@@ -1,0 +1,21 @@
+S -> Select From Where
+Select -> select Liste
+Liste -> <etoile>
+Liste -> Listen
+Listen -> <name>
+Listen -> Listen , <name>
+From -> from Table
+Table -> table
+Where ->
+Where -> where Conds
+Op -> and
+Op -> or
+Cond -> <int>
+Cond -> <name> = Val
+Cond -> Val = Val
+Conds -> Cond
+Conds -> Cond Op Conds
+Val -> Int
+Val -> String
+Int -> <int>
+String -> <str>

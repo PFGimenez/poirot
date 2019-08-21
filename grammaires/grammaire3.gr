@@ -1,0 +1,9 @@
+S -> Msg ; S
+S -> Exe ; S
+S -> Msg
+S -> Exe
+Exe -> exec _cmd
+Msg -> msg _ Params
+Params -> key = value
+Params -> key = value _&_ Params
+

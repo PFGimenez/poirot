@@ -1,0 +1,5 @@
+S -> l' A
+A -> homme B
+B -> _ qui _ a _ vu _ E
+E -> l'ours
+E -> S

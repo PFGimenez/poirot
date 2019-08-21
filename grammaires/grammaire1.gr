@@ -1,0 +1,7 @@
+S -> Prenom
+S -> Prenoms
+Prenoms -> Prenom _et_ Prenom
+Prenoms -> Prenom ,_ Prenoms
+Prenom -> andré
+Prenom -> liam
+Prenom -> phil
