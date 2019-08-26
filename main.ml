@@ -38,7 +38,7 @@ let () =
     let par=trouveParents r in
     print_string ("Règles:\n"^(reglelist2string r)^"\n");
     print_string ("Parents:\n"^(elementList2string par)^"\n");
-    afficherGrammaire (genererGrammaireInjectionAveugle [Nonterminal("Msg")] [Terminal("value")] grammaire);
+    afficherGrammaire (genererGrammaireInjectionAveugle [] [Terminal(";")] grammaire);
 (*    afficherGrammaire (genererGrammaireInjectionAveugle [] [Nonterminal("Params")] (Nonterminal("Params")@grammaire.regles)); *)
 (*    afficherGrammaire (genererGrammaireInjectionAveugle [Terminal("key")] [] (Nonterminal("Params")@grammaire.regles)); *)
 

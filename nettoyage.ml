@@ -29,7 +29,6 @@ let rec reglesAccessibles regles = function
 	| [] -> []
 	| x::rest -> List.append (reglesAccessiblesNT x regles) (reglesAccessibles regles rest)
 
-
 let reglesAccessiblesSansDoublons regles ensemblent = supprimerDoublons (reglesAccessibles regles ensemblent)
 let symbolesAccessiblesSansDoublons listeregles = supprimerDoublons (symbolesAccessibles listeregles)
 
@@ -45,7 +44,6 @@ let nettoyerGrammaireReglesInaccessibles grammaire =
 	Printf.printf "==Nettoyage des règles inaccessibles==\n";
 	let {axiome=axiome;regles=regles}=grammaire in
 	axiome @ (algoAccessibles regles [] [axiome])
-
 
 (** Algorithme de nettoyage des règles inutiles **)
 
@@ -92,6 +90,23 @@ let nettoyerGrammaireReglesInutiles grammaire =
 	let {axiome=axiome;regles=regles}=grammaire in
 	axiome @ (recupererReglesUtiles regles)
 
+(* Autre algorithme de tri une règle contient à droite un symbole qui n'apparaît jamais à gauche, on peut la retire *)
+
+let rec getToutesPartiesGauche = function
+    | [] -> []
+    | r::t -> List.append r.partiegauche (getToutesPartiesGauche t)
+
+let rec checkSymboleUtiles partiesGauche = function
+    | [] -> true
+    | Terminal(s)::t -> checkSymboleUtiles partiesGauche t
+    | h::t -> List.mem h partiesGauche && checkSymboleUtiles partiesGauche t
+
+let checkSymboleUtilesRegle partiesGauche r = checkSymboleUtiles partiesGauche r.partiedroite
+
+let nettoyerGrammaireSymbolesInutiles grammaire =
+	Printf.printf "==Nettoyage des symboles inutiles==\n";
+    let partiesGauche=List.sort_uniq compare (getToutesPartiesGauche grammaire.regles) in
+    grammaire.axiome@(List.filter (checkSymboleUtilesRegle partiesGauche) grammaire.regles)
 
 (** Algorithme de tri des règles pour faciliter la dérivation gauche **)
 let comparaisonPoids un deux =
@@ -176,5 +191,5 @@ in loop grammaire.regles grammaire.axiome (calculerEpsilon grammaire.regles)
 
 (** Algorithme de nettoyage général**)
 let nettoyage grammaire =
-	let nouvellegrammaire =  nettoyerGrammaireReglesInaccessibles (nettoyerGrammaireReglesInutiles (supprimerEpsilon grammaire)) in
+	let nouvellegrammaire = nettoyerGrammaireReglesInaccessibles (nettoyerGrammaireSymbolesInutiles (nettoyerGrammaireReglesInutiles (supprimerEpsilon grammaire))) in
 	trierGrammaire nouvellegrammaire
