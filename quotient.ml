@@ -13,16 +13,17 @@ let etiquette nom numero = nom ^ "." ^ (int2string numero)
 (* Quotient à Gauche d'une règle pour l'itération "numéro" par le terminal "terminal"
    => renvoie (nouvellesrègles,nouvelaxiome) *)
 let quotientGaucheRegle numero terminal axiome = function
-	(* A -> B alpha *) | {partiegauche = [Nonterminal(a)];partiedroite=(Nonterminal(b))::alpha } ->
-	([[Nonterminal(etiquette a numero)]-->((Nonterminal(etiquette b numero))::alpha) ;
-	 [Nonterminal(a)]-->((Nonterminal(b))::alpha)],
-	if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
+
 	(* A -> t alpha *) | {partiegauche = [Nonterminal(a)];partiedroite=t::alpha } when t=terminal ->
 	([ [Nonterminal(etiquette a numero)]-->alpha ;
 	   [Nonterminal(a)]-->(t::alpha) ],
 	if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
-			   (*| {partiegauche = [Nonterminal(a)];partiedroite=[]} -> 
-	([([Nonterminal(etiquette a numero)]-->[]);([Nonterminal(a)]-->[])],if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)*)
+
+    (* A -> B alpha *) | {partiegauche = [Nonterminal(a)];partiedroite=(Nonterminal(b))::alpha } ->
+	([[Nonterminal(etiquette a numero)]-->((Nonterminal(etiquette b numero))::alpha) ;
+	 [Nonterminal(a)]-->((Nonterminal(b))::alpha)],
+	if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
+
 	(* autre *)	   | autreregle -> ([autreregle],None)
 
 (* Inverser la partie droite d'une règle *)
@@ -72,3 +73,14 @@ let rec genererNouvelleGrammaire analysedroite iteration grammaire = function
 
 (* Interface *)
 let genererGrammaireInjection = genererNouvelleGrammaire false 1
+
+
+let rec genererNouvelleGrammaireAveugle analysedroite iteration grammaire = function
+	| [] -> grammaire
+	| x::rest when analysedroite=false-> genererNouvelleGrammaireAveugle false (iteration+1) (quotientGauche iteration x grammaire) rest
+	| x::rest when analysedroite=true -> genererNouvelleGrammaireAveugle true (iteration+1) (quotientDroite iteration x grammaire) rest
+	| _ -> failwith "Cas inconnu"
+
+let genererGrammaireInjectionAveugle prefixe suffixe grammaire =
+    let g = genererNouvelleGrammaireAveugle false 1 grammaire prefixe in
+    nettoyage (genererNouvelleGrammaireAveugle true 1 g suffixe)

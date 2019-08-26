@@ -21,7 +21,6 @@ let estNonTerminal word =
 (* Transforme une chaîne de caractère en liste de tokens *)
 let string2tokens = split " +"
 
-
 (* transforme une liste de token en partie de règle : tail recursive *)
 let rec token2partie acc = function
 	| [] -> List.rev acc

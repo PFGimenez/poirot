@@ -32,6 +32,11 @@ let partie2string partie = List.fold_left (^) "" (List.map element2string partie
 let regle2string = function
 	| {partiegauche=g;partiedroite=d} -> partie2string g ^ " --> " ^ partie2string d
 
+(* Conversion d'une liste de règles en chaîne de caractère *)
+let rec reglelist2string = function
+    | [] -> "Nothing to display."
+    | h::[] -> regle2string h
+    | h::t -> regle2string h ^ "\n" ^ reglelist2string t
 
 
 (** Fonctions utilitaire **)
