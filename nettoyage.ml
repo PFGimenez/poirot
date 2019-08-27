@@ -41,7 +41,7 @@ let rec algoAccessibles reglesdepart accregles accsymbole =
 	else algoAccessibles reglesdepart newregles newsymboles
 
 let nettoyerGrammaireReglesInaccessibles grammaire =
-	Printf.printf "==Nettoyage des règles inaccessibles==\n";
+	(* Printf.printf "==Nettoyage des règles inaccessibles==\n"; *)
 	let {axiome=axiome;regles=regles}=grammaire in
 	axiome @ (algoAccessibles regles [] [axiome])
 
@@ -86,7 +86,7 @@ let recupererReglesUtiles regles =
 	algoUtile regles r []
 
 let nettoyerGrammaireReglesInutiles grammaire =
-	Printf.printf "==Nettoyage des règles inutiles==\n";
+	(* Printf.printf "==Nettoyage des règles inutiles==\n"; *)
 	let {axiome=axiome;regles=regles}=grammaire in
 	axiome @ (recupererReglesUtiles regles)
 
@@ -104,7 +104,7 @@ let rec checkSymboleUtiles partiesGauche = function
 let checkSymboleUtilesRegle partiesGauche r = checkSymboleUtiles partiesGauche r.partiedroite
 
 let nettoyerGrammaireSymbolesInutiles grammaire =
-	Printf.printf "==Nettoyage des symboles inutiles==\n";
+	(* Printf.printf "==Nettoyage des symboles inutiles==\n"; *)
     let partiesGauche=List.sort_uniq compare (getToutesPartiesGauche grammaire.regles) in
     grammaire.axiome@(List.filter (checkSymboleUtilesRegle partiesGauche) grammaire.regles)
 

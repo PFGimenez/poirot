@@ -1,6 +1,9 @@
 open Base
 open Quotient
 
+(* TODO: vérifier si une phrase est acceptée par une grammaire *)
+(* TODO: dériver une phrase qui contiennet un symbole (terminal ou non) de notre choix *)
+
 type arbre_deriv = Leaf of element | Node of element * partie * arbre_deriv * partie
 
 let tree_root_element = function
@@ -26,17 +29,6 @@ let trouve_regles grammaire elem = List.filter (fun r -> List.mem elem r.partied
 
 let trouve_parents r = List.sort_uniq compare (List.map (fun r -> List.hd r.partiegauche) r)
 
-(* TODO: vérifier si une phrase est acceptée par une grammaire *)
-(* let checkGrammar grammaire injectionGrammaire =  *)
-
-let explore grammaire = ();;
-
-(* TODO: dériver une phrase qui contiennet un symbole (terminal ou non) de notre choix *)
-
-let process_grammar grammaire = []
-
-(* TODO: vérifier si un symbole est accessible *)
-
 let rec is_accessible s = function
     | [] -> false
     | r::q -> List.mem s r.partiedroite || List.mem s r.partiegauche || is_accessible s q
@@ -61,7 +53,7 @@ let construct_trees_from_list grammaire tl =
 
 let rec print_tree2 prefix = function
     | Leaf(e) -> print_string (prefix^(element2string e)^"\n")
-    | Node(e,p,c,s) -> print_string (prefix^(partie2string p)^"\n"); print_string ("["^(element2string e)^"]"); print_tree2 (" "^prefix) c; print_string (prefix^(partie2string s)^"\n")
+    | Node(e,p,c,s) -> print_string (prefix^(partie2string p)^"\n"); (*print_string ("["^(element2string e)^"]");*) print_tree2 (" "^prefix) c; print_string (prefix^(partie2string s)^"\n")
 
 let print_tree = print_tree2 ""
 
@@ -69,6 +61,24 @@ let rec print_tree_list = function
     | [] -> ()
     | t::q -> print_string "Arbre:\n"; print_tree t; print_tree_list q
 
-let rec bfs = function
-    | [] -> []
-    | t::q -> bfs (List.append q (process_grammar t))
+let check_grammar_validity prefix suffix grammaire (g,t) =
+    let injections = deriverLongueur 10 g [g.axiome] in
+    let words = List.map (fun p -> List.append (List.append prefix p) suffix) injections in
+    List.for_all (isInLanguage grammaire) words
+
+let rec find_grammar prefix suffix s g trees =
+    let gt = List.combine (List.map (get_grammar_from_tree g) trees) trees in
+    let valid_trees = List.filter (check_grammar_validity prefix suffix g) gt in
+    print_string "Total: "; print_int (List.length gt); print_string "\nValides: "; print_int (List.length valid_trees); print_string "\n";
+    let good = List.filter (fun (g,t) -> is_symbol_accessible s g) gt in
+    match good with
+    | [] -> find_grammar prefix suffix s g (construct_trees_from_list g (snd (List.split valid_trees)))
+    | l -> good
+
+
+let rec afficherGrammaireTreesCombined e = function
+    | [] -> ()
+    | (g,t)::q -> afficherGrammaire g; print_tree t; printWords (List.filter (fun p -> List.mem e p) (deriverLongueur 10 g [g.axiome])); afficherGrammaireTreesCombined e q
+
+let afficherGrammaireTrees e g t =
+    afficherGrammaireTreesCombined e (List.combine g t)

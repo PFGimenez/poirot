@@ -91,7 +91,7 @@ let genererGrammaireInjection = genererNouvelleGrammaire false 1
 
 let rec genererNouvelleGrammaireAveugle quotient iteration grammaire = function
 	| [] -> grammaire
-    | x::rest -> print_string ("quotient par "^element2string2(x)^"\n"); let g=(quotient_and_nettoyage quotient iteration x grammaire) in (* afficherGrammaire g;*) genererNouvelleGrammaireAveugle quotient (iteration+1) g rest
+    | x::rest -> (* print_string ("quotient par "^element2string2(x)^"\n");*) let g=(quotient_and_nettoyage quotient iteration x grammaire) in (* afficherGrammaire g;*) genererNouvelleGrammaireAveugle quotient (iteration+1) g rest
 
 let genererGrammaireInjectionAveugle prefixe suffixe grammaire =
     let g=genererNouvelleGrammaireAveugle quotientGaucheRegle  1 (nettoyage grammaire) prefixe in

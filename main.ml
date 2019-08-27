@@ -34,6 +34,13 @@ let old() =
 
 let ()=
 	let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
+    let interest=Terminal("cmd") in
+    let gt = find_grammar [Terminal("msg");Terminal("key");Terminal("=")] [Terminal("&");Terminal("key");Terminal("=");Terminal("value")] interest grammaire [Leaf(Terminal("value"))] in
+    afficherGrammaireTreesCombined interest gt
+
+
+let old3()=
+	let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
     let t = Leaf(Terminal("value")) in
     let t2 = construct_trees grammaire t in
     let t3 = construct_trees_from_list grammaire t2 in
@@ -42,7 +49,6 @@ let ()=
     let p,s = get_prefix_suffix_tree t4 in
     print_string ("Prefix: "^(partie2string p)^", suffix: "^(partie2string s)^"\n");
     afficherGrammaire (get_grammar_from_tree grammaire t4)
-(*    afficherGrammaireListe (get_grammar_from_tree_list grammaire t3) *)
 
 let old2() =
 	let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in

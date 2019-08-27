@@ -1,3 +1,7 @@
+let print_bool = function
+            | true -> print_string "true\n"
+            | false -> print_string "false\n"
+
 (** Définitions des types **)
 (* Le type element représente un élément de règle, et peut être soit Terminal soit Nonterminal *)
 type element = 	| Terminal of string
@@ -21,8 +25,8 @@ type requete = | Mot of string
 
 (* Conversion d'un élément en chaîne de caractères *)
 let element2string = function
-		| Terminal(x) -> x
-		| Nonterminal(x) -> x
+		| Terminal(x) -> x^" "
+		| Nonterminal(x) -> x^" "
 
 let element2string2 = function
 		| Terminal(x) -> "(T) "^x^" "
@@ -33,7 +37,7 @@ let element2string2 = function
 (* Conversion d'une partie en chaîne de caractères *)
 let partie2string partie = match partie with
     | [] -> "(vide)"
-    | _ -> List.fold_left (^) "" (List.map element2string2 partie)
+    | _ -> List.fold_left (^) "" (List.map element2string partie)
 
 
 (* Conversion d'une règle en chaîne de caractère *)
@@ -87,7 +91,6 @@ let rec estMot = function
 	| Terminal(x)::rest -> estMot rest
 	| Nonterminal(x)::rest -> false
 
-
 (* /!\ Faire une version générique renvoyant une liste ! *)
 let rec deriverTout profondeur grammaire motintermediaire =
     if estMot motintermediaire then [motintermediaire]
@@ -105,11 +108,29 @@ let deriver profondeur grammaire = deriverTout profondeur grammaire [grammaire.a
 
 let deriverPrint profondeur grammaire = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) (deriver profondeur grammaire))
 
-(** Fonctions d'affichage **)
+(** Vérification de la dérivabilité d'une phrase à partir d'une grammaire **)
 
-let print_bool = function
-            | true -> print_string "true\n"
-            | false -> print_string "false\n"
+let rec deriverLongueur longueur grammaire motintermediaire =
+	if (List.length motintermediaire <= longueur) then begin
+        if estMot motintermediaire then [motintermediaire]
+        else
+            let possibles = reglesPossibles motintermediaire grammaire.regles in
+            let rec deriverLesPossibles grammaire mot = function
+                | [] -> []
+                | regle::reste -> List.append (List.filter (fun l -> List.length l <= longueur) (deriverLongueur longueur grammaire (derivationGauche mot regle)))
+                        (deriverLesPossibles grammaire mot reste) in
+            deriverLesPossibles grammaire motintermediaire possibles
+    end
+    else []
+
+
+let isInLanguage grammaire partie = print_string ((partie2string partie)^"\n"); List.mem partie (deriverLongueur (List.length partie) grammaire [grammaire.axiome])
+
+let deriverLongueurPrint longueur grammaire = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n") (*; print_bool (isInLanguage grammaire r)*)) (deriverLongueur longueur grammaire [grammaire.axiome]))
+
+let printWords w = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) w)
+
+(** Fonctions d'affichage **)
 
 (* Affichage d'une partie (équivalent à l'affichage d'un mot intermédiaire) *)
 let afficherPartie partie = Printf.printf "%s\n" (partie2string partie)
