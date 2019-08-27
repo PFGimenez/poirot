@@ -32,7 +32,7 @@ let old() =
 	afficherGrammaire grammairepropre;
 	deriver 15 grammairepropre*)
 
-let old2()=
+let ()=
 	let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
     let t = Leaf(Terminal("value")) in
     let t2 = construct_trees grammaire t in
@@ -44,10 +44,11 @@ let old2()=
     afficherGrammaire (get_grammar_from_tree grammaire t4)
 (*    afficherGrammaireListe (get_grammar_from_tree_list grammaire t3) *)
 
-let () =
+let old2() =
 	let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
     afficherGrammaire grammaire;
-    let g=genererGrammaireInjectionAveugle [Terminal("msg");Terminal("key");Terminal("=")] [Terminal("&");Nonterminal("Params")] (Nonterminal("Msg")@grammaire.regles) in
+    (* let g=genererGrammaireInjectionAveugle [Terminal("msg");Terminal("key");Terminal("=")] [Terminal("&");Nonterminal("Params")] (Nonterminal("Msg")@grammaire.regles) in *)
+    let g=genererGrammaireInjectionAveugle [] [Terminal("&");Nonterminal("Params")] (Nonterminal("Msg")@grammaire.regles) in
     afficherGrammaire g;
 (*    afficherGrammaire (genererGrammaireInjectionAveugle [Nonterminal("Msg")] [Terminal("cmd")] grammaire); *)
 (*    afficherGrammaire (genererGrammaireInjectionAveugle [] [Nonterminal("Params")] (Nonterminal("Params")@grammaire.regles)); *)

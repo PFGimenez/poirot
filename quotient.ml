@@ -14,17 +14,25 @@ let etiquette nom numero = nom ^ "." ^ (int2string numero)
    => renvoie (nouvellesrègles,nouvelaxiome) *)
 let quotientGaucheRegle numero terminal axiome = function
 
-    (* A -> t alpha *) | {partiegauche = [Nonterminal(a)];partiedroite=t::alpha } when t=terminal -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
+    (* A -> t alpha avec t terminal *) | {partiegauche = [Nonterminal(a)];partiedroite=Terminal(t)::alpha } when Terminal(t)=terminal -> (* print_string ("t alpha "^(partie2string (Terminal(t)::alpha))^"\n"); *)
 	([ [Nonterminal(etiquette a numero)]-->alpha ;
-	   [Nonterminal(a)]-->(t::alpha) ],
+	   [Nonterminal(a)]-->(Terminal(t)::alpha) ],
 	if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
+
+    (* A -> t alpha avec t non-terminal *) | {partiegauche = [Nonterminal(a)];partiedroite=Nonterminal(t)::alpha } when Nonterminal(t)=terminal ->  (* print_string ("nt alpha "^(partie2string (Nonterminal(t)::alpha))^"\n"); *)
+	([ [Nonterminal(etiquette a numero)]-->alpha ;
+	   [Nonterminal(etiquette a numero)]-->(Nonterminal(etiquette t numero)::alpha) ;
+	   [Nonterminal(a)]-->(Terminal(t)::alpha) ],
+	if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
+
+
 
     (* A -> B alpha *) | {partiegauche = [Nonterminal(a)];partiedroite=(Nonterminal(b))::alpha } -> (* print_string ("b alpha "^(partie2string (Nonterminal(b)::alpha))^"\n"); *)
 	([[Nonterminal(etiquette a numero)]-->((Nonterminal(etiquette b numero))::alpha) ;
 	 [Nonterminal(a)]-->((Nonterminal(b))::alpha)],
 	if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
-	(* autre *)	   | autreregle -> (* (print_string ("b alpha "^(partie2string (autreregle.partiedroite))^"\n"); *) ([autreregle],None)
+	(* autre *)	   | autreregle -> (* print_string ("other "^(partie2string (autreregle.partiedroite))^"\n"); *)  ([autreregle],None)
 
 (* Inverser la partie droite d'une règle *)
 let inverserOrdrePartieDroite = function
@@ -57,6 +65,13 @@ let quotientDroite iteration terminal grammaire =
 	let {axiome=axiome;regles=regles} = grammaire in
 	nettoyage (quotient quotientDroiteRegle ([],axiome) iteration terminal axiome regles)
 
+(* Quotient à droite pour plusieurs règles par un terminal "terminal" *)
+let quotient_and_nettoyage quotientregle iteration terminal grammaire =
+	let {axiome=axiome;regles=regles} = grammaire in
+	nettoyage (quotient quotientregle ([],axiome) iteration terminal axiome regles)
+
+
+
 (* Algorithme de génération de la grammaire complète pour la requête
 WARNING : les grammaires générées sont à nettoyer, car elles impliquent énormément de backtracking lors de la dérivation du mot.
 	 Penser à appliquer :
@@ -76,8 +91,8 @@ let genererGrammaireInjection = genererNouvelleGrammaire false 1
 
 let rec genererNouvelleGrammaireAveugle quotient iteration grammaire = function
 	| [] -> grammaire
-    | x::rest -> print_string ("quotient par \""^element2string(x)^"\"\n"); let g=(quotient iteration x grammaire) in afficherGrammaire g; genererNouvelleGrammaireAveugle quotient (iteration+1) g rest
+    | x::rest -> print_string ("quotient par "^element2string2(x)^"\n"); let g=(quotient_and_nettoyage quotient iteration x grammaire) in (* afficherGrammaire g;*) genererNouvelleGrammaireAveugle quotient (iteration+1) g rest
 
 let genererGrammaireInjectionAveugle prefixe suffixe grammaire =
-    let g=genererNouvelleGrammaireAveugle quotientGauche 1 (nettoyage grammaire) prefixe in
-    genererNouvelleGrammaireAveugle quotientDroite 10 g (List.rev suffixe)
+    let g=genererNouvelleGrammaireAveugle quotientGaucheRegle  1 (nettoyage grammaire) prefixe in
+    genererNouvelleGrammaireAveugle quotientDroiteRegle 10 g (List.rev suffixe)

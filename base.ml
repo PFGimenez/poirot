@@ -24,10 +24,16 @@ let element2string = function
 		| Terminal(x) -> x
 		| Nonterminal(x) -> x
 
+let element2string2 = function
+		| Terminal(x) -> "(T) "^x^" "
+		| Nonterminal(x) -> "(NT) "^x^" "
+
+
+
 (* Conversion d'une partie en chaîne de caractères *)
 let partie2string partie = match partie with
     | [] -> "(vide)"
-    | _ -> List.fold_left (^) "" (List.map element2string partie)
+    | _ -> List.fold_left (^) "" (List.map element2string2 partie)
 
 
 (* Conversion d'une règle en chaîne de caractère *)
