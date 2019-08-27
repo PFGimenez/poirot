@@ -124,7 +124,7 @@ let rec deriverLongueur longueur grammaire motintermediaire =
     else []
 
 
-let isInLanguage grammaire partie = print_string ((partie2string partie)^"\n"); List.mem partie (deriverLongueur (List.length partie) grammaire [grammaire.axiome])
+let isInLanguage grammaire partie = (* print_string ((partie2string partie)^"\n");*) List.mem partie (deriverLongueur (List.length partie) grammaire [grammaire.axiome])
 
 let deriverLongueurPrint longueur grammaire = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n") (*; print_bool (isInLanguage grammaire r)*)) (deriverLongueur longueur grammaire [grammaire.axiome]))
 

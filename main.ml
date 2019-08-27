@@ -34,8 +34,12 @@ let old() =
 
 let ()=
 	let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
-    let interest=Terminal("cmd") in
-    let gt = find_grammar [Terminal("msg");Terminal("key");Terminal("=")] [Terminal("&");Terminal("key");Terminal("=");Terminal("value")] interest grammaire [Leaf(Terminal("value"))] in
+
+    let prefix = [Terminal("msg");Terminal("key");Terminal("=")] in
+    let suffix = [Terminal("&");Terminal("key");Terminal("=");Terminal("value")] in
+    let interest = Terminal("cmd") in
+
+    let gt = find_grammar (blackbox prefix suffix grammaire) interest grammaire [Leaf(Terminal("value"))] in
     afficherGrammaireTreesCombined interest gt
 
 

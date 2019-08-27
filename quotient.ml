@@ -22,7 +22,7 @@ let quotientGaucheRegle numero terminal axiome = function
     (* A -> t alpha avec t non-terminal *) | {partiegauche = [Nonterminal(a)];partiedroite=Nonterminal(t)::alpha } when Nonterminal(t)=terminal ->  (* print_string ("nt alpha "^(partie2string (Nonterminal(t)::alpha))^"\n"); *)
 	([ [Nonterminal(etiquette a numero)]-->alpha ;
 	   [Nonterminal(etiquette a numero)]-->(Nonterminal(etiquette t numero)::alpha) ;
-	   [Nonterminal(a)]-->(Terminal(t)::alpha) ],
+	   [Nonterminal(a)]-->(Nonterminal(t)::alpha) ],
 	if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
 

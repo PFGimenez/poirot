@@ -1,8 +1,9 @@
 open Base
 open Quotient
 
-(* TODO: vérifier si une phrase est acceptée par une grammaire *)
-(* TODO: dériver une phrase qui contiennet un symbole (terminal ou non) de notre choix *)
+(* TODO: dériver une phrase qui contienne un symbole (terminal ou non) de notre choix *)
+
+let blackbox prefix suffix grammaire injection = isInLanguage grammaire (List.append (List.append prefix injection) suffix)
 
 type arbre_deriv = Leaf of element | Node of element * partie * arbre_deriv * partie
 
@@ -61,24 +62,25 @@ let rec print_tree_list = function
     | [] -> ()
     | t::q -> print_string "Arbre:\n"; print_tree t; print_tree_list q
 
-let check_grammar_validity prefix suffix grammaire (g,t) =
+let check_grammar_validity blackbox grammaire (g,t) =
     let injections = deriverLongueur 10 g [g.axiome] in
-    let words = List.map (fun p -> List.append (List.append prefix p) suffix) injections in
-    List.for_all (isInLanguage grammaire) words
+(*    afficherGrammaire g;*)
+    let out = List.for_all blackbox injections in
+    (*print_bool out;*) out
 
-let rec find_grammar prefix suffix s g trees =
+let rec find_grammar blackbox s g trees =
     let gt = List.combine (List.map (get_grammar_from_tree g) trees) trees in
-    let valid_trees = List.filter (check_grammar_validity prefix suffix g) gt in
+    let valid_trees = List.filter (check_grammar_validity blackbox g) gt in
     print_string "Total: "; print_int (List.length gt); print_string "\nValides: "; print_int (List.length valid_trees); print_string "\n";
-    let good = List.filter (fun (g,t) -> is_symbol_accessible s g) gt in
+    let good = List.filter (fun (g,t) -> is_symbol_accessible s g) valid_trees in
     match good with
-    | [] -> find_grammar prefix suffix s g (construct_trees_from_list g (snd (List.split valid_trees)))
+    | [] -> find_grammar blackbox s g (construct_trees_from_list g (snd (List.split valid_trees)))
     | l -> good
 
 
 let rec afficherGrammaireTreesCombined e = function
     | [] -> ()
-    | (g,t)::q -> afficherGrammaire g; print_tree t; printWords (List.filter (fun p -> List.mem e p) (deriverLongueur 10 g [g.axiome])); afficherGrammaireTreesCombined e q
+    | (g,t)::q -> print_string "\n"; afficherGrammaire g; print_tree t; printWords (List.filter (fun p -> List.mem e p) (deriverLongueur 10 g [g.axiome])); afficherGrammaireTreesCombined e q
 
 let afficherGrammaireTrees e g t =
     afficherGrammaireTreesCombined e (List.combine g t)
