@@ -17,7 +17,7 @@ let rec extraireAccessibles = function
 
 let rec symbolesAccessibles = function
 	|[] -> []
-	|regle::rest -> List.append (extraireAccessibles regle) (symbolesAccessibles rest)
+	|regle::rest -> (extraireAccessibles regle) @ (symbolesAccessibles rest)
 
 let rec reglesAccessiblesNT nt = function
 	| [] -> []
@@ -27,23 +27,23 @@ let rec reglesAccessiblesNT nt = function
 
 let rec reglesAccessibles regles = function
 	| [] -> []
-	| x::rest -> List.append (reglesAccessiblesNT x regles) (reglesAccessibles regles rest)
+	| x::rest -> (reglesAccessiblesNT x regles) @ (reglesAccessibles regles rest)
 
 let reglesAccessiblesSansDoublons regles ensemblent = supprimerDoublons (reglesAccessibles regles ensemblent)
 let symbolesAccessiblesSansDoublons listeregles = supprimerDoublons (symbolesAccessibles listeregles)
 
 let rec algoAccessibles reglesdepart accregles accsymbole =
 	let regles = reglesAccessiblesSansDoublons reglesdepart accsymbole in
-	let newregles = supprimerDoublons (List.append accregles regles) in
+	let newregles = supprimerDoublons (accregles @ regles) in
 	let symboles = symbolesAccessiblesSansDoublons regles in
-	let newsymboles = supprimerDoublons (List.append accsymbole symboles) in
+	let newsymboles = supprimerDoublons (accsymbole @ symboles) in
 	if (newsymboles = accsymbole) then newregles
 	else algoAccessibles reglesdepart newregles newsymboles
 
 let nettoyerGrammaireReglesInaccessibles grammaire =
 	(* Printf.printf "==Nettoyage des règles inaccessibles==\n"; *)
 	let {axiome=axiome;regles=regles}=grammaire in
-	axiome @ (algoAccessibles regles [] [axiome])
+	axiome @@ (algoAccessibles regles [] [axiome])
 
 (** Algorithme de nettoyage des règles inutiles **)
 
@@ -67,11 +67,11 @@ let reglesUtilesNT regles nonterminal = List.filter (regleUtile nonterminal) reg
 
 let rec reglesUtiles regles = function
 	| [] -> []
-	| x::rest -> List.append (reglesUtilesNT regles x) (reglesUtiles regles rest)
+	| x::rest -> (reglesUtilesNT regles x) @ (reglesUtiles regles rest)
 
 let rec symbolesUtiles = function
 	| [] -> []
-	| x::rest -> List.append (extrairePartieGauche x) (symbolesUtiles rest)
+	| x::rest -> (extrairePartieGauche x) @ (symbolesUtiles rest)
 
 
 let rec algoUtile regles r s =
@@ -88,13 +88,13 @@ let recupererReglesUtiles regles =
 let nettoyerGrammaireReglesInutiles grammaire =
 	(* Printf.printf "==Nettoyage des règles inutiles==\n"; *)
 	let {axiome=axiome;regles=regles}=grammaire in
-	axiome @ (recupererReglesUtiles regles)
+	axiome @@ (recupererReglesUtiles regles)
 
 (* Autre algorithme de tri une règle contient à droite un symbole qui n'apparaît jamais à gauche, on peut la retire *)
 
 let rec getToutesPartiesGauche = function
     | [] -> []
-    | r::t -> List.append r.partiegauche (getToutesPartiesGauche t)
+    | r::t -> r.partiegauche @ (getToutesPartiesGauche t)
 
 let rec checkSymboleUtiles partiesGauche = function
     | [] -> true
@@ -106,7 +106,7 @@ let checkSymboleUtilesRegle partiesGauche r = checkSymboleUtiles partiesGauche r
 let nettoyerGrammaireSymbolesInutiles grammaire =
 	(* Printf.printf "==Nettoyage des symboles inutiles==\n"; *)
     let partiesGauche=List.sort_uniq compare (getToutesPartiesGauche grammaire.regles) in
-    grammaire.axiome@(List.filter (checkSymboleUtilesRegle partiesGauche) grammaire.regles)
+    grammaire.axiome@@(List.filter (checkSymboleUtilesRegle partiesGauche) grammaire.regles)
 
 (** Algorithme de tri des règles pour faciliter la dérivation gauche **)
 let comparaisonPoids un deux =
@@ -124,7 +124,7 @@ let trierRegles regles = let weightedList = List.map countNT regles in
 			 List.map (fun x -> let (_,r) = x in r) triee
 
 let trierGrammaire grammaire =
-	grammaire.axiome @ (trierRegles grammaire.regles)
+	grammaire.axiome @@ (trierRegles grammaire.regles)
 
 (** Epsilon production **)
 

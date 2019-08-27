@@ -2,6 +2,7 @@ open Base
 open Nettoyage
 open Quotient
 open Reconstruct
+open Parser
 
 let rec elementList2string = function
     | [] -> ""
@@ -35,13 +36,16 @@ let old() =
 let ()=
 	let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
 
-    let prefix = [Terminal("msg");Terminal("key");Terminal("=")] in
-    let suffix = [Terminal("&");Terminal("key");Terminal("=");Terminal("value")] in
-    let interest = Terminal("cmd") in
-
-    let gt = find_grammar (blackbox prefix suffix grammaire) interest grammaire [Leaf(Terminal("value"))] in
+    (* TODO: automatiser la sélection du token d'injection *)
+    let injectionToken = [Leaf(Terminal("value"))] in
+    let pre=Sys.argv.(3) in
+    let su=Sys.argv.(4) in
+    let inte = Sys.argv.(5) in
+    let prefix=token2partie [] (string2tokens pre) in
+    let suffix=token2partie [] (string2tokens su) in
+    let interest=List.hd (token2partie [] (string2tokens inte)) in
+    let gt = find_grammar (blackbox prefix suffix grammaire) interest grammaire injectionToken in
     afficherGrammaireTreesCombined interest gt
-
 
 let old3()=
 	let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
@@ -57,11 +61,11 @@ let old3()=
 let old2() =
 	let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
     afficherGrammaire grammaire;
-    (* let g=genererGrammaireInjectionAveugle [Terminal("msg");Terminal("key");Terminal("=")] [Terminal("&");Nonterminal("Params")] (Nonterminal("Msg")@grammaire.regles) in *)
-    let g=genererGrammaireInjectionAveugle [] [Terminal("&");Nonterminal("Params")] (Nonterminal("Msg")@grammaire.regles) in
+    (* let g=genererGrammaireInjectionAveugle [Terminal("msg");Terminal("key");Terminal("=")] [Terminal("&");Nonterminal("Params")] (Nonterminal("Msg")@@grammaire.regles) in *)
+    let g=genererGrammaireInjectionAveugle [] [Terminal("&");Nonterminal("Params")] (Nonterminal("Msg")@@grammaire.regles) in
     afficherGrammaire g;
 (*    afficherGrammaire (genererGrammaireInjectionAveugle [Nonterminal("Msg")] [Terminal("cmd")] grammaire); *)
-(*    afficherGrammaire (genererGrammaireInjectionAveugle [] [Nonterminal("Params")] (Nonterminal("Params")@grammaire.regles)); *)
-(*    afficherGrammaire (genererGrammaireInjectionAveugle [Terminal("key")] [] (Nonterminal("Params")@grammaire.regles)); *)
+(*    afficherGrammaire (genererGrammaireInjectionAveugle [] [Nonterminal("Params")] (Nonterminal("Params")@@grammaire.regles)); *)
+(*    afficherGrammaire (genererGrammaireInjectionAveugle [Terminal("key")] [] (Nonterminal("Params")@@grammaire.regles)); *)
     deriverPrint 10 g;
     print_bool (is_symbol_accessible (Terminal("exec")) g)

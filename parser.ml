@@ -56,7 +56,7 @@ let lireFichier filename =
 (* extraction d'une grammaire depuis le nom de fichier et l'axiome passés en arguments *)
 let grammaireDepuisFichier fichier axiome =
 	let reglesString = lireFichier fichier in
-	Nonterminal(axiome) @ (strings2regles [] reglesString)
+	Nonterminal(axiome) @@ (strings2regles [] reglesString)
 
 (** Traitement/Conversion du fichier décrivant les requêtes **)
 let rec token2requete acc = function

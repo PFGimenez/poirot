@@ -3,7 +3,8 @@ open Quotient
 
 (* TODO: dériver une phrase qui contienne un symbole (terminal ou non) de notre choix *)
 
-let blackbox prefix suffix grammaire injection = isInLanguage grammaire (List.append (List.append prefix injection) suffix)
+(* let blackbox prefix suffix grammaire injection = isInLanguage grammaire (prefix @ injection @ suffix) *)
+let blackbox prefix suffix grammaire injections = isInLanguageListe grammaire (List.map (fun p -> prefix @ p @ suffix) injections)
 
 type arbre_deriv = Leaf of element | Node of element * partie * arbre_deriv * partie
 
@@ -14,11 +15,11 @@ let tree_root_element = function
 let rec get_prefix_suffix_tree = function
     | Leaf(t) -> [],[]
     | Node(nt,p,c,s) -> let (pre,suf) = get_prefix_suffix_tree(c) in
-            List.append p pre, List.append suf s
+            p @ pre, suf @ s
 
 let get_grammar_from_tree grammaire tree =
     let p,s=get_prefix_suffix_tree(tree) in
-    genererGrammaireInjectionAveugle p s ((tree_root_element tree)@grammaire.regles)
+    genererGrammaireInjectionAveugle p s ((tree_root_element tree)@@grammaire.regles)
 
 let get_grammar_from_tree_list grammaire tl =
     List.map (get_grammar_from_tree grammaire) tl
@@ -65,18 +66,20 @@ let rec print_tree_list = function
 let check_grammar_validity blackbox grammaire (g,t) =
     let injections = deriverLongueur 10 g [g.axiome] in
 (*    afficherGrammaire g;*)
-    let out = List.for_all blackbox injections in
+    let out = blackbox injections in
     (*print_bool out;*) out
 
 let rec find_grammar blackbox s g trees =
     let gt = List.combine (List.map (get_grammar_from_tree g) trees) trees in
     let valid_trees = List.filter (check_grammar_validity blackbox g) gt in
-    print_string "Total: "; print_int (List.length gt); print_string "\nValides: "; print_int (List.length valid_trees); print_string "\n";
-    let good = List.filter (fun (g,t) -> is_symbol_accessible s g) valid_trees in
-    match good with
-    | [] -> find_grammar blackbox s g (construct_trees_from_list g (snd (List.split valid_trees)))
-    | l -> good
-
+    if (List.length valid_trees) = 0 then []
+    else begin
+        print_string "Total: "; print_int (List.length gt); print_string "\nValides: "; print_int (List.length valid_trees); print_string "\n";
+        let good = List.filter (fun (g,t) -> is_symbol_accessible s g) valid_trees in
+        match good with
+        | [] -> find_grammar blackbox s g (construct_trees_from_list g (snd (List.split valid_trees)))
+        | l -> good
+    end
 
 let rec afficherGrammaireTreesCombined e = function
     | [] -> ()
@@ -84,3 +87,8 @@ let rec afficherGrammaireTreesCombined e = function
 
 let afficherGrammaireTrees e g t =
     afficherGrammaireTreesCombined e (List.combine g t)
+
+let get_all_tokens grammaire = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter isTerminal r.partiedroite) grammaire.regles))
+
+let find_injection_tokens blackbox grammaire =
+    List.filter (fun p -> blackbox [p]) (get_all_tokens grammaire)

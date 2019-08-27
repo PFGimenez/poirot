@@ -33,6 +33,9 @@ let element2string2 = function
 		| Nonterminal(x) -> "(NT) "^x^" "
 
 
+let isTerminal = function
+    | Terminal(x) -> true
+    | _ -> false
 
 (* Conversion d'une partie en chaîne de caractères *)
 let partie2string partie = match partie with
@@ -57,7 +60,7 @@ let rec reglelist2string = function
 let (-->) g d = {partiegauche=g;partiedroite=d}
 
 (* Création d'une grammaire à la volée *)
-let (@) axiome regles = {axiome=axiome;regles=regles}
+let (@@) axiome regles = {axiome=axiome;regles=regles}
 
 (* Dérivation gauche d'un mot intermédiaire "dérivation" par une règle "regle" *)
 let rec derivationGauche derivation regle =
@@ -123,6 +126,12 @@ let rec deriverLongueur longueur grammaire motintermediaire =
     end
     else []
 
+(** Vérifie si un ensemble de mots fait partie d'un langage. Plus rapide que de vérifier chaque mot indépendamment **)
+
+let isInLanguageListe grammaire parties =
+    let len = List.fold_left max 0 (List.map List.length parties) in
+    let words = deriverLongueur len grammaire [grammaire.axiome] in
+    List.length (List.filter (fun p -> not (List.mem p words)) parties) = 0
 
 let isInLanguage grammaire partie = (* print_string ((partie2string partie)^"\n");*) List.mem partie (deriverLongueur (List.length partie) grammaire [grammaire.axiome])
 
