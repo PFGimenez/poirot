@@ -156,3 +156,4 @@ _opam/
 
 
 *.txt
+fuzzer

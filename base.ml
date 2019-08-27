@@ -25,7 +25,9 @@ let element2string = function
 		| Nonterminal(x) -> x
 
 (* Conversion d'une partie en chaîne de caractères *)
-let partie2string partie = List.fold_left (^) "" (List.map element2string partie)
+let partie2string partie = match partie with
+    | [] -> "(vide)"
+    | _ -> List.fold_left (^) "" (List.map element2string partie)
 
 
 (* Conversion d'une règle en chaîne de caractère *)
@@ -80,24 +82,28 @@ let rec estMot = function
 	| Nonterminal(x)::rest -> false
 
 
-(* Dérive et affiche tout les mots possibles pour une grammaire donnée, un mot de départ et une profondeur *)
 (* /!\ Faire une version générique renvoyant une liste ! *)
 let rec deriverTout profondeur grammaire motintermediaire =
-	if estMot motintermediaire then Printf.printf "Mot : %s%!\n" (partie2string motintermediaire)
+    if estMot motintermediaire then [motintermediaire]
 	else if (profondeur != 1) then
 		let possibles = reglesPossibles motintermediaire grammaire.regles in
 		let rec deriverLesPossibles grammaire mot = function
-			| [] -> ()
-			| regle::reste -> deriverTout (profondeur-1) grammaire (derivationGauche mot regle);
-					  deriverLesPossibles grammaire mot reste in
+            | [] -> []
+			| regle::reste -> List.append (deriverTout (profondeur-1) grammaire (derivationGauche mot regle))
+					  (deriverLesPossibles grammaire mot reste) in
 		deriverLesPossibles grammaire motintermediaire possibles
-	else ()
+    else []
 
 (* DeriverTout depuis l'axiome de la grammaire fournie *)
 let deriver profondeur grammaire = deriverTout profondeur grammaire [grammaire.axiome]
 
+let deriverPrint profondeur grammaire = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) (deriver profondeur grammaire))
 
 (** Fonctions d'affichage **)
+
+let print_bool = function
+            | true -> print_string "true\n"
+            | false -> print_string "false\n"
 
 (* Affichage d'une partie (équivalent à l'affichage d'un mot intermédiaire) *)
 let afficherPartie partie = Printf.printf "%s\n" (partie2string partie)
@@ -109,3 +115,8 @@ let afficherRegles regles = List.iter (Printf.printf "%s\n") (List.map regle2str
 (* Affichage d'une grammaire *)
 let afficherGrammaire grammaire = Printf.printf "Axiome : %s \nRegles : \n" (element2string grammaire.axiome);
 				  afficherRegles grammaire.regles
+
+let rec afficherGrammaireListe = function
+    | [] -> print_string "(vide)"
+    | t::[] -> afficherGrammaire t
+    | t::q -> afficherGrammaire t; afficherGrammaireListe q

@@ -147,7 +147,7 @@ let removeDuplicate l =
 	in loopAux [] l
 
 let supprimerEpsilon grammaire =
-Printf.printf "Nombre d'element produisant epsilon : %d \n" (List.length (calculerEpsilon grammaire.regles));
+(* Printf.printf "Nombre d'element produisant epsilon : %d \n" (List.length (calculerEpsilon grammaire.regles)); *)
 let rec loop regles axiome = function
 | [] -> {axiome = axiome ; regles = removeDuplicate regles}
 | element::restElementsEps -> let rec loop1 newRegles axiome = function
@@ -155,14 +155,14 @@ let rec loop regles axiome = function
 		| {partiegauche=gauche;partiedroite=droite}::restRegles ->
 		if( List.mem element droite ) then
 			begin
-				Printf.printf "Duplication \n";
+				(* Printf.printf "Duplication \n";*)
 				loop1 (({partiegauche = gauche ; partiedroite = (List.filter (fun x -> x <> element) droite)})::((gauche-->droite)::newRegles)) axiome restRegles
 			end
 		else if ( (List.mem element gauche) && (droite=[]) ) then
 			begin
 				if (element = axiome) then
 					begin
-						Printf.printf "S-> Eps, Nouvel axiome \n";
+						(* Printf.printf "S-> Eps, Nouvel axiome \n"; *)
 						let naxiome = match axiome with
 							| Terminal(x) -> Terminal(x ^ "'")
 							| Nonterminal(x) -> Nonterminal(x ^ "'")
@@ -171,7 +171,7 @@ let rec loop regles axiome = function
 					end
 				else
 					begin
-						Printf.printf "X -> Eps, rien faire\n" ;
+						(* Printf.printf "X -> Eps, rien faire\n" ; *)
 						loop1 newRegles axiome restRegles
 					end
 			end
@@ -179,7 +179,7 @@ let rec loop regles axiome = function
 			begin
 				if (not(List.mem ({partiegauche = gauche ; partiedroite = droite}) newRegles)) then
 					begin
-					  Printf.printf "Ajout de la règle telle quelle \n" ;
+					  (* Printf.printf "Ajout de la règle telle quelle \n" ; *)
 					  loop1 ((gauche-->droite)::newRegles) axiome restRegles
 					end
 				else loop1 newRegles axiome restRegles

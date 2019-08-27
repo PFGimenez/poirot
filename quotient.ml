@@ -14,17 +14,17 @@ let etiquette nom numero = nom ^ "." ^ (int2string numero)
    => renvoie (nouvellesrègles,nouvelaxiome) *)
 let quotientGaucheRegle numero terminal axiome = function
 
-	(* A -> t alpha *) | {partiegauche = [Nonterminal(a)];partiedroite=t::alpha } when t=terminal ->
+    (* A -> t alpha *) | {partiegauche = [Nonterminal(a)];partiedroite=t::alpha } when t=terminal -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
 	([ [Nonterminal(etiquette a numero)]-->alpha ;
 	   [Nonterminal(a)]-->(t::alpha) ],
 	if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
-    (* A -> B alpha *) | {partiegauche = [Nonterminal(a)];partiedroite=(Nonterminal(b))::alpha } ->
+    (* A -> B alpha *) | {partiegauche = [Nonterminal(a)];partiedroite=(Nonterminal(b))::alpha } -> (* print_string ("b alpha "^(partie2string (Nonterminal(b)::alpha))^"\n"); *)
 	([[Nonterminal(etiquette a numero)]-->((Nonterminal(etiquette b numero))::alpha) ;
 	 [Nonterminal(a)]-->((Nonterminal(b))::alpha)],
 	if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
-	(* autre *)	   | autreregle -> ([autreregle],None)
+	(* autre *)	   | autreregle -> (* (print_string ("b alpha "^(partie2string (autreregle.partiedroite))^"\n"); *) ([autreregle],None)
 
 (* Inverser la partie droite d'une règle *)
 let inverserOrdrePartieDroite = function
@@ -74,13 +74,10 @@ let rec genererNouvelleGrammaire analysedroite iteration grammaire = function
 (* Interface *)
 let genererGrammaireInjection = genererNouvelleGrammaire false 1
 
-
-let rec genererNouvelleGrammaireAveugle analysedroite iteration grammaire = function
+let rec genererNouvelleGrammaireAveugle quotient iteration grammaire = function
 	| [] -> grammaire
-	| x::rest when analysedroite=false-> genererNouvelleGrammaireAveugle false (iteration+1) (quotientGauche iteration x grammaire) rest
-	| x::rest when analysedroite=true -> genererNouvelleGrammaireAveugle true (iteration+1) (quotientDroite iteration x grammaire) rest
-	| _ -> failwith "Cas inconnu"
+    | x::rest -> print_string ("quotient par \""^element2string(x)^"\"\n"); let g=(quotient iteration x grammaire) in afficherGrammaire g; genererNouvelleGrammaireAveugle quotient (iteration+1) g rest
 
 let genererGrammaireInjectionAveugle prefixe suffixe grammaire =
-    let g = genererNouvelleGrammaireAveugle false 1 grammaire prefixe in
-    nettoyage (genererNouvelleGrammaireAveugle true 1 g suffixe)
+    let g=genererNouvelleGrammaireAveugle quotientGauche 1 (nettoyage grammaire) prefixe in
+    genererNouvelleGrammaireAveugle quotientDroite 10 g (List.rev suffixe)
