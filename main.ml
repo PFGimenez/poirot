@@ -33,19 +33,22 @@ let old() =
 	afficherGrammaire grammairepropre;
 	deriver 15 grammairepropre*)
 
+let string2partie s = token2partie [] (string2tokens s)
+
 let ()=
 	let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
 
-    (* TODO: automatiser la sélection du token d'injection *)
-    let injectionToken = [Leaf(Terminal("value"))] in
-    let pre=Sys.argv.(3) in
-    let su=Sys.argv.(4) in
+    let pre = Sys.argv.(3) in
+    let su = Sys.argv.(4) in
     let inte = Sys.argv.(5) in
-    let prefix=token2partie [] (string2tokens pre) in
-    let suffix=token2partie [] (string2tokens su) in
-    let interest=List.hd (token2partie [] (string2tokens inte)) in
-    let gt = find_grammar (blackbox prefix suffix grammaire) interest grammaire injectionToken in
-    afficherGrammaireTreesCombined interest gt
+    let prefix = string2partie pre in
+    let suffix = string2partie su in
+    let interest = List.hd (string2partie inte) in
+    let blackbox = blackbox prefix suffix grammaire in
+    let injectionToken = get_injection_leaves blackbox grammaire in
+    let gt = find_grammar blackbox interest grammaire injectionToken in
+    (* afficherGrammaireTreesCombined interest gt *)
+    print_string ((partie2string (getInjection interest gt))^"\n")
 
 let old3()=
 	let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in

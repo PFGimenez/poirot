@@ -74,7 +74,7 @@ let rec find_grammar blackbox s g trees =
     let valid_trees = List.filter (check_grammar_validity blackbox g) gt in
     if (List.length valid_trees) = 0 then []
     else begin
-        print_string "Total: "; print_int (List.length gt); print_string "\nValides: "; print_int (List.length valid_trees); print_string "\n";
+(*        print_string "Total: "; print_int (List.length gt); print_string "\nValides: "; print_int (List.length valid_trees); print_string "\n";*)
         let good = List.filter (fun (g,t) -> is_symbol_accessible s g) valid_trees in
         match good with
         | [] -> find_grammar blackbox s g (construct_trees_from_list g (snd (List.split valid_trees)))
@@ -83,12 +83,25 @@ let rec find_grammar blackbox s g trees =
 
 let rec afficherGrammaireTreesCombined e = function
     | [] -> ()
-    | (g,t)::q -> print_string "\n"; afficherGrammaire g; print_tree t; printWords (List.filter (fun p -> List.mem e p) (deriverLongueur 10 g [g.axiome])); afficherGrammaireTreesCombined e q
+    | (g,t)::q -> print_string "\n"; afficherGrammaire g; print_tree t; printWords (List.filter (fun p -> List.mem e p) (deriverLongueur 10 g [g.axiome])); afficherGrammaireTreesCombined  e q
+
+let rec getInjectionCombined e = function
+    | [] -> []
+    | (g,t)::q -> (List.filter (fun p -> List.mem e p) (deriverLongueur 20 g [g.axiome])) @ (getInjectionCombined e q)
+
+let min_list a b = if List.length a < List.length b then a else b
+
+let getInjection e gt = 
+    let all = getInjectionCombined e gt in match all with
+    | [] -> []
+    | t::q -> List.fold_left min_list t q
 
 let afficherGrammaireTrees e g t =
     afficherGrammaireTreesCombined e (List.combine g t)
 
 let get_all_tokens grammaire = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter isTerminal r.partiedroite) grammaire.regles))
 
-let find_injection_tokens blackbox grammaire =
-    List.filter (fun p -> blackbox [p]) (get_all_tokens grammaire)
+let get_injection_tokens blackbox grammaire =
+    List.filter (fun p -> blackbox [[p]]) (get_all_tokens grammaire)
+
+let get_injection_leaves blackbox grammaire = List.map (fun e -> Leaf(e)) (get_injection_tokens blackbox grammaire)
