@@ -26,8 +26,9 @@ let ()=
                     print_string "Pas de token d'injection !\n"
                 else
                     print_string "Injection token:\n";
-                    ignore (List.map (fun t -> match t with Leaf(e) -> print_string ("  "^(element2string e)^"\n") | _ -> failwith "error") injectionToken);
-                    let gt = find_grammar blackbox interest grammaire injectionToken in
-                    print_string ("Injection:\n  "^(partie2string (getInjection interest gt))^"\n")
+                    ignore (List.map (fun t -> print_string ("  "^(element2string (tree_root_element t))^"\n")) injectionToken);
+                    let g = search blackbox interest grammaire [] injectionToken in match g with
+                    | None -> print_string "Pas de grammaire trouvée"
+                    | Some(g2) -> print_string ("Injection:\n  "^(partie2string (getInjection interest g2))^"\n")
 
     else print_string ("Usage : "^Sys.argv.(0)^" <fichierGrammaire> <axiome> <prefixe> <suffixe> <objectif>\n")
