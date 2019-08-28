@@ -118,6 +118,8 @@ let comparaisonPoids un deux =
 let countNT regle = let {partiegauche=g;partiedroite=d} = regle in
 		   let poids = List.fold_left (+) 0 (List.map (fun x->match x with | Terminal(_) -> 0 | Nonterminal(_) -> 1) d) in (poids,regle)
 
+(* utilité ? *)
+
 let trierRegles regles = let weightedList = List.map countNT regles in
 			 let triee = List.sort comparaisonPoids weightedList in
 			 List.map (fun x -> let (_,r) = x in r) triee
@@ -190,5 +192,4 @@ in loop grammaire.regles grammaire.axiome (calculerEpsilon grammaire.regles)
 
 (** Algorithme de nettoyage général**)
 let nettoyage grammaire =
-	let nouvellegrammaire = nettoyerGrammaireReglesInaccessibles (nettoyerGrammaireSymbolesInutiles (nettoyerGrammaireReglesInutiles (supprimerEpsilon grammaire))) in
-	trierGrammaire nouvellegrammaire
+	trierGrammaire (nettoyerGrammaireReglesInaccessibles (nettoyerGrammaireSymbolesInutiles (nettoyerGrammaireReglesInutiles (supprimerEpsilon grammaire))))
