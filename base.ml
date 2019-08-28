@@ -134,7 +134,7 @@ let rec deriverLongueur longueur grammaire motintermediaire =
 let isInLanguageListe grammaire parties =
     let len = List.fold_left max 0 (List.map List.length parties) in
     let words = deriverLongueur len grammaire [grammaire.axiome] in
-    List.length (List.filter (fun p -> not (List.mem p words)) parties) = 0
+    List.for_all (fun p -> List.mem p words) parties
 
 let isInLanguage grammaire partie = (* print_string ((partie2string partie)^"\n");*) List.mem partie (deriverLongueur (List.length partie) grammaire [grammaire.axiome])
 

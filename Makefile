@@ -1,7 +1,7 @@
 all: clean main
 
 main:base.cmo parser.cmo nettoyage.cmo quotient.cmo reconstruct.cmo
-	ocamlc base.cmo str.cma parser.cmo nettoyage.cmo quotient.cmo reconstruct.cmo main.ml -o fuzzer
+	ocamlc base.cmo str.cma parser.cmo nettoyage.cmo quotient.cmo reconstruct.cmo main.ml -g -o fuzzer
 
 parser.cmo:base.cmo
 	ocamlc base.cmo str.cma parser.ml -c
