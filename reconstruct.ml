@@ -66,12 +66,14 @@ let check_grammar_validity blackbox grammaire (g,t) =
     let out = blackbox injections in
     (*print_bool out;*) out
 
+(* TODO: recherche DFS *)
+
 let rec find_grammar blackbox s g trees =
     let gt = List.combine (List.map (get_grammar_from_tree g) trees) trees in
     let valid_trees = List.filter (check_grammar_validity blackbox g) gt in
     if (List.length valid_trees) = 0 then []
     else begin
-(*        print_string "Total: "; print_int (List.length gt); print_string "\nValides: "; print_int (List.length valid_trees); print_string "\n";*)
+        print_string "Total: "; print_int (List.length gt); print_string "\nValides: "; print_int (List.length valid_trees); print_string "\n";  flush stdout;
         let good = List.filter (fun (g,t) -> is_symbol_accessible s g) valid_trees in
         match good with
         | [] -> find_grammar blackbox s g (construct_trees_from_list g (snd (List.split valid_trees)))
