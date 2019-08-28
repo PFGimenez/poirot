@@ -14,15 +14,15 @@ let etiquette nom numero = nom ^ "." ^ (int2string numero)
    => renvoie (nouvellesrègles,nouvelaxiome) *)
 let quotientGaucheRegle numero terminal axiome = function
 
-    (* A -> t alpha avec t terminal *) | {partiegauche = [Nonterminal(a)];partiedroite=Terminal(t)::alpha } when Terminal(t)=terminal -> (* print_string ("t alpha "^(partie2string (Terminal(t)::alpha))^"\n"); *)
+    (* A -> t alpha avec t terminal *) | {partiegauche = [Nonterminal(a)];partiedroite=t::alpha } when t=terminal && isTerminal t -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
 	([ [Nonterminal(etiquette a numero)]-->alpha ;
-	   [Nonterminal(a)]-->(Terminal(t)::alpha) ],
+	   [Nonterminal(a)]-->(t::alpha) ],
 	if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
-    (* A -> t alpha avec t non-terminal *) | {partiegauche = [Nonterminal(a)];partiedroite=Nonterminal(t)::alpha } when Nonterminal(t)=terminal ->  (* print_string ("nt alpha "^(partie2string (Nonterminal(t)::alpha))^"\n"); *)
+    (* A -> t alpha avec t non-terminal *) | {partiegauche = [Nonterminal(a)];partiedroite=t::alpha } when t=terminal ->  (* print_string ("nt alpha "^(partie2string (t::alpha))^"\n"); *)
 	([ [Nonterminal(etiquette a numero)]-->alpha ;
-	   [Nonterminal(etiquette a numero)]-->(Nonterminal(etiquette t numero)::alpha) ;
-	   [Nonterminal(a)]-->(Nonterminal(t)::alpha) ],
+	   [Nonterminal(etiquette a numero)]-->(Nonterminal(etiquette (element2string t) numero)::alpha) ;
+	   [Nonterminal(a)]-->(t::alpha) ],
 	if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
 

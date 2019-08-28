@@ -25,13 +25,16 @@ type requete = | Mot of string
 
 (* Conversion d'un élément en chaîne de caractères *)
 let element2string = function
-		| Terminal(x) -> x^" "
-		| Nonterminal(x) -> x^" "
+		| Terminal(x) -> x
+		| Nonterminal(x) -> x
 
 let element2string2 = function
 		| Terminal(x) -> "(T) "^x^" "
 		| Nonterminal(x) -> "(NT) "^x^" "
 
+let element2string3 = function
+		| Terminal(x) -> x^" "
+		| Nonterminal(x) -> x^" "
 
 let isTerminal = function
     | Terminal(x) -> true
@@ -40,7 +43,7 @@ let isTerminal = function
 (* Conversion d'une partie en chaîne de caractères *)
 let partie2string partie = match partie with
     | [] -> "(vide)"
-    | _ -> List.fold_left (^) "" (List.map element2string partie)
+    | _ -> List.fold_left (^) "" (List.map element2string3 partie)
 
 
 (* Conversion d'une règle en chaîne de caractère *)

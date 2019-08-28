@@ -72,3 +72,6 @@ let rec strings2requetes acc = function
 let requetesDepuisFichier fichier = 
 	let reglesString = lireFichier fichier in
 	(strings2requetes [] reglesString)
+
+
+let string2partie s = token2partie [] (string2tokens s)

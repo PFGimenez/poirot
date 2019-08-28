@@ -73,7 +73,6 @@ let rec symbolesUtiles = function
 	| [] -> []
 	| x::rest -> (extrairePartieGauche x) @ (symbolesUtiles rest)
 
-
 let rec algoUtile regles r s =
 	let newsymboles = supprimerDoublons (List.append (symbolesUtiles r) s) in
 	(*Printf.printf "%s\n" (partie2string newsymboles); DEBUG *)

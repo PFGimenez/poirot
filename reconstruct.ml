@@ -1,9 +1,6 @@
 open Base
 open Quotient
 
-(* TODO: dériver une phrase qui contienne un symbole (terminal ou non) de notre choix *)
-
-(* let blackbox prefix suffix grammaire injection = isInLanguage grammaire (prefix @ injection @ suffix) *)
 let blackbox prefix suffix grammaire injections = isInLanguageListe grammaire (List.map (fun p -> prefix @ p @ suffix) injections)
 
 type arbre_deriv = Leaf of element | Node of element * partie * arbre_deriv * partie
