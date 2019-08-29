@@ -142,7 +142,9 @@ let deriverLongueurPrint longueur grammaire = ignore (List.map (fun r -> print_s
 
 let min_list a b = if List.length a < List.length b then a else b
 
-let min_rule a b = if List.length a.partiedroite < List.length b.partiedroite then a else b
+let lengthNonTerminal r = List.length (List.filter (fun s -> not (isTerminal s)) r.partiedroite)
+
+let min_rule a b = if lengthNonTerminal a < lengthNonTerminal b then a else b
 
 let get_shortest_rule = function
     | [] -> failwith "No rules"
@@ -156,11 +158,11 @@ let rec find_path_symbol grammaire visited = function
 
 let rec derive_with_path grammaire path = function
     | w when estMot w -> w
-    | w -> let rules = reglesPossibles w grammaire.regles in
+    | w -> (* print_string ((partie2string w)^"\n"); *) let rules = reglesPossibles w grammaire.regles in
         if List.length path = 0 || not (List.mem (List.hd path) rules) then
-            derive_with_path grammaire path (derivationGauche w (get_shortest_rule rules))
+            (derive_with_path [@tailcall]) grammaire path (derivationGauche w (get_shortest_rule rules))
         else
-            derive_with_path grammaire (List.tl path) (derivationGauche w (List.hd path))
+            (derive_with_path [@tailcall]) grammaire (List.tl path) (derivationGauche w (List.hd path))
 
 let derive_word_with_symbol grammaire s = derive_with_path grammaire (List.rev (find_path_symbol grammaire [] s)) [grammaire.axiome]
 

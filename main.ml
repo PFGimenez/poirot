@@ -2,6 +2,13 @@ open Base
 open Blind
 open Parser
 
+let a()=
+    let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
+    let path = List.rev (find_path_symbol grammaire [] (Terminal("homme"))) in
+    ignore (List.map (fun r -> print_string ((regle2string r)^"\n")) path); flush stdout;
+    let w = derive_with_path grammaire path [grammaire.axiome] in
+    print_string (partie2string w)
+
 let ()=
 	if Array.length Sys.argv = 6 then
         let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2)
@@ -15,8 +22,8 @@ let ()=
         else
             let interest = List.hd intepart in
 
-            if not (isTerminal interest) || not (is_symbol_accessible grammaire interest) then
-                print_string "Objectif inconnu ou non-terminal !\n"
+            if not (is_symbol_accessible grammaire interest) then
+                print_string "Objectif inconnu !\n"
             else
                 let blackbox = blackbox prefix suffix grammaire in
                 let injectionToken = get_injection_leaves blackbox grammaire in
