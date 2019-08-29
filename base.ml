@@ -150,21 +150,21 @@ let get_shortest_rule = function
     | [] -> failwith "No rules"
     | t::q -> List.fold_left min_rule t q
 
-let rec find_path_symbol grammaire visited = function
-    | obj when obj=grammaire.axiome -> []
-    | obj -> let rules = List.filter (fun r -> List.mem obj r.partiedroite && not (List.mem r visited)) grammaire.regles in
-           let r = get_shortest_rule rules in
-           r::(find_path_symbol grammaire (r::visited) (List.hd r.partiegauche))
+let rec find_path_symbol grammaire = function
+    | [] -> failwith "No path"
+    | (obj,path)::_ when obj=grammaire.axiome -> path
+    | (obj,path)::q -> let rules = List.filter (fun r -> List.mem obj r.partiedroite) grammaire.regles in
+        (find_path_symbol [@tailcall]) grammaire (q@(List.map (fun r -> (List.hd r.partiegauche, r::path)) rules))
 
 let rec derive_with_path grammaire path = function
-    | w when estMot w -> w
+    | w when estMot w -> assert (List.length path = 0); w
     | w -> (* print_string ((partie2string w)^"\n"); *) let rules = reglesPossibles w grammaire.regles in
         if List.length path = 0 || not (List.mem (List.hd path) rules) then
             (derive_with_path [@tailcall]) grammaire path (derivationGauche w (get_shortest_rule rules))
         else
             (derive_with_path [@tailcall]) grammaire (List.tl path) (derivationGauche w (List.hd path))
 
-let derive_word_with_symbol grammaire s = derive_with_path grammaire (List.rev (find_path_symbol grammaire [] s)) [grammaire.axiome]
+let derive_word_with_symbol grammaire s = derive_with_path grammaire (find_path_symbol grammaire [s,[]]) [grammaire.axiome]
 
 let printWords w = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) w)
 

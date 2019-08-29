@@ -4,7 +4,7 @@ open Parser
 
 let a()=
     let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
-    let path = List.rev (find_path_symbol grammaire [] (Terminal("homme"))) in
+    let path = find_path_symbol grammaire [Terminal("homme"),[]] in
     ignore (List.map (fun r -> print_string ((regle2string r)^"\n")) path); flush stdout;
     let w = derive_with_path grammaire path [grammaire.axiome] in
     print_string (partie2string w)
@@ -18,7 +18,11 @@ let ()=
         print_string "Grammaire lue\n";
 
         if List.length intepart != 1 then
-            print_string "Un unique objectif est nécessaire\n"
+            if List.length intepart = 0 then begin
+                print_string "Au moins un objectif nécessaire\n"
+            end else begin
+                print_string "Pas plus d'un objectif !\n"
+            end
         else
             let interest = List.hd intepart in
 
