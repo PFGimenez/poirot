@@ -62,7 +62,7 @@ let rec quotient fquotientregle acc iteration terminal axiome = function
 			| Some(a) -> a
 		     in
 		     let accregles = List.append newregles oldregles in
-		     quotient fquotientregle (accregles,accaxiome) iteration terminal axiome rest
+		     (quotient [@tailcall]) fquotientregle (accregles,accaxiome) iteration terminal axiome rest
 
 (* Quotient à droite pour plusieurs règles par un terminal "terminal" *)
 let quotient_and_nettoyage quotientregle iteration terminal grammaire =
@@ -83,4 +83,4 @@ let rec genererNouvelleGrammaireAveugle quotient iteration grammaire = function
 
 let genererGrammaireInjectionAveugle prefixe suffixe grammaire =
     let g=genererNouvelleGrammaireAveugle quotientGaucheRegle  1 (nettoyage grammaire) prefixe in
-    (genererNouvelleGrammaireAveugle [@tailcall]) quotientDroiteRegle 100 g (List.rev suffixe)
+    genererNouvelleGrammaireAveugle quotientDroiteRegle 100 g (List.rev suffixe)

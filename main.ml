@@ -15,7 +15,7 @@ let ()=
         else
             let interest = List.hd intepart in
 
-            if not (isTerminal interest) || not (is_symbol_accessible interest grammaire) then
+            if not (isTerminal interest) || not (is_symbol_accessible grammaire interest) then
                 print_string "Objectif inconnu ou non-terminal !\n"
             else
                 let blackbox = blackbox prefix suffix grammaire in
@@ -27,6 +27,6 @@ let ()=
                     ignore (List.map (fun (p,e,s) -> print_string ("  "^(element2string e)^"\n")) injectionToken);
                     let g = search blackbox interest grammaire [] injectionToken in match g with
                     | None -> print_string "Pas de grammaire trouvée\n"
-                    | Some(g2) -> print_string ("Injection:\n  "^(partie2string (getInjection interest g2))^"\n")
+                    | Some(g2) -> print_string ("Injection:\n  "^(partie2string (derive_word_with_symbol g2 interest))^"\n")
 
     else print_string ("Usage : "^Sys.argv.(0)^" <fichierGrammaire> <axiome> <prefixe> <suffixe> <objectif>\n")

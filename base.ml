@@ -140,6 +140,30 @@ let isInLanguage grammaire partie = (* print_string ((partie2string partie)^"\n"
 
 let deriverLongueurPrint longueur grammaire = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n") (*; print_bool (isInLanguage grammaire r)*)) (deriverLongueur longueur grammaire [grammaire.axiome]))
 
+let min_list a b = if List.length a < List.length b then a else b
+
+let min_rule a b = if List.length a.partiedroite < List.length b.partiedroite then a else b
+
+let get_shortest_rule = function
+    | [] -> failwith "No rules"
+    | t::q -> List.fold_left min_rule t q
+
+let rec find_path_symbol grammaire visited = function
+    | obj when obj=grammaire.axiome -> []
+    | obj -> let rules = List.filter (fun r -> List.mem obj r.partiedroite && not (List.mem r visited)) grammaire.regles in
+           let r = get_shortest_rule rules in
+           r::(find_path_symbol grammaire (r::visited) (List.hd r.partiegauche))
+
+let rec derive_with_path grammaire path = function
+    | w when estMot w -> w
+    | w -> let rules = reglesPossibles w grammaire.regles in
+        if List.length path = 0 || not (List.mem (List.hd path) rules) then
+            derive_with_path grammaire path (derivationGauche w (get_shortest_rule rules))
+        else
+            derive_with_path grammaire (List.tl path) (derivationGauche w (List.hd path))
+
+let derive_word_with_symbol grammaire s = derive_with_path grammaire (List.rev (find_path_symbol grammaire [] s)) [grammaire.axiome]
+
 let printWords w = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) w)
 
 (** Fonctions d'affichage **)
