@@ -6,7 +6,7 @@ let a()=
     let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
     let path = find_path_symbol grammaire [Terminal("homme"),[]] in
     ignore (List.map (fun r -> print_string ((regle2string r)^"\n")) path); flush stdout;
-    let w = derive_with_path grammaire path [grammaire.axiome] in
+    let w = derive_with_path grammaire [[grammaire.axiome],path] in
     print_string (partie2string w)
 
 let ()=

@@ -156,15 +156,16 @@ let rec find_path_symbol grammaire = function
     | (obj,path)::q -> let rules = List.filter (fun r -> List.mem obj r.partiedroite) grammaire.regles in
         (find_path_symbol [@tailcall]) grammaire (q@(List.map (fun r -> (List.hd r.partiegauche, r::path)) rules))
 
-let rec derive_with_path grammaire path = function
-    | w when estMot w -> assert (List.length path = 0); w
-    | w -> (* print_string ((partie2string w)^"\n"); *) let rules = reglesPossibles w grammaire.regles in
+let rec derive_with_path grammaire = function
+    | [] -> failwith "No derivation with path"
+    | (w, path)::q when estMot w -> assert (List.length path = 0); w
+    | (w, path)::q -> let rules = reglesPossibles w grammaire.regles in
         if List.length path = 0 || not (List.mem (List.hd path) rules) then
-            (derive_with_path [@tailcall]) grammaire path (derivationGauche w (get_shortest_rule rules))
+            (derive_with_path [@tailcall]) grammaire (q@(List.map (fun r -> (derivationGauche w r, path)) rules))
         else
-            (derive_with_path [@tailcall]) grammaire (List.tl path) (derivationGauche w (List.hd path))
+            (derive_with_path [@tailcall]) grammaire (q@[derivationGauche w (List.hd path), List.tl path])
 
-let derive_word_with_symbol grammaire s = derive_with_path grammaire (find_path_symbol grammaire [s,[]]) [grammaire.axiome]
+let derive_word_with_symbol grammaire s = derive_with_path grammaire [[grammaire.axiome],find_path_symbol grammaire [s,[]]]
 
 let printWords w = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) w)
 
