@@ -13,6 +13,27 @@ let get_grammar_from_tree grammaire (p,e,s) = genererGrammaireInjectionAveugle p
 
 let trouve_regles grammaire elem = List.filter (fun r -> List.mem elem r.partiedroite) grammaire.regles
 
+let rec is_accessible_from_axiom grammaire s reachable =
+    if List.mem s reachable then true
+    else
+        let rules = List.filter (fun r -> List.mem (List.hd r.partiegauche) reachable) grammaire.regles in
+        let new_reachable = List.sort_uniq compare (List.flatten (List.map (fun r -> r.partiedroite) rules)) in
+            if (List.length reachable) = (List.length new_reachable) then false
+            else (is_accessible_from_axiom grammaire [@tailcall]) s new_reachable
+
+let symboles_parents grammaire axiome = List.sort_uniq compare (List.map (fun r -> List.hd r.partiegauche) (List.filter (fun r -> List.mem axiome r.partiedroite) grammaire.regles))
+
+let trim = function
+    | Terminal(s) -> Terminal(s)
+    | Nonterminal(s) -> (*print_string s; flush stdout;*) let index = String.index_opt s '.' in match index with
+        | None -> Nonterminal(s)
+        | Some(i) -> Nonterminal(String.sub s 0 i)
+
+let rec distance_to_goal grammaire goal = function
+    | [] -> failwith "Can't reach at all"
+    | (s,nb)::q when is_accessible_from_axiom grammaire goal [s] -> nb 
+    | (s,nb)::q -> (distance_to_goal [@tailcall]) grammaire goal (q@(List.map (fun e -> (e,nb+1)) (symboles_parents grammaire s)))
+
 let rec is_accessible s = function
     | [] -> false
     | r::q -> List.mem s r.partiedroite || List.mem s r.partiegauche || (is_accessible [@tailcall]) s q
@@ -37,26 +58,34 @@ let fuzzer g =
 
 let check_grammar_validity blackbox g = blackbox (fuzzer g)
 
-(* Recherche BFS. Version améliorée : A* avec heuristique (distance à l'objectif) *)
+(* A* avec heuristique : distance à l'objectif *)
 
-let rec search blackbox interest grammaire visited = function
+let rec insert_in_list distance tree = function
+    | [] -> [(distance,tree)]
+    | (d,t)::q when d > distance -> (distance,tree)::((d,t)::q)
+    | t::q -> t::(insert_in_list distance tree q)
+
+let rec insert_all_in_list grammaire interest l = function
+    | [] -> l
+    | (a,b,c)::q -> insert_all_in_list grammaire interest (insert_in_list (distance_to_goal grammaire interest [trim b,0]) (a,b,c) l) q
+
+let rec search blackbox interest grammaire step visited = function
     | [] -> None
-    | t::q -> print_int (List.length q); print_string " search \n"; print_tree t; flush stdout; let g = get_grammar_from_tree grammaire t in
+    | (_,t)::q -> print_string ("Search "^(string_of_int step)^"\n"); print_tree t; flush stdout; let g = get_grammar_from_tree grammaire t in
         (*print_string "Grammaire contruite\n"; flush stdout;*)
+        (*print_string ("Accessible from "^(element2string g.axiome)^": "); print_bool (is_accessible_from_axiom grammaire interest [g.axiome]); flush stdout;*)
+        (*print_string ("Distance: "^(string_of_int (distance_to_goal grammaire interest [(trim g.axiome,0)])));*)
         if (List.mem t visited) || not (check_grammar_validity blackbox g) then begin (* invalid : ignore *)
-            print_string "Nope "; print_bool (List.mem t visited); (search [@tailcall]) blackbox interest grammaire visited q
+            print_string "Nope "; print_bool (List.mem t visited); (search [@tailcall]) blackbox interest grammaire (step+1) visited q
         end else if (*print_string "AA"; flush stdout;*) is_symbol_accessible g interest then begin (* found ! *)
             print_string "Found!\n"; Some(g)
         end else begin (* we explore in this direction *)
             print_string "Explore\n";
-            (search [@tailcall]) blackbox interest grammaire (t::visited) (q@(construct_trees grammaire t))
+            (search [@tailcall]) blackbox interest grammaire (step+1) (t::visited) (insert_all_in_list grammaire interest q (construct_trees grammaire t))
         end
 
-let getInjection e g = 
-    let all = List.filter (fun p -> List.mem e p) (deriver 10 g) in match all with
-    | [] -> []
-    | t::q -> List.fold_left min_list t q
-
+let search_api blackbox interest grammaire init_tokens =
+    search blackbox interest grammaire 0 [] (insert_all_in_list grammaire interest [] init_tokens)
 
 let get_injection_tokens blackbox grammaire = List.filter (fun p -> blackbox [[p]]) (get_all_tokens grammaire)
 

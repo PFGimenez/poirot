@@ -146,10 +146,6 @@ let lengthNonTerminal r = List.length (List.filter (fun s -> not (isTerminal s))
 
 let min_rule a b = if lengthNonTerminal a < lengthNonTerminal b then a else b
 
-let get_shortest_rule = function
-    | [] -> failwith "No rules"
-    | t::q -> List.fold_left min_rule t q
-
 let rec find_path_symbol grammaire = function
     | [] -> failwith "No path"
     | (obj,path)::_ when obj=grammaire.axiome -> path
