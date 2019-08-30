@@ -15,27 +15,27 @@ let etiquette nom numero = nom ^ "." ^ (int2string numero)
 let quotientGaucheRegle numero terminal axiome = function
 
     (* A -> t alpha avec t terminal *)
-    | {partiegauche = [Nonterminal(a)];partiedroite=t::alpha } when t=terminal && isTerminal t
+    | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when t=terminal && isTerminal t
         -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
-            ([ [Nonterminal(etiquette a numero)]-->alpha ;
-                [Nonterminal(a)]-->(t::alpha) ],
+            ([ (Nonterminal(etiquette a numero))-->alpha ;
+                (Nonterminal(a))-->(t::alpha) ],
                 if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
     (* A -> t alpha avec t non-terminal *)
-    | {partiegauche = [Nonterminal(a)];partiedroite=t::alpha } when t=terminal
+    | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when t=terminal
         ->  (* print_string ("nt alpha "^(partie2string (t::alpha))^"\n"); *)
-            ([ [Nonterminal(etiquette a numero)]-->alpha ;
-                [Nonterminal(etiquette a numero)]-->(Nonterminal(etiquette (element2string t) numero)::alpha) ;
-                [Nonterminal(a)]-->(t::alpha) ],
+            ([ (Nonterminal(etiquette a numero))-->alpha ;
+                (Nonterminal(etiquette a numero))-->(Nonterminal(etiquette (element2string t) numero)::alpha) ;
+                (Nonterminal(a))-->(t::alpha) ],
                 if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
 
 
     (* A -> B alpha *)
-    | {partiegauche = [Nonterminal(a)];partiedroite=(Nonterminal(b))::alpha }
+    | {elementgauche = Nonterminal(a);partiedroite=(Nonterminal(b))::alpha }
         -> (* print_string ("b alpha "^(partie2string (Nonterminal(b)::alpha))^"\n"); *)
-            ([[Nonterminal(etiquette a numero)]-->((Nonterminal(etiquette b numero))::alpha) ;
-                [Nonterminal(a)]-->((Nonterminal(b))::alpha)],
+            ([(Nonterminal(etiquette a numero))-->((Nonterminal(etiquette b numero))::alpha) ;
+                (Nonterminal(a))-->((Nonterminal(b))::alpha)],
                 if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
 	(* autre *)	  
@@ -45,7 +45,7 @@ let quotientGaucheRegle numero terminal axiome = function
 
 (* Inverser la partie droite d'une règle *)
 let inverserOrdrePartieDroite = function
-	| {partiegauche=gauche;partiedroite=droite} -> {partiegauche=gauche;partiedroite=List.rev droite}
+	| {elementgauche=gauche;partiedroite=droite} -> {elementgauche=gauche;partiedroite=List.rev droite}
 
 (* Quotient à droite de regle = inversionPartieDroite (quotient à gauche de (inversionPartieDroite regle)) (ouf) *)
 let quotientDroiteRegle numero terminal axiome regle =

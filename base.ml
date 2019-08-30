@@ -12,7 +12,7 @@ type element = 	| Terminal of string
 type partie = element list
 
 (* Une règle est composée d'une partie gauche et d'une partie droite, ces *)
-type regle =  { partiegauche : partie; partiedroite : partie }
+type regle =  { elementgauche : element; partiedroite : partie }
 
 (* Une grammaire est composée d'un élément axiome et d'une liste de règles *)
 type grammaire = {axiome: element; regles : regle list }
@@ -48,7 +48,7 @@ let partie2string partie = match partie with
 
 (* Conversion d'une règle en chaîne de caractère *)
 let regle2string = function
-	| {partiegauche=g;partiedroite=d} -> partie2string g ^ " --> " ^ partie2string d
+	| {elementgauche=g;partiedroite=d} -> element2string g ^ " --> " ^ partie2string d
 
 (* Conversion d'une liste de règles en chaîne de caractère *)
 let rec reglelist2string = function
@@ -60,17 +60,17 @@ let rec reglelist2string = function
 (** Fonctions utilitaire **)
 
 (* L'opérateur --> permet de créer une règle à la volée (facilité syntaxique) à partie de deux parties *)
-let (-->) g d = {partiegauche=g;partiedroite=d}
+let (-->) g d = {elementgauche=g;partiedroite=d}
 
 (* Création d'une grammaire à la volée *)
 let (@@) axiome regles = {axiome=axiome;regles=regles}
 
 (* Dérivation gauche d'un mot intermédiaire "dérivation" par une règle "regle" *)
 let rec derivationGauche derivation regle =
-	let {partiegauche=base;partiedroite=transformation} = regle in
+	let {elementgauche=base;partiedroite=transformation} = regle in
 	match derivation with
 	| [] -> []
-	| Nonterminal(x)::rest when [Nonterminal(x)]=base -> List.append transformation rest
+	| Nonterminal(x)::rest when Nonterminal(x)=base -> List.append transformation rest
 	| x::rest -> x::derivationGauche rest regle
 
 (* Récupération d'une monade option contenant le premier non terminal d'une partie (si il existe !) *)
@@ -87,9 +87,9 @@ let rec reglesPossibles motintermediaire regles =
 	| Some(x) ->
 	match regles with
 	| [] -> []
-	| {partiegauche=gauche;partiedroite=droite}::rest when Some(x) = premierNonTerminal gauche ->
+    | {elementgauche=gauche;partiedroite=droite}::rest when x = gauche ->
 		gauche-->droite::(reglesPossibles motintermediaire rest)
-	| _::rest -> reglesPossibles motintermediaire rest
+    | _::rest -> reglesPossibles motintermediaire rest
 
 (* Prédicat indiquant si le mot intermédiaire en argument est un mot (soit si il ne contient que des terminaux) *)
 let rec estMot = function
@@ -150,7 +150,7 @@ let rec find_path_symbol grammaire = function
     | [] -> failwith "No path"
     | (obj,path)::_ when obj=grammaire.axiome -> path
     | (obj,path)::q -> let rules = List.filter (fun r -> List.mem obj r.partiedroite) grammaire.regles in
-        (find_path_symbol [@tailcall]) grammaire (q@(List.map (fun r -> (List.hd r.partiegauche, r::path)) rules))
+        (find_path_symbol [@tailcall]) grammaire (q@(List.map (fun r -> (r.elementgauche, r::path)) rules))
 
 let rec derive_with_path grammaire = function
     | [] -> failwith "No derivation with path"

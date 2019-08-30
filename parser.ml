@@ -36,7 +36,7 @@ let string2regle input =
 	| _ -> failwith "Regle mal formée" in
 	let listegauche = string2tokens partiegauche in
 	let listedroite = string2tokens partiedroite in
-	(token2partie [] listegauche)-->(token2partie [] listedroite)
+	(List.hd (token2partie [] listegauche))-->(token2partie [] listedroite)
 
 (* transforme une liste de chaînes de caractères en liste de règles *)
 let rec strings2regles acc = function

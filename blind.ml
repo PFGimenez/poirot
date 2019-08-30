@@ -16,12 +16,12 @@ let trouve_regles grammaire elem = List.filter (fun r -> List.mem elem r.partied
 let rec is_accessible_from_axiom grammaire s reachable =
     if List.mem s reachable then true
     else
-        let rules = List.filter (fun r -> List.mem (List.hd r.partiegauche) reachable) grammaire.regles in
+        let rules = List.filter (fun r -> List.mem r.elementgauche reachable) grammaire.regles in
         let new_reachable = List.sort_uniq compare (List.flatten (List.map (fun r -> r.partiedroite) rules)) in
             if (List.length reachable) = (List.length new_reachable) then false
             else (is_accessible_from_axiom grammaire [@tailcall]) s new_reachable
 
-let symboles_parents grammaire axiome = List.sort_uniq compare (List.map (fun r -> List.hd r.partiegauche) (List.filter (fun r -> List.mem axiome r.partiedroite) grammaire.regles))
+let symboles_parents grammaire axiome = List.sort_uniq compare (List.map (fun r -> r.elementgauche) (List.filter (fun r -> List.mem axiome r.partiedroite) grammaire.regles))
 
 let trim = function
     | Terminal(s) -> Terminal(s)
@@ -36,7 +36,7 @@ let rec distance_to_goal grammaire goal = function
 
 let rec is_accessible s = function
     | [] -> false
-    | r::q -> List.mem s r.partiedroite || List.mem s r.partiegauche || (is_accessible [@tailcall]) s q
+    | r::q -> List.mem s r.partiedroite || s = r.elementgauche || (is_accessible [@tailcall]) s q
 
 let is_symbol_accessible g s = is_accessible s g.regles
 
@@ -46,7 +46,7 @@ let rec get_prefix_suffix_partie elem = function
     | t::q -> let p,s=get_prefix_suffix_partie elem q in t::p,s
 
 let construct_trees grammaire (p,e,s) =
-    List.map (fun r -> let p2,s2=get_prefix_suffix_partie e r.partiedroite in (p2@p,List.hd r.partiegauche,s@s2)) (trouve_regles grammaire e)
+    List.map (fun r -> let p2,s2=get_prefix_suffix_partie e r.partiedroite in (p2@p,r.elementgauche,s@s2)) (trouve_regles grammaire e)
 
 let get_all_tokens grammaire = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter isTerminal r.partiedroite) grammaire.regles))
 
