@@ -40,13 +40,13 @@ let rec is_accessible s = function
 
 let is_symbol_accessible g s = is_accessible s g.regles
 
-let rec get_prefix_suffix_partie elem = function
-    | [] -> failwith "Element absent de la règle"
-    | t::q when t=elem -> [],q
-    | t::q -> let p,s=get_prefix_suffix_partie elem q in t::p,s
+let rec get_prefix_suffix_partie elem prefix = function
+    | [] -> []
+    | t::q when t=elem -> (List.rev prefix,q)::(get_prefix_suffix_partie elem (t::prefix) q)
+    | t::q -> get_prefix_suffix_partie elem (t::prefix) q
 
 let construct_trees grammaire (p,e,s) =
-    List.map (fun r -> let p2,s2=get_prefix_suffix_partie e r.partiedroite in (p2@p,r.elementgauche,s@s2)) (trouve_regles grammaire e)
+    List.flatten (List.map (fun r -> let l=get_prefix_suffix_partie e [] r.partiedroite in List.map (fun (p2,s2) -> p2@p,r.elementgauche,s@s2) l) (trouve_regles grammaire e))
 
 let get_all_tokens grammaire = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter isTerminal r.partiedroite) grammaire.regles))
 
@@ -69,19 +69,47 @@ let rec insert_all_in_list grammaire interest l = function
     | [] -> l
     | (a,b,c)::q -> insert_all_in_list grammaire interest (insert_in_list (distance_to_goal grammaire interest [trim b,0]) (a,b,c) l) q
 
+(* TODO: conserver les arbres/grammaires visitées pour les réutiliser *)
+
+let rec is_prefix a l = match a with
+    | [] -> true
+    | t::q -> match l with
+        | [] -> false
+        | t2::q2 when t=t2 -> (is_prefix [@tailcall]) q q2
+        | _ -> false
+
+let is_suffix c c2 = is_prefix (List.rev c) (List.rev c2)
+
+let is_extension (a,b,c) (a2,b2,c2) = b = b2 && (is_prefix a2 a) && (is_suffix c2 c)
+
+let grammar_of_longest_tree (g,(a,b,c)) (g2,(a2,b2,c2)) = if (List.length a + List.length c) > (List.length a2 + List.length c2) then g,(a,b,c) else g2,(a2,b2,c2)
+
+let extend_grammar (g,t) = g
+
 let rec search blackbox interest grammaire step visited = function
     | [] -> None
-    | (_,t)::q -> print_string ("Search "^(string_of_int step)^"\n"); print_tree t; flush stdout; let g = get_grammar_from_tree grammaire t in
-        (*print_string "Grammaire contruite\n"; flush stdout;*)
-        (*print_string ("Accessible from "^(element2string g.axiome)^": "); print_bool (is_accessible_from_axiom grammaire interest [g.axiome]); flush stdout;*)
-        (*print_string ("Distance: "^(string_of_int (distance_to_goal grammaire interest [(trim g.axiome,0)])));*)
-        if (List.mem t visited) || not (check_grammar_validity blackbox g) then begin (* invalid : ignore *)
-            print_string "Nope "; print_bool (List.mem t visited); (search [@tailcall]) blackbox interest grammaire (step+1) visited q
-        end else if (*print_string "AA"; flush stdout;*) is_symbol_accessible g interest then begin (* found ! *)
-            print_string "Found!\n"; Some(g)
-        end else begin (* we explore in this direction *)
-            print_string "Explore\n";
-            (search [@tailcall]) blackbox interest grammaire (step+1) (t::visited) (insert_all_in_list grammaire interest q (construct_trees grammaire t))
+    | (_,t)::q -> print_string ("Search "^(string_of_int step)^"\n"); print_tree t; flush stdout;
+        if (List.exists (fun (_,tree) -> tree=t) visited) then begin
+            print_string "Visited\n"; (search [@tailcall]) blackbox interest grammaire (step+1) visited q
+        end else begin
+(*            let extensions = List.filter (fun (_,tree) -> is_extension t tree) visited in
+            let g = match extensions with
+            | [] -> get_grammar_from_tree grammaire t 
+            | t::q -> let (base_g,base_t) = (List.fold_left grammar_of_longest_tree t q) in print_string "Extension of:\n"; print_tree base_t; extend_grammar (base_g,base_t)
+            in *)
+            let g = get_grammar_from_tree grammaire t in
+            afficherGrammaire g;
+            (*print_string "Grammaire contruite\n"; flush stdout;*)
+            (*print_string ("Accessible from "^(element2string g.axiome)^": "); print_bool (is_accessible_from_axiom grammaire interest [g.axiome]); flush stdout;*)
+            (*print_string ("Distance: "^(string_of_int (distance_to_goal grammaire interest [(trim g.axiome,0)])));*)
+            if not (check_grammar_validity blackbox g) then begin (* invalid : ignore *)
+                print_string "Invalid\n"; (search [@tailcall]) blackbox interest grammaire (step+1) visited q
+            end else if (*print_string "AA"; flush stdout;*) is_symbol_accessible g interest then begin (* found ! *)
+                print_string "Found!\n"; Some(g)
+            end else begin (* we explore in this direction *)
+                print_string "Explore\n";
+                (search [@tailcall]) blackbox interest grammaire (step+1) ((g,t)::visited) (insert_all_in_list grammaire interest q (construct_trees grammaire t))
+            end
         end
 
 let search_api blackbox interest grammaire init_tokens =

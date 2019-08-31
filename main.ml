@@ -5,7 +5,7 @@ open Parser
 let a()=
     let grammaire = Parser.grammaireDepuisFichier Sys.argv.(1) Sys.argv.(2) in
     let path = find_path_symbol grammaire [Terminal("homme"),[]] in
-    ignore (List.map (fun r -> print_string ((regle2string r)^"\n")) path); flush stdout;
+    List.iter (fun r -> print_string ((regle2string r)^"\n")) path; flush stdout;
     let w = derive_with_path grammaire [[grammaire.axiome],path] in
     print_string (partie2string w)
 
@@ -35,7 +35,7 @@ let ()=
                     print_string "Pas de token d'injection !\n"
                 else
                     print_string "Injection token:\n";
-                    ignore (List.map (fun (p,e,s) -> print_string ("  "^(element2string e)^"\n")) injectionToken);
+                    List.iter (fun (p,e,s) -> print_string ("  "^(element2string e)^"\n")) injectionToken;
                     let g = search_api blackbox interest grammaire injectionToken in match g with
                     | None -> print_string "Pas de grammaire trouvée\n"
                     | Some(g2) -> print_string ("Injection:\n  "^(partie2string (derive_word_with_symbol g2 interest))^"\n")

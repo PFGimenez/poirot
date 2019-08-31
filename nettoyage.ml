@@ -53,9 +53,6 @@ let regleDirectementUtile = function
 
 let reglesDirectementUtiles regles = List.filter regleDirectementUtile regles
 
-let extrairePartieGauche = function
-	| {elementgauche=g;partiedroite=_} -> g
-
 let rec appartient x = function
 	| [] -> false
 	| e::rest when e=x -> true

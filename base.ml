@@ -112,7 +112,7 @@ let rec deriverTout profondeur grammaire motintermediaire =
 (* DeriverTout depuis l'axiome de la grammaire fournie *)
 let deriver profondeur grammaire = deriverTout profondeur grammaire [grammaire.axiome]
 
-let deriverPrint profondeur grammaire = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) (deriver profondeur grammaire))
+let deriverPrint profondeur grammaire = List.iter (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) (deriver profondeur grammaire)
 
 (** Vérification de la dérivabilité d'une phrase à partir d'une grammaire **)
 
@@ -138,7 +138,7 @@ let isInLanguageListe grammaire parties =
 
 let isInLanguage grammaire partie = (* print_string ((partie2string partie)^"\n");*) List.mem partie (deriverLongueur (List.length partie) grammaire [grammaire.axiome])
 
-let deriverLongueurPrint longueur grammaire = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n") (*; print_bool (isInLanguage grammaire r)*)) (deriverLongueur longueur grammaire [grammaire.axiome]))
+let deriverLongueurPrint longueur grammaire = List.iter (fun r -> print_string ("Mot: "^(partie2string r)^"\n") (*; print_bool (isInLanguage grammaire r)*)) (deriverLongueur longueur grammaire [grammaire.axiome])
 
 let min_list a b = if List.length a < List.length b then a else b
 
@@ -163,7 +163,7 @@ let rec derive_with_path grammaire = function
 
 let derive_word_with_symbol grammaire s = derive_with_path grammaire [[grammaire.axiome],find_path_symbol grammaire [s,[]]]
 
-let printWords w = ignore (List.map (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) w)
+let printWords w = List.iter (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) w
 
 (** Fonctions d'affichage **)
 
