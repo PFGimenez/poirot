@@ -12,10 +12,10 @@ let etiquette nom numero = nom ^ "." ^ (int2string numero)
 
 (* Quotient à Gauche d'une règle pour l'itération "numéro" par le terminal "terminal"
    => renvoie (nouvellesrègles,nouvelaxiome) *)
-let quotientGaucheRegle numero terminal axiome = function
+let left_quotient_of_rule numero terminal axiome = function
 
     (* A -> t alpha avec t terminal *)
-    | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when t=terminal && isTerminal t
+    | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when t=terminal && is_terminal t
         -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(a))-->(t::alpha) ],
@@ -44,13 +44,13 @@ let quotientGaucheRegle numero terminal axiome = function
             ([autreregle],None)
 
 (* Inverser la partie droite d'une règle *)
-let inverserOrdrePartieDroite = function
+let reverse_right_part = function
 	| {elementgauche=gauche;partiedroite=droite} -> {elementgauche=gauche;partiedroite=List.rev droite}
 
 (* Quotient à droite de regle = inversionPartieDroite (quotient à gauche de (inversionPartieDroite regle)) (ouf) *)
-let quotientDroiteRegle numero terminal axiome regle =
-	let (r,a) = (quotientGaucheRegle numero terminal axiome (inverserOrdrePartieDroite regle)) in
-	(List.map inverserOrdrePartieDroite r,a)
+let right_quotient_of_rule numero terminal axiome regle =
+	let (r,a) = (left_quotient_of_rule numero terminal axiome (reverse_right_part regle)) in
+	(List.map reverse_right_part r,a)
 
 (* Quotient générique pour plusieurs règles où fquotientregle est la fonction quotientRegle à appliquer *)
 let rec quotient fquotientregle acc iteration terminal axiome = function
@@ -77,10 +77,10 @@ WARNING : les grammaires générées sont à nettoyer, car elles impliquent éno
 	-> suppression des symboles inutiles
 *)
 
-let rec genererNouvelleGrammaireAveugle quotient iteration grammaire = function
+let rec generate_blind_grammar quotient iteration grammaire = function
 	| [] -> grammaire
-    | x::rest -> (* print_string ("quotient par "^element2string2(x)^"\n");*) let g=(quotient_and_nettoyage quotient iteration x grammaire) in (* afficherGrammaire g;*) (genererNouvelleGrammaireAveugle [@tailcall]) quotient (iteration+1) g rest
+    | x::rest -> (* print_string ("quotient par "^element2string2(x)^"\n");*) let g=(quotient_and_nettoyage quotient iteration x grammaire) in (* print_grammar g;*) (generate_blind_grammar [@tailcall]) quotient (iteration+1) g rest
 
-let genererGrammaireInjectionAveugle prefixe suffixe grammaire =
-    let g=genererNouvelleGrammaireAveugle quotientGaucheRegle  1 (nettoyage grammaire) prefixe in
-    genererNouvelleGrammaireAveugle quotientDroiteRegle 100 g (List.rev suffixe)
+let generate_blind_grammar_both_sides prefixe suffixe grammaire =
+    let g=generate_blind_grammar left_quotient_of_rule  1 (nettoyage grammaire) prefixe in
+    generate_blind_grammar right_quotient_of_rule 100 g (List.rev suffixe)

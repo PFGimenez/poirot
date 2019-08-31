@@ -1,13 +1,13 @@
 open Base
 open Quotient
 
-let blackbox prefix suffix grammaire injections = isInLanguageListe grammaire (List.map (fun p -> prefix @ p @ suffix) injections)
+let blackbox prefix suffix grammaire injections = is_list_in_language grammaire (List.map (fun p -> prefix @ p @ suffix) injections)
 
 type tree_state = partie * element * partie
 
 let print_tree (a,b,c) = print_string ((partie2string a)^" ["^(element2string b)^"] "^(partie2string c)^"\n")
 
-let get_grammar_from_tree grammaire (p,e,s) = genererGrammaireInjectionAveugle p s (e@@grammaire.regles)
+let get_grammar_from_tree grammaire (p,e,s) = generate_blind_grammar_both_sides p s (e@@grammaire.regles)
 
 (* renvoie les règles dont la partie droite contient l'élément cherché *)
 
@@ -21,7 +21,7 @@ let rec is_accessible_from_axiom grammaire s reachable =
             if (List.length reachable) = (List.length new_reachable) then false
             else (is_accessible_from_axiom grammaire [@tailcall]) s new_reachable
 
-let symboles_parents grammaire axiome = List.sort_uniq compare (List.map (fun r -> r.elementgauche) (List.filter (fun r -> List.mem axiome r.partiedroite) grammaire.regles))
+let symbols_from_parents grammaire axiome = List.sort_uniq compare (List.map (fun r -> r.elementgauche) (List.filter (fun r -> List.mem axiome r.partiedroite) grammaire.regles))
 
 let trim = function
     | Terminal(s) -> Terminal(s)
@@ -32,7 +32,7 @@ let trim = function
 let rec distance_to_goal grammaire goal = function
     | [] -> failwith "Can't reach at all"
     | (s,nb)::q when is_accessible_from_axiom grammaire goal [s] -> nb 
-    | (s,nb)::q -> (distance_to_goal [@tailcall]) grammaire goal (q@(List.map (fun e -> (e,nb+1)) (symboles_parents grammaire s)))
+    | (s,nb)::q -> (distance_to_goal [@tailcall]) grammaire goal (q@(List.map (fun e -> (e,nb+1)) (symbols_from_parents grammaire s)))
 
 let rec is_accessible s = function
     | [] -> false
@@ -46,11 +46,15 @@ let rec get_prefix_suffix_partie elem prefix = function
     | t::q -> get_prefix_suffix_partie elem (t::prefix) q
 
 let construct_trees grammaire (p,e,s) =
+(*    List.to_seq (trouve_regles grammaire e)
+    |> Seq.map (fun r -> get_prefix_suffix_partie e [] r.partiedroite)
+    |> Seq.map (fun (p2,s2) -> p2@p,r.elementgauche,s@s2)
+    |> List.of_seq |> List.flatten *)
     List.flatten (List.map (fun r -> let l=get_prefix_suffix_partie e [] r.partiedroite in List.map (fun (p2,s2) -> p2@p,r.elementgauche,s@s2) l) (trouve_regles grammaire e))
 
-let get_all_tokens grammaire = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter isTerminal r.partiedroite) grammaire.regles))
+let get_all_tokens grammaire = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.partiedroite) grammaire.regles))
 
-(* let fuzzer g = deriverLongueur 10 g [g.axiome] *)
+(* let fuzzer g = derive_within_length 10 g [g.axiome] *)
 
 let fuzzer g =
     let term = List.filter (is_symbol_accessible g) (get_all_tokens g) in
@@ -88,7 +92,7 @@ let extend_grammar (g,t) = g
 
 let rec search blackbox interest grammaire step visited = function
     | [] -> None
-    | (_,t)::q -> print_string ("Search "^(string_of_int step)^"\n"); print_tree t; flush stdout;
+    | (_,t)::q -> print_string ("Search "^(string_of_int step)^" (queue: "^(string_of_int ((List.length q) + 1))^")\n"); print_tree t; flush stdout;
         if (List.exists (fun (_,tree) -> tree=t) visited) then begin
             print_string "Visited\n"; (search [@tailcall]) blackbox interest grammaire (step+1) visited q
         end else begin
@@ -98,7 +102,7 @@ let rec search blackbox interest grammaire step visited = function
             | t::q -> let (base_g,base_t) = (List.fold_left grammar_of_longest_tree t q) in print_string "Extension of:\n"; print_tree base_t; extend_grammar (base_g,base_t)
             in *)
             let g = get_grammar_from_tree grammaire t in
-            afficherGrammaire g;
+            print_grammar g;
             (*print_string "Grammaire contruite\n"; flush stdout;*)
             (*print_string ("Accessible from "^(element2string g.axiome)^": "); print_bool (is_accessible_from_axiom grammaire interest [g.axiome]); flush stdout;*)
             (*print_string ("Distance: "^(string_of_int (distance_to_goal grammaire interest [(trim g.axiome,0)])));*)

@@ -11,12 +11,12 @@ let split regexp source = Str.split (Str.regexp regexp) source
 
 (** Traitement/Conversion du fichier décrivant la grammaire **)
 (* Renvoie un booléen indiquant si la chaîne de caractère représente un non terminal (si elle commence par une majuscule) *)
-let estNonTerminal word =
-	let estEnMajuscule = function
+let is_string_non_terminal word =
+	let is_uppercase = function
 	| 'A'|'B'|'C'|'D'|'E'|'F'|'G'|'H'|'I'|'J'|'K'|'L'|'M'
 	|'N'|'O'|'P'|'Q'|'R'|'S'|'T'|'U'|'V'|'W'|'X'|'Y'|'Z' -> true
 	| _ -> false in
-	estEnMajuscule (String.get word 0)
+	is_uppercase (String.get word 0)
 
 (* Transforme une chaîne de caractère en liste de tokens *)
 let string2tokens = split " +"
@@ -24,7 +24,7 @@ let string2tokens = split " +"
 (* transforme une liste de token en partie de règle : tail recursive *)
 let rec token2partie acc = function
 	| [] -> List.rev acc
-	| x::rest when estNonTerminal x-> token2partie (Nonterminal(x)::acc) rest
+	| x::rest when is_string_non_terminal x-> token2partie (Nonterminal(x)::acc) rest
 	| x::rest -> token2partie (Terminal(x)::acc) rest
 
 (* transforme une chaîne de caractère en règle *)
@@ -44,7 +44,7 @@ let rec strings2regles acc = function
 	| regle::rest -> strings2regles ((string2regle regle)::acc) rest
 
 (* lis un fichier et renvoie une liste de chaînes de caractères composée des lignes du fichier *)
-let lireFichier filename =
+let read_file filename =
 	if (filename="") then [] else
 	let canal_entree = open_in filename in
 	let rec readfile canal =
@@ -54,24 +54,8 @@ let lireFichier filename =
 	List.rev (readfile canal_entree)
 
 (* extraction d'une grammaire depuis le nom de fichier et l'axiome passés en arguments *)
-let grammaireDepuisFichier fichier axiome =
-	let reglesString = lireFichier fichier in
-	Nonterminal(axiome) @@ (strings2regles [] reglesString)
-
-(** Traitement/Conversion du fichier décrivant les requêtes **)
-let rec token2requete acc = function
-	| [] -> List.rev acc
-	| x::rest when x = "[X]" -> token2requete (Entree::acc) rest
-	| x::rest -> token2requete (Mot(x)::acc) rest
-
-let rec strings2requetes acc = function
-	| [] -> List.rev acc
-	| regle::rest -> strings2requetes ((token2requete [] (string2tokens regle))::acc) rest
-
-
-let requetesDepuisFichier fichier = 
-	let reglesString = lireFichier fichier in
-	(strings2requetes [] reglesString)
-
+let read_grammar_from_file fichier axiome =
+	let string_rules = read_file fichier in
+	Nonterminal(axiome) @@ (strings2regles [] string_rules)
 
 let string2partie s = token2partie [] (string2tokens s)
