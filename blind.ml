@@ -1,5 +1,6 @@
 open Base
 open Quotient
+open Hashtbl
 
 let blackbox prefix suffix grammaire injections = is_list_in_language grammaire (List.map (fun p -> prefix @ p @ suffix) injections)
 
@@ -8,6 +9,10 @@ type tree_state = partie * element * partie
 let print_tree (a,b,c) = print_string ((partie2string a)^" ["^(element2string b)^"] "^(partie2string c)^"\n")
 
 let get_grammar_from_tree grammaire (p,e,s) = generate_blind_grammar_both_sides p s (e@@grammaire.regles)
+
+(* TODO *)
+
+let get_grammar_from_tree2 grammars grammaire (p,e,s) = grammaire
 
 (* renvoie les règles dont la partie droite contient l'élément cherché *)
 
@@ -88,19 +93,12 @@ let is_extension (a,b,c) (a2,b2,c2) = b = b2 && (is_prefix a2 a) && (is_suffix c
 
 let grammar_of_longest_tree (g,(a,b,c)) (g2,(a2,b2,c2)) = if (List.length a + List.length c) > (List.length a2 + List.length c2) then g,(a,b,c) else g2,(a2,b2,c2)
 
-let extend_grammar (g,t) = g
-
 let rec search blackbox interest grammaire step visited = function
     | [] -> None
     | (_,t)::q -> print_string ("Search "^(string_of_int step)^" (queue: "^(string_of_int ((List.length q) + 1))^")\n"); print_tree t; flush stdout;
         if (List.exists (fun (_,tree) -> tree=t) visited) then begin
             print_string "Visited\n"; (search [@tailcall]) blackbox interest grammaire (step+1) visited q
         end else begin
-(*            let extensions = List.filter (fun (_,tree) -> is_extension t tree) visited in
-            let g = match extensions with
-            | [] -> get_grammar_from_tree grammaire t 
-            | t::q -> let (base_g,base_t) = (List.fold_left grammar_of_longest_tree t q) in print_string "Extension of:\n"; print_tree base_t; extend_grammar (base_g,base_t)
-            in *)
             let g = get_grammar_from_tree grammaire t in
             print_grammar g;
             (*print_string "Grammaire contruite\n"; flush stdout;*)
@@ -118,6 +116,33 @@ let rec search blackbox interest grammaire step visited = function
 
 let search_api blackbox interest grammaire init_tokens =
     search blackbox interest grammaire 0 [] (insert_all_in_list grammaire interest [] init_tokens)
+
+
+let rec search2 blackbox interest grammaire step visited grammars = function
+    | [] -> None
+    | (_,t)::q -> print_string ("Search "^(string_of_int step)^" (queue: "^(string_of_int ((List.length q) + 1))^")\n"); print_tree t; flush stdout;
+        if (List.exists (fun (_,tree) -> tree=t) visited) then begin
+            print_string "Visited\n"; (search2 [@tailcall]) blackbox interest grammaire (step+1) visited grammars q
+        end else begin
+            let g = get_grammar_from_tree2 grammars grammaire t in
+            Hashtbl.add grammars t g;
+            print_grammar g;
+            (*print_string "Grammaire contruite\n"; flush stdout;*)
+            (*print_string ("Accessible from "^(element2string g.axiome)^": "); print_bool (is_accessible_from_axiom grammaire interest [g.axiome]); flush stdout;*)
+            (*print_string ("Distance: "^(string_of_int (distance_to_goal grammaire interest [(trim g.axiome,0)])));*)
+            if not (check_grammar_validity blackbox g) then begin (* invalid : ignore *)
+                print_string "Invalid\n"; (search2 [@tailcall]) blackbox interest grammaire (step+1) visited grammars q
+            end else if (*print_string "AA"; flush stdout;*) is_symbol_accessible g interest then begin (* found ! *)
+                print_string "Found!\n"; Some(g)
+            end else begin (* we explore in this direction *)
+                print_string "Explore\n";
+                (search2 [@tailcall]) blackbox interest grammaire (step+1) ((g,t)::visited) grammars (insert_all_in_list grammaire interest q (construct_trees grammaire t))
+            end
+        end
+
+let search2_api blackbox interest grammaire init_tokens =
+    search2 blackbox interest grammaire 0 [] (Hashtbl.create 100) (insert_all_in_list grammaire interest [] init_tokens)
+
 
 let get_injection_tokens blackbox grammaire = List.filter (fun p -> blackbox [[p]]) (get_all_tokens grammaire)
 
