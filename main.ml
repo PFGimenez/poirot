@@ -37,7 +37,7 @@ let ()=
                     print_string "Pas de token d'injection !\n"
                 else
                     print_string "Injection token:\n";
-                    List.iter (fun (p,e,s) -> print_string ("  "^(element2string e)^"\n")) injection_tokens;
+                    List.iter (fun (p,e,s) -> print_string ("  \""^(element2string e)^"\"\n")) injection_tokens;
                     let g = search_api blackbox interest grammaire injection_tokens in match g with
                     | None -> print_string "Pas de grammaire trouvée\n"
                     | Some(g2) -> print_string ("Injection:\n  "^(partie2string (derive_word_with_symbol g2 interest))^"\n")

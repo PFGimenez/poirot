@@ -95,12 +95,12 @@ let rec check_useful_symbols left_parts = function
     | Terminal(s)::t -> check_useful_symbols left_parts t
     | h::t -> List.mem h left_parts && check_useful_symbols left_parts t
 
-let check_useful_symbolsRegle left_parts r = check_useful_symbols left_parts r.partiedroite
+let check_useful_symbols_rule left_parts r = check_useful_symbols left_parts r.partiedroite
 
 let clean_useless_symbols grammaire =
 	(* Printf.printf "==Nettoyage des symboles inutiles==\n"; *)
     let left_parts=List.sort_uniq compare (get_all_left_elements grammaire.regles) in
-    grammaire.axiome@@(List.filter (check_useful_symbolsRegle left_parts) grammaire.regles)
+    grammaire.axiome@@(List.filter (check_useful_symbols_rule left_parts) grammaire.regles)
 
 (** Algorithme de tri des règles pour faciliter la dérivation gauche **)
 let weight_compare un deux =
@@ -182,8 +182,6 @@ let rec loop regles axiome = function
 	 in loop1 [] axiome regles
 in loop grammaire.regles grammaire.axiome (compute_epsilon grammaire.regles)
 
-
-
 (** Algorithme de nettoyage général**)
 let nettoyage grammaire =
-	sort_grammar (clean_unreachable_rules (clean_useless_symbols (clean_useless_rules (remove_epsilon grammaire))))
+	sort_grammar (clean_unreachable_rules (clean_useless_rules (clean_useless_symbols grammaire)))

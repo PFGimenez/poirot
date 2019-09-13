@@ -84,3 +84,9 @@ let rec generate_blind_grammar quotient iteration grammaire = function
 let generate_blind_grammar_both_sides prefixe suffixe grammaire =
     let g=generate_blind_grammar left_quotient_of_rule  1 (nettoyage grammaire) prefixe in
     generate_blind_grammar right_quotient_of_rule 100 g (List.rev suffixe)
+
+let rec generate_blind_grammar2 grammars tree grammaire =
+    let g = Hashtbl.find_opt grammars tree in match g with
+    | None -> let g2 = grammaire (* TODO *) in Hashtbl.add grammars tree g2; g2
+    | Some(g2) -> g2
+

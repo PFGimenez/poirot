@@ -11,11 +11,30 @@ type element = 	| Terminal of string
  Elle peut représenter une partie de règle ou un mot intermédiaire dans une dérivation *)
 type partie = element list
 
+(* Un axiome et ses préfixe et suffixe *)
+type tree_state = partie * element * partie
+
 (* Une règle est composée d'une partie gauche et d'une partie droite, ces *)
 type regle =  { elementgauche : element; partiedroite : partie }
 
 (* Une grammaire est composée d'un élément axiome et d'une liste de règles *)
 type grammaire = {axiome: element; regles : regle list }
+
+type rec_part = tree_state list
+
+type rec_rule = {left_symbol : tree_state; right_part : rec_part}
+
+let (--->) g d = {left_symbol=g;right_part=d}
+
+type rec_grammar = {axiom: tree_state; rules: rec_rule list}
+
+let tree_of_element e = ([],e,[])
+
+let rec_rule_of_regle r = (tree_of_element r.elementgauche) ---> (List.map tree_of_element r.partiedroite)
+
+let rec_grammar_of_grammar g = {axiom = tree_of_element g.axiome; rules = List.map rec_rule_of_regle g.regles}
+
+let is_tree_in_rules t r = List.exists t (List.map (fun r -> r.left_symbol) r)
 
 (** Fonctions de conversion en chaîne de caractères **)
 
@@ -25,23 +44,41 @@ let element2string = function
 		| Nonterminal(x) -> x
 
 let element2string2 = function
-		| Terminal(x) -> "(T) "^x^" "
-		| Nonterminal(x) -> "(NT) "^x^" "
-
-let element2string3 = function
-		| Terminal(x) -> x^" "
-		| Nonterminal(x) -> x^" "
+		| Terminal(x) -> "(T) "^x
+		| Nonterminal(x) -> "(NT) "^x
 
 let is_terminal = function
-    | Terminal(x) -> true
+    | Terminal(_) -> true
     | _ -> false
 
+let is_tree_terminal (pre,s,suf) = is_terminal s
+
 (* Conversion d'une partie en chaîne de caractères *)
-let partie2string partie = match partie with
-    | [] -> "(vide)"
-    | _ -> List.fold_left (^) "" (List.map element2string3 partie)
+let concat_with_delimiter d s1 s2 = s1 ^ d ^ s2
 
+let concat_space = concat_with_delimiter " "
 
+let concat_new_line = concat_with_delimiter "\n"
+
+let partie2string = function
+    | t::q -> List.fold_left concat_space (element2string t) (List.map element2string q)
+    | [] -> "ε"
+
+let string_of_tree (l,s,r) = let str=element2string s in match l,r with
+    | [],[] -> str
+    | _,_ -> str ^ "_[" ^ (partie2string l) ^ "],[" ^ (partie2string r) ^ "]"
+
+let string_of_rec_part = function
+    | t::q -> List.fold_left concat_space (string_of_tree t) (List.map string_of_tree q)
+    | [] -> "ε"
+
+let string_of_rec_rule r = (string_of_tree r.left_symbol) ^ " ---> " ^ (string_of_rec_part r.right_part)
+
+let string_of_rec_rules = function
+    | t::q -> List.fold_left concat_new_line (string_of_rec_rule t) (List.map string_of_rec_rule q)
+    | [] -> "(no rules)"
+
+let string_of_rec_grammar g = "Axiom: " ^ (string_of_tree g.axiom) ^ "\nRules: " ^ (string_of_rec_rules g.rules)
 (* Conversion d'une règle en chaîne de caractère *)
 let regle2string = function
 	| {elementgauche=g;partiedroite=d} -> element2string g ^ " --> " ^ partie2string d
@@ -60,6 +97,8 @@ let (-->) g d = {elementgauche=g;partiedroite=d}
 
 (* Création d'une grammaire à la volée *)
 let (@@) axiome regles = {axiome=axiome;regles=regles}
+
+let (@@@) axiome regles = {axiom=axiome;rules=regles}
 
 (* Dérivation gauche d'un mot intermédiaire "dérivation" par une règle "regle" *)
 let rec left_derivation derivation regle =
@@ -93,7 +132,6 @@ let rec is_word = function
 	| Terminal(x)::rest -> is_word rest
 	| Nonterminal(x)::rest -> false
 
-(* /!\ Faire une version générique renvoyant une liste ! *)
 let rec derive_within_depth profondeur grammaire motintermediaire =
     if is_word motintermediaire then [motintermediaire]
 	else if (profondeur != 1) then

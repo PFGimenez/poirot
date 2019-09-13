@@ -4,15 +4,14 @@ open Hashtbl
 
 let blackbox prefix suffix grammaire injections = is_list_in_language grammaire (List.map (fun p -> prefix @ p @ suffix) injections)
 
-type tree_state = partie * element * partie
 
-let print_tree (a,b,c) = print_string ((partie2string a)^" ["^(element2string b)^"] "^(partie2string c)^"\n")
+let print_tree t = print_string ((string_of_tree t)^"\n")
 
 let get_grammar_from_tree grammaire (p,e,s) = generate_blind_grammar_both_sides p s (e@@grammaire.regles)
 
 (* TODO *)
 
-let get_grammar_from_tree2 grammars grammaire (p,e,s) = grammaire
+let get_grammar_from_tree2 grammars grammaire (p,e,s) = generate_blind_grammar2 grammars (p,e,s) (e@@grammaire.regles)
 
 (* renvoie les règles dont la partie droite contient l'élément cherché *)
 
@@ -125,7 +124,6 @@ let rec search2 blackbox interest grammaire step visited grammars = function
             print_string "Visited\n"; (search2 [@tailcall]) blackbox interest grammaire (step+1) visited grammars q
         end else begin
             let g = get_grammar_from_tree2 grammars grammaire t in
-            Hashtbl.add grammars t g;
             print_grammar g;
             (*print_string "Grammaire contruite\n"; flush stdout;*)
             (*print_string ("Accessible from "^(element2string g.axiome)^": "); print_bool (is_accessible_from_axiom grammaire interest [g.axiome]); flush stdout;*)
