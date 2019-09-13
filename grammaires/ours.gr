@@ -4,3 +4,9 @@ A -> homme B
 B -> qui a vu E
 E -> l ours
 E -> S
+U -> V
+V -> W
+W -> Z
+U -> E
+F -> U
+G -> F

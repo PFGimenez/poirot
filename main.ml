@@ -19,6 +19,8 @@ let ()=
         print_string "Grammaire lue\n";
         let g2 = remove_useless_symbols (rec_grammar_of_grammar grammaire) in
         print_string ((string_of_rec_grammar g2)^"\n");
+        let g3 = remove_unreachable_symbols g2 in
+        print_string ((string_of_rec_grammar g3)^"\n");
 
         if List.length intepart != 1 then
             if List.length intepart = 0 then begin
