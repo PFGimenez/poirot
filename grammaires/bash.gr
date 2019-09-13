@@ -1,3 +1,4 @@
+S
 S -> Cmd
 S -> Cmd ; S
 S -> Cmd && S

@@ -1,3 +1,4 @@
+S
 S -> Prenom
 S -> Prenoms
 Prenoms -> Prenom _et_ Prenom

@@ -54,8 +54,10 @@ let read_file filename =
 	List.rev (readfile canal_entree)
 
 (* extraction d'une grammaire depuis le nom de fichier et l'axiome passés en arguments *)
-let read_grammar_from_file fichier axiome =
+let read_grammar_from_file fichier =
 	let string_rules = read_file fichier in
-	Nonterminal(axiome) @@ (strings2regles [] string_rules)
+    match string_rules with
+    | t::q -> Nonterminal(t) @@ (strings2regles [] q)
+    | _ -> failwith "Fichier vide !"
 
 let string2partie s = token2partie [] (string2tokens s)

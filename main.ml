@@ -3,19 +3,21 @@ open Blind
 open Parser
 
 let a()=
-    let grammaire = Parser.read_grammar_from_file Sys.argv.(1) Sys.argv.(2) in
+    let grammaire = Parser.read_grammar_from_file Sys.argv.(1) in
     let path = find_path_symbol grammaire [Terminal("homme"),[]] in
     List.iter (fun r -> print_string ((regle2string r)^"\n")) path; flush stdout;
     let w = derive_with_path grammaire [[grammaire.axiome],path] in
     print_string (partie2string w)
 
 let ()=
-	if Array.length Sys.argv = 6 then
-        let grammaire = Parser.read_grammar_from_file Sys.argv.(1) Sys.argv.(2)
-        and prefix = string2partie (Sys.argv.(3))
-        and suffix = string2partie (Sys.argv.(4))
-        and intepart = string2partie (Sys.argv.(5)) in
+	if Array.length Sys.argv = 5 then
+        let grammaire = Parser.read_grammar_from_file Sys.argv.(1)
+        and prefix = string2partie (Sys.argv.(2))
+        and suffix = string2partie (Sys.argv.(3))
+        and intepart = string2partie (Sys.argv.(4)) in
         print_string "Grammaire lue\n";
+        let g2 = rec_grammar_of_grammar grammaire in
+        print_string ((string_of_rec_grammar g2)^"\n");
 
         if List.length intepart != 1 then
             if List.length intepart = 0 then begin
@@ -40,4 +42,4 @@ let ()=
                     | None -> print_string "Pas de grammaire trouvée\n"
                     | Some(g2) -> print_string ("Injection:\n  "^(partie2string (derive_word_with_symbol g2 interest))^"\n")
 
-    else print_string ("Usage : "^Sys.argv.(0)^" <fichierGrammaire> <axiome> <prefixe> <suffixe> <objectif>\n")
+    else print_string ("Usage : "^Sys.argv.(0)^" <fichierGrammaire> <prefixe> <suffixe> <objectif>\n")
