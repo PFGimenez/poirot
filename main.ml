@@ -1,6 +1,7 @@
 open Base
 open Blind
 open Parser
+open Clean
 
 let a()=
     let grammaire = Parser.read_grammar_from_file Sys.argv.(1) in
@@ -16,7 +17,7 @@ let ()=
         and suffix = string2partie (Sys.argv.(3))
         and intepart = string2partie (Sys.argv.(4)) in
         print_string "Grammaire lue\n";
-        let g2 = rec_grammar_of_grammar grammaire in
+        let g2 = remove_useless_symbols (rec_grammar_of_grammar grammaire) in
         print_string ((string_of_rec_grammar g2)^"\n");
 
         if List.length intepart != 1 then
