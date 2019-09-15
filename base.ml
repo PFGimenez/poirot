@@ -1,3 +1,5 @@
+(* TODO : renommer rec_* en ext_* *)
+
 let print_bool = function
             | true -> print_string "true\n"
             | false -> print_string "false\n"
@@ -33,6 +35,10 @@ type rec_grammar = {axiom: tree_state; rules: rec_rules}
 let tree_of_element e = ([],e,[])
 
 let trim2 (pre,e,suf) = ([],e,[])
+
+let element_of_tree ((pre,e,suf) : tree_state) : element = e
+
+let word_of_trees (tree_list: tree_state list) : partie = List.map element_of_tree tree_list
 
 let rec_rule_of_regle r = (tree_of_element r.elementgauche) ---> (List.map tree_of_element r.partiedroite)
 
@@ -112,11 +118,25 @@ let rec left_derivation derivation regle =
 	| Nonterminal(x)::rest when Nonterminal(x)=base -> List.append transformation rest
 	| x::rest -> x::left_derivation rest regle
 
+let rec left_derivation2 (derivation : tree_state list) (regle : rec_rule) =
+    let {left_symbol=base;right_part=transformation} = regle in
+	match derivation with
+	| [] -> []
+	| (pre,Nonterminal(x),suf)::rest when (pre,Nonterminal(x),suf)=base -> List.append transformation rest
+	| x::rest -> x::left_derivation2 rest regle
+
+
+
 (* Récupération d'une monade option contenant le premier non terminal d'une partie (si il existe !) *)
 let rec first_non_terminal = function
 	| [] -> None
 	| Terminal(x)::rest -> first_non_terminal rest
 	| Nonterminal(x)::rest -> Some(Nonterminal(x))
+
+let rec first_non_terminal2 : tree_state list -> tree_state option = function
+	| [] -> None
+	| (pre,Terminal(x),suf)::rest -> first_non_terminal2 rest
+	| (pre,Nonterminal(x),suf)::rest -> Some((pre,Nonterminal(x),suf))
 
 (* Renvoie toutes les règles possibles parmi un liste de règles pour dériver motintermediaire *)
 let rec possible_rules motintermediaire regles =
@@ -130,11 +150,29 @@ let rec possible_rules motintermediaire regles =
 		gauche-->droite::(possible_rules motintermediaire rest)
     | _::rest -> possible_rules motintermediaire rest
 
+let rec possible_rules2 (motintermediaire : tree_state list) (regles : rec_rules) : rec_rules =
+	let premier = first_non_terminal2 motintermediaire in
+	match premier with
+	| None -> []
+	| Some(x) ->
+	match regles with
+	| [] -> []
+    | {left_symbol=ls;right_part=rp}::rest when x = ls ->
+		ls--->rp::(possible_rules2 motintermediaire rest)
+    | _::rest -> possible_rules2 motintermediaire rest
+
+
+
 (* Prédicat indiquant si le mot intermédiaire en argument est un mot (soit si il ne contient que des terminaux) *)
 let rec is_word = function
 	| [] -> true
 	| Terminal(x)::rest -> is_word rest
 	| Nonterminal(x)::rest -> false
+
+let rec is_word2 : tree_state list -> bool = function
+	| [] -> true
+    | ([],Terminal(x),[])::rest -> is_word2 rest
+	| _ -> false
 
 let rec derive_within_depth profondeur grammaire motintermediaire =
     if is_word motintermediaire then [motintermediaire]
@@ -200,6 +238,25 @@ let rec derive_with_path grammaire = function
             (derive_with_path [@tailcall]) grammaire (q@[left_derivation w (List.hd path), List.tl path])
 
 let derive_word_with_symbol grammaire s = derive_with_path grammaire [[grammaire.axiome],find_path_symbol grammaire [s,[]]]
+
+let rec find_path_symbol2 (grammaire : rec_grammar) : (element*rec_rule list) list -> rec_rule list = function
+    | [] -> failwith "No path"
+    | (obj,path)::_ when obj=element_of_tree grammaire.axiom -> path
+    | (obj,path)::q -> let rules = List.filter (fun r -> List.exists (fun t -> obj = element_of_tree t) r.right_part) grammaire.rules in
+        (find_path_symbol2 [@tailcall]) grammaire (q@(List.map (fun r -> (element_of_tree r.left_symbol, r::path)) rules))
+
+let rec derive_with_path2 (grammaire : rec_grammar) : (tree_state list * rec_rule list) list -> partie = function
+    | [] -> failwith "No derivation with path"
+    | (w, path)::q when is_word2 w -> assert (List.length path = 0); word_of_trees w
+    | (w, path)::q -> let rules = possible_rules2 w grammaire.rules in
+        if List.length path = 0 || not (List.mem (List.hd path) rules) then
+            (derive_with_path2 [@tailcall]) grammaire (q@(List.map (fun r -> (left_derivation2 w r, path)) rules))
+        else
+            (derive_with_path2 [@tailcall]) grammaire (q@[left_derivation2 w (List.hd path), List.tl path])
+(*
+let derive_word_with_symbol2 grammaire s = derive_with_path2 grammaire [[grammaire.axiome],find_path_symbol2 grammaire [s,[]]]
+*)
+
 
 let print_words w = List.iter (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) w
 
