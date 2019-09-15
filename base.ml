@@ -24,11 +24,15 @@ type rec_part = tree_state list
 
 type rec_rule = {left_symbol : tree_state; right_part : rec_part}
 
+type rec_rules = rec_rule list
+
 let (--->) g d = {left_symbol=g;right_part=d}
 
-type rec_grammar = {axiom: tree_state; rules: rec_rule list}
+type rec_grammar = {axiom: tree_state; rules: rec_rules}
 
 let tree_of_element e = ([],e,[])
+
+let trim2 (pre,e,suf) = ([],e,[])
 
 let rec_rule_of_regle r = (tree_of_element r.elementgauche) ---> (List.map tree_of_element r.partiedroite)
 
