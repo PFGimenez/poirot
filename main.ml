@@ -17,10 +17,22 @@ let ()=
         and suffix = string2partie (Sys.argv.(3))
         and intepart = string2partie (Sys.argv.(4)) in
         print_string "Grammaire lue\n";
-        let g2 = remove_useless_symbols (rec_grammar_of_grammar grammaire) in
+        let g = clean (rec_grammar_of_grammar grammaire) in
+        print_string ((string_of_rec_grammar g)^"\n");
+(*        let lists = get_epsilon_symbols g in
+        print_string ("Eps symbols: "^(string_of_rec_part lists)^"\n");
+        let eps_sym = List.hd lists in
+        print_string ("Symbol: "^(string_of_tree eps_sym)^"\n");
+        let r = List.hd (get_rules_with_symbol eps_sym g.rules) in
+        print_string ("Rule: "^(string_of_rec_rule r)^"\n");
+        let g4 = g.axiom @@@ (remove_epsilon_symbols_once g) in
+        print_string ((string_of_rec_grammar g4)^"\n");
+        let g5 = g.axiom @@@ (remove_epsilon_symbols_once g4) in
+        print_string ((string_of_rec_grammar g5)^"\n");
+        let g2 = remove_useless_symbols g in
         print_string ((string_of_rec_grammar g2)^"\n");
         let g3 = remove_unreachable_symbols g2 in
-        print_string ((string_of_rec_grammar g3)^"\n");
+        print_string ((string_of_rec_grammar g3)^"\n");*)
 
         if List.length intepart != 1 then
             if List.length intepart = 0 then begin

@@ -11,7 +11,11 @@ let get_grammar_from_tree grammaire (p,e,s) = generate_blind_grammar_both_sides 
 
 (* TODO *)
 
-let get_grammar_from_tree2 grammars grammaire (p,e,s) = generate_blind_grammar2 grammars (p,e,s) (e@@grammaire.regles)
+let update_grammars grammars grammaire = function
+    | [] -> ()
+    | t::q -> let g = generate_blind_grammar2 grammars t grammaire in Hashtbl.add grammars t g
+
+let get_grammar_from_tree2 grammars grammaire t = update_grammars grammars grammaire [t]; Hashtbl.find grammars t
 
 (* renvoie les règles dont la partie droite contient l'élément cherché *)
 
