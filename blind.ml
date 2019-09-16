@@ -5,6 +5,8 @@ open Hashtbl
 type db_type = (tree_state, (rec_rule list)) t
 type scored_tree = int * tree_state
 
+(* TODO: blackbox linked to interface *)
+
 let blackbox_template
     (prefix : element list)
     (suffix : element list)
