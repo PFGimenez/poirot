@@ -1,3 +1,5 @@
+open Hashtbl
+
 (* TODO : renommer rec_* en ext_* *)
 
 let print_bool = function
@@ -52,6 +54,8 @@ let is_tree_in_rules t r = List.exists t (List.map (fun r -> r.left_symbol) r)
 let element2string = function
 		| Terminal(x) -> x
 		| Nonterminal(x) -> x
+
+let string_of_element = element2string
 
 let element2string2 = function
 		| Terminal(x) -> "(T) "^x
@@ -253,12 +257,18 @@ let rec derive_with_path2 (grammaire : rec_grammar) : (tree_state list * rec_rul
             (derive_with_path2 [@tailcall]) grammaire (q@(List.map (fun r -> (left_derivation2 w r, path)) rules))
         else
             (derive_with_path2 [@tailcall]) grammaire (q@[left_derivation2 w (List.hd path), List.tl path])
-(*
-let derive_word_with_symbol2 grammaire s = derive_with_path2 grammaire [[grammaire.axiome],find_path_symbol2 grammaire [s,[]]]
-*)
 
+let derive_word_with_symbol2 (grammaire : rec_grammar) (s : element) : element list = derive_with_path2 grammaire [[grammaire.axiom],find_path_symbol2 grammaire [s,[]]]
 
-let print_words w = List.iter (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) w
+let string_inst_of_element (values : (element, string) t) : element -> string  = function
+    | s when Hashtbl.mem values s -> Hashtbl.find values s
+    | s -> string_of_element s
+
+let string_inst_of_part (values : (element, string) t) : element list -> string = function
+    | t::q -> List.fold_left concat_space (string_inst_of_element values t) (List.map (string_inst_of_element values) q)
+    | [] -> "ε"
+
+let print_words (w : partie list) : unit = List.iter (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) w
 
 (** Fonctions d'affichage **)
 

@@ -33,6 +33,8 @@ let ()=
         print_string ((string_of_rec_grammar g2)^"\n");
         let g3 = remove_unreachable_symbols g2 in
         print_string ((string_of_rec_grammar g3)^"\n");*)
+        let values = Hashtbl.create 1 in
+        Hashtbl.add values (Terminal("value")) "val1";
 
         if List.length intepart != 1 then
             if List.length intepart = 0 then begin
@@ -46,7 +48,7 @@ let ()=
             if not (is_symbol_accessible grammaire interest) then
                 print_string "Objectif inconnu !\n"
             else
-                let blackbox = blackbox prefix suffix grammaire in
+                let blackbox = blackbox_template prefix suffix grammaire in
                 let injection_tokens = get_injection_leaves blackbox grammaire in
                 if List.length injection_tokens = 0 then
                     print_string "Pas de token d'injection !\n"
@@ -55,6 +57,6 @@ let ()=
                     List.iter (fun (p,e,s) -> print_string ("  \""^(element2string e)^"\"\n")) injection_tokens;
                     let g = search_api blackbox interest grammaire injection_tokens in match g with
                     | None -> print_string "Pas de grammaire trouvée\n"
-                    | Some(g2) -> print_string ("Injection:\n  "^(partie2string (derive_word_with_symbol g2 interest))^"\n")
+                    | Some(g2) -> print_string ("Injection:\n  "^(string_inst_of_part values (derive_word_with_symbol g2 interest))^"\n")
 
     else print_string ("Usage : "^Sys.argv.(0)^" <fichierGrammaire> <prefixe> <suffixe> <objectif>\n")

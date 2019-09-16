@@ -5,7 +5,7 @@ open Hashtbl
 type db_type = (tree_state, (rec_rule list)) t
 type scored_tree = int * tree_state
 
-let blackbox
+let blackbox_template
     (prefix : element list)
     (suffix : element list)
     (grammaire : grammaire)
@@ -22,7 +22,7 @@ let get_grammar_from_tree grammaire (p,e,s) = generate_blind_grammar_both_sides 
 
 let get_new_rules (grammaire : grammaire) (t : tree_state) : rec_rule list = []
 
-(* TODO *)
+(* TODO *)
 
 let get_new_axioms (r : rec_rules) : tree_state list = [(List.hd r).left_symbol]
 
@@ -160,10 +160,14 @@ let rec search2
             end
         end
 
-let search2_api blackbox interest init_grammaire init_tokens =
+let search2_api
+    (blackbox : partie list -> bool)
+    (interest : element)
+    (init_grammaire : grammaire)
+    (init_tokens : tree_state list)
+    : rec_grammar option =
         search2 blackbox interest init_grammaire 0 [] (Hashtbl.create 100) (insert_all_in_list2 init_grammaire interest [] init_tokens)
 
+let get_injection_tokens (blackbox : partie list -> bool) (grammaire : grammaire) : element list = List.filter (fun p -> blackbox [[p]]) (get_all_tokens grammaire)
 
-let get_injection_tokens blackbox grammaire = List.filter (fun p -> blackbox [[p]]) (get_all_tokens grammaire)
-
-let get_injection_leaves blackbox grammaire = List.map (fun e -> ([],e,[])) (get_injection_tokens blackbox grammaire)
+let get_injection_leaves (blackbox : partie list -> bool) (grammaire : grammaire) : tree_state list = List.map tree_of_element (get_injection_tokens blackbox grammaire)
