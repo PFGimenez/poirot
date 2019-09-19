@@ -55,6 +55,12 @@ let element2string = function
 		| Terminal(x) -> x
 		| Nonterminal(x) -> x
 
+let quoted_element2string = function
+		| Terminal(x) -> "\""^(String.escaped x)^"\""
+		| Nonterminal(x) -> x
+
+
+
 let string_of_element = element2string
 
 let element2string2 = function
@@ -75,22 +81,42 @@ let concat_space = concat_with_delimiter " "
 let concat_new_line = concat_with_delimiter "\n"
 
 let partie2string = function
-    | t::q -> List.fold_left concat_space (element2string2 t) (List.map element2string2 q)
+    | t::q -> List.fold_left concat_space (element2string t) (List.map element2string q)
     | [] -> "ε"
+
+let quoted_partie2string = function
+    | t::q -> List.fold_left concat_space (quoted_element2string t) (List.map quoted_element2string q)
+    | [] -> ""
 
 let string_of_tree (l,s,r) = let str=element2string s in match l,r with
     | [],[] -> str
     | _,_ -> str ^ "_[" ^ (partie2string l) ^ "],[" ^ (partie2string r) ^ "]"
 
+let quoted_string_of_tree (l,s,r) = let str=quoted_element2string s in match l,r with
+    | [],[] -> str
+    | _,_ -> str ^ "_[" ^ (quoted_partie2string l) ^ "],[" ^ (quoted_partie2string r) ^ "]"
+
 let string_of_rec_part = function
     | t::q -> List.fold_left concat_space (string_of_tree t) (List.map string_of_tree q)
     | [] -> "ε"
 
-let string_of_rec_rule r = (string_of_tree r.left_symbol) ^ " ---> " ^ (string_of_rec_part r.right_part)
+let quoted_string_of_rec_part = function
+    | t::q -> List.fold_left concat_space (quoted_string_of_tree t) (List.map quoted_string_of_tree q)
+    | [] -> ""
+
+let string_of_rec_rule r = (string_of_tree r.left_symbol) ^ " -> " ^ (string_of_rec_part r.right_part)
+
+let quoted_string_of_rec_rule r = (quoted_string_of_tree r.left_symbol) ^ " ::= " ^ (quoted_string_of_rec_part r.right_part)^";"
 
 let string_of_rec_rules = function
     | t::q -> List.fold_left concat_new_line (string_of_rec_rule t) (List.map string_of_rec_rule q)
     | [] -> "(no rules)"
+
+let quoted_string_of_rec_rules = function
+    | t::q -> List.fold_left concat_new_line (quoted_string_of_rec_rule t) (List.map quoted_string_of_rec_rule q)
+    | [] -> ""
+
+let bnf_string_of_rec_grammar g = (quoted_string_of_tree g.axiom) ^ ";\n" ^ (quoted_string_of_rec_rules g.rules)
 
 let string_of_rec_grammar g = "Axiom: " ^ (string_of_tree g.axiom) ^ "\nRules: " ^ (string_of_rec_rules g.rules)
 (* Conversion d'une règle en chaîne de caractère *)
