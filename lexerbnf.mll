@@ -19,6 +19,7 @@ rule token = parse
 
     | "::=" { SEP } (* separator of the rule *)
 
+    | "EOF" { TERM (true,"EOF") }
     | "'" (([^ '\'' '\n' '\r']|"\\\'")* as s) "'" { TERM (true,unescaped s) } (* terminal *)
     | '"' (([^ '"' '\n' '\r']|"\\\"")* as s) '"' { TERM (true,unescaped s) } (* terminal *)
     | ['A'-'Z' 'a'-'z' '0'-'9' '_']* as s { NTERM (false,s) } (* nonterminal *)
