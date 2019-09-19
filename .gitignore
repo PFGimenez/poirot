@@ -157,4 +157,6 @@ _opam/
 
 *.txt
 fuzzer
-fuzzer-bcode
+parserbnf.ml
+lexerbnf.ml
+parserbnf.mli
