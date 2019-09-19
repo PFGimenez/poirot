@@ -75,7 +75,7 @@ let concat_space = concat_with_delimiter " "
 let concat_new_line = concat_with_delimiter "\n"
 
 let partie2string = function
-    | t::q -> List.fold_left concat_space (element2string t) (List.map element2string q)
+    | t::q -> List.fold_left concat_space (element2string2 t) (List.map element2string2 q)
     | [] -> "ε"
 
 let string_of_tree (l,s,r) = let str=element2string s in match l,r with
@@ -95,7 +95,7 @@ let string_of_rec_rules = function
 let string_of_rec_grammar g = "Axiom: " ^ (string_of_tree g.axiom) ^ "\nRules: " ^ (string_of_rec_rules g.rules)
 (* Conversion d'une règle en chaîne de caractère *)
 let regle2string = function
-	| {elementgauche=g;partiedroite=d} -> element2string g ^ " --> " ^ partie2string d
+	| {elementgauche=g;partiedroite=d} -> element2string2 g ^ " --> " ^ partie2string d
 
 (* Conversion d'une liste de règles en chaîne de caractère *)
 let rec reglelist2string = function
@@ -283,3 +283,17 @@ let rec print_grammars = function
     | [] -> print_string "(vide)"
     | t::[] -> print_grammar t
     | t::q -> print_grammar t; print_grammars q
+
+
+let rec read_part (part : (bool*string) list) : partie = match part with
+    | [] -> []
+    | t::q when fst t -> Terminal(snd t)::(read_part q)
+    | t::q -> Nonterminal(snd t)::(read_part q)
+
+let rec read_rules (rules : ((bool*string) * ((bool*string) list)) list) : regle list = match rules with
+    | [] -> []
+    | (n,l)::q -> assert (not (fst n)); (Nonterminal(snd n) --> read_part l)::read_rules q
+
+let read_grammar (tokens : ((bool*string) * (((bool*string) * ((bool*string) list)) list))) : grammaire =
+    assert (not (fst (fst tokens)));
+    Nonterminal(snd (fst tokens)) @@ read_rules (snd tokens)
