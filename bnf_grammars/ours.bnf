@@ -1,6 +1,6 @@
 S;
-S ::= "l" A;
+S ::= "l\'" A;
 A ::= "homme" B;
 B ::= "qui" "a" "vu" E;
-E ::= "l" "ours";
+E ::= "l\'" "ours";
 E ::= S;

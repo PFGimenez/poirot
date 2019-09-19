@@ -160,3 +160,4 @@ fuzzer
 parserbnf.ml
 lexerbnf.ml
 parserbnf.mli
+*_api

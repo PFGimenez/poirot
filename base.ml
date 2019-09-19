@@ -116,7 +116,9 @@ let quoted_string_of_rec_rules = function
     | t::q -> List.fold_left concat_new_line (quoted_string_of_rec_rule t) (List.map quoted_string_of_rec_rule q)
     | [] -> ""
 
-let bnf_string_of_rec_grammar g = (quoted_string_of_tree g.axiom) ^ ";\n" ^ (quoted_string_of_rec_rules g.rules)
+let bnf_string_of_rec_grammar g = (quoted_string_of_tree g.axiom) ^ ";\n" ^ (quoted_string_of_rec_rules g.rules) ^ "\n"
+
+let bnf_string_of_grammar g = bnf_string_of_rec_grammar (rec_grammar_of_grammar g)
 
 let string_of_rec_grammar g = "Axiom: " ^ (string_of_tree g.axiom) ^ "\nRules: " ^ (string_of_rec_rules g.rules)
 (* Conversion d'une règle en chaîne de caractère *)
