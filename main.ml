@@ -11,7 +11,11 @@ let a()=
     let w = derive_with_path grammaire [[grammaire.axiome],path] in
     print_string (partie2string w)
 
-let () = 
+let () =
+        let grammaire = Base.read_bnf_grammar Sys.argv.(1)
+        in print_grammar grammaire
+
+let c() = 
 	if Array.length Sys.argv = 4 then
         let grammaire = Parser.read_grammar_from_file Sys.argv.(1)
         and prefix = string2partie (Sys.argv.(2))
@@ -20,9 +24,10 @@ let () =
         print_grammar g
     else print_string ("Usage : "^Sys.argv.(0)^" <fichierGrammaire> <prefixe> <suffixe>\n")
  
-let b()=
+let d()=
 	if Array.length Sys.argv = 5 then
-        let grammaire = Parser.read_grammar_from_file Sys.argv.(1)
+        (* let grammaire = Parser.read_grammar_from_file Sys.argv.(1) *)
+        let grammaire = Base.read_bnf_grammar Sys.argv.(1)
         and prefix = string2partie (Sys.argv.(2))
         and suffix = string2partie (Sys.argv.(3))
         and intepart = string2partie (Sys.argv.(4)) in

@@ -294,6 +294,10 @@ let rec read_rules (rules : ((bool*string) * ((bool*string) list)) list) : regle
     | [] -> []
     | (n,l)::q -> assert (not (fst n)); (Nonterminal(snd n) --> read_part l)::read_rules q
 
-let read_grammar (tokens : ((bool*string) * (((bool*string) * ((bool*string) list)) list))) : grammaire =
+let convert_grammar (tokens : ((bool*string) * (((bool*string) * ((bool*string) list)) list))) : grammaire =
     assert (not (fst (fst tokens)));
     Nonterminal(snd (fst tokens)) @@ read_rules (snd tokens)
+
+let read_bnf_grammar (filename : string) : grammaire =
+    let lexbuf = Lexing.from_channel (open_in filename) in
+    convert_grammar (Parserbnf.start Lexerbnf.token lexbuf)

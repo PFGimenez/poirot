@@ -1,13 +1,14 @@
-all: clean main bytecode
+all: clean main
 
-main: lexerbnf.ml
-	ocamlopt str.cmxa base.ml parser.ml nettoyage.ml clean.ml quotient.ml blind.ml main.ml -g -o fuzzer
-
-bytecode: lexerbnf.ml
-	ocamlc str.cma base.ml parser.ml nettoyage.ml clean.ml quotient.ml blind.ml main.ml -g -o fuzzer-bcode
+main: parser
+	ocamlopt str.cmxa parserbnf.cmx lexerbnf.cmx base.ml parser.ml nettoyage.ml clean.ml quotient.ml blind.ml main.ml -g -o fuzzer
 
 clean:
-	rm -f *.cm* *.o fuzzer fuzzer-bcode
+	rm -f *.cm* *.o fuzzer
 
-lexerbnf.ml:
+parser:
 	ocamllex lexerbnf.mll
+	ocamlyacc parserbnf.mly
+	ocamlc -c parserbnf.mli
+	ocamlopt -c parserbnf.ml
+	ocamlopt -c lexerbnf.ml
