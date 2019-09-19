@@ -8,7 +8,7 @@ open Nettoyage
 let int2string = string_of_int
 
 (* Generation du nom du nouveau non terminal, fonction du numéro de l'itération et du nom précédent *)
-let etiquette nom numero = nom ^ "." ^ (int2string numero)
+let etiquette nom numero = nom ^ "_" ^ (int2string numero)
 
 (* Quotient à Gauche d'une règle pour l'itération "numéro" par le terminal "terminal"
    => renvoie (nouvellesrègles,nouvelaxiome) *)
