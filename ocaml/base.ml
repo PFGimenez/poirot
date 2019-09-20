@@ -82,7 +82,7 @@ let concat_space = concat_with_delimiter " "
 let concat_new_line = concat_with_delimiter "\n"
 
 let partie2string = function
-    | t::q -> List.fold_left concat_space (element2string2 t) (List.map element2string2 q)
+    | t::q -> List.fold_left concat_space (element2string t) (List.map element2string q)
     | [] -> "ε"
 
 let quoted_partie2string = function
@@ -307,6 +307,9 @@ let print_rules regles = List.iter (Printf.printf "%s\n") (List.map regle2string
 (* Affichage d'une grammaire *)
 let print_grammar grammaire = Printf.printf "Axiome : %s \nRegles : \n" (element2string grammaire.axiome);
 				  print_rules grammaire.regles
+
+(* TODO *)
+let equals_grammars (g1 : rec_grammar) (g2 : rec_grammar) : bool = true
 
 let rec print_grammars = function
     | [] -> print_string "(vide)"

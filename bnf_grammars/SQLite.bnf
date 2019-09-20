@@ -1,4 +1,4 @@
-parse;
+select_stmt;
 # cat SQLite.g4 | python3 Main.py
 # Grammar LEXER= None
 # Grammar PARSER= None
