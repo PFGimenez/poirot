@@ -52,7 +52,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
             lexer_regexp_to_bnf(nt, suf, child)
 
     elif rex[0] == "string":
-        print(rule + " " + escape(rex[1]) + " ;")
+        print(rule + " " + rex[1] + " ;")
 
     elif rex[0] == "token":
         print(rule + " " + escape(rex[1]) + " ;")
@@ -94,11 +94,11 @@ def lexer_regexp_to_bnf(nt, suf, rex):
     elif rex[0] == "?":
         print(rule + " ;")                   # X ::=
         lexer_regexp_to_bnf(nt, suf, rex[1]) # X ::= b
- 
+
     elif rex[0] == ".":
         for x in char_table:
             print(rule + (" '%s' ;" % escape(x)))
- 
+
     elif rex[0] == "char_set":
         if rex[1][0] == '[' and rex[1][-1] == ']':
             flat = []
@@ -144,7 +144,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                 c = rex[1][1][1]
             elif len(rex[1][1]) == 4 and rex[1][1][-1] == '\'' and rex[1][1][1] == '\\':
                 c = rex[1][1][2]
-    
+
             if c is not None:
                 for x in char_table:
                     if x != c:
@@ -187,7 +187,7 @@ def parser_regexp_to_bnf(nt, suf, rex):
     if rex[0] == "and":
         for child in rex[1]:
             if child[0] in ["token", "string", "rule"]:
-                rule += " " + escape(child[1])
+                rule += " " + (child[1])
             else:
                 new_suf = counters[lhs] + 1
                 counters[lhs] = new_suf
@@ -227,7 +227,7 @@ def parser_regexp_to_bnf(nt, suf, rex):
         print(rule + " ;")
 
     elif rex[0] == "string":
-        print(rule + " " + escape(rex[1]) + " ;")
+        print(rule + " " + (rex[1]) + " ;")
 
     elif rex[0] == "token":
         print(rule + " " + escape(rex[1]) + " ;")
