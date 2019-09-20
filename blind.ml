@@ -96,12 +96,12 @@ let check_grammar_validity2 (blackbox : partie list -> bool) (g : rec_grammar) =
 
 let rec insert_in_list (distance : int) (tree : tree_state) : scored_tree list -> scored_tree list = function
     | [] -> [(distance,tree)]
-    | (d,t)::q when d > distance -> (distance,tree)::((d,t)::q)
+    | ((d,t) as h)::q when d > distance -> (distance,tree)::(h::q)
     | t::q -> t::(insert_in_list distance tree q)
 
 let rec insert_all_in_list grammaire interest l = function
     | [] -> l
-    | (a,b,c)::q -> (insert_all_in_list [@tailcall]) grammaire interest (insert_in_list (distance_to_goal grammaire interest [trim b,0]) (a,b,c) l) q
+    | ((a,b,c) as t)::q -> (insert_all_in_list [@tailcall]) grammaire interest (insert_in_list (distance_to_goal grammaire interest [trim b,0]) t l) q
 
 let rec insert_all_in_list2 (grammaire : grammaire) (interest : element) (l : scored_tree list) : tree_state list -> scored_tree list = function
     | [] -> l

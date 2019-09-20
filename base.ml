@@ -1,4 +1,5 @@
 open Hashtbl
+open Parserbnf
 
 (* TODO : renommer rec_* en ext_* *)
 
@@ -81,7 +82,7 @@ let concat_space = concat_with_delimiter " "
 let concat_new_line = concat_with_delimiter "\n"
 
 let partie2string = function
-    | t::q -> List.fold_left concat_space (element2string t) (List.map element2string q)
+    | t::q -> List.fold_left concat_space (element2string2 t) (List.map element2string2 q)
     | [] -> "ε"
 
 let quoted_partie2string = function
@@ -116,14 +117,14 @@ let quoted_string_of_rec_rules = function
     | t::q -> List.fold_left concat_new_line (quoted_string_of_rec_rule t) (List.map quoted_string_of_rec_rule q)
     | [] -> ""
 
-let bnf_string_of_rec_grammar g = (quoted_string_of_tree g.axiom) ^ ";\n" ^ (quoted_string_of_rec_rules g.rules) ^ "\n"
+let bnf_string_of_rec_grammar (g : rec_grammar) : string = (quoted_string_of_tree g.axiom) ^ ";\n" ^ (quoted_string_of_rec_rules g.rules) ^ "\n"
 
-let bnf_string_of_grammar g = bnf_string_of_rec_grammar (rec_grammar_of_grammar g)
+let bnf_string_of_grammar (g : grammaire) : string = bnf_string_of_rec_grammar (rec_grammar_of_grammar g)
 
-let string_of_rec_grammar g = "Axiom: " ^ (string_of_tree g.axiom) ^ "\nRules: " ^ (string_of_rec_rules g.rules)
+let string_of_rec_grammar (g : rec_grammar) : string = "Axiom: " ^ (string_of_tree g.axiom) ^ "\nRules: " ^ (string_of_rec_rules g.rules)
 (* Conversion d'une règle en chaîne de caractère *)
-let regle2string = function
-	| {elementgauche=g;partiedroite=d} -> element2string2 g ^ " --> " ^ partie2string d
+let regle2string : regle -> string = function
+	| {elementgauche=g;partiedroite=d} -> element2string g ^ " --> " ^ partie2string d
 
 (* Conversion d'une liste de règles en chaîne de caractère *)
 let rec reglelist2string = function
@@ -329,3 +330,13 @@ let convert_grammar (tokens : ((bool*string) * (((bool*string) * ((bool*string) 
 let read_bnf_grammar (filename : string) : grammaire =
     let lexbuf = Lexing.from_channel (open_in filename) in
     convert_grammar (Parserbnf.start Lexerbnf.token lexbuf)
+
+let rec read_tokens_from_ch (ch: Lexing.lexbuf) : element list =
+    let token = Lexerbnf.token ch in match token with
+    | EOF -> []
+    | NTERM(b,str) -> Nonterminal(str)::(read_tokens_from_ch ch)
+    | TERM(b,str) -> Terminal(str)::(read_tokens_from_ch ch)
+    | _ -> failwith "Error token"
+
+let read_tokens (str : string) : element list =
+    read_tokens_from_ch (Lexing.from_string str)

@@ -10,9 +10,22 @@ let int2string = string_of_int
 (* Generation du nom du nouveau non terminal, fonction du numéro de l'itération et du nom précédent *)
 let etiquette nom numero = nom ^ "_" ^ (int2string numero)
 
+let quotient_prefix_string str prefix = 
+    if String.length prefix > String.length str then None else
+    let b = Str.string_match (Str.regexp (Str.quote prefix)) str 0 in match b with
+    | false -> None
+    | true -> Some(Str.string_after str (String.length prefix))
+
+let quotient_suffix_string str suffix = 
+    if String.length suffix > String.length str then None else
+    let pos = String.length str - String.length suffix in
+    let b = Str.string_match (Str.regexp (Str.quote suffix)) str pos in match b with
+    | false -> None
+    | true -> Some(Str.string_before str pos)
+
 (* Quotient à Gauche d'une règle pour l'itération "numéro" par le terminal "terminal"
    => renvoie (nouvellesrègles,nouvelaxiome) *)
-let left_quotient_of_rule numero terminal axiome = function
+let left_quotient_of_rule quotient_string numero terminal axiome = function
 
     (* A -> t alpha avec t terminal *)
     | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when t=terminal && is_terminal t
@@ -20,6 +33,20 @@ let left_quotient_of_rule numero terminal axiome = function
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(a))-->(t::alpha) ],
                 if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
+
+    (* A -> t alpha avec t terminal *)
+    | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when t=terminal && is_terminal t
+        -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
+            ([ (Nonterminal(etiquette a numero))-->alpha ;
+                (Nonterminal(a))-->(t::alpha) ],
+                if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
+
+    (* A -> t alpha avec t terminal préfixe *)
+(*    | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when is_terminal t && quotient_string (element2string t) (element2string terminal) <> None
+        -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
+            ([ (Nonterminal(etiquette a numero))-->alpha ;
+                (Nonterminal(a))-->(t::alpha) ],
+                if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None) *)
 
     (* A -> t alpha avec t non-terminal *)
     | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when t=terminal
@@ -49,7 +76,7 @@ let reverse_right_part = function
 
 (* Quotient à droite de regle = inversionPartieDroite (quotient à gauche de (inversionPartieDroite regle)) (ouf) *)
 let right_quotient_of_rule numero terminal axiome regle =
-	let (r,a) = (left_quotient_of_rule numero terminal axiome (reverse_right_part regle)) in
+	let (r,a) = (left_quotient_of_rule quotient_suffix_string numero terminal axiome (reverse_right_part regle)) in
 	(List.map reverse_right_part r,a)
 
 (* Quotient générique pour plusieurs règles où fquotientregle est la fonction quotientRegle à appliquer *)
@@ -82,7 +109,7 @@ let rec generate_blind_grammar quotient iteration grammaire = function
     | x::rest -> (* print_string ("quotient par "^element2string2(x)^"\n");*) let g=(quotient_and_nettoyage quotient iteration x grammaire) in (* print_grammar g;*) (generate_blind_grammar [@tailcall]) quotient (iteration+1) g rest
 
 let generate_blind_grammar_both_sides prefixe suffixe grammaire =
-    let g=generate_blind_grammar left_quotient_of_rule  1 (nettoyage grammaire) prefixe in
+    let g=generate_blind_grammar (left_quotient_of_rule quotient_prefix_string) 1 (nettoyage grammaire) prefixe in
     generate_blind_grammar right_quotient_of_rule 100 g (List.rev suffixe)
 
 let rec generate_blind_grammar2 grammars tree grammaire =
