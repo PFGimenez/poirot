@@ -22,6 +22,6 @@ rule token = parse
     | "EOF" { TERM (true,"EOF") }
     | "'" (([^ '\'' '\n' '\r']|"\\\'")* as s) "'" { TERM (true,unescaped s) } (* terminal *)
     | '"' (([^ '"' '\n' '\r']|"\\\"")* as s) '"' { TERM (true,unescaped s) } (* terminal *)
-    | ['A'-'Z' 'a'-'z' '0'-'9' '_']* as s { NTERM (false,s) } (* nonterminal *)
+    | ['A'-'Z' 'a'-'z' '0'-'9' '_']* as s { (*Printf.printf "NT:%s\n%!" s;*) NTERM (false,s) } (* nonterminal *)
 
     | _ as c { raise (UnknownToken c)}
