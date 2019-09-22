@@ -1,4 +1,5 @@
 open Base
+open Fuzzer
 open Blind
 open Clean
 open Quotient

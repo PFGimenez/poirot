@@ -1,4 +1,5 @@
 open Base
+open Fuzzer
 
 let ()=
     let grammaire = Base.read_bnf_grammar Sys.argv.(1) in

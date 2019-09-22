@@ -1,6 +1,7 @@
 open Base
 open Quotient
 open Hashtbl
+open Fuzzer
 
 type db_type = (tree_state, (rec_rule list)) t
 type scored_tree = int * tree_state
