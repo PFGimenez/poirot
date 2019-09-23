@@ -72,7 +72,11 @@ let is_terminal = function
     | Terminal(_) -> true
     | _ -> false
 
+let is_non_terminal s = not (is_terminal s)
+
 let is_tree_terminal (pre,s,suf) = is_terminal s
+
+let is_tree_non_terminal (pre,s,suf) = not (is_terminal s)
 
 (* Conversion d'une partie en chaîne de caractères *)
 let concat_with_delimiter d s1 s2 = s1 ^ d ^ s2
@@ -154,8 +158,6 @@ let rec first_non_terminal2 : tree_state list -> tree_state option = function
 	| [] -> None
 	| (pre,Terminal(x),suf)::rest -> first_non_terminal2 rest
 	| (pre,Nonterminal(x),suf)::rest -> Some((pre,Nonterminal(x),suf))
-
-
 
 let string_inst_of_element (values : (element, string) t) : element -> string  = function
     | s when Hashtbl.mem values s -> Hashtbl.find values s

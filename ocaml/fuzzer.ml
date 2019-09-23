@@ -133,4 +133,21 @@ let rec derive_with_path2 (grammaire : rec_grammar) : (tree_state list * rec_rul
 
 let derive_word_with_symbol2 (grammaire : rec_grammar) (s : element) : element list = derive_with_path2 grammaire [[grammaire.axiom],find_path_symbol2 grammaire [s,[]]]
 
+let get_all_non_terminal (grammaire : grammaire) : element list = List.sort_uniq compare (List.flatten (List.map (fun r -> List.filter is_non_terminal r.partiedroite) grammaire.regles))
 
+let get_parents (g : grammaire) (all : element list) (x : element) : element * (element list) =
+    let right_parts = List.map (fun r -> r.partiedroite) (List.filter (fun r -> r.elementgauche = x) g.regles) in
+    (x, List.filter (fun t -> is_non_terminal t && List.for_all (fun tl -> List.mem t tl) right_parts) all)
+
+let rec get_order_from_par (par : (element * (element list)) list) (output : element list) : element list = match par with
+    | [] -> output
+    | l -> let l_nopar = List.filter (fun (t,tl) -> (first_non_terminal tl = None)) par in match l_nopar with
+        | [] -> failwith "Impossible, entirely recursive grammar"
+        | (ht,_)::q -> let new_par = List.filter (fun (t,tl) -> t <> ht) par in
+                let new_par_filtered = List.map (fun (t,tl) -> (t,List.filter (fun t -> t<>ht) tl)) new_par in
+                (get_order_from_par [@tailcall]) new_par_filtered (ht::output)
+
+let get_order (g : grammaire) : element list =
+    let all = get_all_non_terminal g in
+    let par = List.map (get_parents g all) all in
+    get_order_from_par par []
