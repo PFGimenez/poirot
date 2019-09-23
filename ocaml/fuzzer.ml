@@ -151,3 +151,14 @@ let get_order (g : grammaire) : element list =
     let all = get_all_non_terminal g in
     let par = List.map (get_parents g all) all in
     get_order_from_par par []
+
+let delete_recursion (g : grammaire) : grammaire =
+    let rec del_rec (rl : regle list) (forbidden : element list): element list -> regle list = function
+        | [] -> rl
+        | t::q -> (del_rec [@tailcall]) (List.filter (fun r -> r.elementgauche<>t || List.for_all (fun s -> not (List.mem s forbidden || s=t)) r.partiedroite) rl) (t::forbidden) q
+    and order = get_order g in
+    g.axiome @@ (del_rec g.regles [] order)
+
+let simple_fuzzer (g : grammaire) (order : element list) : element list =
+    []
+

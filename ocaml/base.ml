@@ -187,18 +187,18 @@ let rec print_grammars = function
     | t::q -> print_grammar t; print_grammars q
 
 
-let rec read_part (part : (bool*string) list) : partie = match part with
-    | [] -> []
-    | t::q when fst t -> Terminal(snd t)::(read_part q)
-    | t::q -> Nonterminal(snd t)::(read_part q)
+let rec read_part (part : (bool*string) list) (output : element list) : partie = match part with
+    | [] -> List.rev output
+    | t::q when fst t -> (read_part [@tailcall]) q (Terminal(snd t)::output)
+    | t::q -> (read_part [@tailcall]) q (Nonterminal(snd t)::output)
 
-let rec read_rules (rules : ((bool*string) * ((bool*string) list)) list) : regle list = match rules with
-    | [] -> []
-    | (n,l)::q -> assert (not (fst n)); (Nonterminal(snd n) --> read_part l)::read_rules q
+let rec read_rules (rules : ((bool*string) * ((bool*string) list)) list) (output : regle list) : regle list = match rules with
+    | [] -> output
+    | (n,l)::q -> assert (not (fst n)); (read_rules [@tailcall]) q ((Nonterminal(snd n) --> read_part l [])::output)
 
 let convert_grammar (tokens : ((bool*string) * (((bool*string) * ((bool*string) list)) list))) : grammaire =
     assert (not (fst (fst tokens)));
-    Nonterminal(snd (fst tokens)) @@ read_rules (snd tokens)
+    Nonterminal(snd (fst tokens)) @@ read_rules (snd tokens) []
 
 let read_bnf_grammar (filename : string) : grammaire =
     let lexbuf = Lexing.from_channel (open_in filename) in
