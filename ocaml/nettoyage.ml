@@ -73,7 +73,7 @@ let rec useful_symbols = function
 
 let rec algoUtile rules r s =
 	let newsymboles = remove_duplicates (List.append (useful_symbols r) s) in
-	(*Printf.printf "%s\n" (partie2string newsymboles); DEBUG *)
+	(*Printf.printf "%s\n" (part2string newsymboles); DEBUG *)
 	let newregles = remove_duplicates (List.append r (useful_rules rules newsymboles)) in
 	if (newsymboles = s) then newregles
 	else algoUtile rules newregles newsymboles

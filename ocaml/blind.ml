@@ -11,7 +11,7 @@ let blackbox_template
     (prefix : element list)
     (suffix : element list)
     (grammar : grammar)
-    (injections : partie list)
+    (injections : part list)
     : bool
     = Fuzzer.is_list_in_language grammar (List.map (fun p -> prefix @ p @ suffix) injections)
 
@@ -37,7 +37,7 @@ let assemble_grammar (grammars : db_type) (t : ext_element) : ext_grammar = t@@@
 
 let get_grammar_from_ext_element2 (grammars : db_type) (grammar : grammar) (t : ext_element) : ext_grammar = update_grammars grammars grammar [t]; assemble_grammar grammars t
 
-(* renvoie les règles dont la partie droite contient l'élément cherché *)
+(* renvoie les règles dont la part droite contient l'élément cherché *)
 
 let trouve_regles grammar elem = List.filter (fun r -> List.mem elem r.right_part) grammar.rules
 
@@ -84,13 +84,13 @@ let construct_ext_elements (grammar: grammar) ((p,e,s): ext_element) : ext_eleme
 
 let get_all_tokens (grammar : grammar) : element list = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.right_part) grammar.rules))
 
-let fuzzer (g : grammar) : partie list =
+let fuzzer (g : grammar) : part list =
     let term = List.filter (is_symbol_accessible g) (get_all_tokens g) in
     List.map (Fuzzer.derive_word_with_symbol g) term
 
-let check_grammar_validity (blackbox : partie list -> bool) (g : grammar) : bool = blackbox (fuzzer g)
+let check_grammar_validity (blackbox : part list -> bool) (g : grammar) : bool = blackbox (fuzzer g)
 
-let check_grammar_validity2 (blackbox : partie list -> bool) (g : ext_grammar) = true
+let check_grammar_validity2 (blackbox : part list -> bool) (g : ext_grammar) = true
 
 (* A* algorithm *)
 
@@ -117,7 +117,7 @@ let rec search blackbox interest grammar step visited = function
         end else begin
             let g = get_grammar_from_ext_element grammar t in
             print_grammar g;
-            (*print_string "grammar contruite\n"; flush stdout;*)
+            (*print_string "Grammar built\n"; flush stdout;*)
             (*print_string ("Accessible from "^(element2string g.axiom)^": "); print_bool (is_accessible_from_ext_axiom grammar interest [g.axiom]); flush stdout;*)
             (*print_string ("Distance: "^(string_of_int (distance_to_goal grammar interest [(trim g.axiom,0)])));*)
             if not (check_grammar_validity blackbox g) then begin (* invalid : ignore *)
@@ -135,7 +135,7 @@ let search_api blackbox interest grammar init_tokens =
 
 
 let rec search2
-    (blackbox : partie list -> bool)
+    (blackbox : part list -> bool)
     (interest : element)
     (init_grammaire : grammar)
     (step : int)
@@ -149,7 +149,7 @@ let rec search2
         end else begin
             let g = get_grammar_from_ext_element2 grammars init_grammaire t in
             print_string (string_of_ext_grammar g);
-            (*print_string "grammar contruite\n"; flush stdout;*)
+            (*print_string "Grammar built\n"; flush stdout;*)
             (*print_string ("Accessible from "^(element2string g.axiom)^": "); print_bool (is_accessible_from_ext_axiom init_grammaire interest [g.axiom]); flush stdout;*)
             (*print_string ("Distance: "^(string_of_int (distance_to_goal init_grammaire interest [(trim g.axiom,0)])));*)
             if not (check_grammar_validity2 blackbox g) then begin (* invalid : ignore *)
@@ -163,13 +163,13 @@ let rec search2
         end
 
 let search2_api
-    (blackbox : partie list -> bool)
+    (blackbox : part list -> bool)
     (interest : element)
     (init_grammaire : grammar)
     (init_tokens : ext_element list)
     : ext_grammar option =
         search2 blackbox interest init_grammaire 0 [] (Hashtbl.create 100) (insert_all_in_list2 init_grammaire interest [] init_tokens)
 
-let get_injection_tokens (blackbox : partie list -> bool) (grammar : grammar) : element list = List.filter (fun p -> blackbox [[p]]) (get_all_tokens grammar)
+let get_injection_tokens (blackbox : part list -> bool) (grammar : grammar) : element list = List.filter (fun p -> blackbox [[p]]) (get_all_tokens grammar)
 
-let get_injection_leaves (blackbox : partie list -> bool) (grammar : grammar) : ext_element list = List.map ext_element_of_element (get_injection_tokens blackbox grammar)
+let get_injection_leaves (blackbox : part list -> bool) (grammar : grammar) : ext_element list = List.map ext_element_of_element (get_injection_tokens blackbox grammar)

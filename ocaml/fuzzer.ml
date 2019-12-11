@@ -65,7 +65,7 @@ let rec derive_within_depth profondeur grammar motintermediaire =
 (* DeriverTout depuis l'axiom de la grammar fournie *)
 let deriver profondeur grammar = derive_within_depth profondeur grammar [grammar.axiom]
 
-let derive_and_print profondeur grammar = List.iter (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) (deriver profondeur grammar)
+let derive_and_print profondeur grammar = List.iter (fun r -> print_string ("Mot: "^(part2string r)^"\n")) (deriver profondeur grammar)
 
 (** Vérification de la dérivabilité d'une phrase à partir d'une grammar **)
 
@@ -82,16 +82,16 @@ let rec derive_within_length longueur grammar motintermediaire =
     end
     else []
 
-(** Vérifie si un ensemble de mots fait partie d'un langage. Plus rapide que de vérifier chaque mot indépendamment **)
+(** Vérifie si un ensemble de mots fait part d'un langage. Plus rapide que de vérifier chaque mot indépendamment **)
 
 let is_list_in_language grammar parties =
     let len = List.fold_left max 0 (List.map List.length parties) in
     let words = derive_within_length len grammar [grammar.axiom] in
     List.for_all (fun p -> List.mem p words) parties
 
-let is_in_language grammar partie = (* print_string ((partie2string partie)^"\n");*) List.mem partie (derive_within_length (List.length partie) grammar [grammar.axiom])
+let is_in_language grammar part = (* print_string ((part2string part)^"\n");*) List.mem part (derive_within_length (List.length part) grammar [grammar.axiom])
 
-let derive_within_lengthPrint longueur grammar = List.iter (fun r -> print_string ("Mot: "^(partie2string r)^"\n") (*; print_bool (is_in_language grammar r)*)) (derive_within_length longueur grammar [grammar.axiom])
+let derive_within_lengthPrint longueur grammar = List.iter (fun r -> print_string ("Mot: "^(part2string r)^"\n") (*; print_bool (is_in_language grammar r)*)) (derive_within_length longueur grammar [grammar.axiom])
 
 let min_list a b = if List.length a < List.length b then a else b
 
@@ -122,7 +122,7 @@ let rec find_path_symbol2 (grammar : ext_grammar) : (element*ext_rule list) list
     | (obj,path)::q -> let ext_rules = List.filter (fun r -> List.exists (fun t -> obj = element_of_ext_element t) r.ext_right_part) grammar.ext_rules in
         (find_path_symbol2 [@tailcall]) grammar (q@(List.map (fun r -> (element_of_ext_element r.ext_left_symbol, r::path)) ext_rules))
 
-let rec derive_with_path2 (grammar : ext_grammar) : (ext_element list * ext_rule list) list -> partie = function
+let rec derive_with_path2 (grammar : ext_grammar) : (ext_element list * ext_rule list) list -> part = function
     | [] -> failwith "No derivation with path"
     | (w, path)::q when is_word2 w -> assert (List.length path = 0); word_of_ext_elements w
     | (w, path)::q -> let ext_rules = possible_rules2 w grammar.ext_rules in

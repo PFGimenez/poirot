@@ -4,7 +4,7 @@ let ()=
         and prefix = Base.read_tokens (Sys.argv.(2))
         and suffix = Base.read_tokens (Sys.argv.(3))
         and intepart = Base.read_tokens (Sys.argv.(4)) in
-        print_string ("Prefix: "^(Base.partie2string prefix)^"\nSuffix: "^(Base.partie2string suffix)^"\n");
+        print_string ("Prefix: "^(Base.part2string prefix)^"\nSuffix: "^(Base.part2string suffix)^"\n");
         let values = Hashtbl.create 1 in
         Hashtbl.add values (Base.Terminal("value")) "val1";
 
