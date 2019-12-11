@@ -1,6 +1,6 @@
 open Base
 
-(** Algorithme de génération de la grammaire des injections **)
+(** Algorithme de génération de la grammar des injections **)
 
 
 (* Alias pour la conversion int vers string *)
@@ -73,9 +73,9 @@ let left_quotient_of_rule quotient_string numero terminal axiome = function
 let reverse_right_part = function
 	| {elementgauche=gauche;partiedroite=droite} -> {elementgauche=gauche;partiedroite=List.rev droite}
 
-(* Quotient à droite de regle = inversionPartieDroite (quotient à gauche de (inversionPartieDroite regle)) (ouf) *)
-let right_quotient_of_rule numero terminal axiome regle =
-	let (r,a) = (left_quotient_of_rule quotient_suffix_string numero terminal axiome (reverse_right_part regle)) in
+(* Quotient à droite de rule = inversionPartieDroite (quotient à gauche de (inversionPartieDroite rule)) (ouf) *)
+let right_quotient_of_rule numero terminal axiome rule =
+	let (r,a) = (left_quotient_of_rule quotient_suffix_string numero terminal axiome (reverse_right_part rule)) in
 	(List.map reverse_right_part r,a)
 
 (* Quotient générique pour plusieurs règles où fquotientregle est la fonction quotientRegle à appliquer *)
@@ -91,11 +91,11 @@ let rec quotient fquotientregle acc iteration terminal axiome = function
 		     (quotient [@tailcall]) fquotientregle (accregles,accaxiome) iteration terminal axiome rest
 
 (* Quotient à droite pour plusieurs règles par un terminal "terminal" *)
-let quotient_and_nettoyage quotientregle iteration terminal grammaire =
-	let {axiome=axiome;regles=regles} = grammaire in
+let quotient_and_nettoyage quotientregle iteration terminal grammar =
+	let {axiome=axiome;regles=regles} = grammar in
 	Nettoyage.nettoyage (quotient quotientregle ([],axiome) iteration terminal axiome regles)
 
-(* Algorithme de génération de la grammaire complète pour la requête
+(* Algorithme de génération de la grammar complète pour la requête
 WARNING : les grammaires générées sont à nettoyer, car elles impliquent énormément de backtracking lors de la dérivation du mot.
 	 Penser à appliquer :
 	-> suppression des eps production
@@ -103,16 +103,16 @@ WARNING : les grammaires générées sont à nettoyer, car elles impliquent éno
 	-> suppression des symboles inutiles
 *)
 
-let rec generate_blind_grammar quotient iteration grammaire = function
-	| [] -> grammaire
-    | x::rest -> (* print_string ("quotient par "^element2string2(x)^"\n");*) let g=(quotient_and_nettoyage quotient iteration x grammaire) in (* print_grammar g;*) (generate_blind_grammar [@tailcall]) quotient (iteration+1) g rest
+let rec generate_blind_grammar quotient iteration grammar = function
+	| [] -> grammar
+    | x::rest -> (* print_string ("quotient par "^element2string2(x)^"\n");*) let g=(quotient_and_nettoyage quotient iteration x grammar) in (* print_grammar g;*) (generate_blind_grammar [@tailcall]) quotient (iteration+1) g rest
 
-let generate_blind_grammar_both_sides prefixe suffixe grammaire =
-    let g=generate_blind_grammar (left_quotient_of_rule quotient_prefix_string) 1 (Nettoyage.nettoyage grammaire) prefixe in
+let generate_blind_grammar_both_sides prefixe suffixe grammar =
+    let g=generate_blind_grammar (left_quotient_of_rule quotient_prefix_string) 1 (Nettoyage.nettoyage grammar) prefixe in
     generate_blind_grammar right_quotient_of_rule 100 g (List.rev suffixe)
 
-let rec generate_blind_grammar2 grammars tree grammaire =
-    let g = Hashtbl.find_opt grammars tree in match g with
-    | None -> let g2 = grammaire (* TODO *) in Hashtbl.add grammars tree g2; g2
+let rec generate_blind_grammar2 grammars ext_element grammar =
+    let g = Hashtbl.find_opt grammars ext_element in match g with
+    | None -> let g2 = grammar (* TODO *) in Hashtbl.add grammars ext_element g2; g2
     | Some(g2) -> g2
 

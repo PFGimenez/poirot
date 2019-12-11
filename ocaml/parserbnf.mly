@@ -15,7 +15,7 @@ start:
 ;
 
 rule:
-    | NTERM SEP right_part { (* Printf.printf "Regle %s\n%!" (snd $1) ; *) ($1,$3) } ;
+    | NTERM SEP right_part { (* Printf.printf "Rule %s\n%!" (snd $1) ; *) ($1,$3) } ;
 
 rlist:
     | rule { [$1] }
