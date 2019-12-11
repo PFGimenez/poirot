@@ -14,20 +14,20 @@ type partie = element list
 type ext_element = partie * element * partie
 
 (* Une règle est composée d'une partie gauche (un élément) et d'une partie droite *)
-type rule =  { elementgauche : element; partiedroite : partie }
+type rule =  { left_symbol : element; right_part : partie }
 
 (* A grammar is composed of an axiom (an element) and a list of rules *)
 type grammar = {axiome: element; regles : rule list }
 
 type ext_part = ext_element list
 
-type ext_rule = {left_symbol : ext_element; right_part : ext_part}
+type ext_rule = {ext_left_symbol : ext_element; ext_right_part : ext_part}
 
 type ext_rules = ext_rule list
 
 type ext_grammar = {axiom: ext_element; rules: ext_rules}
 
-let (--->) g d = {left_symbol=g;right_part=d}
+let (--->) g d = {ext_left_symbol=g;ext_right_part=d}
 
 let ext_element_of_element e = ([],e,[])
 
@@ -37,11 +37,11 @@ let element_of_ext_element ((pre,e,suf) : ext_element) : element = e
 
 let word_of_ext_elements (ext_element_list: ext_element list) : partie = List.map element_of_ext_element ext_element_list
 
-let ext_rule_of_rule r = (ext_element_of_element r.elementgauche) ---> (List.map ext_element_of_element r.partiedroite)
+let ext_rule_of_rule r = (ext_element_of_element r.left_symbol) ---> (List.map ext_element_of_element r.right_part)
 
 let ext_grammar_of_grammar g = {axiom = ext_element_of_element g.axiome; rules = List.map ext_rule_of_rule g.regles}
 
-let is_ext_element_in_rules t r = List.exists t (List.map (fun r -> r.left_symbol) r)
+let is_ext_element_in_rules t r = List.exists t (List.map (fun r -> r.ext_left_symbol) r)
 
 (** Fonctions de conversion en chaîne de caractères **)
 
@@ -103,9 +103,9 @@ let quoted_string_of_ext_part = function
     | t::q -> List.fold_left concat_space (quoted_string_of_ext_element t) (List.map quoted_string_of_ext_element q)
     | [] -> ""
 
-let string_of_ext_rule r = (string_of_ext_element r.left_symbol) ^ " -> " ^ (string_of_ext_part r.right_part)
+let string_of_ext_rule r = (string_of_ext_element r.ext_left_symbol) ^ " -> " ^ (string_of_ext_part r.ext_right_part)
 
-let quoted_string_of_ext_rule r = (quoted_string_of_ext_element r.left_symbol) ^ " ::= " ^ (quoted_string_of_ext_part r.right_part)^";"
+let quoted_string_of_ext_rule r = (quoted_string_of_ext_element r.ext_left_symbol) ^ " ::= " ^ (quoted_string_of_ext_part r.ext_right_part)^";"
 
 let string_of_ext_rules = function
     | t::q -> List.fold_left concat_new_line (string_of_ext_rule t) (List.map string_of_ext_rule q)
@@ -122,7 +122,7 @@ let bnf_string_of_grammar (g : grammar) : string = bnf_string_of_ext_grammar (ex
 let string_of_ext_grammar (g : ext_grammar) : string = "Axiom: " ^ (string_of_ext_element g.axiom) ^ "\nRules: " ^ (string_of_ext_rules g.rules)
 (* Conversion d'une règle en chaîne de caractère *)
 let regle2string : rule -> string = function
-	| {elementgauche=g;partiedroite=d} -> element2string g ^ " --> " ^ partie2string d
+	| {left_symbol=g;right_part=d} -> element2string g ^ " --> " ^ partie2string d
 
 (* Conversion d'une liste de règles en chaîne de caractère *)
 let rec reglelist2string = function
@@ -134,7 +134,7 @@ let rec reglelist2string = function
 (** Fonctions utilitaire **)
 
 (* L'opérateur --> permet de créer une règle à la volée (facilité syntaxique) à partie de deux parties *)
-let (-->) g d = {elementgauche=g;partiedroite=d}
+let (-->) g d = {left_symbol=g;right_part=d}
 
 (* Création d'une grammar à la volée *)
 let (@@) axiome regles = {axiome=axiome;regles=regles}
@@ -191,7 +191,7 @@ let rec read_rules (rules : ((bool*string) * ((bool*string) list)) list) (output
     | (n,l)::q -> assert (not (fst n)); (read_rules [@tailcall]) q ((Nonterminal(snd n) --> read_part l [])::output)
 
 let convert_grammar (tokens : ((bool*string) * (((bool*string) * ((bool*string) list)) list))) : grammar =
-    assert (not (fst (fst tokens)));
+    assert (not (fst (fst tokens))); (* the axiom must be a nonterminal *)
     Nonterminal(snd (fst tokens)) @@ read_rules (snd tokens) []
 
 let read_bnf_grammar (filename : string) : grammar =

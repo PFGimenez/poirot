@@ -15,23 +15,23 @@ let rec iterate_until_convergence (f : ext_grammar -> ext_rules) (g : ext_gramma
     if old_length = List.length new_rules then g else (iterate_until_convergence [@tailcall]) f (g.axiom@@@new_rules)
 
 (* The useful symbols are the non-terminal that are the left side of a production *)
-let get_useful_symbols (g : ext_grammar) : ext_element list = List.sort_uniq compare (List.map (fun r -> r.left_symbol) g.rules)
+let get_useful_symbols (g : ext_grammar) : ext_element list = List.sort_uniq compare (List.map (fun r -> r.ext_left_symbol) g.rules)
 
 let rec is_rule_useful (useful_s : ext_element list) (t : ext_rule) : bool =
-    List.mem t.left_symbol useful_s && List.for_all (fun s -> is_ext_element_terminal s || List.mem s useful_s) t.right_part
+    List.mem t.ext_left_symbol useful_s && List.for_all (fun s -> is_ext_element_terminal s || List.mem s useful_s) t.ext_right_part
 
 let remove_useless_symbols_once (g : ext_grammar) : ext_rules = List.filter (is_rule_useful (get_useful_symbols g)) g.rules
 
 let remove_useless_symbols : ext_grammar -> ext_grammar = iterate_until_convergence remove_useless_symbols_once
 
-let get_reachable_symbols_once (g : ext_grammar) (slist : ext_element list) : ext_element list = List.sort_uniq compare (List.concat (slist::(List.map (fun r -> r.right_part) (List.filter (fun r -> List.mem r.left_symbol slist) g.rules))))
+let get_reachable_symbols_once (g : ext_grammar) (slist : ext_element list) : ext_element list = List.sort_uniq compare (List.concat (slist::(List.map (fun r -> r.ext_right_part) (List.filter (fun r -> List.mem r.ext_left_symbol slist) g.rules))))
 
 let rec get_reachable_symbols (g : ext_grammar) (slist : ext_element list) : ext_element list = let old_length = List.length slist and slist2 = get_reachable_symbols_once g slist in
     if old_length = List.length slist2 then slist else (get_reachable_symbols [@tailcall]) g slist2
 
 let remove_unreachable_symbols (g : ext_grammar) : ext_grammar = g.axiom @@@ (List.filter (is_rule_useful (get_reachable_symbols g [g.axiom])) g.rules)
 
-let get_epsilon_symbols (g : ext_grammar) : ext_element list = List.sort_uniq compare (List.map (fun r -> r.left_symbol) (List.filter (fun r -> List.length r.right_part = 0 && r.left_symbol <> g.axiom) g.rules))
+let get_epsilon_symbols (g : ext_grammar) : ext_element list = List.sort_uniq compare (List.map (fun r -> r.ext_left_symbol) (List.filter (fun r -> List.length r.ext_right_part = 0 && r.ext_left_symbol <> g.axiom) g.rules))
 
 let rec power_set : int -> bool list list = function
     | 0 -> [[]]
@@ -52,13 +52,13 @@ let rec filter_symbol (s : ext_element) (blist : bool list) : ext_element list -
 
 let rec get_rules_with_symbol (s : ext_element) : ext_rules -> ext_rules = function
     | [] -> []
-    | r::q when List.mem s (r.right_part) -> r::(get_rules_with_symbol s q)
+    | r::q when List.mem s (r.ext_right_part) -> r::(get_rules_with_symbol s q)
     | r::q -> get_rules_with_symbol s q
 
-let duplicate_epsilon_symbol_from_rule (s : ext_element) (r : ext_rule) : ext_rule list = let ps = power_set (get_occurrences_number s r.right_part) in
-    List.map (fun blist -> r.left_symbol ---> (filter_symbol s blist r.right_part)) ps
+let duplicate_epsilon_symbol_from_rule (s : ext_element) (r : ext_rule) : ext_rule list = let ps = power_set (get_occurrences_number s r.ext_right_part) in
+    List.map (fun blist -> r.ext_left_symbol ---> (filter_symbol s blist r.ext_right_part)) ps
 
-let remove_epsilon_rules_except_axiom epsilon_symbols (g : ext_grammar) : ext_rules = List.filter (fun r -> List.length r.right_part != 0 || (r.left_symbol = g.axiom || not (List.mem r.left_symbol epsilon_symbols))) g.rules
+let remove_epsilon_rules_except_axiom epsilon_symbols (g : ext_grammar) : ext_rules = List.filter (fun r -> List.length r.ext_right_part != 0 || (r.ext_left_symbol = g.axiom || not (List.mem r.ext_left_symbol epsilon_symbols))) g.rules
 
 let remove_epsilon_symbols_once (g : ext_grammar) : ext_rules =
     let epsilon_symbols = get_epsilon_symbols g in

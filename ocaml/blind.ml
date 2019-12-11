@@ -26,7 +26,7 @@ let get_new_rules (grammar : grammar) (t : ext_element) : ext_rule list = []
 
 (* TODO *)
 
-let get_new_axioms (r : ext_rules) : ext_element list = [(List.hd r).left_symbol]
+let get_new_axioms (r : ext_rules) : ext_element list = [(List.hd r).ext_left_symbol]
 
 let rec update_grammars (grammars : db_type) (grammar : grammar) : ext_element list -> unit = function
     | [] -> ()
@@ -39,17 +39,17 @@ let get_grammar_from_ext_element2 (grammars : db_type) (grammar : grammar) (t : 
 
 (* renvoie les règles dont la partie droite contient l'élément cherché *)
 
-let trouve_regles grammar elem = List.filter (fun r -> List.mem elem r.partiedroite) grammar.regles
+let trouve_regles grammar elem = List.filter (fun r -> List.mem elem r.right_part) grammar.regles
 
 let rec is_accessible_from_axiom (grammar : grammar) (s : element) (reachable : element list) : bool =
     if List.mem s reachable then true
     else
-        let rules = List.filter (fun r -> List.mem r.elementgauche reachable) grammar.regles in
-        let new_reachable = List.sort_uniq compare (List.flatten (List.map (fun r -> r.partiedroite) rules)) in
+        let rules = List.filter (fun r -> List.mem r.left_symbol reachable) grammar.regles in
+        let new_reachable = List.sort_uniq compare (List.flatten (List.map (fun r -> r.right_part) rules)) in
             if (List.length reachable) = (List.length new_reachable) then false
             else (is_accessible_from_axiom [@tailcall]) grammar s new_reachable
 
-let symbols_from_parents (grammar : grammar) (axiome : element) : element list = List.sort_uniq compare (List.map (fun r -> r.elementgauche) (List.filter (fun r -> List.mem axiome r.partiedroite) grammar.regles))
+let symbols_from_parents (grammar : grammar) (axiome : element) : element list = List.sort_uniq compare (List.map (fun r -> r.left_symbol) (List.filter (fun r -> List.mem axiome r.right_part) grammar.regles))
 
 let trim = function
     | Terminal(s) -> Terminal(s)
@@ -64,13 +64,13 @@ let rec distance_to_goal (grammar : grammar) (goal : element) : (element * int) 
 
 let rec is_accessible s = function
     | [] -> false
-    | r::q -> List.mem s r.partiedroite || s = r.elementgauche || (is_accessible [@tailcall]) s q
+    | r::q -> List.mem s r.right_part || s = r.left_symbol || (is_accessible [@tailcall]) s q
 
 let is_symbol_accessible g s = is_accessible s g.regles
 
 let rec is_accessible2 (s : element) : ext_rules -> bool = function
     | [] -> false
-    | r::q -> List.exists (fun t -> element_of_ext_element t = s) r.right_part || s = (element_of_ext_element r.left_symbol) || (is_accessible2 [@tailcall]) s q
+    | r::q -> List.exists (fun t -> element_of_ext_element t = s) r.ext_right_part || s = (element_of_ext_element r.ext_left_symbol) || (is_accessible2 [@tailcall]) s q
 
 let is_symbol_accessible2 (g : ext_grammar) (s : element) : bool = is_accessible2 s g.rules
 
@@ -80,9 +80,9 @@ let rec get_prefix_suffix_partie (elem : element) (prefix : element list) : elem
     | t::q -> get_prefix_suffix_partie elem (t::prefix) q
 
 let construct_ext_elements (grammar: grammar) ((p,e,s): ext_element) : ext_element list =
-    List.flatten (List.map (fun r -> let l=get_prefix_suffix_partie e [] r.partiedroite in List.map (fun (p2,s2) -> p2@p,r.elementgauche,s@s2) l) (trouve_regles grammar e))
+    List.flatten (List.map (fun r -> let l=get_prefix_suffix_partie e [] r.right_part in List.map (fun (p2,s2) -> p2@p,r.left_symbol,s@s2) l) (trouve_regles grammar e))
 
-let get_all_tokens (grammar : grammar) : element list = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.partiedroite) grammar.regles))
+let get_all_tokens (grammar : grammar) : element list = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.right_part) grammar.regles))
 
 let fuzzer (g : grammar) : partie list =
     let term = List.filter (is_symbol_accessible g) (get_all_tokens g) in

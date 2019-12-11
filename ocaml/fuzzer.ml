@@ -2,14 +2,14 @@ open Base
 
 (* Dérivation gauche d'un mot intermédiaire "dérivation" par une règle "rule" *)
 let rec left_derivation derivation rule =
-	let {elementgauche=base;partiedroite=transformation} = rule in
+	let {left_symbol=base;right_part=transformation} = rule in
 	match derivation with
 	| [] -> []
 	| Nonterminal(x)::rest when Nonterminal(x)=base -> List.append transformation rest
 	| x::rest -> x::left_derivation rest rule
 
 let rec left_derivation2 (derivation : ext_element list) (rule : ext_rule) =
-    let {left_symbol=base;right_part=transformation} = rule in
+    let {ext_left_symbol=base;ext_right_part=transformation} = rule in
 	match derivation with
 	| [] -> []
 	| (pre,Nonterminal(x),suf)::rest when (pre,Nonterminal(x),suf)=base -> List.append transformation rest
@@ -24,7 +24,7 @@ let rec possible_rules motintermediaire regles =
 	| Some(x) ->
 	match regles with
 	| [] -> []
-    | {elementgauche=gauche;partiedroite=droite}::rest when x = gauche ->
+    | {left_symbol=gauche;right_part=droite}::rest when x = gauche ->
 		gauche-->droite::(possible_rules motintermediaire rest)
     | _::rest -> possible_rules motintermediaire rest
 
@@ -35,7 +35,7 @@ let rec possible_rules2 (motintermediaire : ext_element list) (regles : ext_rule
 	| Some(x) ->
 	match regles with
 	| [] -> []
-    | {left_symbol=ls;right_part=rp}::rest when x = ls ->
+    | {ext_left_symbol=ls;ext_right_part=rp}::rest when x = ls ->
 		ls--->rp::(possible_rules2 motintermediaire rest)
     | _::rest -> possible_rules2 motintermediaire rest
 
@@ -95,15 +95,15 @@ let derive_within_lengthPrint longueur grammar = List.iter (fun r -> print_strin
 
 let min_list a b = if List.length a < List.length b then a else b
 
-let length_non_terminal r = List.length (List.filter (fun s -> not (is_terminal s)) r.partiedroite)
+let length_non_terminal r = List.length (List.filter (fun s -> not (is_terminal s)) r.right_part)
 
 let min_rule a b = if length_non_terminal a < length_non_terminal b then a else b
 
 let rec find_path_symbol grammar = function
     | [] -> failwith "No path"
     | (obj,path)::_ when obj=grammar.axiome -> path
-    | (obj,path)::q -> let rules = List.filter (fun r -> List.mem obj r.partiedroite) grammar.regles in
-        (find_path_symbol [@tailcall]) grammar (q@(List.map (fun r -> (r.elementgauche, r::path)) rules))
+    | (obj,path)::q -> let rules = List.filter (fun r -> List.mem obj r.right_part) grammar.regles in
+        (find_path_symbol [@tailcall]) grammar (q@(List.map (fun r -> (r.left_symbol, r::path)) rules))
 
 let rec derive_with_path grammar = function
     | [] -> failwith "No derivation with path"
@@ -119,8 +119,8 @@ let derive_word_with_symbol grammar s = derive_with_path grammar [[grammar.axiom
 let rec find_path_symbol2 (grammar : ext_grammar) : (element*ext_rule list) list -> ext_rule list = function
     | [] -> failwith "No path"
     | (obj,path)::_ when obj=element_of_ext_element grammar.axiom -> path
-    | (obj,path)::q -> let rules = List.filter (fun r -> List.exists (fun t -> obj = element_of_ext_element t) r.right_part) grammar.rules in
-        (find_path_symbol2 [@tailcall]) grammar (q@(List.map (fun r -> (element_of_ext_element r.left_symbol, r::path)) rules))
+    | (obj,path)::q -> let rules = List.filter (fun r -> List.exists (fun t -> obj = element_of_ext_element t) r.ext_right_part) grammar.rules in
+        (find_path_symbol2 [@tailcall]) grammar (q@(List.map (fun r -> (element_of_ext_element r.ext_left_symbol, r::path)) rules))
 
 let rec derive_with_path2 (grammar : ext_grammar) : (ext_element list * ext_rule list) list -> partie = function
     | [] -> failwith "No derivation with path"
@@ -133,11 +133,11 @@ let rec derive_with_path2 (grammar : ext_grammar) : (ext_element list * ext_rule
 
 let derive_word_with_symbol2 (grammar : ext_grammar) (s : element) : element list = derive_with_path2 grammar [[grammar.axiom],find_path_symbol2 grammar [s,[]]]
 
-let get_all_non_terminal (grammar : grammar) : element list = List.sort_uniq compare (List.flatten (List.map (fun r -> List.filter is_non_terminal r.partiedroite) grammar.regles))
+let get_all_non_terminal (grammar : grammar) : element list = List.sort_uniq compare (List.flatten (List.map (fun r -> List.filter is_non_terminal r.right_part) grammar.regles))
 
 let get_parents (g : grammar) (all : element list) (x : element) : element * (element list) =
-    let right_parts = List.map (fun r -> r.partiedroite) (List.filter (fun r -> r.elementgauche = x) g.regles) in
-    (x, List.filter (fun t -> is_non_terminal t && List.for_all (fun tl -> List.mem t tl) right_parts) all)
+    let ext_right_parts = List.map (fun r -> r.right_part) (List.filter (fun r -> r.left_symbol = x) g.regles) in
+    (x, List.filter (fun t -> is_non_terminal t && List.for_all (fun tl -> List.mem t tl) ext_right_parts) all)
 
 let rec get_order_from_par (par : (element * (element list)) list) (output : element list) : element list = match par with
     | [] -> output
@@ -155,7 +155,7 @@ let get_order (g : grammar) : element list =
 let delete_recursion (g : grammar) : grammar =
     let rec del_rec (rl : rule list) (forbidden : element list): element list -> rule list = function
         | [] -> rl
-        | t::q -> (del_rec [@tailcall]) (List.filter (fun r -> r.elementgauche<>t || List.for_all (fun s -> not (List.mem s forbidden || s=t)) r.partiedroite) rl) (t::forbidden) q
+        | t::q -> (del_rec [@tailcall]) (List.filter (fun r -> r.left_symbol<>t || List.for_all (fun s -> not (List.mem s forbidden || s=t)) r.right_part) rl) (t::forbidden) q
     and order = get_order g in
     g.axiome @@ (del_rec g.regles [] order)
 

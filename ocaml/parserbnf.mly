@@ -6,7 +6,7 @@
 
 %start start
 %type <((bool*string) * (((bool*string) * ((bool*string) list)) list))> start
-%type <(bool*string) list> right_part
+%type <(bool*string) list> ext_right_part
 %type <((bool*string) * ((bool*string) list)) list> rlist
 %%
 
@@ -15,15 +15,15 @@ start:
 ;
 
 rule:
-    | NTERM SEP right_part { (* Printf.printf "Rule %s\n%!" (snd $1) ; *) ($1,$3) } ;
+    | NTERM SEP ext_right_part { (* Printf.printf "Rule %s\n%!" (snd $1) ; *) ($1,$3) } ;
 
 rlist:
     | rule { [$1] }
     | rule rlist { $1 :: $2 }
 ;
 
-right_part:
-    | NTERM right_part { $1 :: $2 }
-    | TERM right_part { $1 :: $2 }
+ext_right_part:
+    | NTERM ext_right_part { $1 :: $2 }
+    | TERM ext_right_part { $1 :: $2 }
     | END_RULE { [] }
 ;

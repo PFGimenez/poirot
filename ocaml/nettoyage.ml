@@ -16,7 +16,7 @@ let rec extract_non_terminal_part = function
 	| Nonterminal(x)::rest -> Nonterminal(x) :: extract_non_terminal_part rest
 
 let rec get_reachable = function
-	{elementgauche=_;partiedroite=d} -> extract_non_terminal_part d
+	{left_symbol=_;right_part=d} -> extract_non_terminal_part d
 
 let rec reachable_symbols = function
 	|[] -> []
@@ -24,7 +24,7 @@ let rec reachable_symbols = function
 
 let rec reachable_rules_from_non_terminal nt = function
 	| [] -> []
-    |{elementgauche=g;partiedroite=d}::rest when g=nt ->
+    |{left_symbol=g;right_part=d}::rest when g=nt ->
 			g-->d::(reachable_rules_from_non_terminal nt rest)
 	|_::rest -> (reachable_rules_from_non_terminal nt rest)
 
@@ -51,7 +51,7 @@ let clean_unreachable_rules grammar =
 (** Algorithme de nettoyage des règles inutiles **)
 
 let rule_directly_useful = function
-	| {elementgauche = _;partiedroite = d} when None = first_non_terminal d -> true
+	| {left_symbol = _;right_part = d} when None = first_non_terminal d -> true
 	| _ -> false
 
 let rec appartient x = function
@@ -59,7 +59,7 @@ let rec appartient x = function
 	| e::rest when e=x -> true
 	| _::rest -> appartient x rest
 
-let useful_rule nonterminal rule = appartient nonterminal rule.partiedroite
+let useful_rule nonterminal rule = appartient nonterminal rule.right_part
 
 let useful_rules_non_terminal regles nonterminal = List.filter (useful_rule nonterminal) regles
 
@@ -69,7 +69,7 @@ let rec useful_rules regles = function
 
 let rec useful_symbols = function
 	| [] -> []
-	| x::rest -> x.elementgauche :: (useful_symbols rest)
+	| x::rest -> x.left_symbol :: (useful_symbols rest)
 
 let rec algoUtile regles r s =
 	let newsymboles = remove_duplicates (List.append (useful_symbols r) s) in
@@ -91,14 +91,14 @@ let clean_useless_rules grammar =
 
 let rec get_all_left_elements = function
     | [] -> []
-    | r::t -> r.elementgauche :: (get_all_left_elements t)
+    | r::t -> r.left_symbol :: (get_all_left_elements t)
 
 let rec check_useful_symbols left_parts = function
     | [] -> true
     | Terminal(s)::t -> check_useful_symbols left_parts t
     | h::t -> List.mem h left_parts && check_useful_symbols left_parts t
 
-let check_useful_symbols_rule left_parts r = check_useful_symbols left_parts r.partiedroite
+let check_useful_symbols_rule left_parts r = check_useful_symbols left_parts r.right_part
 
 let clean_useless_symbols grammar =
 	(* Printf.printf "==Nettoyage des symboles inutiles==\n"; *)
@@ -113,7 +113,7 @@ let weight_compare un deux =
 	| ((p1,_),(p2,_)) when p1<p2 -> -1
 	| _ -> failwith "Exhaustivité du pattern"
 
-let count_non_terminal rule = let {elementgauche=g;partiedroite=d} = rule in
+let count_non_terminal rule = let {left_symbol=g;right_part=d} = rule in
 		   let poids = List.fold_left (+) 0 (List.map (fun x->match x with | Terminal(_) -> 0 | Nonterminal(_) -> 1) d) in (poids,rule)
 
 (* utilité ? *)
@@ -130,7 +130,7 @@ let sort_grammar grammar =
 let rec compute_epsilonAux regles reglesAux epsPlus =
 match reglesAux with
 | [] -> epsPlus
-| {elementgauche=gauche;partiedroite=droite}::rest ->
+| {left_symbol=gauche;right_part=droite}::rest ->
 		if( (not(List.mem gauche epsPlus)) && (((List.length droite) = 0) ||
 		 (List.for_all (fun x -> (List.mem x epsPlus)) droite) )) then
 		  compute_epsilonAux regles regles (gauche::epsPlus)
@@ -150,11 +150,11 @@ let rec loop regles axiome = function
 | [] -> {axiome = axiome ; regles = remove_duplicate regles}
 | element::restElementsEps -> let rec loop1 newRegles axiome = function
 		| [] -> loop newRegles axiome restElementsEps
-		| {elementgauche=gauche;partiedroite=droite}::restRegles ->
+		| {left_symbol=gauche;right_part=droite}::restRegles ->
 		if( List.mem element droite ) then
 			begin
 				(* Printf.printf "Duplication \n";*)
-				loop1 (({elementgauche = gauche ; partiedroite = (List.filter (fun x -> x <> element) droite)})::((gauche-->droite)::newRegles)) axiome restRegles
+				loop1 (({left_symbol = gauche ; right_part = (List.filter (fun x -> x <> element) droite)})::((gauche-->droite)::newRegles)) axiome restRegles
 			end
 		else if ( (element = gauche) && (droite=[]) ) then
 			begin
@@ -175,7 +175,7 @@ let rec loop regles axiome = function
 			end
 		else
 			begin
-				if (not(List.mem ({elementgauche = gauche ; partiedroite = droite}) newRegles)) then
+				if (not(List.mem ({left_symbol = gauche ; right_part = droite}) newRegles)) then
 					begin
 					  (* Printf.printf "Ajout de la règle telle quelle \n" ; *)
 					  loop1 ((gauche-->droite)::newRegles) axiome restRegles

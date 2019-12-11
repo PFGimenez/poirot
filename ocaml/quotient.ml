@@ -27,28 +27,28 @@ let quotient_suffix_string str suffix =
 let left_quotient_of_rule quotient_string numero terminal axiome = function
 
     (* A -> t alpha avec t terminal *)
-    | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when t=terminal && is_terminal t
+    | {left_symbol = Nonterminal(a);right_part=t::alpha } when t=terminal && is_terminal t
         -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(a))-->(t::alpha) ],
                 if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
     (* A -> t alpha avec t terminal *)
-    | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when t=terminal && is_terminal t
+    | {left_symbol = Nonterminal(a);right_part=t::alpha } when t=terminal && is_terminal t
         -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(a))-->(t::alpha) ],
                 if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
     (* A -> t alpha avec t terminal préfixe *)
-(*    | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when is_terminal t && quotient_string (element2string t) (element2string terminal) <> None
+(*    | {left_symbol = Nonterminal(a);right_part=t::alpha } when is_terminal t && quotient_string (element2string t) (element2string terminal) <> None
         -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(a))-->(t::alpha) ],
                 if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None) *)
 
     (* A -> t alpha avec t non-terminal *)
-    | {elementgauche = Nonterminal(a);partiedroite=t::alpha } when t=terminal
+    | {left_symbol = Nonterminal(a);right_part=t::alpha } when t=terminal
         ->  (* print_string ("nt alpha "^(partie2string (t::alpha))^"\n"); *)
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(etiquette a numero))-->(Nonterminal(etiquette (element2string t) numero)::alpha) ;
@@ -58,7 +58,7 @@ let left_quotient_of_rule quotient_string numero terminal axiome = function
 
 
     (* A -> B alpha *)
-    | {elementgauche = Nonterminal(a);partiedroite=(Nonterminal(b))::alpha }
+    | {left_symbol = Nonterminal(a);right_part=(Nonterminal(b))::alpha }
         -> (* print_string ("b alpha "^(partie2string (Nonterminal(b)::alpha))^"\n"); *)
             ([(Nonterminal(etiquette a numero))-->((Nonterminal(etiquette b numero))::alpha) ;
                 (Nonterminal(a))-->((Nonterminal(b))::alpha)],
@@ -66,17 +66,17 @@ let left_quotient_of_rule quotient_string numero terminal axiome = function
 
 	(* autre *)	  
     | autreregle
-        -> (* print_string ("other "^(partie2string (autreregle.partiedroite))^"\n"); *)
+        -> (* print_string ("other "^(partie2string (autreregle.right_part))^"\n"); *)
             ([autreregle],None)
 
 (* Inverser la partie droite d'une règle *)
-let reverse_right_part = function
-	| {elementgauche=gauche;partiedroite=droite} -> {elementgauche=gauche;partiedroite=List.rev droite}
+let reverse_ext_right_part = function
+	| {left_symbol=gauche;right_part=droite} -> {left_symbol=gauche;right_part=List.rev droite}
 
-(* Quotient à droite de rule = inversionPartieDroite (quotient à gauche de (inversionPartieDroite rule)) (ouf) *)
+(* Quotient à droite de rule = inversionright_part (quotient à gauche de (inversionright_part rule)) (ouf) *)
 let right_quotient_of_rule numero terminal axiome rule =
-	let (r,a) = (left_quotient_of_rule quotient_suffix_string numero terminal axiome (reverse_right_part rule)) in
-	(List.map reverse_right_part r,a)
+	let (r,a) = (left_quotient_of_rule quotient_suffix_string numero terminal axiome (reverse_ext_right_part rule)) in
+	(List.map reverse_ext_right_part r,a)
 
 (* Quotient générique pour plusieurs règles où fquotientregle est la fonction quotientRegle à appliquer *)
 let rec quotient fquotientregle acc iteration terminal axiome = function
