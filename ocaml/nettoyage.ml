@@ -28,25 +28,25 @@ let rec reachable_rules_from_non_terminal nt = function
 			g-->d::(reachable_rules_from_non_terminal nt rest)
 	|_::rest -> (reachable_rules_from_non_terminal nt rest)
 
-let rec reachable_rules regles = function
+let rec reachable_rules rules = function
 	| [] -> []
-	| x::rest -> (reachable_rules_from_non_terminal x regles) @ (reachable_rules regles rest)
+	| x::rest -> (reachable_rules_from_non_terminal x rules) @ (reachable_rules rules rest)
 
-let uniq_reachable_rules regles ensemblent = remove_duplicates (reachable_rules regles ensemblent)
+let uniq_reachable_rules rules ensemblent = remove_duplicates (reachable_rules rules ensemblent)
 let reachable_symbolsSansDoublons listeregles = remove_duplicates (reachable_symbols listeregles)
 
 let rec algoAccessibles reglesdepart accregles accsymbole =
-	let regles = uniq_reachable_rules reglesdepart accsymbole in
-	let newregles = remove_duplicates (accregles @ regles) in
-	let symboles = reachable_symbolsSansDoublons regles in
+	let rules = uniq_reachable_rules reglesdepart accsymbole in
+	let newregles = remove_duplicates (accregles @ rules) in
+	let symboles = reachable_symbolsSansDoublons rules in
 	let newsymboles = remove_duplicates (accsymbole @ symboles) in
 	if (newsymboles = accsymbole) then newregles
 	else algoAccessibles reglesdepart newregles newsymboles
 
 let clean_unreachable_rules grammar =
 	(* Printf.printf "==Nettoyage des règles inaccessibles==\n"; *)
-	let {axiome=axiome;regles=regles}=grammar in
-	axiome @@ (algoAccessibles regles [] [axiome])
+	let {axiom=axiom;rules=rules}=grammar in
+	axiom @@ (algoAccessibles rules [] [axiom])
 
 (** Algorithme de nettoyage des règles inutiles **)
 
@@ -61,31 +61,31 @@ let rec appartient x = function
 
 let useful_rule nonterminal rule = appartient nonterminal rule.right_part
 
-let useful_rules_non_terminal regles nonterminal = List.filter (useful_rule nonterminal) regles
+let useful_rules_non_terminal rules nonterminal = List.filter (useful_rule nonterminal) rules
 
-let rec useful_rules regles = function
+let rec useful_rules rules = function
 	| [] -> []
-	| x::rest -> (useful_rules_non_terminal regles x) @ (useful_rules regles rest)
+	| x::rest -> (useful_rules_non_terminal rules x) @ (useful_rules rules rest)
 
 let rec useful_symbols = function
 	| [] -> []
 	| x::rest -> x.left_symbol :: (useful_symbols rest)
 
-let rec algoUtile regles r s =
+let rec algoUtile rules r s =
 	let newsymboles = remove_duplicates (List.append (useful_symbols r) s) in
 	(*Printf.printf "%s\n" (partie2string newsymboles); DEBUG *)
-	let newregles = remove_duplicates (List.append r (useful_rules regles newsymboles)) in
+	let newregles = remove_duplicates (List.append r (useful_rules rules newsymboles)) in
 	if (newsymboles = s) then newregles
-	else algoUtile regles newregles newsymboles
+	else algoUtile rules newregles newsymboles
 
-let get_useful_rules regles =
-	let r = List.filter rule_directly_useful regles in
-	algoUtile regles r []
+let get_useful_rules rules =
+	let r = List.filter rule_directly_useful rules in
+	algoUtile rules r []
 
 let clean_useless_rules grammar =
 	(* Printf.printf "==Nettoyage des règles inutiles==\n"; *)
-	let {axiome=axiome;regles=regles}=grammar in
-	axiome @@ (get_useful_rules regles)
+	let {axiom=axiom;rules=rules}=grammar in
+	axiom @@ (get_useful_rules rules)
 
 (* Autre algorithme de tri une règle contient à droite un symbole qui n'apparaît jamais à gauche, on peut la retire *)
 
@@ -102,8 +102,8 @@ let check_useful_symbols_rule left_parts r = check_useful_symbols left_parts r.r
 
 let clean_useless_symbols grammar =
 	(* Printf.printf "==Nettoyage des symboles inutiles==\n"; *)
-    let left_parts=List.sort_uniq compare (get_all_left_elements grammar.regles) in
-    grammar.axiome@@(List.filter (check_useful_symbols_rule left_parts) grammar.regles)
+    let left_parts=List.sort_uniq compare (get_all_left_elements grammar.rules) in
+    grammar.axiom@@(List.filter (check_useful_symbols_rule left_parts) grammar.rules)
 
 (** Algorithme de tri des règles pour faciliter la dérivation gauche **)
 let weight_compare un deux =
@@ -118,25 +118,25 @@ let count_non_terminal rule = let {left_symbol=g;right_part=d} = rule in
 
 (* utilité ? *)
 
-let sort_rules regles = let weighted_list = List.map count_non_terminal regles in
+let sort_rules rules = let weighted_list = List.map count_non_terminal rules in
 			 let triee = List.sort weight_compare weighted_list in
 			 List.map (fun x -> let (_,r) = x in r) triee
 
 let sort_grammar grammar =
-	grammar.axiome @@ (sort_rules grammar.regles)
+	grammar.axiom @@ (sort_rules grammar.rules)
 
 (** Epsilon production **)
 
-let rec compute_epsilonAux regles reglesAux epsPlus =
+let rec compute_epsilonAux rules reglesAux epsPlus =
 match reglesAux with
 | [] -> epsPlus
 | {left_symbol=gauche;right_part=droite}::rest ->
 		if( (not(List.mem gauche epsPlus)) && (((List.length droite) = 0) ||
 		 (List.for_all (fun x -> (List.mem x epsPlus)) droite) )) then
-		  compute_epsilonAux regles regles (gauche::epsPlus)
-		  else compute_epsilonAux regles rest epsPlus
+		  compute_epsilonAux rules rules (gauche::epsPlus)
+		  else compute_epsilonAux rules rest epsPlus
 
-let compute_epsilon regles = compute_epsilonAux regles regles []
+let compute_epsilon rules = compute_epsilonAux rules rules []
 
 let remove_duplicate l =
 	let rec loopAux acu = function
@@ -145,32 +145,32 @@ let remove_duplicate l =
 	in loopAux [] l
 
 let remove_epsilon grammar =
-(* Printf.printf "Nombre d'element produisant epsilon : %d \n" (List.length (compute_epsilon grammar.regles)); *)
-let rec loop regles axiome = function
-| [] -> {axiome = axiome ; regles = remove_duplicate regles}
-| element::restElementsEps -> let rec loop1 newRegles axiome = function
-		| [] -> loop newRegles axiome restElementsEps
+(* Printf.printf "Nombre d'element produisant epsilon : %d \n" (List.length (compute_epsilon grammar.rules)); *)
+let rec loop rules axiom = function
+| [] -> {axiom = axiom ; rules = remove_duplicate rules}
+| element::restElementsEps -> let rec loop1 newRegles axiom = function
+		| [] -> loop newRegles axiom restElementsEps
 		| {left_symbol=gauche;right_part=droite}::restRegles ->
 		if( List.mem element droite ) then
 			begin
 				(* Printf.printf "Duplication \n";*)
-				loop1 (({left_symbol = gauche ; right_part = (List.filter (fun x -> x <> element) droite)})::((gauche-->droite)::newRegles)) axiome restRegles
+				loop1 (({left_symbol = gauche ; right_part = (List.filter (fun x -> x <> element) droite)})::((gauche-->droite)::newRegles)) axiom restRegles
 			end
 		else if ( (element = gauche) && (droite=[]) ) then
 			begin
-				if (element = axiome) then
+				if (element = axiom) then
 					begin
-						(* Printf.printf "S-> Eps, Nouvel axiome \n"; *)
-						let naxiome = match axiome with
+						(* Printf.printf "S-> Eps, Nouvel axiom \n"; *)
+						let naxiom = match axiom with
 							| Terminal(x) -> Terminal(x ^ "'")
 							| Nonterminal(x) -> Nonterminal(x ^ "'")
 						in
-						loop1 ((naxiome-->[axiome])::(naxiome-->[])::newRegles) naxiome restRegles
+						loop1 ((naxiom-->[axiom])::(naxiom-->[])::newRegles) naxiom restRegles
 					end
 				else
 					begin
 						(* Printf.printf "X -> Eps, rien faire\n" ; *)
-						loop1 newRegles axiome restRegles
+						loop1 newRegles axiom restRegles
 					end
 			end
 		else
@@ -178,12 +178,12 @@ let rec loop regles axiome = function
 				if (not(List.mem ({left_symbol = gauche ; right_part = droite}) newRegles)) then
 					begin
 					  (* Printf.printf "Ajout de la règle telle quelle \n" ; *)
-					  loop1 ((gauche-->droite)::newRegles) axiome restRegles
+					  loop1 ((gauche-->droite)::newRegles) axiom restRegles
 					end
-				else loop1 newRegles axiome restRegles
+				else loop1 newRegles axiom restRegles
 			end
-	 in loop1 [] axiome regles
-in loop grammar.regles grammar.axiome (compute_epsilon grammar.regles)
+	 in loop1 [] axiom rules
+in loop grammar.rules grammar.axiom (compute_epsilon grammar.rules)
 
 (** Algorithme de nettoyage général**)
 let nettoyage grammar =

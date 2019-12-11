@@ -10,14 +10,14 @@ type element = 	| Terminal of string
 (* A part represents a list of elements. It can either be a right-hand side of a rule or an intermediate derivation *)
 type partie = element list
 
-(* An axiom with a prefix and a suffix *)
+(* An ext_axiom with a prefix and a suffix *)
 type ext_element = partie * element * partie
 
 (* Une règle est composée d'une partie gauche (un élément) et d'une partie droite *)
 type rule =  { left_symbol : element; right_part : partie }
 
-(* A grammar is composed of an axiom (an element) and a list of rules *)
-type grammar = {axiome: element; regles : rule list }
+(* A grammar is composed of an ext_axiom (an element) and a list of ext_rules *)
+type grammar = {axiom: element; rules : rule list }
 
 type ext_part = ext_element list
 
@@ -25,7 +25,7 @@ type ext_rule = {ext_left_symbol : ext_element; ext_right_part : ext_part}
 
 type ext_rules = ext_rule list
 
-type ext_grammar = {axiom: ext_element; rules: ext_rules}
+type ext_grammar = {ext_axiom: ext_element; ext_rules: ext_rules}
 
 let (--->) g d = {ext_left_symbol=g;ext_right_part=d}
 
@@ -39,7 +39,7 @@ let word_of_ext_elements (ext_element_list: ext_element list) : partie = List.ma
 
 let ext_rule_of_rule r = (ext_element_of_element r.left_symbol) ---> (List.map ext_element_of_element r.right_part)
 
-let ext_grammar_of_grammar g = {axiom = ext_element_of_element g.axiome; rules = List.map ext_rule_of_rule g.regles}
+let ext_grammar_of_grammar g = {ext_axiom = ext_element_of_element g.axiom; ext_rules = List.map ext_rule_of_rule g.rules}
 
 let is_ext_element_in_rules t r = List.exists t (List.map (fun r -> r.ext_left_symbol) r)
 
@@ -109,17 +109,17 @@ let quoted_string_of_ext_rule r = (quoted_string_of_ext_element r.ext_left_symbo
 
 let string_of_ext_rules = function
     | t::q -> List.fold_left concat_new_line (string_of_ext_rule t) (List.map string_of_ext_rule q)
-    | [] -> "(no rules)"
+    | [] -> "(no ext_rules)"
 
 let quoted_string_of_ext_rules = function
     | t::q -> List.fold_left concat_new_line (quoted_string_of_ext_rule t) (List.map quoted_string_of_ext_rule q)
     | [] -> ""
 
-let bnf_string_of_ext_grammar (g : ext_grammar) : string = (quoted_string_of_ext_element g.axiom) ^ ";\n" ^ (quoted_string_of_ext_rules g.rules) ^ "\n"
+let bnf_string_of_ext_grammar (g : ext_grammar) : string = (quoted_string_of_ext_element g.ext_axiom) ^ ";\n" ^ (quoted_string_of_ext_rules g.ext_rules) ^ "\n"
 
 let bnf_string_of_grammar (g : grammar) : string = bnf_string_of_ext_grammar (ext_grammar_of_grammar g)
 
-let string_of_ext_grammar (g : ext_grammar) : string = "Axiom: " ^ (string_of_ext_element g.axiom) ^ "\nRules: " ^ (string_of_ext_rules g.rules)
+let string_of_ext_grammar (g : ext_grammar) : string = "ext_axiom: " ^ (string_of_ext_element g.ext_axiom) ^ "\nRules: " ^ (string_of_ext_rules g.ext_rules)
 (* Conversion d'une règle en chaîne de caractère *)
 let regle2string : rule -> string = function
 	| {left_symbol=g;right_part=d} -> element2string g ^ " --> " ^ partie2string d
@@ -137,9 +137,9 @@ let rec reglelist2string = function
 let (-->) g d = {left_symbol=g;right_part=d}
 
 (* Création d'une grammar à la volée *)
-let (@@) axiome regles = {axiome=axiome;regles=regles}
+let (@@) axiom rules = {axiom=axiom;rules=rules}
 
-let (@@@) axiome regles = {axiom=axiome;rules=regles}
+let (@@@) axiom rules = {ext_axiom=axiom;ext_rules=rules}
 
 
 (* Récupération d'une monade option contenant le premier non terminal d'une partie (si il existe !) *)
@@ -166,11 +166,11 @@ let print_words (w : partie list) : unit = List.iter (fun r -> print_string ("Mo
 (** Fonctions d'affichage **)
 
 (* Affichage d'une liste de règles *)
-let print_rules regles = List.iter (Printf.printf "%s\n") (List.map regle2string regles)
+let print_rules rules = List.iter (Printf.printf "%s\n") (List.map regle2string rules)
 
 (* Affichage d'une grammar *)
-let print_grammar grammar = Printf.printf "Axiome : %s \nRegles : \n" (element2string grammar.axiome);
-				  print_rules grammar.regles
+let print_grammar grammar = Printf.printf "axiom : %s \nRegles : \n" (element2string grammar.axiom);
+				  print_rules grammar.rules
 
 (* TODO *)
 let equals_grammars (g1 : ext_grammar) (g2 : ext_grammar) : bool = true
@@ -186,12 +186,12 @@ let rec read_part (part : (bool*string) list) (output : element list) : partie =
     | t::q when fst t -> (read_part [@tailcall]) q (Terminal(snd t)::output)
     | t::q -> (read_part [@tailcall]) q (Nonterminal(snd t)::output)
 
-let rec read_rules (rules : ((bool*string) * ((bool*string) list)) list) (output : rule list) : rule list = match rules with
+let rec read_rules (ext_rules : ((bool*string) * ((bool*string) list)) list) (output : rule list) : rule list = match ext_rules with
     | [] -> output
     | (n,l)::q -> assert (not (fst n)); (read_rules [@tailcall]) q ((Nonterminal(snd n) --> read_part l [])::output)
 
 let convert_grammar (tokens : ((bool*string) * (((bool*string) * ((bool*string) list)) list))) : grammar =
-    assert (not (fst (fst tokens))); (* the axiom must be a nonterminal *)
+    assert (not (fst (fst tokens))); (* the ext_axiom must be a nonterminal *)
     Nonterminal(snd (fst tokens)) @@ read_rules (snd tokens) []
 
 let read_bnf_grammar (filename : string) : grammar =

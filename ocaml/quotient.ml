@@ -23,29 +23,29 @@ let quotient_suffix_string str suffix =
     | true -> Some(Str.string_before str pos)
 
 (* Quotient à Gauche d'une règle pour l'itération "numéro" par le terminal "terminal"
-   => renvoie (nouvellesrègles,nouvelaxiome) *)
-let left_quotient_of_rule quotient_string numero terminal axiome = function
+   => renvoie (nouvellesrègles,nouvelaxiom) *)
+let left_quotient_of_rule quotient_string numero terminal axiom = function
 
     (* A -> t alpha avec t terminal *)
     | {left_symbol = Nonterminal(a);right_part=t::alpha } when t=terminal && is_terminal t
         -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(a))-->(t::alpha) ],
-                if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
+                if (axiom=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
     (* A -> t alpha avec t terminal *)
     | {left_symbol = Nonterminal(a);right_part=t::alpha } when t=terminal && is_terminal t
         -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(a))-->(t::alpha) ],
-                if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
+                if (axiom=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
     (* A -> t alpha avec t terminal préfixe *)
 (*    | {left_symbol = Nonterminal(a);right_part=t::alpha } when is_terminal t && quotient_string (element2string t) (element2string terminal) <> None
         -> (* print_string ("t alpha "^(partie2string (t::alpha))^"\n"); *)
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(a))-->(t::alpha) ],
-                if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None) *)
+                if (axiom=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None) *)
 
     (* A -> t alpha avec t non-terminal *)
     | {left_symbol = Nonterminal(a);right_part=t::alpha } when t=terminal
@@ -53,7 +53,7 @@ let left_quotient_of_rule quotient_string numero terminal axiome = function
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(etiquette a numero))-->(Nonterminal(etiquette (element2string t) numero)::alpha) ;
                 (Nonterminal(a))-->(t::alpha) ],
-                if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
+                if (axiom=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
 
 
@@ -62,7 +62,7 @@ let left_quotient_of_rule quotient_string numero terminal axiome = function
         -> (* print_string ("b alpha "^(partie2string (Nonterminal(b)::alpha))^"\n"); *)
             ([(Nonterminal(etiquette a numero))-->((Nonterminal(etiquette b numero))::alpha) ;
                 (Nonterminal(a))-->((Nonterminal(b))::alpha)],
-                if (axiome=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
+                if (axiom=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
 	(* autre *)	  
     | autreregle
@@ -74,26 +74,26 @@ let reverse_ext_right_part = function
 	| {left_symbol=gauche;right_part=droite} -> {left_symbol=gauche;right_part=List.rev droite}
 
 (* Quotient à droite de rule = inversionright_part (quotient à gauche de (inversionright_part rule)) (ouf) *)
-let right_quotient_of_rule numero terminal axiome rule =
-	let (r,a) = (left_quotient_of_rule quotient_suffix_string numero terminal axiome (reverse_ext_right_part rule)) in
+let right_quotient_of_rule numero terminal axiom rule =
+	let (r,a) = (left_quotient_of_rule quotient_suffix_string numero terminal axiom (reverse_ext_right_part rule)) in
 	(List.map reverse_ext_right_part r,a)
 
 (* Quotient générique pour plusieurs règles où fquotientregle est la fonction quotientRegle à appliquer *)
-let rec quotient fquotientregle acc iteration terminal axiome = function
-	| [] -> let (r,a) = acc in {axiome=a;regles=r}
-	| x::rest -> let (newregles,newaxiome) = (fquotientregle iteration terminal axiome x) in
-		     let (oldregles,oldaxiome) = acc in
-		     let accaxiome = match newaxiome with
-			| None -> oldaxiome
+let rec quotient fquotientregle acc iteration terminal axiom = function
+	| [] -> let (r,a) = acc in {axiom=a;rules=r}
+	| x::rest -> let (newregles,newaxiom) = (fquotientregle iteration terminal axiom x) in
+		     let (oldregles,oldaxiom) = acc in
+		     let accaxiom = match newaxiom with
+			| None -> oldaxiom
 			| Some(a) -> a
 		     in
 		     let accregles = List.append newregles oldregles in
-		     (quotient [@tailcall]) fquotientregle (accregles,accaxiome) iteration terminal axiome rest
+		     (quotient [@tailcall]) fquotientregle (accregles,accaxiom) iteration terminal axiom rest
 
 (* Quotient à droite pour plusieurs règles par un terminal "terminal" *)
 let quotient_and_nettoyage quotientregle iteration terminal grammar =
-	let {axiome=axiome;regles=regles} = grammar in
-	Nettoyage.nettoyage (quotient quotientregle ([],axiome) iteration terminal axiome regles)
+	let {axiom=axiom;rules=rules} = grammar in
+	Nettoyage.nettoyage (quotient quotientregle ([],axiom) iteration terminal axiom rules)
 
 (* Algorithme de génération de la grammar complète pour la requête
 WARNING : les grammaires générées sont à nettoyer, car elles impliquent énormément de backtracking lors de la dérivation du mot.

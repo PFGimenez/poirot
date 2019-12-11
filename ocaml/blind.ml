@@ -18,7 +18,7 @@ let blackbox_template
 
 let print_ext_element t = print_string ((string_of_ext_element t)^"\n")
 
-let get_grammar_from_ext_element grammar (p,e,s) = Quotient.generate_blind_grammar_both_sides p s (e@@grammar.regles)
+let get_grammar_from_ext_element grammar (p,e,s) = Quotient.generate_blind_grammar_both_sides p s (e@@grammar.rules)
 
 (* TODO *)
 
@@ -39,17 +39,17 @@ let get_grammar_from_ext_element2 (grammars : db_type) (grammar : grammar) (t : 
 
 (* renvoie les règles dont la partie droite contient l'élément cherché *)
 
-let trouve_regles grammar elem = List.filter (fun r -> List.mem elem r.right_part) grammar.regles
+let trouve_regles grammar elem = List.filter (fun r -> List.mem elem r.right_part) grammar.rules
 
-let rec is_accessible_from_axiom (grammar : grammar) (s : element) (reachable : element list) : bool =
+let rec is_accessible_from_ext_axiom (grammar : grammar) (s : element) (reachable : element list) : bool =
     if List.mem s reachable then true
     else
-        let rules = List.filter (fun r -> List.mem r.left_symbol reachable) grammar.regles in
-        let new_reachable = List.sort_uniq compare (List.flatten (List.map (fun r -> r.right_part) rules)) in
+        let ext_rules = List.filter (fun r -> List.mem r.left_symbol reachable) grammar.rules in
+        let new_reachable = List.sort_uniq compare (List.flatten (List.map (fun r -> r.right_part) ext_rules)) in
             if (List.length reachable) = (List.length new_reachable) then false
-            else (is_accessible_from_axiom [@tailcall]) grammar s new_reachable
+            else (is_accessible_from_ext_axiom [@tailcall]) grammar s new_reachable
 
-let symbols_from_parents (grammar : grammar) (axiome : element) : element list = List.sort_uniq compare (List.map (fun r -> r.left_symbol) (List.filter (fun r -> List.mem axiome r.right_part) grammar.regles))
+let symbols_from_parents (grammar : grammar) (axiom : element) : element list = List.sort_uniq compare (List.map (fun r -> r.left_symbol) (List.filter (fun r -> List.mem axiom r.right_part) grammar.rules))
 
 let trim = function
     | Terminal(s) -> Terminal(s)
@@ -59,20 +59,20 @@ let trim = function
 
 let rec distance_to_goal (grammar : grammar) (goal : element) : (element * int) list -> int = function
     | [] -> failwith "Can't reach at all"
-    | (s,nb)::q when is_accessible_from_axiom grammar goal [s] -> nb 
+    | (s,nb)::q when is_accessible_from_ext_axiom grammar goal [s] -> nb 
     | (s,nb)::q -> (distance_to_goal [@tailcall]) grammar goal (q@(List.map (fun e -> (e,nb+1)) (symbols_from_parents grammar s)))
 
 let rec is_accessible s = function
     | [] -> false
     | r::q -> List.mem s r.right_part || s = r.left_symbol || (is_accessible [@tailcall]) s q
 
-let is_symbol_accessible g s = is_accessible s g.regles
+let is_symbol_accessible g s = is_accessible s g.rules
 
 let rec is_accessible2 (s : element) : ext_rules -> bool = function
     | [] -> false
     | r::q -> List.exists (fun t -> element_of_ext_element t = s) r.ext_right_part || s = (element_of_ext_element r.ext_left_symbol) || (is_accessible2 [@tailcall]) s q
 
-let is_symbol_accessible2 (g : ext_grammar) (s : element) : bool = is_accessible2 s g.rules
+let is_symbol_accessible2 (g : ext_grammar) (s : element) : bool = is_accessible2 s g.ext_rules
 
 let rec get_prefix_suffix_partie (elem : element) (prefix : element list) : element list -> (element list * element list) list = function
     | [] -> []
@@ -82,7 +82,7 @@ let rec get_prefix_suffix_partie (elem : element) (prefix : element list) : elem
 let construct_ext_elements (grammar: grammar) ((p,e,s): ext_element) : ext_element list =
     List.flatten (List.map (fun r -> let l=get_prefix_suffix_partie e [] r.right_part in List.map (fun (p2,s2) -> p2@p,r.left_symbol,s@s2) l) (trouve_regles grammar e))
 
-let get_all_tokens (grammar : grammar) : element list = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.right_part) grammar.regles))
+let get_all_tokens (grammar : grammar) : element list = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.right_part) grammar.rules))
 
 let fuzzer (g : grammar) : partie list =
     let term = List.filter (is_symbol_accessible g) (get_all_tokens g) in
@@ -118,8 +118,8 @@ let rec search blackbox interest grammar step visited = function
             let g = get_grammar_from_ext_element grammar t in
             print_grammar g;
             (*print_string "grammar contruite\n"; flush stdout;*)
-            (*print_string ("Accessible from "^(element2string g.axiome)^": "); print_bool (is_accessible_from_axiom grammar interest [g.axiome]); flush stdout;*)
-            (*print_string ("Distance: "^(string_of_int (distance_to_goal grammar interest [(trim g.axiome,0)])));*)
+            (*print_string ("Accessible from "^(element2string g.axiom)^": "); print_bool (is_accessible_from_ext_axiom grammar interest [g.axiom]); flush stdout;*)
+            (*print_string ("Distance: "^(string_of_int (distance_to_goal grammar interest [(trim g.axiom,0)])));*)
             if not (check_grammar_validity blackbox g) then begin (* invalid : ignore *)
                 print_string "Invalid\n"; (search [@tailcall]) blackbox interest grammar (step+1) visited q
             end else if (*print_string "AA"; flush stdout;*) is_symbol_accessible g interest then begin (* found ! *)
@@ -150,8 +150,8 @@ let rec search2
             let g = get_grammar_from_ext_element2 grammars init_grammaire t in
             print_string (string_of_ext_grammar g);
             (*print_string "grammar contruite\n"; flush stdout;*)
-            (*print_string ("Accessible from "^(element2string g.axiome)^": "); print_bool (is_accessible_from_axiom init_grammaire interest [g.axiome]); flush stdout;*)
-            (*print_string ("Distance: "^(string_of_int (distance_to_goal init_grammaire interest [(trim g.axiome,0)])));*)
+            (*print_string ("Accessible from "^(element2string g.axiom)^": "); print_bool (is_accessible_from_ext_axiom init_grammaire interest [g.axiom]); flush stdout;*)
+            (*print_string ("Distance: "^(string_of_int (distance_to_goal init_grammaire interest [(trim g.axiom,0)])));*)
             if not (check_grammar_validity2 blackbox g) then begin (* invalid : ignore *)
                 print_string "Invalid\n"; (search2 [@tailcall]) blackbox interest init_grammaire (step+1) visited grammars q
             end else if (*print_string "AA"; flush stdout;*) is_symbol_accessible2 g interest then begin (* found ! *)

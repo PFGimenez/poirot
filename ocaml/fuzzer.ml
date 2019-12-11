@@ -17,23 +17,23 @@ let rec left_derivation2 (derivation : ext_element list) (rule : ext_rule) =
 
 
 (* Renvoie toutes les règles possibles parmi un liste de règles pour dériver motintermediaire *)
-let rec possible_rules motintermediaire regles =
+let rec possible_rules motintermediaire rules =
 	let premier = first_non_terminal motintermediaire in
 	match premier with
 	| None -> []
 	| Some(x) ->
-	match regles with
+	match rules with
 	| [] -> []
     | {left_symbol=gauche;right_part=droite}::rest when x = gauche ->
 		gauche-->droite::(possible_rules motintermediaire rest)
     | _::rest -> possible_rules motintermediaire rest
 
-let rec possible_rules2 (motintermediaire : ext_element list) (regles : ext_rules) : ext_rules =
+let rec possible_rules2 (motintermediaire : ext_element list) (rules : ext_rules) : ext_rules =
 	let premier = first_non_terminal2 motintermediaire in
 	match premier with
 	| None -> []
 	| Some(x) ->
-	match regles with
+	match rules with
 	| [] -> []
     | {ext_left_symbol=ls;ext_right_part=rp}::rest when x = ls ->
 		ls--->rp::(possible_rules2 motintermediaire rest)
@@ -54,7 +54,7 @@ let rec is_word2 : ext_element list -> bool = function
 let rec derive_within_depth profondeur grammar motintermediaire =
     if is_word motintermediaire then [motintermediaire]
 	else if (profondeur != 1) then
-		let possibles = possible_rules motintermediaire grammar.regles in
+		let possibles = possible_rules motintermediaire grammar.rules in
 		let rec deriverLesPossibles grammar mot = function
             | [] -> []
 			| rule::reste -> List.append (derive_within_depth (profondeur-1) grammar (left_derivation mot rule))
@@ -62,8 +62,8 @@ let rec derive_within_depth profondeur grammar motintermediaire =
 		deriverLesPossibles grammar motintermediaire possibles
     else []
 
-(* DeriverTout depuis l'axiome de la grammar fournie *)
-let deriver profondeur grammar = derive_within_depth profondeur grammar [grammar.axiome]
+(* DeriverTout depuis l'axiom de la grammar fournie *)
+let deriver profondeur grammar = derive_within_depth profondeur grammar [grammar.axiom]
 
 let derive_and_print profondeur grammar = List.iter (fun r -> print_string ("Mot: "^(partie2string r)^"\n")) (deriver profondeur grammar)
 
@@ -73,7 +73,7 @@ let rec derive_within_length longueur grammar motintermediaire =
 	if (List.length motintermediaire <= longueur) then begin
         if is_word motintermediaire then [motintermediaire]
         else
-            let possibles = possible_rules motintermediaire grammar.regles in
+            let possibles = possible_rules motintermediaire grammar.rules in
             let rec deriverLesPossibles grammar mot = function
                 | [] -> []
                 | rule::reste -> List.append (List.filter (fun l -> List.length l <= longueur) (derive_within_length longueur grammar (left_derivation mot rule)))
@@ -86,12 +86,12 @@ let rec derive_within_length longueur grammar motintermediaire =
 
 let is_list_in_language grammar parties =
     let len = List.fold_left max 0 (List.map List.length parties) in
-    let words = derive_within_length len grammar [grammar.axiome] in
+    let words = derive_within_length len grammar [grammar.axiom] in
     List.for_all (fun p -> List.mem p words) parties
 
-let is_in_language grammar partie = (* print_string ((partie2string partie)^"\n");*) List.mem partie (derive_within_length (List.length partie) grammar [grammar.axiome])
+let is_in_language grammar partie = (* print_string ((partie2string partie)^"\n");*) List.mem partie (derive_within_length (List.length partie) grammar [grammar.axiom])
 
-let derive_within_lengthPrint longueur grammar = List.iter (fun r -> print_string ("Mot: "^(partie2string r)^"\n") (*; print_bool (is_in_language grammar r)*)) (derive_within_length longueur grammar [grammar.axiome])
+let derive_within_lengthPrint longueur grammar = List.iter (fun r -> print_string ("Mot: "^(partie2string r)^"\n") (*; print_bool (is_in_language grammar r)*)) (derive_within_length longueur grammar [grammar.axiom])
 
 let min_list a b = if List.length a < List.length b then a else b
 
@@ -101,42 +101,42 @@ let min_rule a b = if length_non_terminal a < length_non_terminal b then a else 
 
 let rec find_path_symbol grammar = function
     | [] -> failwith "No path"
-    | (obj,path)::_ when obj=grammar.axiome -> path
-    | (obj,path)::q -> let rules = List.filter (fun r -> List.mem obj r.right_part) grammar.regles in
-        (find_path_symbol [@tailcall]) grammar (q@(List.map (fun r -> (r.left_symbol, r::path)) rules))
+    | (obj,path)::_ when obj=grammar.axiom -> path
+    | (obj,path)::q -> let ext_rules = List.filter (fun r -> List.mem obj r.right_part) grammar.rules in
+        (find_path_symbol [@tailcall]) grammar (q@(List.map (fun r -> (r.left_symbol, r::path)) ext_rules))
 
 let rec derive_with_path grammar = function
     | [] -> failwith "No derivation with path"
     | (w, path)::q when is_word w -> assert (List.length path = 0); w
-    | (w, path)::q -> let rules = possible_rules w grammar.regles in
-        if List.length path = 0 || not (List.mem (List.hd path) rules) then
-            (derive_with_path [@tailcall]) grammar (q@(List.map (fun r -> (left_derivation w r, path)) rules))
+    | (w, path)::q -> let ext_rules = possible_rules w grammar.rules in
+        if List.length path = 0 || not (List.mem (List.hd path) ext_rules) then
+            (derive_with_path [@tailcall]) grammar (q@(List.map (fun r -> (left_derivation w r, path)) ext_rules))
         else
             (derive_with_path [@tailcall]) grammar (q@[left_derivation w (List.hd path), List.tl path])
 
-let derive_word_with_symbol grammar s = derive_with_path grammar [[grammar.axiome],find_path_symbol grammar [s,[]]]
+let derive_word_with_symbol grammar s = derive_with_path grammar [[grammar.axiom],find_path_symbol grammar [s,[]]]
 
 let rec find_path_symbol2 (grammar : ext_grammar) : (element*ext_rule list) list -> ext_rule list = function
     | [] -> failwith "No path"
-    | (obj,path)::_ when obj=element_of_ext_element grammar.axiom -> path
-    | (obj,path)::q -> let rules = List.filter (fun r -> List.exists (fun t -> obj = element_of_ext_element t) r.ext_right_part) grammar.rules in
-        (find_path_symbol2 [@tailcall]) grammar (q@(List.map (fun r -> (element_of_ext_element r.ext_left_symbol, r::path)) rules))
+    | (obj,path)::_ when obj=element_of_ext_element grammar.ext_axiom -> path
+    | (obj,path)::q -> let ext_rules = List.filter (fun r -> List.exists (fun t -> obj = element_of_ext_element t) r.ext_right_part) grammar.ext_rules in
+        (find_path_symbol2 [@tailcall]) grammar (q@(List.map (fun r -> (element_of_ext_element r.ext_left_symbol, r::path)) ext_rules))
 
 let rec derive_with_path2 (grammar : ext_grammar) : (ext_element list * ext_rule list) list -> partie = function
     | [] -> failwith "No derivation with path"
     | (w, path)::q when is_word2 w -> assert (List.length path = 0); word_of_ext_elements w
-    | (w, path)::q -> let rules = possible_rules2 w grammar.rules in
-        if List.length path = 0 || not (List.mem (List.hd path) rules) then
-            (derive_with_path2 [@tailcall]) grammar (q@(List.map (fun r -> (left_derivation2 w r, path)) rules))
+    | (w, path)::q -> let ext_rules = possible_rules2 w grammar.ext_rules in
+        if List.length path = 0 || not (List.mem (List.hd path) ext_rules) then
+            (derive_with_path2 [@tailcall]) grammar (q@(List.map (fun r -> (left_derivation2 w r, path)) ext_rules))
         else
             (derive_with_path2 [@tailcall]) grammar (q@[left_derivation2 w (List.hd path), List.tl path])
 
-let derive_word_with_symbol2 (grammar : ext_grammar) (s : element) : element list = derive_with_path2 grammar [[grammar.axiom],find_path_symbol2 grammar [s,[]]]
+let derive_word_with_symbol2 (grammar : ext_grammar) (s : element) : element list = derive_with_path2 grammar [[grammar.ext_axiom],find_path_symbol2 grammar [s,[]]]
 
-let get_all_non_terminal (grammar : grammar) : element list = List.sort_uniq compare (List.flatten (List.map (fun r -> List.filter is_non_terminal r.right_part) grammar.regles))
+let get_all_non_terminal (grammar : grammar) : element list = List.sort_uniq compare (List.flatten (List.map (fun r -> List.filter is_non_terminal r.right_part) grammar.rules))
 
 let get_parents (g : grammar) (all : element list) (x : element) : element * (element list) =
-    let ext_right_parts = List.map (fun r -> r.right_part) (List.filter (fun r -> r.left_symbol = x) g.regles) in
+    let ext_right_parts = List.map (fun r -> r.right_part) (List.filter (fun r -> r.left_symbol = x) g.rules) in
     (x, List.filter (fun t -> is_non_terminal t && List.for_all (fun tl -> List.mem t tl) ext_right_parts) all)
 
 let rec get_order_from_par (par : (element * (element list)) list) (output : element list) : element list = match par with
@@ -157,7 +157,7 @@ let delete_recursion (g : grammar) : grammar =
         | [] -> rl
         | t::q -> (del_rec [@tailcall]) (List.filter (fun r -> r.left_symbol<>t || List.for_all (fun s -> not (List.mem s forbidden || s=t)) r.right_part) rl) (t::forbidden) q
     and order = get_order g in
-    g.axiome @@ (del_rec g.regles [] order)
+    g.axiom @@ (del_rec g.rules [] order)
 
 let simple_fuzzer (g : grammar) (order : element list) : element list =
     []

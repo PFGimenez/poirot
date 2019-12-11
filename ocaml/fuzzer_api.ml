@@ -9,7 +9,7 @@ let ()=
 (*    derive_within_lengthPrint 10 grammar;*)
 (*    let path = find_path_symbol grammar [Terminal(Sys.argv.(2)),[]] in
     List.iter (fun r -> print_string ((regle2string r)^"\n")) path; flush stdout *)
-(*    let w = derive_with_path grammar [[grammar.axiome],path] in
+(*    let w = derive_with_path grammar [[grammar.axiom],path] in
     print_string ((partie2string w)^"\n")*)
 
 
