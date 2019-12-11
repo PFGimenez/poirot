@@ -1,9 +1,8 @@
-open Base
-open Quotient
-open Hashtbl
-open Fuzzer
+(* TODO: pour la génération d'injection, ne générer que des injections qui ne sont pas des formes syntactiques valides (i.e. qui ne sont pas dérivables d'un seul non-terminal *)
 
-type db_type = (tree_state, (rec_rule list)) t
+open Base
+
+type db_type = (tree_state, (rec_rule list)) Hashtbl.t
 type scored_tree = int * tree_state
 
 (* TODO: blackbox linked to interface *)
@@ -14,12 +13,12 @@ let blackbox_template
     (grammaire : grammaire)
     (injections : partie list)
     : bool
-    = is_list_in_language grammaire (List.map (fun p -> prefix @ p @ suffix) injections)
+    = Fuzzer.is_list_in_language grammaire (List.map (fun p -> prefix @ p @ suffix) injections)
 
 
 let print_tree t = print_string ((string_of_tree t)^"\n")
 
-let get_grammar_from_tree grammaire (p,e,s) = generate_blind_grammar_both_sides p s (e@@grammaire.regles)
+let get_grammar_from_tree grammaire (p,e,s) = Quotient.generate_blind_grammar_both_sides p s (e@@grammaire.regles)
 
 (* TODO *)
 
@@ -87,7 +86,7 @@ let get_all_tokens (grammaire : grammaire) : element list = List.sort_uniq compa
 
 let fuzzer (g : grammaire) : partie list =
     let term = List.filter (is_symbol_accessible g) (get_all_tokens g) in
-    List.map (derive_word_with_symbol g) term
+    List.map (Fuzzer.derive_word_with_symbol g) term
 
 let check_grammar_validity (blackbox : partie list -> bool) (g : grammaire) : bool = blackbox (fuzzer g)
 

@@ -1,6 +1,3 @@
-open Hashtbl
-open Parserbnf
-
 (* TODO : renommer rec_* en ext_* *)
 
 let print_bool = function
@@ -159,11 +156,11 @@ let rec first_non_terminal2 : tree_state list -> tree_state option = function
 	| (pre,Terminal(x),suf)::rest -> first_non_terminal2 rest
 	| (pre,Nonterminal(x),suf)::rest -> Some((pre,Nonterminal(x),suf))
 
-let string_inst_of_element (values : (element, string) t) : element -> string  = function
+let string_inst_of_element (values : (element, string) Hashtbl.t) : element -> string  = function
     | s when Hashtbl.mem values s -> Hashtbl.find values s
     | s -> string_of_element s
 
-let string_inst_of_part (values : (element, string) t) : element list -> string = function
+let string_inst_of_part (values : (element, string) Hashtbl.t) : element list -> string = function
     | t::q -> List.fold_left concat_space (string_inst_of_element values t) (List.map (string_inst_of_element values) q)
     | [] -> "ε"
 
@@ -206,9 +203,9 @@ let read_bnf_grammar (filename : string) : grammaire =
 
 let rec read_tokens_from_ch (ch: Lexing.lexbuf) : element list =
     let token = Lexerbnf.token ch in match token with
-    | EOF -> []
-    | NTERM(b,str) -> Nonterminal(str)::(read_tokens_from_ch ch)
-    | TERM(b,str) -> Terminal(str)::(read_tokens_from_ch ch)
+    | Parserbnf.EOF -> []
+    | Parserbnf.NTERM(b,str) -> Nonterminal(str)::(read_tokens_from_ch ch)
+    | Parserbnf.TERM(b,str) -> Terminal(str)::(read_tokens_from_ch ch)
     | _ -> failwith "Error token"
 
 let read_tokens (str : string) : element list =

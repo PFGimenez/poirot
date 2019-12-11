@@ -1,5 +1,4 @@
 open Base
-open Nettoyage
 
 (** Algorithme de génération de la grammaire des injections **)
 
@@ -94,7 +93,7 @@ let rec quotient fquotientregle acc iteration terminal axiome = function
 (* Quotient à droite pour plusieurs règles par un terminal "terminal" *)
 let quotient_and_nettoyage quotientregle iteration terminal grammaire =
 	let {axiome=axiome;regles=regles} = grammaire in
-	nettoyage (quotient quotientregle ([],axiome) iteration terminal axiome regles)
+	Nettoyage.nettoyage (quotient quotientregle ([],axiome) iteration terminal axiome regles)
 
 (* Algorithme de génération de la grammaire complète pour la requête
 WARNING : les grammaires générées sont à nettoyer, car elles impliquent énormément de backtracking lors de la dérivation du mot.
@@ -109,7 +108,7 @@ let rec generate_blind_grammar quotient iteration grammaire = function
     | x::rest -> (* print_string ("quotient par "^element2string2(x)^"\n");*) let g=(quotient_and_nettoyage quotient iteration x grammaire) in (* print_grammar g;*) (generate_blind_grammar [@tailcall]) quotient (iteration+1) g rest
 
 let generate_blind_grammar_both_sides prefixe suffixe grammaire =
-    let g=generate_blind_grammar (left_quotient_of_rule quotient_prefix_string) 1 (nettoyage grammaire) prefixe in
+    let g=generate_blind_grammar (left_quotient_of_rule quotient_prefix_string) 1 (Nettoyage.nettoyage grammaire) prefixe in
     generate_blind_grammar right_quotient_of_rule 100 g (List.rev suffixe)
 
 let rec generate_blind_grammar2 grammars tree grammaire =
