@@ -115,11 +115,8 @@ let quoted_string_of_ext_rules = function
     | t::q -> List.fold_left concat_new_line (quoted_string_of_ext_rule t) (List.map quoted_string_of_ext_rule q)
     | [] -> ""
 
-let bnf_string_of_ext_grammar (g : ext_grammar) : string = (quoted_string_of_ext_element g.ext_axiom) ^ ";\n" ^ (quoted_string_of_ext_rules g.ext_rules) ^ "\n"
-
-let bnf_string_of_grammar (g : grammar) : string = bnf_string_of_ext_grammar (ext_grammar_of_grammar g)
-
 let string_of_ext_grammar (g : ext_grammar) : string = "axiom: " ^ (string_of_ext_element g.ext_axiom) ^ "\nRules: " ^ (string_of_ext_rules g.ext_rules)
+
 (* Conversion d'une règle en chaîne de caractère *)
 let rule2string : rule -> string = function
 	| {left_symbol=g;right_part=d} -> element2string g ^ " --> " ^ part2string d
@@ -140,7 +137,6 @@ let (-->) g d = {left_symbol=g;right_part=d}
 let (@@) axiom rules = {axiom=axiom;rules=rules}
 
 let (@@@) axiom rules = {ext_axiom=axiom;ext_rules=rules}
-
 
 (* Récupération d'une monade option contenant le premier non terminal d'une part (si il existe !) *)
 let rec first_non_terminal = function
@@ -180,30 +176,3 @@ let rec print_grammars = function
     | t::[] -> print_grammar t
     | t::q -> print_grammar t; print_grammars q
 
-
-let rec read_part (part : (bool*string) list) (output : element list) : part = match part with
-    | [] -> List.rev output
-    | t::q when fst t -> (read_part [@tailcall]) q (Terminal(snd t)::output)
-    | t::q -> (read_part [@tailcall]) q (Nonterminal(snd t)::output)
-
-let rec read_rules (ext_rules : ((bool*string) * ((bool*string) list)) list) (output : rule list) : rule list = match ext_rules with
-    | [] -> output
-    | (n,l)::q -> assert (not (fst n)); (read_rules [@tailcall]) q ((Nonterminal(snd n) --> read_part l [])::output)
-
-let convert_grammar (tokens : ((bool*string) * (((bool*string) * ((bool*string) list)) list))) : grammar =
-    assert (not (fst (fst tokens))); (* the ext_axiom must be a nonterminal *)
-    Nonterminal(snd (fst tokens)) @@ read_rules (snd tokens) []
-
-let read_bnf_grammar (filename : string) : grammar =
-    let lexbuf = Lexing.from_channel (open_in filename) in
-    convert_grammar (Parserbnf.start Lexerbnf.token lexbuf)
-
-let rec read_tokens_from_ch (ch: Lexing.lexbuf) : element list =
-    let token = Lexerbnf.token ch in match token with
-    | Parserbnf.EOF -> []
-    | Parserbnf.NTERM(b,str) -> Nonterminal(str)::(read_tokens_from_ch ch)
-    | Parserbnf.TERM(b,str) -> Terminal(str)::(read_tokens_from_ch ch)
-    | _ -> failwith "Error token"
-
-let read_tokens (str : string) : element list =
-    read_tokens_from_ch (Lexing.from_string str)

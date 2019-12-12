@@ -1,7 +1,7 @@
 open Base
 
 let ()=
-    let grammar = Nettoyage.nettoyage (Base.read_bnf_grammar Sys.argv.(1)) in
+    let grammar = Nettoyage.nettoyage (Grammar_io.read_bnf_grammar Sys.argv.(1)) in
     let order = Fuzzer.get_order grammar in
     print_string ((part2string order)^"\n");
     let g2 = Fuzzer.delete_recursion grammar in

@@ -1,9 +1,9 @@
 let ()=
 	if Array.length Sys.argv = 5 then
-        let grammar = Base.read_bnf_grammar Sys.argv.(1)
-        and prefix = Base.read_tokens (Sys.argv.(2))
-        and suffix = Base.read_tokens (Sys.argv.(3))
-        and intepart = Base.read_tokens (Sys.argv.(4)) in
+        let grammar = Grammar_io.read_bnf_grammar Sys.argv.(1)
+        and prefix = Grammar_io.read_tokens (Sys.argv.(2))
+        and suffix = Grammar_io.read_tokens (Sys.argv.(3))
+        and intepart = Grammar_io.read_tokens (Sys.argv.(4)) in
         print_string ("Prefix: "^(Base.part2string prefix)^"\nSuffix: "^(Base.part2string suffix)^"\n");
         let values = Hashtbl.create 1 in
         Hashtbl.add values (Base.Terminal("value")) "val1";
@@ -29,6 +29,6 @@ let ()=
                     List.iter (fun (p,e,s) -> print_string ("  \""^(Base.element2string e)^"\"\n")) injection_tokens;
                     let g = Blind.search_api blackbox interest grammar injection_tokens in match g with
                     | None -> print_string "Pas de grammar trouvée\n"
-                    | Some(g2) -> print_string ("Injection:\n  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol g2 interest))^"\n"); print_string ("grammar :\n"^(Base.bnf_string_of_ext_grammar (Clean.clean (Base.ext_grammar_of_grammar g2))))
+                    | Some(g2) -> print_string ("Injection:\n  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol g2 interest))^"\n"); print_string ("grammar :\n"^(Grammar_io.bnf_string_of_ext_grammar (Clean.clean (Base.ext_grammar_of_grammar g2))))
 
     else print_string ("Usage : "^Sys.argv.(0)^" <fichierGrammaire> <prefixe> <suffixe> <objectif>\n")
