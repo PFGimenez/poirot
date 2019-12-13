@@ -1,6 +1,6 @@
 open Base
 
-let bnf_string_of_ext_grammar (g : ext_grammar) : string = (quoted_string_of_ext_element g.ext_axiom) ^ ";\n" ^ (quoted_string_of_ext_rules g.ext_rules) ^ "\n"
+let bnf_string_of_ext_grammar (g : ext_grammar) : string = (quoted_string_of_ext_element g.ext_axiom) ^ ";" ^ (quoted_string_of_ext_rules g.ext_rules)
 
 let bnf_string_of_grammar (g : grammar) : string = bnf_string_of_ext_grammar (ext_grammar_of_grammar g)
 

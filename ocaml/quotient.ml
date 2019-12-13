@@ -28,28 +28,21 @@ let left_quotient_of_rule quotient_string numero terminal axiom = function
 
     (* A -> t alpha avec t terminal *)
     | {left_symbol = Nonterminal(a);right_part=t::alpha } when t=terminal && is_terminal t
-        -> (* print_string ("t alpha "^(part2string (t::alpha))^"\n"); *)
-            ([ (Nonterminal(etiquette a numero))-->alpha ;
-                (Nonterminal(a))-->(t::alpha) ],
-                if (axiom=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
-
-    (* A -> t alpha avec t terminal *)
-    | {left_symbol = Nonterminal(a);right_part=t::alpha } when t=terminal && is_terminal t
-        -> (* print_string ("t alpha "^(part2string (t::alpha))^"\n"); *)
+        -> (* print_endline ("t alpha "^(part2string (t::alpha))); *)
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(a))-->(t::alpha) ],
                 if (axiom=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
     (* A -> t alpha avec t terminal préfixe *)
 (*    | {left_symbol = Nonterminal(a);right_part=t::alpha } when is_terminal t && quotient_string (element2string t) (element2string terminal) <> None
-        -> (* print_string ("t alpha "^(part2string (t::alpha))^"\n"); *)
+        -> (* print_endline ("t alpha "^(part2string (t::alpha))); *)
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(a))-->(t::alpha) ],
                 if (axiom=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None) *)
 
     (* A -> t alpha avec t non-terminal *)
     | {left_symbol = Nonterminal(a);right_part=t::alpha } when t=terminal
-        ->  (* print_string ("nt alpha "^(part2string (t::alpha))^"\n"); *)
+        ->  (* print_endline ("nt alpha "^(part2string (t::alpha))); *)
             ([ (Nonterminal(etiquette a numero))-->alpha ;
                 (Nonterminal(etiquette a numero))-->(Nonterminal(etiquette (element2string t) numero)::alpha) ;
                 (Nonterminal(a))-->(t::alpha) ],
@@ -59,14 +52,14 @@ let left_quotient_of_rule quotient_string numero terminal axiom = function
 
     (* A -> B alpha *)
     | {left_symbol = Nonterminal(a);right_part=(Nonterminal(b))::alpha }
-        -> (* print_string ("b alpha "^(part2string (Nonterminal(b)::alpha))^"\n"); *)
+        -> (* print_endline ("b alpha "^(part2string (Nonterminal(b)::alpha))); *)
             ([(Nonterminal(etiquette a numero))-->((Nonterminal(etiquette b numero))::alpha) ;
                 (Nonterminal(a))-->((Nonterminal(b))::alpha)],
                 if (axiom=Nonterminal(a)) then Some(Nonterminal(etiquette a numero)) else None)
 
 	(* autre *)	  
     | autreregle
-        -> (* print_string ("other "^(part2string (autreregle.right_part))^"\n"); *)
+        -> (* print_endline ("other "^(part2string (autreregle.right_part))); *)
             ([autreregle],None)
 
 (* Inverser la part droite d'une règle *)
@@ -105,7 +98,7 @@ WARNING : les grammaires générées sont à nettoyer, car elles impliquent éno
 
 let rec generate_blind_grammar quotient iteration grammar = function
 	| [] -> grammar
-    | x::rest -> (* print_string ("quotient par "^element2string2(x)^"\n");*) let g=(quotient_and_nettoyage quotient iteration x grammar) in (* print_grammar g;*) (generate_blind_grammar [@tailcall]) quotient (iteration+1) g rest
+    | x::rest -> (* print_endline ("quotient par "^element2string2(x));*) let g=(quotient_and_nettoyage quotient iteration x grammar) in (* print_grammar g;*) (generate_blind_grammar [@tailcall]) quotient (iteration+1) g rest
 
 let generate_blind_grammar_both_sides prefixe suffixe grammar =
     let g=generate_blind_grammar (left_quotient_of_rule quotient_prefix_string) 1 (Nettoyage.nettoyage grammar) prefixe in

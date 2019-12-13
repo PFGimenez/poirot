@@ -4,31 +4,31 @@ let ()=
         and prefix = Grammar_io.read_tokens (Sys.argv.(2))
         and suffix = Grammar_io.read_tokens (Sys.argv.(3))
         and intepart = Grammar_io.read_tokens (Sys.argv.(4)) in
-        print_string ("Prefix: "^(Base.part2string prefix)^"\nSuffix: "^(Base.part2string suffix)^"\n");
+        print_endline ("Prefix: "^(Base.part2string prefix)^"Suffix: "^(Base.part2string suffix));
         let values = Hashtbl.create 1 in
         Hashtbl.add values (Base.Terminal("value")) "val1";
 
         if List.length intepart != 1 then
             if List.length intepart = 0 then begin
-                print_string "Au moins un objectif nécessaire\n"
+                print_endline "Au moins un objectif nécessaire"
             end else begin
-                print_string "Pas plus d'un objectif !\n"
+                print_endline "Pas plus d'un objectif !"
             end
         else
             let interest = List.hd intepart in
 
             if not (Blind.is_symbol_accessible grammar interest) then
-                print_string "Objectif inconnu !\n"
+                print_endline "Objectif inconnu !"
             else
                 let blackbox = Blind.blackbox_template prefix suffix grammar in
                 let injection_tokens = Blind.get_injection_leaves blackbox grammar in
                 if List.length injection_tokens = 0 then
-                    print_string "Pas de token d'injection !\n"
+                    print_endline "Pas de token d'injection !"
                 else
-                    print_string "Injection token:\n";
-                    List.iter (fun (p,e,s) -> print_string ("  \""^(Base.element2string e)^"\"\n")) injection_tokens;
+                    print_endline "Injection token:";
+                    List.iter (fun (p,e,s) -> print_endline ("  \""^(Base.element2string e)^"\"")) injection_tokens;
                     let g = Blind.search_api blackbox interest grammar injection_tokens in match g with
-                    | None -> print_string "Pas de grammar trouvée\n"
-                    | Some(g2) -> print_string ("Injection:\n  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol g2 interest))^"\n"); print_string ("grammar :\n"^(Grammar_io.bnf_string_of_ext_grammar (Clean.clean (Base.ext_grammar_of_grammar g2))))
+                    | None -> print_endline "Pas de grammar trouvée"
+                    | Some(g2) -> print_endline ("Injection:  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol g2 interest))); print_endline ("grammar :"^(Grammar_io.bnf_string_of_ext_grammar (Clean.clean (Base.ext_grammar_of_grammar g2))))
 
-    else print_string ("Usage : "^Sys.argv.(0)^" <fichierGrammaire> <prefixe> <suffixe> <objectif>\n")
+    else print_endline ("Usage : "^Sys.argv.(0)^" <fichierGrammaire> <prefixe> <suffixe> <objectif>")

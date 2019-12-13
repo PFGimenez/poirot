@@ -28,7 +28,7 @@ let rec possible_rules motintermediaire rules =
 		gauche-->droite::(possible_rules motintermediaire rest)
     | _::rest -> possible_rules motintermediaire rest
 
-let rec possible_rules2 (motintermediaire : ext_element list) (rules : ext_rules) : ext_rules =
+let rec possible_rules2 (motintermediaire : ext_element list) (rules : ext_rule list) : ext_rule list =
 	let premier = first_non_terminal2 motintermediaire in
 	match premier with
 	| None -> []
@@ -65,7 +65,7 @@ let rec derive_within_depth profondeur grammar motintermediaire =
 (* DeriverTout depuis l'axiom de la grammar fournie *)
 let deriver profondeur grammar = derive_within_depth profondeur grammar [grammar.axiom]
 
-let derive_and_print profondeur grammar = List.iter (fun r -> print_string ("Mot: "^(part2string r)^"\n")) (deriver profondeur grammar)
+let derive_and_print profondeur grammar = List.iter (fun r -> print_endline ("Mot: "^(part2string r))) (deriver profondeur grammar)
 
 (** Vérification de la dérivabilité d'une phrase à partir d'une grammar **)
 
@@ -89,9 +89,9 @@ let is_list_in_language grammar parties =
     let words = derive_within_length len grammar [grammar.axiom] in
     List.for_all (fun p -> List.mem p words) parties
 
-let is_in_language grammar part = (* print_string ((part2string part)^"\n");*) List.mem part (derive_within_length (List.length part) grammar [grammar.axiom])
+let is_in_language grammar part = (* print_endline ((part2string part));*) List.mem part (derive_within_length (List.length part) grammar [grammar.axiom])
 
-let derive_within_lengthPrint longueur grammar = List.iter (fun r -> print_string ("Mot: "^(part2string r)^"\n") (*; print_bool (is_in_language grammar r)*)) (derive_within_length longueur grammar [grammar.axiom])
+let derive_within_lengthPrint longueur grammar = List.iter (fun r -> print_endline ("Mot: "^(part2string r)) (*; print_bool (is_in_language grammar r)*)) (derive_within_length longueur grammar [grammar.axiom])
 
 let min_list a b = if List.length a < List.length b then a else b
 

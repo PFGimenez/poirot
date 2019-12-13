@@ -16,7 +16,7 @@ let blackbox_template
     = Fuzzer.is_list_in_language grammar (List.map (fun p -> prefix @ p @ suffix) injections)
 
 
-let print_ext_element t = print_string ((string_of_ext_element t)^"\n")
+let print_ext_element t = print_endline ((string_of_ext_element t))
 
 let get_grammar_from_ext_element grammar (p,e,s) = Quotient.generate_blind_grammar_both_sides p s (e@@grammar.rules)
 
@@ -26,7 +26,7 @@ let get_new_rules (grammar : grammar) (t : ext_element) : ext_rule list = []
 
 (* TODO *)
 
-let get_new_axioms (r : ext_rules) : ext_element list = [(List.hd r).ext_left_symbol]
+let get_new_axioms (r : ext_rule list) : ext_element list = [(List.hd r).ext_left_symbol]
 
 let rec update_grammars (grammars : db_type) (grammar : grammar) : ext_element list -> unit = function
     | [] -> ()
@@ -53,7 +53,7 @@ let symbols_from_parents (grammar : grammar) (axiom : element) : element list = 
 
 let trim = function
     | Terminal(s) -> Terminal(s)
-    | Nonterminal(s) -> (*print_string s; flush stdout;*) let index = String.index_opt s '.' in match index with
+    | Nonterminal(s) -> (*print_endline s; flush stdout;*) let index = String.index_opt s '.' in match index with
         | None -> Nonterminal(s)
         | Some(i) -> Nonterminal(String.sub s 0 i)
 
@@ -68,7 +68,7 @@ let rec is_accessible s = function
 
 let is_symbol_accessible g s = is_accessible s g.rules
 
-let rec is_accessible2 (s : element) : ext_rules -> bool = function
+let rec is_accessible2 (s : element) : ext_rule list -> bool = function
     | [] -> false
     | r::q -> List.exists (fun t -> element_of_ext_element t = s) r.ext_right_part || s = (element_of_ext_element r.ext_left_symbol) || (is_accessible2 [@tailcall]) s q
 
@@ -111,21 +111,21 @@ let grammar_of_longest_ext_element (g,(a,b,c)) (g2,(a2,b2,c2)) = if (List.length
 
 let rec search blackbox interest grammar step visited = function
     | [] -> None
-    | (_,t)::q -> print_string ("Search "^(string_of_int step)^" (queue: "^(string_of_int ((List.length q) + 1))^")\n"); print_ext_element t; flush stdout;
+    | (_,t)::q -> print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int ((List.length q) + 1))^")"); print_ext_element t; flush stdout;
         if (List.exists (fun (_,ext_element) -> ext_element=t) visited) then begin
-            print_string "Visited\n"; (search [@tailcall]) blackbox interest grammar (step+1) visited q
+            print_endline "Visited"; (search [@tailcall]) blackbox interest grammar (step+1) visited q
         end else begin
             let g = get_grammar_from_ext_element grammar t in
             print_grammar g;
-            (*print_string "Grammar built\n"; flush stdout;*)
-            (*print_string ("Accessible from "^(element2string g.axiom)^": "); print_bool (is_accessible_from_ext_axiom grammar interest [g.axiom]); flush stdout;*)
-            (*print_string ("Distance: "^(string_of_int (distance_to_goal grammar interest [(trim g.axiom,0)])));*)
+            (*print_endline "Grammar built"; flush stdout;*)
+            (*print_endline ("Accessible from "^(element2string g.axiom)^": "); print_bool (is_accessible_from_ext_axiom grammar interest [g.axiom]); flush stdout;*)
+            (*print_endline ("Distance: "^(string_of_int (distance_to_goal grammar interest [(trim g.axiom,0)])));*)
             if not (check_grammar_validity blackbox g) then begin (* invalid : ignore *)
-                print_string "Invalid\n"; (search [@tailcall]) blackbox interest grammar (step+1) visited q
-            end else if (*print_string "AA"; flush stdout;*) is_symbol_accessible g interest then begin (* found ! *)
-                print_string "Found!\n"; Some(g)
+                print_endline "Invalid"; (search [@tailcall]) blackbox interest grammar (step+1) visited q
+            end else if (*print_endline "AA"; flush stdout;*) is_symbol_accessible g interest then begin (* found ! *)
+                print_endline "Found!"; Some(g)
             end else begin (* we explore in this direction *)
-                print_string "Explore\n";
+                print_endline "Explore";
                 (search [@tailcall]) blackbox interest grammar (step+1) ((g,t)::visited) (insert_all_in_list grammar interest q (construct_ext_elements grammar t))
             end
         end
@@ -143,21 +143,21 @@ let rec search2
     (grammars : db_type)
     : scored_ext_element list -> ext_grammar option = function
     | [] -> None
-    | (_,t)::q -> print_string ("Search "^(string_of_int step)^" (queue: "^(string_of_int ((List.length q) + 1))^")\n"); flush stdout;
+    | (_,t)::q -> print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int ((List.length q) + 1))^")"); flush stdout;
         if (List.exists (fun ext_element -> ext_element=t) visited) then begin
-            print_string "Visited\n"; (search2 [@tailcall]) blackbox interest init_grammaire (step+1) visited grammars q
+            print_endline "Visited"; (search2 [@tailcall]) blackbox interest init_grammaire (step+1) visited grammars q
         end else begin
             let g = get_grammar_from_ext_element2 grammars init_grammaire t in
-            print_string (string_of_ext_grammar g);
-            (*print_string "Grammar built\n"; flush stdout;*)
-            (*print_string ("Accessible from "^(element2string g.axiom)^": "); print_bool (is_accessible_from_ext_axiom init_grammaire interest [g.axiom]); flush stdout;*)
-            (*print_string ("Distance: "^(string_of_int (distance_to_goal init_grammaire interest [(trim g.axiom,0)])));*)
+            print_endline (string_of_ext_grammar g);
+            (*print_endline "Grammar built"; flush stdout;*)
+            (*print_endline ("Accessible from "^(element2string g.axiom)^": "); print_bool (is_accessible_from_ext_axiom init_grammaire interest [g.axiom]); flush stdout;*)
+            (*print_endline ("Distance: "^(string_of_int (distance_to_goal init_grammaire interest [(trim g.axiom,0)])));*)
             if not (check_grammar_validity2 blackbox g) then begin (* invalid : ignore *)
-                print_string "Invalid\n"; (search2 [@tailcall]) blackbox interest init_grammaire (step+1) visited grammars q
-            end else if (*print_string "AA"; flush stdout;*) is_symbol_accessible2 g interest then begin (* found ! *)
-                print_string "Found!\n"; Some(g)
+                print_endline "Invalid"; (search2 [@tailcall]) blackbox interest init_grammaire (step+1) visited grammars q
+            end else if (*print_endline "AA"; flush stdout;*) is_symbol_accessible2 g interest then begin (* found ! *)
+                print_endline "Found!"; Some(g)
             end else begin (* we explore in this direction *)
-                print_string "Explore\n";
+                print_endline "Explore";
                 (search2 [@tailcall]) blackbox interest init_grammaire (step+1) (t::visited) grammars (insert_all_in_list2 init_grammaire interest q (construct_ext_elements init_grammaire t))
             end
         end

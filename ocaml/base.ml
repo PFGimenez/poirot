@@ -1,6 +1,6 @@
 let print_bool = function
-            | true -> print_string "true\n"
-            | false -> print_string "false\n"
+            | true -> print_endline "true"
+            | false -> print_endline "false"
 
 (** Type definition **)
 (* An element represents a rule element that can be either a Terminal or a Nonterminal *)
@@ -23,9 +23,7 @@ type ext_part = ext_element list
 
 type ext_rule = {ext_left_symbol : ext_element; ext_right_part : ext_part}
 
-type ext_rules = ext_rule list
-
-type ext_grammar = {ext_axiom: ext_element; ext_rules: ext_rules}
+type ext_grammar = {ext_axiom: ext_element; ext_rules: ext_rule list}
 
 let (--->) g d = {ext_left_symbol=g;ext_right_part=d}
 
@@ -157,7 +155,7 @@ let string_inst_of_part (values : (element, string) Hashtbl.t) : element list ->
     | t::q -> List.fold_left concat_space (string_inst_of_element values t) (List.map (string_inst_of_element values) q)
     | [] -> "ε"
 
-let print_words (w : part list) : unit = List.iter (fun r -> print_string ("Mot: "^(part2string r)^"\n")) w
+let print_words (w : part list) : unit = List.iter (fun r -> print_endline ("Mot: "^(part2string r))) w
 
 (** Fonctions d'affichage **)
 
@@ -172,7 +170,7 @@ let print_grammar grammar = Printf.printf "axiom : %s \nRegles : \n" (element2st
 let equals_grammars (g1 : ext_grammar) (g2 : ext_grammar) : bool = true
 
 let rec print_grammars = function
-    | [] -> print_string "(vide)"
+    | [] -> print_endline "(vide)"
     | t::[] -> print_grammar t
     | t::q -> print_grammar t; print_grammars q
 
