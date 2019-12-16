@@ -1,5 +1,5 @@
 let ()=
-	if Array.length Sys.argv = 5 then
+    if Array.length Sys.argv = 5 then
         let grammar = Grammar_io.read_bnf_grammar Sys.argv.(1)
         and prefix = Grammar_io.read_tokens (Sys.argv.(2))
         and suffix = Grammar_io.read_tokens (Sys.argv.(3))

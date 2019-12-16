@@ -1,10 +1,8 @@
-let print_bool = function
-            | true -> print_endline "true"
-            | false -> print_endline "false"
+(** Type definitions **)
 
-(** Type definition **)
 (* An element represents a rule element that can be either a Terminal or a Nonterminal *)
-type element = 	| Terminal of string
+type element =
+        | Terminal of string
 		| Nonterminal of string
 
 (* A part represents a list of elements. It can either be a right-hand side of a rule or an intermediate derivation *)
@@ -29,8 +27,6 @@ let (--->) g d = {ext_left_symbol=g;ext_right_part=d}
 
 let ext_element_of_element e = {pf=[]; e=e; sf=[]}
 
-let trim2 (pre,e,suf) = ([],e,[])
-
 let element_of_ext_element (e : ext_element) : element = e.e
 
 let word_of_ext_elements (ext_element_list: ext_element list) : part = List.map element_of_ext_element ext_element_list
@@ -51,6 +47,10 @@ let element2string = function
 let quoted_element2string = function
 		| Terminal(x) -> "\""^(String.escaped x)^"\""
 		| Nonterminal(x) -> x
+
+let print_bool = function
+            | true -> print_endline "true"
+            | false -> print_endline "false"
 
 
 
@@ -145,7 +145,7 @@ let rec first_non_terminal = function
 let rec first_non_terminal2 : ext_element list -> ext_element option = function
 	| [] -> None
     | {pf=pre; e=Terminal(x); sf=suf}::rest -> first_non_terminal2 rest
-	| ({pf=pre; e=Nonterminal(x); sf=suf} as e)::rest -> Some(e)
+	| e::rest -> Some(e)
 
 let string_inst_of_element (values : (element, string) Hashtbl.t) : element -> string  = function
     | s when Hashtbl.mem values s -> Hashtbl.find values s
@@ -165,9 +165,6 @@ let print_rules rules = List.iter (Printf.printf "%s\n") (List.map rule2string r
 (* Affichage d'une grammar *)
 let print_grammar grammar = Printf.printf "axiom : %s \nRegles : \n" (element2string grammar.axiom);
 				  print_rules grammar.rules
-
-(* TODO *)
-let equals_grammars (g1 : ext_grammar) (g2 : ext_grammar) : bool = true
 
 let rec print_grammars = function
     | [] -> print_endline "(vide)"
