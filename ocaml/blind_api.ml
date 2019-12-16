@@ -26,7 +26,7 @@ let ()=
                     print_endline "Pas de token d'injection !"
                 else
                     print_endline "Injection token:";
-                    List.iter (fun (p,e,s) -> print_endline ("  \""^(Base.element2string e)^"\"")) injection_tokens;
+                    List.iter (fun e -> print_endline ("  \""^(Base.element2string (Base.element_of_ext_element e))^"\"")) injection_tokens;
                     let g = Blind.search_api blackbox interest grammar injection_tokens in match g with
                     | None -> print_endline "Pas de grammar trouvée"
                     | Some(g2) -> print_endline ("Injection:  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol g2 interest))); print_endline ("grammar :"^(Grammar_io.bnf_string_of_ext_grammar (Clean.clean (Base.ext_grammar_of_grammar g2))))

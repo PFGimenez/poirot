@@ -18,7 +18,7 @@ let blackbox_template
 
 let print_ext_element t = print_endline ((string_of_ext_element t))
 
-let get_grammar_from_ext_element grammar (p,e,s) = Quotient.generate_blind_grammar_both_sides p s (e@@grammar.rules)
+let get_grammar_from_ext_element grammar e = Quotient.generate_blind_grammar_both_sides e.pf e.sf (e.e@@grammar.rules)
 
 (* TODO *)
 
@@ -79,8 +79,8 @@ let rec get_prefix_suffix_partie (elem : element) (prefix : element list) : elem
     | t::q when t=elem -> (List.rev prefix,q)::(get_prefix_suffix_partie elem (t::prefix) q)
     | t::q -> get_prefix_suffix_partie elem (t::prefix) q
 
-let construct_ext_elements (grammar: grammar) ((p,e,s): ext_element) : ext_element list =
-    List.flatten (List.map (fun r -> let l=get_prefix_suffix_partie e [] r.right_part in List.map (fun (p2,s2) -> p2@p,r.left_symbol,s@s2) l) (trouve_regles grammar e))
+let construct_ext_elements (grammar: grammar) (e: ext_element) : ext_element list =
+    List.flatten (List.map (fun r -> let l=get_prefix_suffix_partie e.e [] r.right_part in List.map (fun (p2,s2) -> {pf=p2@e.pf; e=r.left_symbol; sf=e.sf@s2}) l) (trouve_regles grammar e.e))
 
 let get_all_tokens (grammar : grammar) : element list = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.right_part) grammar.rules))
 
@@ -101,7 +101,7 @@ let rec insert_in_list (distance : int) (ext_element : ext_element) : scored_ext
 
 let rec insert_all_in_list grammar interest l = function
     | [] -> l
-    | ((a,b,c) as t)::q -> (insert_all_in_list [@tailcall]) grammar interest (insert_in_list (distance_to_goal grammar interest [trim b,0]) t l) q
+    | t::q -> (insert_all_in_list [@tailcall]) grammar interest (insert_in_list (distance_to_goal grammar interest [trim t.e,0]) t l) q
 
 let rec insert_all_in_list2 (grammar : grammar) (interest : element) (l : scored_ext_element list) : ext_element list -> scored_ext_element list = function
     | [] -> l

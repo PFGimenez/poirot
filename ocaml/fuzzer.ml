@@ -12,7 +12,7 @@ let rec left_derivation2 (derivation : ext_element list) (rule : ext_rule) =
     let {ext_left_symbol=base;ext_right_part=transformation} = rule in
 	match derivation with
 	| [] -> []
-	| (pre,Nonterminal(x),suf)::rest when (pre,Nonterminal(x),suf)=base -> List.append transformation rest
+    | ({pf=pre; e=Nonterminal(x); sf=suf} as e)::rest when e=base -> List.append transformation rest
 	| x::rest -> x::left_derivation2 rest rule
 
 
@@ -48,7 +48,7 @@ let rec is_word = function
 
 let rec is_word2 : ext_element list -> bool = function
 	| [] -> true
-    | ([],Terminal(x),[])::rest -> is_word2 rest
+    | {pf=[]; e=Terminal(x); sf=[]}::rest -> is_word2 rest
 	| _ -> false
 
 let rec derive_within_depth profondeur grammar motintermediaire =

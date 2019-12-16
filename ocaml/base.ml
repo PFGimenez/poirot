@@ -11,7 +11,7 @@ type element = 	| Terminal of string
 type part = element list
 
 (* An element with a prefix and a suffix *)
-type ext_element = part * element * part
+type ext_element = {pf: part; e: element; sf: part}
 
 (* Une règle est composée d'une part gauche (un élément) et d'une part droite *)
 type rule =  { left_symbol : element; right_part : part }
@@ -27,11 +27,11 @@ type ext_grammar = {ext_axiom: ext_element; ext_rules: ext_rule list}
 
 let (--->) g d = {ext_left_symbol=g;ext_right_part=d}
 
-let ext_element_of_element e = ([],e,[])
+let ext_element_of_element e = {pf=[]; e=e; sf=[]}
 
 let trim2 (pre,e,suf) = ([],e,[])
 
-let element_of_ext_element ((pre,e,suf) : ext_element) : element = e
+let element_of_ext_element (e : ext_element) : element = e.e
 
 let word_of_ext_elements (ext_element_list: ext_element list) : part = List.map element_of_ext_element ext_element_list
 
@@ -66,9 +66,9 @@ let is_terminal = function
 
 let is_non_terminal s = not (is_terminal s)
 
-let is_ext_element_terminal (pre,s,suf) = is_terminal s
+let is_ext_element_terminal e = is_terminal e.e
 
-let is_ext_element_non_terminal (pre,s,suf) = not (is_terminal s)
+let is_ext_element_non_terminal e = not (is_terminal e.e)
 
 (* Conversion d'une part en chaîne de caractères *)
 let concat_with_delimiter d s1 s2 = s1 ^ d ^ s2
@@ -85,13 +85,13 @@ let quoted_part2string = function
     | t::q -> List.fold_left concat_space (quoted_element2string t) (List.map quoted_element2string q)
     | [] -> ""
 
-let string_of_ext_element (l,s,r) = let str=element2string s in match l,r with
+let string_of_ext_element e = let str=element2string e.e in match e.pf,e.sf with
     | [],[] -> str
-    | _,_ -> str ^ "_[" ^ (part2string l) ^ "],[" ^ (part2string r) ^ "]"
+    | _,_ -> str ^ "_[" ^ (part2string e.pf) ^ "],[" ^ (part2string e.sf) ^ "]"
 
-let quoted_string_of_ext_element (l,s,r) = let str=quoted_element2string s in match l,r with
+let quoted_string_of_ext_element e = let str=quoted_element2string e.e in match e.pf,e.sf with
     | [],[] -> str
-    | _,_ -> str ^ "_[" ^ (quoted_part2string l) ^ "],[" ^ (quoted_part2string r) ^ "]"
+    | _,_ -> str ^ "_[" ^ (quoted_part2string e.pf) ^ "],[" ^ (quoted_part2string e.sf) ^ "]"
 
 let string_of_ext_part = function
     | t::q -> List.fold_left concat_space (string_of_ext_element t) (List.map string_of_ext_element q)
@@ -144,8 +144,8 @@ let rec first_non_terminal = function
 
 let rec first_non_terminal2 : ext_element list -> ext_element option = function
 	| [] -> None
-	| (pre,Terminal(x),suf)::rest -> first_non_terminal2 rest
-	| (pre,Nonterminal(x),suf)::rest -> Some((pre,Nonterminal(x),suf))
+    | {pf=pre; e=Terminal(x); sf=suf}::rest -> first_non_terminal2 rest
+	| ({pf=pre; e=Nonterminal(x); sf=suf} as e)::rest -> Some(e)
 
 let string_inst_of_element (values : (element, string) Hashtbl.t) : element -> string  = function
     | s when Hashtbl.mem values s -> Hashtbl.find values s
