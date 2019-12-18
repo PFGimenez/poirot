@@ -27,5 +27,9 @@ let right_symbol_list (g: grammar) (task: element) : element list =
 let get_generative_rules (g: grammar) (e: element) : rule list =
     List.filter (fun r -> List.mem e r.right_part) g.rules
 
-let quotient (g: grammar) (rsym : element list) (lsym : element list) (e: ext_element) : ext_rule list =
-    (* List.map quotient_one_rule *) []
+let quotient_mem mem_size =
+    let mem : (ext_element, ext_rule list) Hashtbl.t = Hashtbl.create mem_size
+    and rsym : (ext_element, element list) Hashtbl.t = Hashtbl.create mem_size
+    and lsym : (ext_element, element list) Hashtbl.t = Hashtbl.create mem_size in
+        fun (g: grammar) (e: ext_element) : grammar -> g (* TODO *)
+
