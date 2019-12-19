@@ -90,11 +90,11 @@ let quoted_part2string = function
 
 let string_of_ext_element e = let str=element2string e.e in match e.pf,e.sf with
     | [],[] -> str
-    | _,_ -> str ^ "_[" ^ (part2string e.pf) ^ "],[" ^ (part2string e.sf) ^ "]"
+    | _,_ -> str ^ "_[" ^ (part2string (List.rev e.pf)) ^ "],[" ^ (part2string e.sf) ^ "]"
 
 let quoted_string_of_ext_element e = let str=quoted_element2string e.e in match e.pf,e.sf with
     | [],[] -> str
-    | _,_ -> str ^ "_[" ^ (quoted_part2string e.pf) ^ "],[" ^ (quoted_part2string e.sf) ^ "]"
+    | _,_ -> str ^ "_[" ^ (quoted_part2string (List.rev e.pf)) ^ "],[" ^ (quoted_part2string e.sf) ^ "]"
 
 let string_of_ext_part = function
     | t::q -> List.fold_left concat_space (string_of_ext_element t) (List.map string_of_ext_element q)

@@ -34,8 +34,9 @@ let get_generative_rules (g: grammar) (e: element) : ext_rule list =
     List.filter_map (fun r -> if List.mem e r.right_part then Some(ext_rule_of_rule r) else None) g.rules
 
 (* get the list of rules with some left-hand side *)
-let get_rules (g: grammar) (e: element) : ext_rule list =
-    List.filter_map (fun r -> if r.left_symbol = e then Some(ext_rule_of_rule r) else None) g.rules
+(* TODO: mettre dans une hashtable une fois pour toute *)
+let get_rules (rlist: ext_rule list) (e: ext_element) : ext_rule list =
+    List.filter_map (fun r -> if r.ext_left_symbol = e then Some(r) else None) rlist
 
 let quotient_mem (g: grammar) =
     (* all the computed rules *)
@@ -43,6 +44,9 @@ let quotient_mem (g: grammar) =
     (* has an ext_element been computed before ? *)
     and seen : (ext_element, bool) Hashtbl.t = Hashtbl.create 100
     and all_sym : (element list) = get_all_symbols g in
+
+    (* the base grammar is already computed *)
+    List.iter (fun e -> Hashtbl.add seen (ext_element_of_element e) true) all_sym;
 
     let all_non_terminal : (element list) = List.filter (is_non_terminal) all_sym
     and create_useless (e: element) : ext_element list =
@@ -59,50 +63,56 @@ let quotient_mem (g: grammar) =
     List.iter (fun e -> Hashtbl.add useless e true) (List.flatten (List.map create_useless all_non_terminal));
 
     (* apply a quotient of a single rule with a prefix that is a single element *)
-    let quotient_by_one_element (pf: element) (r: ext_rule) : (ext_rule list) * (ext_element list)  =
-        let new_lhs = {pf=r.ext_left_symbol.pf@[pf]; e=r.ext_left_symbol.e; sf=r.ext_left_symbol.sf} in
+    let quotient_by_one_element (pf: element) (new_lhs: ext_element) (r: ext_rule) : ext_element list =
         match r.ext_right_part with
-        | [] -> [],[]
+        | [] -> []
         (* A -> aBC with prefix = a *)
-        | t::q when t.e=pf && is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); [new_lhs ---> q],[]
+        | t::q when t.e=pf && is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); mem:=(new_lhs ---> q)::!mem; []
         (* A -> aBC with prefix != a *)
-        | t::q when is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); [],[]
+        | t::q when is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); []
         (* A -> BC with prefix = B *)
         | t::q when t.e=pf && t.pf=[] -> let new_elem = {pf=[pf];e=t.e;sf=t.sf} in
             (* if B can't derive a leftmost B *)
             if Hashtbl.mem useless new_elem then
-                [new_lhs ---> q],[]
+                (mem:=(new_lhs ---> q)::!mem; [])
             (* if B can derive a leftmost B *)
             else
-                [new_lhs ---> q; new_lhs ---> (new_elem::q)],[new_elem]
+                (mem:=(new_lhs ---> q)::(new_lhs ---> (new_elem::q))::!mem; [new_elem])
         (* A -> B_{D|}C *)
-        | t::q -> let new_elem = {pf=t.pf@[pf];e=t.e;sf=t.sf} in
-            if Hashtbl.mem useless new_elem then [],[]
-            else [new_lhs ---> (new_elem::q)],[new_elem]
+        | t::q -> let new_elem = {pf=pf::t.pf;e=t.e;sf=t.sf} in
+            if Hashtbl.mem useless new_elem then []
+            else (mem:=(new_lhs ---> (new_elem::q))::!mem; [new_elem])
     in
 
-    (* apply a quotient of rules with a prefix *)
-    let rec quotient_rules (rlist: ext_rule list) (pf: part) (new_sym: ext_element list) : ext_element list = match pf with
-        | [] -> new_sym
-        | t::q -> let (new_rlist,new_new_sym) = List.split (List.map (quotient_by_one_element t) rlist) in
-            let new_rlist = List.flatten new_rlist and new_new_sym = List.flatten new_new_sym in
-            mem := new_rlist@(!mem);
-            print_endline ("New rules:\n"^(string_of_ext_rules new_rlist));
-            (quotient_rules [@tailcall]) new_rlist q (new_new_sym@new_sym)
+    (* compute the rules of e with a new prefix (a single element) pf *)
+    (* the new rules (left symbol: new_lhs) are based on the rules of the previous_lhs *)
+    let quotient_by_one_element_mem (pf: element) (new_lhs: ext_element) (previous_lhs: ext_element) : (ext_element list) =
+        if Hashtbl.mem seen new_lhs then
+            []
+        else begin
+            Hashtbl.add seen new_lhs true;
+            assert (Hashtbl.mem seen previous_lhs);
+            let new_new_sym = List.map (quotient_by_one_element pf new_lhs) (get_rules !mem previous_lhs) in
+            List.sort_uniq compare (List.filter (fun e -> not (Hashtbl.mem seen e)) (List.flatten new_new_sym))
+        end
     in
 
     (* compute the rules of a ext_element and do it recursively with every new symbol *)
     let rec quotient_symbols (elist: ext_element list) : ext_rule list =
         match elist with
         | [] -> !mem
-        | t::q when Hashtbl.mem seen t -> print_endline ("Seen: "^(string_of_ext_element t)); (quotient_symbols [@tailcall]) q
-        | t::q -> let new_elist = quotient_rules (get_rules g t.e) t.pf [] in
-            Hashtbl.add seen t true;
-            (quotient_symbols [@tailcall]) (new_elist@elist)
+        | lhs::q -> print_endline ("Current LHS: "^(string_of_ext_element lhs)^"\nCurrent elist:"); List.iter (fun e -> print_endline (string_of_ext_element e)) elist; print_endline ("Current rules:\n"^(string_of_ext_rules !mem));
+                match lhs.pf with
+            | [] -> quotient_symbols q
+            | tpf::qpf -> let base_lhs = {pf=qpf;e=lhs.e;sf=lhs.sf} in
+                        if Hashtbl.mem useless base_lhs || Hashtbl.mem seen lhs then
+                            (quotient_symbols q)
+                        else if qpf = [] || Hashtbl.mem seen base_lhs then begin
+                            let new_elist = quotient_by_one_element_mem tpf lhs base_lhs in
+                            (quotient_symbols [@tailcall]) (new_elist@q) end
+                        else begin
+                            (* we keep the current symbol on the list *)
+                            ((quotient_symbols [@tailcall]) (base_lhs::elist)) end
     in
+    (* TODO : update useless *)
     fun (e: ext_element) : ext_grammar -> Clean.clean (e@@@(quotient_symbols [e]))
-
-(*     print_endline "Useless:";
-    List.iter (fun e -> print_endline (string_of_ext_element e)) !useless; *)
-    (* quotient_by_one_element *)
-    (* quotient_rules *)
