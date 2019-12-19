@@ -63,6 +63,14 @@ let quotient_mem (g: grammar) =
     let useless : (ext_element, bool) Hashtbl.t = Hashtbl.create 100 in
     List.iter (fun e -> Hashtbl.add useless e true) (List.flatten (List.map create_useless all_non_terminal));
 
+    let update_useless (e: ext_element) =
+        let useful = Clean.get_useful_symbols (e@@@(!mem)) in
+        let new_useless = List.filter (fun s -> is_ext_element_non_terminal s && Hashtbl.mem seen e && not (Hashtbl.mem useless e) && not (List.mem s useful)) (get_all_symbols_ext_rules !mem) in
+        print_endline "New useless:";
+        List.iter (fun e -> print_endline (string_of_ext_element e)) new_useless;
+        List.iter (fun e -> Hashtbl.replace useless e true) new_useless
+    in
+
     (* apply a quotient of a single rule with a prefix that is a single element *)
     let quotient_by_one_element (pf: element) (new_lhs: ext_element) (r: ext_rule) : (ext_element list * bool) =
         match r.ext_right_part with
@@ -94,7 +102,7 @@ let quotient_mem (g: grammar) =
             Hashtbl.add seen new_lhs true;
             assert (Hashtbl.mem seen previous_lhs);
             let (new_new_sym,useful) = List.split (List.map (quotient_by_one_element pf new_lhs) (get_rules !mem previous_lhs)) in
-(*            if List.find_opt (fun b : bool -> b) useful = None then
+            (* if List.for_all not useful then (* TODO: corriger *)
                 (print_endline "Useless !"; Hashtbl.add useless new_lhs true); *)
             List.sort_uniq compare (List.filter (fun e -> not (Hashtbl.mem seen e)) (List.flatten new_new_sym))
         end
@@ -104,7 +112,7 @@ let quotient_mem (g: grammar) =
     let rec quotient_symbols (elist: ext_element list) : ext_rule list =
         match elist with
         | [] -> !mem
-        | lhs::q -> print_endline ("Current LHS: "^(string_of_ext_element lhs)^"\nCurrent elist:"); List.iter (fun e -> print_endline (string_of_ext_element e)) elist; print_endline ("Current rules:\n"^(string_of_ext_rules !mem));
+        | lhs::q -> print_endline ("Current LHS: "^(string_of_ext_element lhs)^"\nCurrent elist:"); List.iter (fun e -> print_endline (string_of_ext_element e)) elist; (* print_endline ("Current rules:\n"^(string_of_ext_rules !mem)) ;*)
                 match lhs.pf with
             | [] -> quotient_symbols q
             | tpf::qpf -> let base_lhs = {pf=qpf;e=lhs.e;sf=lhs.sf} in
@@ -114,6 +122,7 @@ let quotient_mem (g: grammar) =
                         (quotient_symbols q)
                     else if qpf = [] || Hashtbl.mem seen base_lhs then begin
                         (* we can compute the current symbol *)
+                        (* update_useless lhs; TODO: corriger car il considère useless des non-terminaux dont  *)
                         let new_elist = quotient_by_one_element_mem tpf lhs base_lhs in
                         (quotient_symbols [@tailcall]) (new_elist@q) end
                     else begin
