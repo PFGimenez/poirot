@@ -1,16 +1,5 @@
 open Base
 
-(* TODO : nettoyage:
-    - retirer règles avec symbole inutiles (non-terminaux pas à gauche d'une production)
-    - retirer les symboles inaccessibles depuis l'axiom
-    - pas nécessaire : retirer epsilon-rule:
-        - laisser axiom -> ε si ça existe
-        - trouver les symboles annulables. Un symbole A est annulable si:
-            - il y a une règle A -> ε
-            - il y a une règle A -> α, avec α composé de symboles annulables
-        - créer des toutes les règles où un ou des symboles annulables sont retirés
-*)
-
 let rec iterate_until_convergence (f : ext_grammar -> ext_rule list) (g : ext_grammar) : ext_grammar = let old_length = List.length g.ext_rules and new_rules = f g in
     if old_length = List.length new_rules then g else (iterate_until_convergence [@tailcall]) f (g.ext_axiom@@@new_rules)
 

@@ -9,5 +9,19 @@ let ()=
     print_endline("Right symbols:");
     List.iter (fun e -> print_endline (string_of_element e)) lr;
     print_grammar grammar;
-    let rlist = fst (Rec_quotient.quotient grammar (Nonterminal("Exe")) (ext_rule_of_rule (List.nth (grammar.rules) 5))) in
-    print_endline (string_of_ext_rules rlist);
+    (* let out = Rec_quotient.quotient grammar (Nonterminal("Msg")) (ext_rule_of_rule (List.nth (grammar.rules) 5)) in
+    let rlist = fst out in
+    print_endline ("New rules:\n"^(string_of_ext_rules rlist));
+    let new_sym = snd out in
+    print_endline "New symbols:";
+    List.iter (fun e -> print_endline (string_of_ext_element e)) new_sym *)
+    (* let new_sym = Rec_quotient.quotient grammar [ext_rule_of_rule (List.nth (grammar.rules) 6)] [Nonterminal("Exe");Terminal(";");Nonterminal("Msg");Terminal(";");Nonterminal("Msg")] [] in
+    print_endline "New symbols:";
+    List.iter (fun e -> print_endline (string_of_ext_element e)) new_sym *)
+    let q = Rec_quotient.quotient_mem grammar in
+    print_endline "First call";
+    let g2 = q {pf=[Nonterminal("Msg");Terminal(";");Terminal("exec")];e=Nonterminal("S");sf=[]} in
+print_endline ((string_of_ext_grammar g2));
+    print_endline "Second call";
+    let g2 = q {pf=[Nonterminal("Msg");Terminal(";");Terminal("exec");Terminal("cmd")];e=Nonterminal("S");sf=[]} in
+print_endline (string_of_ext_grammar g2);
