@@ -70,6 +70,9 @@ let is_ext_element_terminal e = is_terminal e.e
 
 let is_ext_element_non_terminal e = not (is_terminal e.e)
 
+let get_all_symbols (g: grammar) : element list =
+    List.sort_uniq compare ((List.map (fun r -> r.left_symbol) g.rules) @ (List.flatten (List.map (fun r -> r.right_part) g.rules)))
+
 (* Conversion d'une part en chaîne de caractères *)
 let concat_with_delimiter d s1 s2 = s1 ^ d ^ s2
 
