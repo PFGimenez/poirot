@@ -27,15 +27,10 @@ let left_symbol_list (g: grammar) (task: element) : element list =
 let right_symbol_list (g: grammar) (task: element) : element list =
     symbol_list_aux extract_right_symbol g [task] [] true
 
-
 (* get the list of rules that can directly derive this element *)
+(* TODO: bouger dans blind *)
 let get_generative_rules (g: grammar) (e: element) : ext_rule list =
     List.filter_map (fun r -> if List.mem e r.right_part then Some(ext_rule_of_rule r) else None) g.rules
-
-(* get the list of rules with some left-hand side *)
-(* TODO: mettre dans une hashtable une fois pour toute *)
-let get_rules (rlist: ext_rule list) (e: ext_element) : ext_rule list =
-    List.filter_map (fun r -> if r.ext_left_symbol = e then Some(r) else None) rlist
 
 let quotient_mem (g: grammar) =
     let ext_g = ext_grammar_of_grammar g
@@ -58,10 +53,6 @@ let quotient_mem (g: grammar) =
         List.filter_map check_useless all_sym
     in
 
-    List.iter (fun e -> Hashtbl.add mem e (get_rules ext_g.ext_rules e)) (List.map ext_element_of_element all_non_terminal);
-    (* we don't need to compute the useless of terminal since their "quotientability" is trivial *)
-    List.iter (fun e -> Hashtbl.add mem e []) (List.flatten (List.map create_useless all_non_terminal));
-
     let get_reachable_symbols_once (slist : ext_element list) : ext_element list = List.sort_uniq compare (List.concat (slist::(List.map (fun r -> r.ext_right_part) (List.concat (List.filter_map (Hashtbl.find_opt mem) slist)))))
     in
 
@@ -80,14 +71,6 @@ let quotient_mem (g: grammar) =
         axiom @@@ (List.concat (List.filter_map (Hashtbl.find_opt mem) sym))
     in
 
-(*     let update_useless (e: ext_element) =
-        let useful = Clean.get_useful_symbols (grammar_of_mem e) in
-        let new_useless = List.filter (fun s -> is_ext_element_non_terminal s && Hashtbl.mem seen e && not (Hashtbl.mem useless e) && not (List.mem s useful)) (get_all_symbols_ext_rules !mem) in
-        print_endline "New useless:";
-        List.iter (fun e -> print_endline (string_of_ext_element e)) new_useless;
-        List.iter (fun e -> Hashtbl.replace useless e true) new_useless
-    in *)
-
     let add_rules_in_mem (rlist: ext_rule list) = match rlist with
         | [] -> ()
         | t::q -> print_endline ("New rules: "^(string_of_ext_rules rlist)); let l = Hashtbl.find mem t.ext_left_symbol in
@@ -96,69 +79,72 @@ let quotient_mem (g: grammar) =
 
     let add_rule_in_mem (r: ext_rule) = add_rules_in_mem [r] in
 
+    List.iter (fun e -> Hashtbl.add mem e (Base.get_rules ext_g.ext_rules e)) (List.map ext_element_of_element all_non_terminal);
+    (* we don't need to compute the useless of terminal since their "quotientability" is trivial *)
+    List.iter set_useless (List.flatten (List.map create_useless all_non_terminal));
+
     (* apply a quotient of a single rule with a prefix that is a single element *)
-    let quotient_by_one_element (pf: element) (new_lhs: ext_element) (r: ext_rule) : (ext_element list) =
+    let quotient_by_one_element (pf: element) (new_lhs: ext_element) (r: ext_rule) : ext_element option =
         assert (is_seen new_lhs);
         match r.ext_right_part with
-        | [] -> []
+        | [] -> None
         (* A -> aBC with prefix = a *)
-        | t::q when t.e=pf && is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); add_rule_in_mem (new_lhs ---> q); []
+        | t::q when t.e=pf && is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); add_rule_in_mem (new_lhs ---> q); None
         (* A -> aBC with prefix != a *)
-        | t::q when is_ext_element_terminal t -> []
+        | t::q when is_ext_element_terminal t -> None
         (* A -> BC with prefix = B *)
         | t::q when t.e=pf && t.pf=[] -> let new_elem = {pf=[pf];e=t.e;sf=t.sf} in
             (* if B_{B|} is a dead end *)
             if is_useless new_elem then
-                (add_rule_in_mem (new_lhs ---> q); [])
+                (add_rule_in_mem (new_lhs ---> q); None)
             (* if B can derive a leftmost B *)
             else
-                (add_rules_in_mem [(new_lhs ---> q);(new_lhs ---> (new_elem::q))]; [new_elem])
+                (add_rules_in_mem [(new_lhs ---> q);(new_lhs ---> (new_elem::q))]; Some(new_elem))
         (* A -> B_{D|}C *)
         | t::q -> let new_elem = {pf=pf::t.pf;e=t.e;sf=t.sf} in
-            if is_useless new_elem then []
-            else (add_rule_in_mem (new_lhs ---> (new_elem::q)); [new_elem])
+            if is_useless new_elem then None
+            else (add_rule_in_mem (new_lhs ---> (new_elem::q)); Some(new_elem))
     in
 
     (* compute the rules of e with a new prefix (a single element) pf *)
     (* the new rules (left symbol: new_lhs) are based on the rules of the previous_lhs *)
     let quotient_by_one_element_mem (pf: element) (new_lhs: ext_element) (previous_lhs: ext_element) : (ext_element list) =
-        assert (not (is_seen new_lhs));
+        assert (not (is_seen new_lhs) && is_seen previous_lhs);
         set_useless new_lhs; (* all lhs is useless before it gains some rules *)
-        assert (is_seen previous_lhs);
-        let new_new_sym = List.map (quotient_by_one_element pf new_lhs) (Hashtbl.find mem previous_lhs) in
-        List.sort_uniq compare (List.filter (fun e -> not (is_seen e)) (List.flatten new_new_sym))
+        List.sort_uniq compare (List.filter (fun e -> not (is_seen e)) (List.filter_map (quotient_by_one_element pf new_lhs) (Hashtbl.find mem previous_lhs)))
     in
 
     (* compute the rules of a ext_element and do it recursively with every new symbol *)
     let rec quotient_symbols (elist: ext_element list) : unit =
         match elist with
         | [] -> ()
-        | lhs::q -> print_endline ("Current LHS: "^(string_of_ext_element lhs)(* ^"\nCurrent elist:" *)); (*List.iter (fun e -> print_endline (string_of_ext_element e)) elist;  print_endline ("Current rules:\n"^(string_of_ext_rules !mem)) ;*)
-                match lhs.pf with
+        | lhs::q -> print_endline ("Work on: "^(string_of_ext_element lhs));
+            match lhs.pf with
             | [] -> quotient_symbols q
             | tpf::qpf -> let base_lhs = {pf=qpf;e=lhs.e;sf=lhs.sf} in
-                    (*print_endline ("Base LHS: "^(string_of_ext_element base_lhs));*)
                     if is_useless base_lhs || is_seen lhs then
                         (* we ignore this element *)
-                        (set_useless lhs; print_endline "Ignored";quotient_symbols q)
+                        (set_useless lhs; print_endline " Ignored";quotient_symbols q)
                     else if qpf = [] || is_seen base_lhs then begin
                         (* we can compute the current symbol *)
-                        (* update_useless lhs; TODO: corriger car il considère useless des non-terminaux dont  *)
-                        print_endline "Compute";
+                        print_endline "  Compute";
                         let new_elist = quotient_by_one_element_mem tpf lhs base_lhs in
-                        (*print_mem ();*)
                         quotient_symbols new_elist;
                         if new_elist <> [] then begin
                             (* verify uselessness *)
-                            print_endline ("Verify: "^(string_of_ext_element lhs));
-                            if (List.exists is_useless new_elist) then
-                                (print_endline "Useless!"; set_useless lhs)
+                            let rules = Hashtbl.find mem lhs in
+                            let necessary_rules = List.filter (fun r -> List.for_all (fun e -> not (is_useless e)) r.ext_right_part) rules in
+                            Hashtbl.replace mem lhs necessary_rules
                         end;
+                        if is_useless lhs then
+                            print_endline ("Useless: "^(string_of_ext_element lhs));
                         (quotient_symbols [@tailcall]) q
                         end
                     else begin
-                        print_endline "Postpone";
+                        print_endline "  Postpone";
                         (* we can't compute the current symbol so we keep it on the list *)
                         ((quotient_symbols [@tailcall]) (base_lhs::elist)) end
     in 
-    fun (e: ext_element) : ext_grammar -> quotient_symbols [e]; (*Clean.clean*) (grammar_of_mem e)
+    (fun (e: ext_element) : ext_grammar -> quotient_symbols [e];
+    let out : ext_grammar = grammar_of_mem e in
+    assert (out = (Clean.clean out)); out)

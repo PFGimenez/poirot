@@ -76,6 +76,10 @@ let get_all_symbols (g: grammar) : element list =
 let get_all_symbols_ext_rules (rlist: ext_rule list) : ext_element list =
     List.sort_uniq compare ((List.map (fun r -> r.ext_left_symbol) rlist) @ (List.flatten (List.map (fun r -> r.ext_right_part) rlist)))
 
+(* get the list of rules with some left-hand side *)
+let get_rules (rlist: ext_rule list) (e: ext_element) : ext_rule list =
+    List.filter_map (fun r -> if r.ext_left_symbol = e then Some(r) else None) rlist
+
 (* Conversion d'une part en chaîne de caractères *)
 let concat_with_delimiter d s1 s2 = s1 ^ d ^ s2
 
