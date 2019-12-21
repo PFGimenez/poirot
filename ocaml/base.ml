@@ -80,6 +80,11 @@ let get_all_symbols_ext_rules (rlist: ext_rule list) : ext_element list =
 let get_rules (rlist: ext_rule list) (e: ext_element) : ext_rule list =
     List.filter_map (fun r -> if r.ext_left_symbol = e then Some(r) else None) rlist
 
+(* get the list of rules that can directly derive this element *)
+let get_generative_rules (g: grammar) (e: element) : ext_rule list =
+    List.filter_map (fun r -> if List.mem e r.right_part then Some(ext_rule_of_rule r) else None) g.rules
+
+
 (* Conversion d'une part en chaîne de caractères *)
 let concat_with_delimiter d s1 s2 = s1 ^ d ^ s2
 
@@ -97,11 +102,11 @@ let quoted_part2string = function
 
 let string_of_ext_element e = let str=element2string e.e in match e.pf,e.sf with
     | [],[] -> str
-    | _,_ -> str ^ "_[" ^ (part2string (List.rev e.pf)) ^ "],[" ^ (part2string e.sf) ^ "]"
+    | _,_ -> str ^ "_[" ^ (part2string (List.rev e.pf)) ^ "|" ^ (part2string e.sf) ^ "]"
 
 let quoted_string_of_ext_element e = let str=quoted_element2string e.e in match e.pf,e.sf with
     | [],[] -> str
-    | _,_ -> str ^ "_[" ^ (quoted_part2string (List.rev e.pf)) ^ "],[" ^ (quoted_part2string e.sf) ^ "]"
+    | _,_ -> str ^ "_[" ^ (quoted_part2string (List.rev e.pf)) ^ "|" ^ (quoted_part2string e.sf) ^ "]"
 
 let string_of_ext_part = function
     | t::q -> List.fold_left concat_space (string_of_ext_element t) (List.map string_of_ext_element q)
