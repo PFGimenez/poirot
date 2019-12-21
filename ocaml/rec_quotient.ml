@@ -1,18 +1,16 @@
 open Base
 
-let quotient_mem (g: grammar) =
-    let ext_g = ext_grammar_of_grammar g
+let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
+    let ext_g : ext_grammar = ext_grammar_of_grammar g
     (* all the computed rules *)
     and mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 1000 in
 (*    let print_mem () = print_endline "Mem status: "; Hashtbl.iter (fun e rlist -> print_endline (string_of_ext_element e); print_endline (string_of_ext_rules rlist)) mem 
     in *)
 
-    let get_reachable_symbols_once (slist : ext_element list) : ext_element list = List.filter is_ext_element_non_terminal (List.sort_uniq compare (List.concat (slist::(List.concat (List.map (Hashtbl.find mem) slist)))))
-    in
-
     let rec get_reachable_symbols (slist : ext_element list) : ext_element list =
-        let slist2 = get_reachable_symbols_once slist in
-        if List.compare_lengths slist slist2 == 0 then slist else (get_reachable_symbols [@tailcall]) slist2
+        let get_reachable_symbols_once (slist : ext_element list) : ext_element list = slist |> List.rev_map (Hashtbl.find mem) |> List.concat |> List.cons slist |> List.concat |> List.sort_uniq compare |> List.filter is_ext_element_non_terminal in
+            let slist2 = get_reachable_symbols_once slist in
+            if List.compare_lengths slist slist2 == 0 then slist else (get_reachable_symbols [@tailcall]) slist2
     in
 
     let is_seen (e: ext_element) : bool = Hashtbl.find_opt mem e <> None in
@@ -22,29 +20,28 @@ let quotient_mem (g: grammar) =
     let set_useless (e: ext_element) : unit = Hashtbl.replace mem e [] in
 
     let grammar_of_mem (axiom : ext_element) : ext_grammar =
-        let sym = get_reachable_symbols [axiom] in
-        axiom @@@ (List.concat (List.map (fun (e : ext_element) : ext_rule list -> List.map (fun (r: ext_part) : ext_rule -> (e--->r)) (Hashtbl.find mem e)) sym))
+        let rules_of_element = fun e -> Hashtbl.find mem e |> List.rev_map (fun (r: ext_part) : ext_rule -> (e--->r)) in
+        let rules = get_reachable_symbols [axiom] |> List.rev_map rules_of_element |> List.concat in
+        axiom @@@ rules
     in
 
     let add_rules_in_mem (lhs: ext_element) (rlist: ext_part list) : unit = match rlist with
         | [] -> ()
-        | t::q -> print_endline ("New rules: "^(string_of_ext_rules (List.map (fun r -> lhs ---> r) rlist))); let l = Hashtbl.find mem lhs in
+        | t::q -> print_endline ("New rules: "^(string_of_ext_rules (List.rev_map (fun r -> lhs ---> r) rlist))); let l = Hashtbl.find mem lhs in
             Hashtbl.replace mem lhs (rlist@l)
     in
 
-    let add_rule_in_mem lhs (r: ext_part) : unit = add_rules_in_mem lhs [r] in
+    let add_rule_in_mem (lhs: ext_element) (r: ext_part) : unit = add_rules_in_mem lhs [r] in
 
-    let is_epsilon (e: ext_element) : bool = assert (is_seen e); List.for_all (fun r -> r = []) (Hashtbl.find mem e)
-    in
-
-    let can_epsilon (e: ext_element) : bool = assert (is_seen e); List.exists (fun r -> r = []) (Hashtbl.find mem e)
-    in
-
-    let remove_epsilon : ext_part -> ext_part list = function
+    let remove_epsilon : ext_part -> ext_part list =
+        let is_epsilon (e: ext_element) : bool = assert (is_seen e); List.for_all (fun r -> r = []) (Hashtbl.find mem e)
+        and can_epsilon (e: ext_element) : bool = assert (is_seen e); List.exists (fun r -> r = []) (Hashtbl.find mem e)
+        in
+        function
         | [] -> []
-        | (t::q) as l when is_ext_element_terminal t -> [l]
-        | t::q when is_epsilon t -> [q]
-        | (t::q) as l when can_epsilon t -> [l;q]
+        | (t::q) as l when is_ext_element_terminal t -> [l] (* a terminal can't derive an epsilon *)
+        | t::q when is_epsilon t -> [q] (* t always derive an epsilon: we remove it *)
+        | (t::q) as l when can_epsilon t -> [l;q] (* t can derive an epsilon: we add a new rule without it *)
         | l -> [l]
     in
 
@@ -80,7 +77,7 @@ let quotient_mem (g: grammar) =
     let quotient_by_one_element_mem (pf: element) (new_lhs: ext_element) (previous_lhs: ext_element) : (ext_element list) =
         assert (not (is_seen new_lhs) && is_seen previous_lhs);
         set_useless new_lhs; (* all lhs is useless before it gains some rules *)
-        List.sort_uniq compare (List.filter (fun e -> not (is_seen e)) (List.filter_map (quotient_by_one_element pf new_lhs) (Hashtbl.find mem previous_lhs)))
+        Hashtbl.find mem previous_lhs |> List.filter_map (quotient_by_one_element pf new_lhs) |> List.filter (fun e -> not (is_seen e)) |> List.sort_uniq compare
     in
 
     (* compute the rules of a ext_element and do it recursively with every new symbol *)
@@ -103,12 +100,9 @@ let quotient_mem (g: grammar) =
                         let new_nb_iter = quotient_symbols nb_iter new_elist in
                         if new_elist <> [] then begin
                             (* verify uselessness of the rhs *)
-                            let rules = Hashtbl.find mem lhs in
-                            let necessary_rules = List.filter (List.for_all (fun e -> not (is_useless e))) rules in
-                            (* if A -> BC and B can derive an epsilon, then add a rule A -> C. Necessary for quotient. *)
-                            let nonepsilon_rules = List.sort_uniq compare (List.flatten (List.map remove_epsilon necessary_rules)) in
-                            print_endline ("Updated rules: "^(string_of_ext_rules (List.map (fun r -> lhs ---> r) nonepsilon_rules)));
-                            Hashtbl.replace mem lhs nonepsilon_rules
+                            let rules = Hashtbl.find mem lhs |> List.filter (List.for_all (fun e -> not (is_useless e))) |> List.rev_map remove_epsilon |> List.flatten |> List.sort_uniq compare in
+                            print_endline ("Updated rules: "^(string_of_ext_rules (List.rev_map (fun r -> lhs ---> r) rules)));
+                            Hashtbl.replace mem lhs rules
                         end;
                         if is_useless lhs then
                             print_endline ("Useless: "^(string_of_ext_element lhs));
