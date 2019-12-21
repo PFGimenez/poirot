@@ -35,7 +35,7 @@ let get_generative_rules (g: grammar) (e: element) : ext_rule list =
 let quotient_mem (g: grammar) =
     let ext_g = ext_grammar_of_grammar g
     (* all the computed rules *)
-    and mem : (ext_element, ext_rule list) Hashtbl.t = Hashtbl.create 1000
+    and mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 1000
     and all_sym : (element list) = get_all_symbols g in
 
     (* the base grammar is already computed *)
@@ -53,11 +53,12 @@ let quotient_mem (g: grammar) =
         List.filter_map check_useless all_sym
     in
 
-    let get_reachable_symbols_once (slist : ext_element list) : ext_element list = List.sort_uniq compare (List.concat (slist::(List.map (fun r -> r.ext_right_part) (List.concat (List.filter_map (Hashtbl.find_opt mem) slist)))))
+    let get_reachable_symbols_once (slist : ext_element list) : ext_element list = List.filter is_ext_element_non_terminal (List.sort_uniq compare (List.concat (slist::(List.concat (List.map (Hashtbl.find mem) slist)))))
     in
 
-    let rec get_reachable_symbols (slist : ext_element list) : ext_element list = let old_length = List.length slist and slist2 = get_reachable_symbols_once slist in
-        if old_length = List.length slist2 then slist else (get_reachable_symbols [@tailcall]) slist2
+    let rec get_reachable_symbols (slist : ext_element list) : ext_element list =
+        let slist2 = get_reachable_symbols_once slist in
+        if List.compare_lengths slist slist2 == 0 then slist else (get_reachable_symbols [@tailcall]) slist2
     in
 
     let is_seen (e: ext_element) = Hashtbl.find_opt mem e <> None in
@@ -68,42 +69,45 @@ let quotient_mem (g: grammar) =
 
     let grammar_of_mem (axiom : ext_element) : ext_grammar =
         let sym = get_reachable_symbols [axiom] in
-        axiom @@@ (List.concat (List.filter_map (Hashtbl.find_opt mem) sym))
+        axiom @@@ (List.concat (List.map (fun (e : ext_element) : ext_rule list -> List.map (fun (r: ext_part) : ext_rule -> (e--->r)) (Hashtbl.find mem e)) sym))
     in
 
-    let add_rules_in_mem (rlist: ext_rule list) = match rlist with
+    let add_rules_in_mem (lhs: ext_element) (rlist: ext_part list) = match rlist with
         | [] -> ()
-        | t::q -> print_endline ("New rules: "^(string_of_ext_rules rlist)); let l = Hashtbl.find mem t.ext_left_symbol in
-            Hashtbl.replace mem t.ext_left_symbol (rlist@l)
+        | t::q -> print_endline ("New rules: "^(string_of_ext_rules (List.map (fun r -> lhs ---> r) rlist))); let l = Hashtbl.find mem lhs in
+            Hashtbl.replace mem lhs (rlist@l)
     in
 
-    let add_rule_in_mem (r: ext_rule) = add_rules_in_mem [r] in
+    let add_rule_in_mem lhs (r: ext_part) = add_rules_in_mem lhs [r] in
 
-    List.iter (fun e -> Hashtbl.add mem e (Base.get_rules ext_g.ext_rules e)) (List.map ext_element_of_element all_non_terminal);
+    let is_epsilon (e: ext_element) = is_seen e && List.exists (fun r -> r = []) (Hashtbl.find mem e)
+    in
+
+    List.iter (fun e -> Hashtbl.add mem e (List.map (fun r -> r.ext_right_part) (Base.get_rules ext_g.ext_rules e))) (List.map ext_element_of_element all_non_terminal);
     (* we don't need to compute the useless of terminal since their "quotientability" is trivial *)
     List.iter set_useless (List.flatten (List.map create_useless all_non_terminal));
 
     (* apply a quotient of a single rule with a prefix that is a single element *)
-    let quotient_by_one_element (pf: element) (new_lhs: ext_element) (r: ext_rule) : ext_element option =
+    let quotient_by_one_element (pf: element) (new_lhs: ext_element) (r: ext_part) : ext_element option =
         assert (is_seen new_lhs);
-        match r.ext_right_part with
+        match r with
         | [] -> None
         (* A -> aBC with prefix = a *)
-        | t::q when t.e=pf && is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); add_rule_in_mem (new_lhs ---> q); None
+        | t::q when t.e=pf && is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); add_rule_in_mem new_lhs q; None
         (* A -> aBC with prefix != a *)
         | t::q when is_ext_element_terminal t -> None
         (* A -> BC with prefix = B *)
         | t::q when t.e=pf && t.pf=[] -> let new_elem = {pf=[pf];e=t.e;sf=t.sf} in
             (* if B_{B|} is a dead end *)
             if is_useless new_elem then
-                (add_rule_in_mem (new_lhs ---> q); None)
+                (add_rule_in_mem new_lhs q; None)
             (* if B can derive a leftmost B *)
             else
-                (add_rules_in_mem [(new_lhs ---> q);(new_lhs ---> (new_elem::q))]; Some(new_elem))
+                (add_rules_in_mem new_lhs [q;new_elem::q]; Some(new_elem))
         (* A -> B_{D|}C *)
         | t::q -> let new_elem = {pf=pf::t.pf;e=t.e;sf=t.sf} in
             if is_useless new_elem then None
-            else (add_rule_in_mem (new_lhs ---> (new_elem::q)); Some(new_elem))
+            else (add_rule_in_mem new_lhs (new_elem::q); Some(new_elem))
     in
 
     (* compute the rules of e with a new prefix (a single element) pf *)
@@ -133,7 +137,7 @@ let quotient_mem (g: grammar) =
                         if new_elist <> [] then begin
                             (* verify uselessness *)
                             let rules = Hashtbl.find mem lhs in
-                            let necessary_rules = List.filter (fun r -> List.for_all (fun e -> not (is_useless e)) r.ext_right_part) rules in
+                            let necessary_rules = List.filter (List.for_all (fun e -> not (is_useless e))) rules in
                             Hashtbl.replace mem lhs necessary_rules
                         end;
                         if is_useless lhs then
