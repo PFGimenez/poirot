@@ -1,17 +1,48 @@
 open Base
 
-let search (fuzzer: ext_grammar -> bool) (g: grammar) (goal: element) (injection_tokens: element list) : ext_grammar option =
+let rec is_reachable (g: grammar) (s: element) (reachable : element list) : bool =
+    if List.mem s reachable then true
+    else
+        let ext_rules = List.filter (fun r -> List.mem r.left_symbol reachable) g.rules in
+        let new_reachable = List.sort_uniq compare (List.flatten (List.map (fun r -> r.right_part) ext_rules)) in
+            if (List.length reachable) = (List.length new_reachable) then false
+            else (is_reachable [@tailcall]) g s new_reachable
+
+let rec is_accessible s = function
+    | [] -> false
+    | r::q -> List.mem s r.right_part || s = r.left_symbol || (is_accessible [@tailcall]) s q
+
+let rec is_accessible2 (s : element) : ext_rule list -> bool = function
+    | [] -> false
+    | r::q -> List.exists (fun t -> element_of_ext_element t = s) r.ext_right_part || s = (element_of_ext_element r.ext_left_symbol) || (is_accessible2 [@tailcall]) s q
+
+
+
+let get_all_tokens (grammar : grammar) : element list = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.right_part) grammar.rules))
+
+
+let get_injection_tokens (oracle : part list -> bool) (grammar : grammar) : element list = List.filter (fun p -> oracle [[p]]) (get_all_tokens grammar)
+
+let get_injection_leaves (oracle : part list -> bool) (grammar : grammar) : element list = get_injection_tokens oracle grammar
+
+let fuzzer (g : grammar) : part list =
+    let term = List.filter (fun e -> is_reachable g e []) (get_all_tokens g) in
+    List.map (Fuzzer.derive_word_with_symbol g) term
+ 
+let oracle_template
+    (prefix : element list)
+    (suffix : element list)
+    (grammar : grammar)
+    (injections : part list)
+    : bool
+    = Fuzzer.is_list_in_language grammar (List.map (fun p -> prefix @ p @ suffix) injections)
+
+let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: grammar) (goal: element) (injection_tokens: element list) : ext_grammar option =
     let quotient = Rec_quotient.quotient_mem g
     and distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create 100
     and all_sym = g.rules |> List.map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
 
-    let rec is_reachable (s : element) (reachable : element list) : bool =
-        if List.mem s reachable then true
-        else
-            let ext_rules = List.filter (fun r -> List.mem r.left_symbol reachable) g.rules in
-            let new_reachable = List.sort_uniq compare (List.flatten (List.map (fun r -> r.right_part) ext_rules)) in
-                if (List.length reachable) = (List.length new_reachable) then false
-                else (is_reachable [@tailcall]) s new_reachable in
+    let is_reachable = is_reachable g in
 
     let symbols_from_parents (axiom : element) : element list = List.sort_uniq compare (List.map (fun r -> r.left_symbol) (List.filter (fun r -> List.mem axiom r.right_part) g.rules)) in
 
@@ -58,7 +89,7 @@ let search (fuzzer: ext_grammar -> bool) (g: grammar) (goal: element) (injection
             let rules = ext_g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = t) in
             assert ((List.compare_length_with rules 1) >= 0);
             if (List.compare_length_with rules 1) > 0 then begin (* testable *)
-            if not (fuzzer ext_g) then begin (* invalid : ignore *)
+            if not (ext_g |> grammar_of_ext_grammar |> fuzzer |> oracle) then begin (* invalid : ignore *)
                 print_endline "Invalid"; (search_aux [@tailcall]) visited (step + 1) q
             end else if g == 0 then begin (* found ! *)
                 print_endline "Found!"; Some(ext_g)
@@ -71,5 +102,4 @@ let search (fuzzer: ext_grammar -> bool) (g: grammar) (goal: element) (injection
                 (search_aux [@tailcall]) visited (step + 1) (add_in_list (g+1) q (build_ext_elements t))
         end in
     injection_tokens |> List.map (fun e -> (e-->[e],ext_element_of_element e)) |> add_in_list 0 [] |> search_aux (Hashtbl.create 100) 0
-
 

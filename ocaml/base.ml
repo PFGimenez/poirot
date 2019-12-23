@@ -52,8 +52,6 @@ let print_bool = function
             | true -> print_endline "true"
             | false -> print_endline "false"
 
-
-
 let string_of_element = element2string
 
 let element2string2 = function
@@ -90,6 +88,8 @@ let concat_with_delimiter d s1 s2 = s1 ^ d ^ s2
 
 let concat_space = concat_with_delimiter " "
 
+let concat_underscore = concat_with_delimiter "_"
+
 let concat_new_line = concat_with_delimiter "\n"
 
 let part2string = function
@@ -107,6 +107,14 @@ let string_of_ext_element e = let str=element2string e.e in match e.pf,e.sf with
 let quoted_string_of_ext_element e = let str=quoted_element2string e.e in match e.pf,e.sf with
     | [],[] -> str
     | _,_ -> str ^ "_[" ^ (quoted_part2string (List.rev e.pf)) ^ "|" ^ (quoted_part2string e.sf) ^ "]"
+
+let underscore_string_of_part = function
+    | t::q -> List.fold_left concat_underscore (string_of_element t) (List.map string_of_element q)
+    | [] -> "ε"
+
+let full_element_of_ext_element (e : ext_element) : element = match e.e with
+    | Terminal(x) -> e.e
+    | Nonterminal(x) -> Nonterminal((underscore_string_of_part e.pf)^"^"^x^"^"^(underscore_string_of_part e.sf))
 
 let string_of_ext_part = function
     | t::q -> List.fold_left concat_space (string_of_ext_element t) (List.map string_of_ext_element q)
@@ -150,6 +158,8 @@ let (-->) g d = {left_symbol=g;right_part=d}
 let (@@) axiom rules = {axiom=axiom;rules=rules}
 
 let (@@@) axiom rules = {ext_axiom=axiom;ext_rules=rules}
+
+let grammar_of_ext_grammar (g: ext_grammar) : grammar = (full_element_of_ext_element g.ext_axiom) @@ (List.map (fun r -> (full_element_of_ext_element r.ext_left_symbol) --> (List.map full_element_of_ext_element r.ext_right_part)) g.ext_rules)
 
 (* Récupération d'une monade option contenant le premier non terminal d'une part (si il existe !) *)
 let rec first_non_terminal = function
