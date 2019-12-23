@@ -11,5 +11,3 @@ let g2 = q {pf=List.rev [Terminal("msg");Terminal("key");Terminal("=")];e=Nonter
 (* let g2 = q {pf=List.rev [Nonterminal("Msg");Terminal(";");Terminal("exec")];e=Nonterminal("S");sf=[]} in *)
 print_endline ((string_of_ext_grammar g2));
 
-(* TODO: Params_[ε|Exe] -> key = value & Params_[ε|Exe] devrait être useless *)
-
