@@ -33,7 +33,7 @@ let word_of_ext_elements (ext_element_list: ext_element list) : part = List.map 
 
 let ext_rule_of_rule r = (ext_element_of_element r.left_symbol) ---> (List.map ext_element_of_element r.right_part)
 
-let ext_grammar_of_grammar g = {ext_axiom = ext_element_of_element g.axiom; ext_rules = List.map ext_rule_of_rule g.rules}
+let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element_of_element g.axiom; ext_rules = List.map ext_rule_of_rule g.rules}
 
 (* let is_ext_element_in_rules t r = List.exists t (List.map (fun r -> r.ext_left_symbol) r) *)
 
