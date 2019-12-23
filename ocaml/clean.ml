@@ -1,7 +1,7 @@
 open Base
 
-let rec iterate_until_convergence (f : ext_grammar -> ext_rule list) (g : ext_grammar) : ext_grammar = let old_length = List.length g.ext_rules and new_rules = f g in
-    if old_length = List.length new_rules then g else (iterate_until_convergence [@tailcall]) f (g.ext_axiom@@@new_rules)
+let rec iterate_until_convergence (f : ext_grammar -> ext_rule list) (g : ext_grammar) : ext_grammar = let new_rules = f g in
+    if List.compare_lengths g.ext_rules new_rules = 0 then g else (iterate_until_convergence [@tailcall]) f (g.ext_axiom@@@new_rules)
 
 (* The useful symbols are the non-terminal that are the left side of a production *)
 let get_useful_symbols (g : ext_grammar) : ext_element list = List.sort_uniq compare (List.map (fun r -> r.ext_left_symbol) g.ext_rules)
@@ -56,7 +56,14 @@ let remove_epsilon_symbols_once (g : ext_grammar) : ext_rule list =
 
 let remove_epsilon_symbols : ext_grammar -> ext_grammar = iterate_until_convergence remove_epsilon_symbols_once
 
+let remove_trivial_rule (r: ext_rule) : ext_rule option = match r with
+    | {ext_left_symbol=e; ext_right_part=p} when p=[e] -> None
+    | r -> Some(r)
+
+let remove_trivial_rules (g: ext_grammar) : ext_grammar =
+    g.ext_axiom @@@ (List.filter_map remove_trivial_rule g.ext_rules)
+
 (* Epsilon-removing not used *)
-let clean_once (g : ext_grammar) : ext_rule list = ((* remove_epsilon_symbols *) (remove_unreachable_symbols (remove_useless_symbols g))).ext_rules
+let clean_once (g : ext_grammar) : ext_rule list = ((* remove_epsilon_symbols *) remove_trivial_rules (remove_unreachable_symbols (remove_useless_symbols g))).ext_rules
 
 let clean : ext_grammar -> ext_grammar = iterate_until_convergence clean_once
