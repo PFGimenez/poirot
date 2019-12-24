@@ -57,7 +57,7 @@ let remove_epsilon_symbols_once (g : ext_grammar) : ext_rule list =
 let remove_epsilon_symbols : ext_grammar -> ext_grammar = iterate_until_convergence remove_epsilon_symbols_once
 
 let remove_trivial_rule (r: ext_rule) : ext_rule option = match r with
-    | {ext_left_symbol=e; ext_right_part=p} when p=[e] -> None
+    | {ext_left_symbol=e; ext_right_part=p} when is_ext_element_non_terminal e && p=[e] -> None
     | r -> Some(r)
 
 let remove_trivial_rules (g: ext_grammar) : ext_grammar =

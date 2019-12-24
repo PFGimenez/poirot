@@ -4,19 +4,9 @@ let rec is_reachable (g: grammar) (s: element) (reachable : element list) : bool
     if List.mem s reachable then true
     else
         let ext_rules = List.filter (fun r -> List.mem r.left_symbol reachable) g.rules in
-        let new_reachable = List.sort_uniq compare (List.flatten (List.map (fun r -> r.right_part) ext_rules)) in
-            if (List.length reachable) = (List.length new_reachable) then false
-            else (is_reachable [@tailcall]) g s new_reachable
-
-let rec is_accessible s = function
-    | [] -> false
-    | r::q -> List.mem s r.right_part || s = r.left_symbol || (is_accessible [@tailcall]) s q
-
-let rec is_accessible2 (s : element) : ext_rule list -> bool = function
-    | [] -> false
-    | r::q -> List.exists (fun t -> element_of_ext_element t = s) r.ext_right_part || s = (element_of_ext_element r.ext_left_symbol) || (is_accessible2 [@tailcall]) s q
-
-
+        let new_reachable = ext_rules |> List.map (fun r -> r.right_part) |> List.flatten |> List.append reachable |> List.sort_uniq compare in
+        if (List.compare_lengths reachable new_reachable) = 0 then false
+        else (is_reachable [@tailcall]) g s new_reachable
 
 let get_all_tokens (grammar : grammar) : element list = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.right_part) grammar.rules))
 
@@ -40,19 +30,21 @@ let oracle_template
 let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: grammar) (goal: element) (injection_tokens: element list) : ext_grammar option =
     let quotient = Rec_quotient.quotient_mem g
     and distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create 100
-    and all_sym = g.rules |> List.map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
-
-    let is_reachable = is_reachable g in
+    and all_sym = g.rules |> List.map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare
+    and ext_g = ext_grammar_of_grammar g in
 
     let symbols_from_parents (axiom : element) : element list = List.sort_uniq compare (List.map (fun r -> r.left_symbol) (List.filter (fun r -> List.mem axiom r.right_part) g.rules)) in
 
-    let rec get_distance_to_goal (e : element) : (element * int) list -> int = function
+    let rec compute_distance_to_goal (e : element) : (element * int) list -> int = function
     | [] -> failwith "Can't reach at all"
-    | (s,nb)::q when is_reachable e [s] -> nb 
-    | (s,nb)::q -> (get_distance_to_goal [@tailcall]) e (q@(List.map (fun e -> (e,nb+1)) (symbols_from_parents s))) in
+    | (s,nb)::q when is_reachable g e [s] -> nb 
+    | (s,nb)::q -> (compute_distance_to_goal [@tailcall]) e (q@(List.map (fun e -> (e,nb+1)) (symbols_from_parents s))) in
 
     let compute_one_distance (a: element) (b: element) : unit =
-        Hashtbl.add distance_to_goal (a,b) (get_distance_to_goal a [b,0]) in
+        Hashtbl.add distance_to_goal (a,b) (compute_distance_to_goal a [b,0]) in
+
+    let get_distance_to_goal (e: element) : int =
+        Hashtbl.find distance_to_goal (e,goal) in
 
     all_sym |> List.iter (fun e -> all_sym |> List.iter (compute_one_distance e));
 
@@ -76,30 +68,31 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
 
     let rec search_aux (visited: (ext_element, bool) Hashtbl.t) (step: int) : (int * int * rule * ext_element) list -> ext_grammar option = function
     | [] -> None
-    | (g,_,r,t)::q ->
+    | (distance,_,r,t)::q ->
         print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int ((List.length q) + 1))^")");
         if Hashtbl.mem visited t then begin
             print_endline "Visited"; (search_aux [@tailcall]) visited (step + 1) q
         end else begin
-            let ext_g = quotient t in
-            print_endline (string_of_ext_grammar ext_g);
+            let inj_g = quotient t in
+            print_endline (string_of_ext_grammar inj_g);
+            let h = get_distance_to_goal t.e in
             (*print_endline "Grammar built"; flush stdout;*)
             (*print_endline ("Accessible from "^(element2string g.axiom)^": "); print_bool (is_accessible_from_ext_axiom init_grammaire interest [g.axiom]); flush stdout;*)
             (*print_endline ("Distance: "^(string_of_int (distance_to_goal init_grammaire interest [(trim g.axiom,0)])));*)
-            let rules = ext_g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = t) in
+            let rules = g.rules |> List.filter (fun r -> List.mem t.e r.right_part) in
             assert ((List.compare_length_with rules 1) >= 0);
             if (List.compare_length_with rules 1) > 0 then begin (* testable *)
             if not (ext_g |> grammar_of_ext_grammar |> fuzzer |> oracle) then begin (* invalid : ignore *)
                 print_endline "Invalid"; (search_aux [@tailcall]) visited (step + 1) q
-            end else if g == 0 then begin (* found ! *)
+            end else if h == 0 then begin (* found ! *)
                 print_endline "Found!"; Some(ext_g)
             end else begin (* we explore in this direction *)
                 print_endline "Explore";
                 Hashtbl.add visited t true;
-                (search_aux [@tailcall]) visited (step + 1) (add_in_list (g+1) q (build_ext_elements t))
+                (search_aux [@tailcall]) visited (step + 1) (add_in_list (distance+1) q (build_ext_elements t))
             end
             end else
-                (search_aux [@tailcall]) visited (step + 1) (add_in_list (g+1) q (build_ext_elements t))
+                (search_aux [@tailcall]) visited (step + 1) (add_in_list (distance+1) q (build_ext_elements t))
         end in
     injection_tokens |> List.map (fun e -> (e-->[e],ext_element_of_element e)) |> add_in_list 0 [] |> search_aux (Hashtbl.create 100) 0
 

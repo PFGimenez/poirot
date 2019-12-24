@@ -21,8 +21,12 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
     let set_useless (e: ext_element) : unit = Hashtbl.replace mem e [] in
 
     let grammar_of_mem (axiom : ext_element) : ext_grammar =
-        let rules_of_element = fun e -> Hashtbl.find mem e |> List.rev_map (fun (r: ext_part) : ext_rule -> (e--->r)) in
-        let rules = get_reachable_symbols [axiom] |> List.rev_map rules_of_element |> List.concat in axiom @@@ rules
+        if is_ext_element_terminal axiom then
+            axiom @@@ [axiom ---> [axiom]]
+        else begin
+            let rules_of_element = fun e -> Hashtbl.find mem e |> List.rev_map (fun (r: ext_part) : ext_rule -> (e--->r)) in
+            let rules = get_reachable_symbols [axiom] |> List.rev_map rules_of_element |> List.concat in axiom @@@ rules
+        end
     in
 
     let reverse_ext_elem (rv: rev) (e: ext_element) = match rv with
@@ -108,8 +112,9 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
         | [] -> nb_iter
         | lhs::q ->
             (* Nothing to do *)
+            print_endline ("Work on: "^(string_of_ext_element lhs));
             if lhs.pf = [] && lhs.sf = [] then
-                (assert (is_seen lhs); quotient_symbols (nb_iter + 1) q)
+                (assert (is_ext_element_terminal lhs || is_seen lhs); quotient_symbols (nb_iter + 1) q)
             else begin
                 let (base_lhs,rv,qu) = match lhs.pf,lhs.sf with
                 | [],[] -> assert false (* impossible : case verified just before *)

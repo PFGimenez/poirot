@@ -4,7 +4,9 @@ let ()=
         and prefix = Grammar_io.read_tokens (Sys.argv.(2))
         and suffix = Grammar_io.read_tokens (Sys.argv.(3))
         and goals = Grammar_io.read_tokens (Sys.argv.(4)) in
-        print_endline ("Prefix: "^(Base.part2string prefix)^"Suffix: "^(Base.part2string suffix));
+        print_endline ("Prefix: "^(Base.part2string prefix));
+        print_endline ("Suffix: "^(Base.part2string suffix));
+        Base.print_grammar grammar;
         let values = Hashtbl.create 1 in
         Hashtbl.add values (Base.Terminal("value")) "val1";
 
@@ -16,8 +18,8 @@ let ()=
             end
         else
             let goal = List.hd goals in
-
-            if not (Blind2.is_reachable grammar goal []) then
+            print_endline ("Goal: "^(Base.string_of_element goal));
+            if not (Blind2.is_reachable grammar goal [grammar.axiom]) then
                 print_endline "Objectif inconnu !"
             else
                 let oracle = Blind2.oracle_template prefix suffix grammar in

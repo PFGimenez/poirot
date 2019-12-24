@@ -112,6 +112,10 @@ let underscore_string_of_part = function
     | t::q -> List.fold_left concat_underscore (string_of_element t) (List.map string_of_element q)
     | [] -> "ε"
 
+let string_of_part = function
+    | t::q -> List.fold_left concat_space (string_of_element t) (List.map string_of_element q)
+    | [] -> "ε"
+
 let full_element_of_ext_element (e : ext_element) : element = match e.e with
     | Terminal(x) -> e.e
     | Nonterminal(x) -> Nonterminal((underscore_string_of_part e.pf)^"^"^x^"^"^(underscore_string_of_part e.sf))
