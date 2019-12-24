@@ -65,7 +65,7 @@ let rec derive_within_depth profondeur grammar motintermediaire =
 (* DeriverTout depuis l'axiom de la grammar fournie *)
 let deriver profondeur grammar = derive_within_depth profondeur grammar [grammar.axiom]
 
-let derive_and_print profondeur grammar = List.iter (fun r -> print_endline ("Mot: "^(part2string r))) (deriver profondeur grammar)
+let derive_and_print profondeur grammar = List.iter (fun r -> print_endline ("Mot: "^(string_of_part r))) (deriver profondeur grammar)
 
 (** Vérification de la dérivabilité d'une phrase à partir d'une grammar **)
 
@@ -91,7 +91,7 @@ let is_list_in_language grammar parties =
 
 let is_in_language grammar part = (* print_endline ((part2string part));*) List.mem part (derive_within_length (List.length part) grammar [grammar.axiom])
 
-let derive_within_lengthPrint longueur grammar = List.iter (fun r -> print_endline ("Mot: "^(part2string r)) (*; print_bool (is_in_language grammar r)*)) (derive_within_length longueur grammar [grammar.axiom])
+let derive_within_lengthPrint longueur grammar = List.iter (fun r -> print_endline ("Mot: "^(string_of_part r)) (*; print_bool (is_in_language grammar r)*)) (derive_within_length longueur grammar [grammar.axiom])
 
 let min_list a b = if List.length a < List.length b then a else b
 

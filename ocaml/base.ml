@@ -92,21 +92,13 @@ let concat_underscore = concat_with_delimiter "_"
 
 let concat_new_line = concat_with_delimiter "\n"
 
-let part2string = function
-    | t::q -> List.fold_left concat_space (element2string t) (List.map element2string q)
-    | [] -> "ε"
-
-let quoted_part2string = function
+let quoted_string_of_part = function
     | t::q -> List.fold_left concat_space (quoted_element2string t) (List.map quoted_element2string q)
     | [] -> ""
 
-let string_of_ext_element e = let str=element2string e.e in match e.pf,e.sf with
-    | [],[] -> str
-    | _,_ -> str ^ "_[" ^ (part2string (List.rev e.pf)) ^ "|" ^ (part2string e.sf) ^ "]"
-
 let quoted_string_of_ext_element e = let str=quoted_element2string e.e in match e.pf,e.sf with
     | [],[] -> str
-    | _,_ -> str ^ "_[" ^ (quoted_part2string (List.rev e.pf)) ^ "|" ^ (quoted_part2string e.sf) ^ "]"
+    | _,_ -> str ^ "_[" ^ (quoted_string_of_part (List.rev e.pf)) ^ "|" ^ (quoted_string_of_part e.sf) ^ "]"
 
 let underscore_string_of_part = function
     | t::q -> List.fold_left concat_underscore (string_of_element t) (List.map string_of_element q)
@@ -115,6 +107,12 @@ let underscore_string_of_part = function
 let string_of_part = function
     | t::q -> List.fold_left concat_space (string_of_element t) (List.map string_of_element q)
     | [] -> "ε"
+
+let string_of_ext_element e = let str=element2string e.e in match e.pf,e.sf with
+    | [],[] -> str
+    | _,_ -> str ^ "_[" ^ (string_of_part (List.rev e.pf)) ^ "|" ^ (string_of_part e.sf) ^ "]"
+
+
 
 let full_element_of_ext_element (e : ext_element) : element = match e with
     | {pf=_;e=Terminal(x);sf=_} -> e.e
@@ -144,15 +142,8 @@ let quoted_string_of_ext_rules = function
 let string_of_ext_grammar (g : ext_grammar) : string = "axiom: " ^ (string_of_ext_element g.ext_axiom) ^ "\nRules: " ^ (string_of_ext_rules g.ext_rules)
 
 (* Conversion d'une règle en chaîne de caractère *)
-let rule2string : rule -> string = function
-	| {left_symbol=g;right_part=d} -> element2string g ^ " --> " ^ part2string d
-
-(* Conversion d'une liste de règles en chaîne de caractère *)
-(* let rec reglelist2string = function
-    | [] -> "Nothing to display."
-    | h::[] -> rule2string h
-    | h::t -> rule2string h ^ "\n" ^ reglelist2string t *)
-
+let string_of_rule : rule -> string = function
+	| {left_symbol=g;right_part=d} -> string_of_element g ^ " --> " ^ string_of_part d
 
 (** Fonctions utilitaire **)
 
@@ -185,15 +176,15 @@ let string_inst_of_part (values : (element, string) Hashtbl.t) : element list ->
     | t::q -> List.fold_left concat_space (string_inst_of_element values t) (List.map (string_inst_of_element values) q)
     | [] -> "ε"
 
-let print_words (w : part list) : unit = List.iter (fun r -> print_endline ("Mot: "^(part2string r))) w
+let print_words (w : part list) : unit = List.iter (fun r -> print_endline ("Mot: "^(string_of_part r))) w
 
 (** Fonctions d'affichage **)
 
 (* Affichage d'une liste de règles *)
-let print_rules rules = List.iter (Printf.printf "%s\n") (List.map rule2string rules)
+let print_rules rules = List.iter (fun r -> print_endline (string_of_rule r)) rules
 
 (* Affichage d'une grammar *)
-let print_grammar grammar = Printf.printf "axiom : %s \nRegles : \n" (element2string grammar.axiom);
+let print_grammar grammar = Printf.printf "axiom : %s \nRegles : \n" (string_of_element grammar.axiom);
 				  print_rules grammar.rules
 
 let rec print_grammars = function
