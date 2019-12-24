@@ -29,8 +29,8 @@ let ()=
                 else
                     print_endline "Injection token:";
                     List.iter (fun e -> print_endline ("  \""^(Base.element2string e)^"\"")) injection_tokens;
-                    let g = Blind2.search Blind2.fuzzer oracle grammar goal 10 injection_tokens in match g with
+                    let g = Blind2.search Blind2.fuzzer oracle grammar goal 5 injection_tokens in match g with
                     | None -> print_endline "Pas de grammar trouvée"
-                    | Some(g2) -> print_endline ("Injection:  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol (Base.grammar_of_ext_grammar g2) goal))); print_endline ("grammar :"^(Grammar_io.bnf_string_of_ext_grammar (Clean.clean g2)))
+                    | Some(g2) -> print_endline ("Injection:  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol (Base.grammar_of_ext_grammar g2) goal)))
 
     else print_endline ("Usage : "^Sys.argv.(0)^" <fichierGrammaire> <prefixe> <suffixe> <objectif>")

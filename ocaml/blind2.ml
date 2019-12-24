@@ -72,8 +72,8 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
         print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element t));
         if Hashtbl.mem visited t then
             (print_endline "Visited"; (search_aux [@tailcall]) visited (step + 1) q)
-        else if distance > max_depth then
-            (print_endline "Too deep"; (search_aux [@tailcall]) visited (step + 1) q)
+(*        else if distance > max_depth then
+            (print_endline "Too deep"; (search_aux [@tailcall]) visited (step + 1) q) *)
         else begin
             Hashtbl.add visited t true;
             if is_ext_element_non_terminal t then begin
@@ -88,13 +88,17 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
                 if (List.compare_length_with rules 1) > 0 then begin (* testable *)
                     if not (ext_g |> grammar_of_ext_grammar |> fuzzer |> oracle) then (* invalid : ignore *)
                         (print_endline "Invalid"; (search_aux [@tailcall]) visited (step + 1) q)
-                    else if h == 0 then (* found ! *)
-                        (print_endline "Found!"; Some(ext_g))
+                    else if distance = max_depth then
+                        (print_endline "Depth max"; (search_aux [@tailcall]) visited (step + 1) q)
+                    else if is_reachable (grammar_of_ext_grammar inj_g) goal [full_element_of_ext_element inj_g.ext_axiom] then (* found ! *)
+                        (print_endline "Found!"; Some(inj_g))
                     else (* we explore in this direction *)
                         (print_endline "Explore";
                         (search_aux [@tailcall]) visited (step + 1) (add_in_list (distance+1) q (build_ext_elements t)))
-                end else (* not testable *)
-                    (print_endline "Not testable"; (search_aux [@tailcall]) visited (step + 1) (add_in_list (distance+1) q (build_ext_elements t)))
+                end else if distance = max_depth then (* not testable *)
+                    (print_endline "Depth max"; (search_aux [@tailcall]) visited (step + 1) q)
+                else
+                    (print_endline "Not testable"; (search_aux [@tailcall]) visited (step + 1) (add_in_list (distance + 1) q (build_ext_elements t)))
             end
             else (* t is terminal *)
                 (search_aux [@tailcall]) visited (step + 1) (add_in_list (distance+1) q (build_ext_elements t))

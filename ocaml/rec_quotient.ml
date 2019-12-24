@@ -44,7 +44,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
         | [] -> ()
         | t::q -> let l = Hashtbl.find mem lhs
             and rlist2 = List.rev_map (reverse_rule rv) rlist in
-            print_endline ("New rules: "^(string_of_ext_rules (List.rev_map (fun r -> lhs ---> r) rlist2)));
+            (*print_endline ("New rules: "^(string_of_ext_rules (List.rev_map (fun r -> lhs ---> r) rlist2)));*)
             Hashtbl.replace mem lhs (rlist2@l) in
 
     let add_rule_in_mem (rv: rev) (lhs: ext_element) (r: ext_part) : unit = add_rules_in_mem rv lhs [r] in
@@ -112,7 +112,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
         | [] -> nb_iter
         | lhs::q ->
             (* Nothing to do *)
-            print_endline ("Work on: "^(string_of_ext_element lhs));
+            (* print_endline ("Work on: "^(string_of_ext_element lhs)); *)
             if lhs.pf = [] && lhs.sf = [] then
                 (assert (is_ext_element_terminal lhs || is_seen lhs); quotient_symbols (nb_iter + 1) q)
             else begin
@@ -121,43 +121,45 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
                 | ((tpf::qpf) as pf),sf when List.compare_lengths pf sf >= 0 -> ({pf=qpf;e=lhs.e;sf=sf},Nonrev,tpf)
                 | _,[] -> assert false (* impossible because of the previous case *)
                 | pf,(tsf::qsf) -> ({pf=pf;e=lhs.e;sf=qsf},Rev,tsf) in
-                if rv=Nonrev then print_endline "Nonrev" else print_endline "Rev";
+                (*if rv=Nonrev then print_endline "Nonrev" else print_endline "Rev";*)
                 if is_seen lhs then
-                    (print_endline " Already known"; quotient_symbols (nb_iter + 1) q)
+                    ((*print_endline " Already known";*) quotient_symbols (nb_iter + 1) q)
                 else if is_useless base_lhs then
                     (* we ignore this element *)
-                    (set_useless lhs; print_endline (" Useless because of "^(string_of_ext_element base_lhs)); quotient_symbols (nb_iter + 1) q)
+                    (set_useless lhs; (*print_endline (" Useless because of "^(string_of_ext_element base_lhs));*) quotient_symbols (nb_iter + 1) q)
                 else if is_seen base_lhs then begin
                     (* we can compute the current symbol *)
-                    print_endline "  Compute";
+                    (*print_endline "  Compute";*)
                     let new_elist = quotient_by_one_element_mem rv qu lhs base_lhs in
-                    print_endline "New elements:";
-                    List.iter (fun e -> print_endline (string_of_ext_element e)) new_elist;
-                    let new_nb_iter = quotient_symbols nb_iter new_elist in
                     (* quick check : if a nonterminal is present in the rhs of all its rules, it is useless *)
                     if Hashtbl.find mem lhs |> List.for_all (fun (p: ext_part) : bool -> List.exists (fun e -> e=lhs) p) then set_useless lhs;
                     (* before we compute all the new elements, we verify if the current lhs is useful. Indeed, there could be an circular dependency structure *)
                     if Hashtbl.find mem lhs |> List.exists (fun r -> List.for_all (fun e -> (Hashtbl.find_opt sure_useful e) <> None) r) then
-                        (print_endline "Already useful"; Hashtbl.add sure_useful lhs true);
+                        ((*print_endline "Already useful";*) Hashtbl.add sure_useful lhs true);
+                    (*print_endline "New elements:";
+                    List.iter (fun e -> print_endline (string_of_ext_element e)) new_elist;*)
+                    let new_nb_iter = quotient_symbols nb_iter new_elist in
                     if not (is_useless lhs) && new_elist <> [] then begin
                         (* verify uselessness of the rhs *)
                         let rules = remove_pf_sf_epsilon (Hashtbl.find mem lhs) in
                         let rules = if can_epsilon lhs then remove_pf_sf_epsilon (Hashtbl.find mem lhs) else rules in
                         Hashtbl.replace mem lhs rules;
                         (* maybe rhs is now epsilon-capable itself *)
-                        print_endline ("Updated rules: "^(string_of_ext_rules (List.rev_map (fun r -> lhs ---> r) rules)));
+                        (*print_endline ("Updated rules: "^(string_of_ext_rules (List.rev_map (fun r -> lhs ---> r) rules)));*)
                     end;
-                    if Hashtbl.find mem lhs |> List.for_all (fun r -> List.exists (fun e -> (Hashtbl.find_opt sure_useful e) = None) r) then
-                        (print_endline "Not useful !";
-                        set_useless lhs)
-                    else
-                        (assert ((Hashtbl.find_opt sure_useful lhs) = None); Hashtbl.add sure_useful lhs true);
-                    if is_useless lhs then
-                        print_endline ("Useless: "^(string_of_ext_element lhs));
+                    if (Hashtbl.find_opt sure_useful lhs) = None then begin
+                        if Hashtbl.find mem lhs |> List.for_all (fun r -> List.exists (fun e -> (Hashtbl.find_opt sure_useful e) = None) r) then
+                            ((*print_endline "Not useful !";*)
+                            set_useless lhs)
+                        else
+                            (assert ((Hashtbl.find_opt sure_useful lhs) = None); Hashtbl.add sure_useful lhs true)
+                    end;
+                    (*if is_useless lhs then
+                        print_endline ("Useless: "^(string_of_ext_element lhs));*)
                     (quotient_symbols [@tailcall]) (new_nb_iter + 1) q
                     end
                 else begin
-                    print_endline "  Postpone";
+                    (*print_endline "  Postpone";*)
                     (* we can't compute the current symbol so we keep it on the list *)
                     ((quotient_symbols [@tailcall]) (nb_iter + 1) (base_lhs::elist)) end
             end
