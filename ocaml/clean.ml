@@ -64,6 +64,6 @@ let remove_trivial_rules (g: ext_grammar) : ext_grammar =
     g.ext_axiom @@@ (List.filter_map remove_trivial_rule g.ext_rules)
 
 (* Epsilon-removing not used *)
-let clean_once (g : ext_grammar) : ext_rule list = ((* remove_epsilon_symbols *) remove_trivial_rules (remove_unreachable_symbols (remove_useless_symbols g))).ext_rules
+let clean_once (g : ext_grammar) : ext_rule list = (remove_epsilon_symbols (remove_trivial_rules (remove_unreachable_symbols (remove_useless_symbols g)))).ext_rules
 
 let clean : ext_grammar -> ext_grammar = iterate_until_convergence clean_once
