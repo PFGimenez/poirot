@@ -14,12 +14,13 @@ start:
     | NTERM END_RULE rlist EOF { ($1,$3) }
 ;
 
-rule:
-    | NTERM SEP ext_right_part { (* Printf.printf "Rule %s\n%!" (snd $1) ; *) ($1,$3) } ;
-
 rlist:
     | rule { [$1] }
     | rule rlist { $1 :: $2 }
+;
+
+rule:
+    | NTERM SEP ext_right_part { (* Printf.printf "Rule %s\n%!" (snd $1) ; *) ($1,$3) }
 ;
 
 ext_right_part:

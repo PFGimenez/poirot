@@ -2,7 +2,7 @@
     open Parserbnf
     open Scanf
     open List
-    exception UnknownToken of char
+    exception UnknownToken of string
 }
 
 let eol = "\n"|"\r"|"\r\n"
@@ -24,4 +24,4 @@ rule token = parse
     | '"' (([^ '"' '\n' '\r']|"\\\"")* as s) '"' { TERM (true,unescaped s) } (* terminal *)
     | ['A'-'Z' 'a'-'z' '0'-'9' '_']* as s { (*Printf.printf "NT:%s\n%!" s;*) NTERM (false,s) } (* nonterminal *)
 
-    | _ as c { raise (UnknownToken c)}
+    | _ as c { raise (UnknownToken (Char.escaped c))}
