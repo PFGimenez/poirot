@@ -2,6 +2,7 @@ open Base
 
 (* TODO: vérifier distance to goal *)
 (* TODO: intégrer la découverte automatique des tokens d'injection *)
+(* TODO: résoudre fuzzer pour exemple avec parenthèse *)
 
 let rec is_reachable (g: grammar) (s: element) (reachable : element list) : bool =
     if List.mem s reachable then true
@@ -94,10 +95,10 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
                 if (List.compare_length_with rules 1) > 0 then begin (* testable *)
                     if not (ext_g |> grammar_of_ext_grammar |> fuzzer |> oracle) then (* invalid : ignore *)
                         (print_endline "Invalid"; (search_aux [@tailcall]) visited (step + 1) q)
-                    else if distance = max_depth then
-                        (print_endline "Depth max"; (search_aux [@tailcall]) visited (step + 1) q)
                     else if is_reachable (grammar_of_ext_grammar inj_g) goal [full_element_of_ext_element inj_g.ext_axiom] then (* found ! *)
                         (print_endline "Found!"; Some(inj_g))
+                    else if distance = max_depth then
+                        (print_endline "Depth max"; (search_aux [@tailcall]) visited (step + 1) q)
                     else (* we explore in this direction *)
                         (print_endline "Explore";
                         (search_aux [@tailcall]) visited (step + 1) (add_in_list (distance+1) q (build_ext_elements t)))
