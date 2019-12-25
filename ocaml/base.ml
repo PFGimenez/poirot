@@ -38,7 +38,7 @@ let element_of_ext_element (e : ext_element) : element = e.e
 
 let ext_rule_of_rule r = (ext_element_of_element r.left_symbol) ---> (List.map ext_element_of_element r.right_part)
 
-let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element_of_element g.axiom; ext_rules = List.map ext_rule_of_rule g.rules}
+let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element_of_element g.axiom; ext_rules = List.rev_map ext_rule_of_rule g.rules}
 
 (* string of ... *)
 
@@ -46,10 +46,10 @@ let string_of_element = function
     | Terminal(x) -> x
     | Nonterminal(x) -> x
 
-let string_of_list (delim: string) (empty: string) (string_of_a: 'a -> string) (l: 'a list) =
-    let concat_with_delimiter d s1 s2 = s1 ^ d ^ s2 in
-    let concat = concat_with_delimiter delim in match l with
-    | t::q -> List.fold_left concat (string_of_a t) (List.map string_of_a q)
+let string_of_list (delim: string) (empty: string) (string_of_a: 'a -> string) (l: 'a list) : string =
+    let concat_with_delimiter (d: string) (s1: string) (s2: 'a) : string = s1 ^ d ^ (string_of_a s2) in
+    let concat : string -> 'a -> string = concat_with_delimiter delim in match l with
+    | t::q -> List.fold_left concat (string_of_a t) q
     | [] -> empty
 
 let string_of_part = string_of_list " " "ε" string_of_element
@@ -85,13 +85,11 @@ let is_ext_element_terminal e = is_terminal e.e
 
 let is_ext_element_non_terminal e = not (is_terminal e.e)
 
-let get_all_tokens (grammar : grammar) : element list = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.right_part) grammar.rules))
+let get_all_tokens (grammar : grammar) : element list =
+    grammar.rules |> List.rev_map (fun r -> List.filter is_terminal r.right_part) |> List.concat |> List.sort_uniq compare
 
 let get_all_symbols (g: grammar) : element list =
-    List.sort_uniq compare ((List.map (fun r -> r.left_symbol) g.rules) @ (List.flatten (List.map (fun r -> r.right_part) g.rules)))
-
-let get_all_symbols_ext_rules (rlist: ext_rule list) : ext_element list =
-    List.sort_uniq compare ((List.map (fun r -> r.ext_left_symbol) rlist) @ (List.flatten (List.map (fun r -> r.ext_right_part) rlist)))
+    g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare
 
 (* get the list of rules with some left-hand side *)
 let get_rules (rlist: ext_rule list) (e: ext_element) : ext_rule list =
@@ -101,7 +99,8 @@ let rec is_reachable (g: grammar) (s: element) (reachable : element list) : bool
     if List.mem s reachable then true
     else
         let ext_rules = List.filter (fun r -> List.mem r.left_symbol reachable) g.rules in
-        let new_reachable = ext_rules |> List.map (fun r -> r.right_part) |> List.flatten |> List.append reachable |> List.sort_uniq compare in
+        let new_reachable = ext_rules |> List.rev_map (fun r -> r.right_part) |> List.flatten |> List.append reachable |> List.sort_uniq compare in
         if (List.compare_lengths reachable new_reachable) = 0 then false
         else (is_reachable [@tailcall]) g s new_reachable
+
 

@@ -7,7 +7,7 @@ let rec iterate_until_convergence (f : ext_grammar -> ext_rule list) (g : ext_gr
 
 (* The useful symbols are the non-terminal that are the left side of a production *)
 let get_useful_symbols (g : ext_grammar) : ext_element list =
-    g.ext_rules |> List.map (fun r -> r.ext_left_symbol) |> List.sort_uniq compare
+    g.ext_rules |> List.rev_map (fun r -> r.ext_left_symbol) |> List.sort_uniq compare
 
 (* verify if a rule can derive (directly or not) a word *)
 let is_rule_useful (useful_s : ext_element list) (t : ext_rule) : bool =
@@ -18,7 +18,7 @@ let remove_useless_symbols_once (g : ext_grammar) : ext_rule list = List.filter 
 let remove_useless_symbols : ext_grammar -> ext_grammar = iterate_until_convergence remove_useless_symbols_once
 
 let get_reachable_symbols_once (g : ext_grammar) (slist : ext_element list) : ext_element list =
-    g.ext_rules |> List.filter (fun r -> List.mem r.ext_left_symbol slist) |> List.map (fun r -> r.ext_right_part) |> List.cons slist |> List.concat |> List.sort_uniq compare
+    g.ext_rules |> List.filter (fun r -> List.mem r.ext_left_symbol slist) |> List.rev_map (fun r -> r.ext_right_part) |> List.cons slist |> List.concat |> List.sort_uniq compare
 
 let rec get_reachable_symbols (g : ext_grammar) (slist : ext_element list) : ext_element list = let old_length = List.length slist and slist2 = get_reachable_symbols_once g slist in
     if old_length = List.length slist2 then slist else (get_reachable_symbols [@tailcall]) g slist2
@@ -26,13 +26,13 @@ let rec get_reachable_symbols (g : ext_grammar) (slist : ext_element list) : ext
 let remove_unreachable_symbols (g : ext_grammar) : ext_grammar = g.ext_axiom @@@ (List.filter (is_rule_useful (get_reachable_symbols g [g.ext_axiom])) g.ext_rules)
 
 let get_epsilon_symbols (g : ext_grammar) : ext_element list =
-    g.ext_rules |> List.filter (fun r -> List.length r.ext_right_part = 0 && r.ext_left_symbol <> g.ext_axiom) |> List.map (fun r -> r.ext_left_symbol) |> List.sort_uniq compare
+    g.ext_rules |> List.filter (fun r -> List.length r.ext_right_part = 0 && r.ext_left_symbol <> g.ext_axiom) |> List.rev_map (fun r -> r.ext_left_symbol) |> List.sort_uniq compare
 
 (* not tail-recursive *)
 let rec power_set : int -> bool list list = function
     | 0 -> [[]]
     | n -> let ps = power_set (n-1) in
-        List.map (fun l -> false :: l) ps @ List.map (fun l -> true :: l) ps
+        List.rev_map (fun l -> false :: l) ps @ List.rev_map (fun l -> true :: l) ps
 
 let rec get_occurrences_number (s : ext_element) (nb: int) : ext_element list -> int = function
     | [] -> nb
@@ -54,13 +54,13 @@ let rec get_rules_with_symbol (s : ext_element) : ext_rule list -> ext_rule list
     | r::q -> get_rules_with_symbol s q
 
 let duplicate_epsilon_symbol_from_rule (s : ext_element) (r : ext_rule) : ext_rule list = let ps = power_set (get_occurrences_number s 0 r.ext_right_part) in
-    List.map (fun blist -> r.ext_left_symbol ---> (filter_symbol s blist r.ext_right_part)) ps
+    List.rev_map (fun blist -> r.ext_left_symbol ---> (filter_symbol s blist r.ext_right_part)) ps
 
 let remove_epsilon_rules_except_ext_axiom epsilon_symbols (g : ext_grammar) : ext_rule list = List.filter (fun r -> List.length r.ext_right_part <> 0 || (r.ext_left_symbol = g.ext_axiom || not (List.mem r.ext_left_symbol epsilon_symbols))) g.ext_rules
 
 let remove_epsilon_symbols_once (g : ext_grammar) : ext_rule list =
     let epsilon_symbols = get_epsilon_symbols g in
-    let new_rules = epsilon_symbols |> List.map (fun s -> List.map (duplicate_epsilon_symbol_from_rule s) (get_rules_with_symbol s g.ext_rules)) |> List.flatten |> List.flatten in
+    let new_rules = epsilon_symbols |> List.rev_map (fun s -> List.rev_map (duplicate_epsilon_symbol_from_rule s) (get_rules_with_symbol s g.ext_rules)) |> List.flatten |> List.flatten in
     remove_epsilon_rules_except_ext_axiom epsilon_symbols (g.ext_axiom @@@ (List.sort_uniq compare (g.ext_rules@new_rules)))
 
 let remove_epsilon_symbols : ext_grammar -> ext_grammar = iterate_until_convergence remove_epsilon_symbols_once

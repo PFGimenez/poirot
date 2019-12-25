@@ -4,7 +4,6 @@ open Base
 exception No_trivial_injection
 exception Unknown_goal
 
-
 let underscore_string_of_part = string_of_list "_" "ε" string_of_element
 
 let full_element_of_ext_element (e : ext_element) : element = match e with
@@ -12,22 +11,22 @@ let full_element_of_ext_element (e : ext_element) : element = match e with
     | {pf=[];e=Nonterminal(x);sf=[]} -> Nonterminal(x)
     | {pf=_;e=Nonterminal(x);sf=_} -> Nonterminal((underscore_string_of_part e.pf)^"^"^x^"^"^(underscore_string_of_part e.sf))
 
-let grammar_of_ext_grammar (g: ext_grammar) : grammar = (full_element_of_ext_element g.ext_axiom) @@ (List.map (fun r -> (full_element_of_ext_element r.ext_left_symbol) --> (List.map full_element_of_ext_element r.ext_right_part)) g.ext_rules)
+let grammar_of_ext_grammar (g: ext_grammar) : grammar = (full_element_of_ext_element g.ext_axiom) @@ (List.rev_map (fun r -> (full_element_of_ext_element r.ext_left_symbol) --> (List.map full_element_of_ext_element r.ext_right_part)) g.ext_rules)
 
 let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: grammar) (goal: element) (max_depth: int) : grammar option =
     let quotient = Rec_quotient.quotient_mem g
     and distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create 100
-    and all_sym = g.rules |> List.map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
+    and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
 
     let get_injection_tokens (oracle : part list -> bool) (grammar : grammar) : element list = List.filter (fun p -> oracle [[p]]) (Base.get_all_tokens grammar) in
 
     let symbols_from_parents (axiom : element) : element list =
-        g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.map (fun r -> r.left_symbol) |> List.sort_uniq compare in
+        g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in
 
     let rec compute_distance_to_goal (e : element) : (element * int) list -> int = function
     | [] -> failwith "Can't reach at all"
     | (s,nb)::q when is_reachable g e [s] -> nb
-    | (s,nb)::q -> (compute_distance_to_goal [@tailcall]) e (q@(List.map (fun e -> (e,nb+1)) (symbols_from_parents s))) in
+    | (s,nb)::q -> (compute_distance_to_goal [@tailcall]) e (q@(List.rev_map (fun e -> (e,nb+1)) (symbols_from_parents s))) in
 
     let compute_one_distance (a: element) (b: element) : unit =
         Hashtbl.add distance_to_goal (a,b) (compute_distance_to_goal b [a,0]) in
@@ -46,8 +45,8 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
 
     (* add new elements to the open set *)
     let add_in_list g (openset: (int * int * ext_element) list) (new_elems: ext_element list) : (int * int * ext_element) list =
-        (* openset is already sorted *)
-        List.merge compare_with_score (List.sort compare_with_score (List.map (fun (e: ext_element) : (int * int * ext_element) -> (g,get_distance_to_goal (element_of_ext_element e),e)) new_elems)) openset in
+    (* openset is already sorted *)
+    new_elems |> List.rev_map (fun (e: ext_element) : (int * int * ext_element) -> (g,get_distance_to_goal (element_of_ext_element e),e)) |> List.sort compare_with_score |> List.merge compare_with_score openset in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
     let split (elem : element) (original_rule: rule) : (element list * element list * element) list =
@@ -59,7 +58,7 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
 
     (* construct the new ext_elements (the neighborhood) *)
     let build_ext_elements (e: ext_element) : ext_element list =
-        g.rules |> List.filter (fun r -> List.exists (fun s -> s=e.e) r.right_part) |> List.map (split e.e) |> List.flatten |> List.map (fun (pf,sf,lhs) -> {pf=e.pf@pf;e=lhs;sf=e.sf@sf}) in
+        g.rules |> List.filter (fun r -> List.exists (fun s -> s=e.e) r.right_part) |> List.rev_map (split e.e) |> List.flatten |> List.rev_map (fun (pf,sf,lhs) -> {pf=e.pf@pf;e=lhs;sf=e.sf@sf}) in
 
     (* core algorithm : an A* algorithm *)
     let rec search_aux (closedset: (ext_element, bool) Hashtbl.t) (step: int) (openset: (int * int * ext_element) list) : grammar option = match openset with
@@ -103,4 +102,4 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
     let inj = get_injection_tokens oracle g in (* get the possible injections tokens *)
     if not (is_reachable g goal [g.axiom]) then raise Unknown_goal (* the goal is not reachable from the axiom ! *)
     else if inj = [] then raise No_trivial_injection (* no injection token found *)
-    else inj |> List.map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 100) 0 (* search *)
+    else inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 100) 0 (* search *)

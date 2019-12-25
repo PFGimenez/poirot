@@ -87,7 +87,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
     List.iter (fun r -> add_rule_in_mem Nonrev r.ext_left_symbol r.ext_right_part) ext_g.ext_rules;
 
     (* we assume the base grammar contains only useful symbols *)
-    ext_g.ext_rules |> List.map (fun r -> r.ext_left_symbol::r.ext_right_part) |> List.flatten |> List.iter (fun e -> Hashtbl.replace sure_useful e true);
+    ext_g.ext_rules |> List.rev_map (fun r -> r.ext_left_symbol::r.ext_right_part) |> List.flatten |> List.iter (fun e -> Hashtbl.replace sure_useful e true);
 
     (* apply a quotient of a single rule with a prefix that is a single element *)
     let quotient_by_one_element (rv: rev) (pf: element) (new_lhs: ext_element) (r: ext_part) : ext_element option =
