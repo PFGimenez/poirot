@@ -53,7 +53,7 @@ let rec is_word2 : ext_element list -> bool = function
 
 let rec derive_within_depth profondeur grammar motintermediaire =
     if is_word motintermediaire then [motintermediaire]
-	else if (profondeur != 1) then
+	else if (profondeur <> 1) then
 		let possibles = possible_rules motintermediaire grammar.rules in
 		let rec deriverLesPossibles grammar mot = function
             | [] -> []

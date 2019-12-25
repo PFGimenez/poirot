@@ -11,7 +11,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
     let rec get_reachable_symbols (slist : ext_element list) : ext_element list =
         let get_reachable_symbols_once (slist : ext_element list) : ext_element list = slist |> List.rev_map (Hashtbl.find mem) |> List.concat |> List.cons slist |> List.concat |> List.sort_uniq compare |> List.filter is_ext_element_non_terminal in
             let slist2 = get_reachable_symbols_once slist in
-            if List.compare_lengths slist slist2 == 0 then slist else (get_reachable_symbols [@tailcall]) slist2
+            if List.compare_lengths slist slist2 = 0 then slist else (get_reachable_symbols [@tailcall]) slist2
     in
 
     let is_seen (e: ext_element) : bool = Hashtbl.find_opt mem e <> None in

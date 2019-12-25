@@ -1,36 +1,16 @@
 let ()=
-    if Array.length Sys.argv = 5 then
+    if Array.length Sys.argv = 6 then
         let grammar = Grammar_io.read_bnf_grammar Sys.argv.(1)
         and prefix = Grammar_io.read_tokens Sys.argv.(2)
         and suffix = Grammar_io.read_tokens Sys.argv.(3)
-        and goals = Grammar_io.read_tokens Sys.argv.(4) in
-        print_endline ("Prefix: "^(Base.string_of_part prefix));
-        print_endline ("Suffix: "^(Base.string_of_part suffix));
-        Base.print_grammar grammar;
-        let values = Hashtbl.create 1 in
+        and goal = List.hd (Grammar_io.read_tokens Sys.argv.(4))
+        and max_depth = int_of_string Sys.argv.(5) in
+        let values = Hashtbl.create 100 in
         Hashtbl.add values (Base.Terminal("value")) "val1";
 
-        if List.length goals != 1 then
-            if List.length goals = 0 then begin
-                print_endline "Au moins un objectif nécessaire"
-            end else begin
-                print_endline "Pas plus d'un objectif !"
-            end
-        else
-            let goal = List.hd goals in
-            print_endline ("Goal: "^(Base.string_of_element goal));
-            if not (Blind.is_reachable grammar goal [grammar.axiom]) then
-                print_endline "Objectif inconnu !"
-            else
-                let oracle = Blind.oracle_template prefix suffix grammar in
-                let injection_tokens = Blind.get_injection_leaves oracle grammar in
-                if List.length injection_tokens = 0 then
-                    print_endline "Pas de token d'injection !"
-                else
-                    print_endline "Injection token:";
-                    List.iter (fun e -> print_endline ("  \""^(Base.element2string e)^"\"")) injection_tokens;
-                    let g = Blind.search Blind.fuzzer oracle grammar goal 5 injection_tokens in match g with
-                    | None -> print_endline "Pas de grammar trouvée"
-                    | Some(g2) -> print_endline ("Injection:  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol (Base.grammar_of_ext_grammar g2) goal)))
+        let oracle = Blind.oracle_template prefix suffix grammar in
+        let g = Blind.search Blind.fuzzer oracle grammar goal max_depth in match g with
+        | None -> print_endline "No grammar found"
+        | Some(inj_g) -> print_endline ("Injection:  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol (Base.grammar_of_ext_grammar inj_g) goal)))
 
-    else print_endline ("Usage : "^Sys.argv.(0)^" <fichierGrammaire> <prefixe> <suffixe> <objectif>")
+    else print_endline ("Usage : "^Sys.argv.(0)^" <BNF grammar file> <prefix> <suffix> <goal> <max depth>")

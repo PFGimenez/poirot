@@ -1,8 +1,8 @@
 open Base
 
-(* TODO: vérifier distance to goal *)
-(* TODO: intégrer la découverte automatique des tokens d'injection *)
 (* TODO: résoudre fuzzer pour exemple avec parenthèse *)
+exception No_trivial_injection
+exception Unknown_goal
 
 let rec is_reachable (g: grammar) (s: element) (reachable : element list) : bool =
     if List.mem s reachable then true
@@ -13,10 +13,6 @@ let rec is_reachable (g: grammar) (s: element) (reachable : element list) : bool
         else (is_reachable [@tailcall]) g s new_reachable
 
 let get_all_tokens (grammar : grammar) : element list = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.right_part) grammar.rules))
-
-let get_injection_tokens (oracle : part list -> bool) (grammar : grammar) : element list = List.filter (fun p -> oracle [[p]]) (get_all_tokens grammar)
-
-let get_injection_leaves (oracle : part list -> bool) (grammar : grammar) : element list = get_injection_tokens oracle grammar
 
 let fuzzer (g : grammar) : part list =
     let term = List.filter (fun e -> is_reachable g e []) (get_all_tokens g) in
@@ -30,21 +26,26 @@ let oracle_template
     : bool
     = Fuzzer.is_list_in_language grammar (List.map (fun p -> prefix @ p @ suffix) injections)
 
-let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: grammar) (goal: element) (max_depth: int) (injection_tokens: element list) : ext_grammar option =
+let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: grammar) (goal: element) (max_depth: int) : ext_grammar option =
     let quotient = Rec_quotient.quotient_mem g
     and distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create 100
     and all_sym = g.rules |> List.map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare
     and ext_g = ext_grammar_of_grammar g in
 
-    let symbols_from_parents (axiom : element) : element list = List.sort_uniq compare (List.map (fun r -> r.left_symbol) (List.filter (fun r -> List.mem axiom r.right_part) g.rules)) in
+    let get_injection_tokens (oracle : part list -> bool) (grammar : grammar) : element list = List.filter (fun p -> oracle [[p]]) (get_all_tokens grammar) in
+
+    let get_injection_leaves (oracle : part list -> bool) (grammar : grammar) : element list = get_injection_tokens oracle grammar in
+
+    let symbols_from_parents (axiom : element) : element list =
+        g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.map (fun r -> r.left_symbol) |> List.sort_uniq compare in
 
     let rec compute_distance_to_goal (e : element) : (element * int) list -> int = function
     | [] -> failwith "Can't reach at all"
-    | (s,nb)::q when is_reachable g e [s] -> nb 
+    | (s,nb)::q when is_reachable g e [s] -> nb
     | (s,nb)::q -> (compute_distance_to_goal [@tailcall]) e (q@(List.map (fun e -> (e,nb+1)) (symbols_from_parents s))) in
 
     let compute_one_distance (a: element) (b: element) : unit =
-        Hashtbl.add distance_to_goal (a,b) (compute_distance_to_goal a [b,0]) in
+        Hashtbl.add distance_to_goal (a,b) (compute_distance_to_goal b [a,0]) in
 
     let get_distance_to_goal (e: element) : int =
         Hashtbl.find distance_to_goal (e,goal) in
@@ -110,5 +111,8 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
             else (* t is terminal *)
                 (search_aux [@tailcall]) visited (step + 1) (add_in_list (distance+1) q (build_ext_elements t))
             end in
-    injection_tokens |> List.map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 100) 0
+    let inj = get_injection_leaves oracle g in
+    if not (is_reachable g goal [g.axiom]) then raise Unknown_goal
+    else if inj = [] then raise No_trivial_injection
+    else inj |> List.map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 100) 0
 

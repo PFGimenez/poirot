@@ -47,7 +47,7 @@ let rec get_rules_with_symbol (s : ext_element) : ext_rule list -> ext_rule list
 let duplicate_epsilon_symbol_from_rule (s : ext_element) (r : ext_rule) : ext_rule list = let ps = power_set (get_occurrences_number s r.ext_right_part) in
     List.map (fun blist -> r.ext_left_symbol ---> (filter_symbol s blist r.ext_right_part)) ps
 
-let remove_epsilon_rules_except_ext_axiom epsilon_symbols (g : ext_grammar) : ext_rule list = List.filter (fun r -> List.length r.ext_right_part != 0 || (r.ext_left_symbol = g.ext_axiom || not (List.mem r.ext_left_symbol epsilon_symbols))) g.ext_rules
+let remove_epsilon_rules_except_ext_axiom epsilon_symbols (g : ext_grammar) : ext_rule list = List.filter (fun r -> List.length r.ext_right_part <> 0 || (r.ext_left_symbol = g.ext_axiom || not (List.mem r.ext_left_symbol epsilon_symbols))) g.ext_rules
 
 let remove_epsilon_symbols_once (g : ext_grammar) : ext_rule list =
     let epsilon_symbols = get_epsilon_symbols g in
