@@ -1,12 +1,10 @@
 open Base
 
-(* TODO: résoudre fuzzer pour exemple avec parenthèse *)
 exception No_trivial_injection
 exception Unknown_goal
 
-let underscore_string_of_part = string_of_list "_" "ε" string_of_element
-
-let full_element_of_ext_element (e : ext_element) : element = match e with
+let full_element_of_ext_element (e : ext_element) : element =
+    let underscore_string_of_part = string_of_list "_" "ε" string_of_element in match e with
     | {pf=_;e=Terminal(x);sf=_} -> e.e
     | {pf=[];e=Nonterminal(x);sf=[]} -> Nonterminal(x)
     | {pf=_;e=Nonterminal(x);sf=_} -> Nonterminal((underscore_string_of_part e.pf)^"^"^x^"^"^(underscore_string_of_part e.sf))
