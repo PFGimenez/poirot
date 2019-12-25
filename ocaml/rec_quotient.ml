@@ -4,6 +4,7 @@ type rev = Nonrev | Rev
 
 let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
     let ext_g : ext_grammar = ext_grammar_of_grammar g
+    and da = {pf=[];e=Nonterminal("dummy_axiom");sf=[]}
     (* all the computed rules *)
     and mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 1000
     and sure_useful : (ext_element, bool) Hashtbl.t = Hashtbl.create 1000 in
@@ -14,32 +15,39 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
             if List.compare_lengths slist slist2 = 0 then slist else (get_reachable_symbols [@tailcall]) slist2
     in
 
+    (* has the element been seen / processed ? *)
     let is_seen (e: ext_element) : bool = Hashtbl.find_opt mem e <> None in
 
+    (* is the element useless, i.e. it is processed by is not bound to any rule *)
     let is_useless (e: ext_element) : bool = Hashtbl.find_opt mem e = Some([]) in
 
     let set_useless (e: ext_element) : unit = Hashtbl.replace mem e [] in
 
+    (* construct a grammar, given an axiom, from the memory *)
     let grammar_of_mem (axiom : ext_element) : ext_grammar =
         if is_ext_element_terminal axiom then
-            axiom @@@ [axiom ---> [axiom]]
+            da @@@ [da ---> [axiom]]
         else begin
             let rules_of_element = fun e -> Hashtbl.find mem e |> List.rev_map (fun (r: ext_part) : ext_rule -> (e--->r)) in
             let rules = get_reachable_symbols [axiom] |> List.rev_map rules_of_element |> List.concat in axiom @@@ rules
         end
     in
 
+    (* reverse an extended element depending of the reverse variable *)
     let reverse_ext_elem (rv: rev) (e: ext_element) = match rv with
         | Rev -> {pf=e.sf;e=e.e;sf=e.pf}
         | Nonrev -> e in
 
+    (* reverse a rule depending of the reverse variable *)
     let reverse_rule (rv: rev) (r: ext_part) = match rv with
         | Nonrev -> r
         | Rev -> List.rev_map (reverse_ext_elem Rev) r in (* this rev_map is not an optimization but is mandatory *)
 
+    (* get the rules from mem, reversing them if necessary *)
     let get_rules (rv: rev) (lhs: ext_element) = 
         Hashtbl.find mem lhs |> List.rev_map (reverse_rule rv) in
 
+    (* memorize rules, reversing them if necessary *)
     let add_rules_in_mem (rv: rev) (lhs: ext_element) (rlist: ext_part list) : unit = match rlist with
         | [] -> ()
         | t::q -> let l = Hashtbl.find mem lhs
@@ -47,11 +55,14 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
             (*print_endline ("New rules: "^(string_of_ext_rules (List.rev_map (fun r -> lhs ---> r) rlist2)));*)
             Hashtbl.replace mem lhs (rlist2@l) in
 
+    (* memorize a rule, reversing them if necessary *)
     let add_rule_in_mem (rv: rev) (lhs: ext_element) (r: ext_part) : unit = add_rules_in_mem rv lhs [r] in
 
+    (* does e only derive epsilon ? *)
     let is_epsilon (e: ext_element) : bool = assert (is_seen e); List.for_all (fun r -> r = []) (Hashtbl.find mem e)
+    (* can e derive epsilon ? *)
     and can_epsilon (e: ext_element) : bool = assert (is_seen e); List.exists (fun r -> r = []) (Hashtbl.find mem e) in
-
+    (* create variants of a rule depending of whether the first element is or can be epsilon (and only the first element) *)
     let remove_epsilon : ext_part -> ext_part list = function
         | [] -> []
         | (t::q) as l when is_ext_element_terminal t -> [l] (* a terminal can't derive an epsilon *)
@@ -59,6 +70,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
         | (t::q) as l when can_epsilon t -> [l;q] (* t can derive an epsilon: we add a new rule without it *)
         | l -> [l] in
 
+    (* call remove_epsilon with the rules and the reversed rules *)
     let remove_pf_sf_epsilon (rlist: ext_part list): ext_part list =
         rlist |> List.filter (List.for_all (fun e -> not (is_useless e))) 
             |> List.rev_map remove_epsilon |> List.flatten (* remove epsilon at beginning *)
@@ -107,6 +119,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
         get_rules rv previous_lhs |> List.filter_map (quotient_by_one_element rv pf new_lhs) |> List.rev_map (reverse_ext_elem rv) |> List.filter (fun e -> not (is_seen e)) |> List.sort_uniq compare in
 
     (* compute the rules of a ext_element and do it recursively with every new symbol *)
+    (* not completely tail-recursive *)
     let rec quotient_symbols (nb_iter: int) (elist: ext_element list) : int =
         match elist with
         | [] -> nb_iter
@@ -114,7 +127,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
             (* Nothing to do *)
             (* print_endline ("Work on: "^(string_of_ext_element lhs)); *)
             if lhs.pf = [] && lhs.sf = [] then
-                (assert (is_ext_element_terminal lhs || is_seen lhs); quotient_symbols (nb_iter + 1) q)
+                (assert (is_ext_element_terminal lhs || is_seen lhs); (quotient_symbols [@tailcall]) (nb_iter + 1) q)
             else begin
                 let (base_lhs,rv,qu) = match lhs.pf,lhs.sf with
                 | [],[] -> assert false (* impossible : case verified just before *)
@@ -123,10 +136,10 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
                 | pf,(tsf::qsf) -> ({pf=pf;e=lhs.e;sf=qsf},Rev,tsf) in
                 (*if rv=Nonrev then print_endline "Nonrev" else print_endline "Rev";*)
                 if is_seen lhs then
-                    ((*print_endline " Already known";*) quotient_symbols (nb_iter + 1) q)
+                    ((*print_endline " Already known";*) (quotient_symbols [@tailcall]) (nb_iter + 1) q)
                 else if is_useless base_lhs then
                     (* we ignore this element *)
-                    (set_useless lhs; (*print_endline (" Useless because of "^(string_of_ext_element base_lhs));*) quotient_symbols (nb_iter + 1) q)
+                    (set_useless lhs; (*print_endline (" Useless because of "^(string_of_ext_element base_lhs));*) (quotient_symbols [@tailcall]) (nb_iter + 1) q)
                 else if is_seen base_lhs then begin
                     (* we can compute the current symbol *)
                     (*print_endline "  Compute";*)
@@ -167,13 +180,17 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
     fun (e: ext_element) : ext_grammar ->
         (* the case when e is terminal is handled separately *)
         if is_ext_element_terminal e then begin
+            (* derive epsilon *)
             if (e.pf=[e.e] && e.sf=[]) || (e.pf=[] && e.sf=[e.e]) then
-                e@@@[e--->[]]
+                da@@@[da--->[]]
+            (* derive this terminal *)
             else if e.pf=[] && e.sf=[] then
-                e@@@[e--->[e]]
+                da@@@[da--->[e]]
+            (* empty language *)
             else
-                e@@@[]
+                da@@@[]
         end else begin
             print_endline ("Nb iter: "^(string_of_int (quotient_symbols 0 [e])));
+            (* clean the grammar: remove useless, trivial rules, epsilon, etc. *)
             Clean.clean (grammar_of_mem e)
         end

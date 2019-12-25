@@ -11,10 +11,11 @@ let ()=
         let values = Hashtbl.create 100 in
         Hashtbl.add values (Base.Terminal("value")) "val1";
 
-        let oracle = Fuzzer.oracle prefix suffix grammar in
+        let oracle = Fuzzer.oracle prefix suffix grammar and
+        fuzzer = Fuzzer.fuzzer in
 
-        let g = Blind.search Fuzzer.fuzzer oracle grammar goal max_depth in match g with
+        let g = Blind.search fuzzer oracle grammar goal max_depth in match g with
         | None -> print_endline "No grammar found"
-        | Some(inj_g) -> print_endline ("Injection:  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol (Base.grammar_of_ext_grammar inj_g) goal)))
+        | Some(inj_g) -> print_endline ("Injection:  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol inj_g goal)))
 
     else print_endline ("Usage : "^Sys.argv.(0)^" <BNF grammar file> <prefix> <suffix> <goal> <max depth>")

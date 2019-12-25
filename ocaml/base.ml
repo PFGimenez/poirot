@@ -2,8 +2,8 @@
 
 (* An element represents a rule element that can be either a Terminal or a Nonterminal *)
 type element =
-        | Terminal of string
-		| Nonterminal of string
+    | Terminal of string
+    | Nonterminal of string
 
 (* A part represents a list of elements. It can either be a right-hand side of a rule or an intermediate derivation *)
 type part = element list
@@ -41,22 +41,22 @@ let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element
 
 (* Conversion d'un élément en chaîne de caractères *)
 let element2string = function
-		| Terminal(x) -> x
-		| Nonterminal(x) -> x
+    | Terminal(x) -> x
+    | Nonterminal(x) -> x
 
 let quoted_element2string = function
-		| Terminal(x) -> "\""^(String.escaped x)^"\""
-		| Nonterminal(x) -> x
+    | Terminal(x) -> "\""^(String.escaped x)^"\""
+    | Nonterminal(x) -> x
 
 let print_bool = function
-            | true -> print_endline "true"
-            | false -> print_endline "false"
+    | true -> print_endline "true"
+    | false -> print_endline "false"
 
 let string_of_element = element2string
 
 let element2string2 = function
-		| Terminal(x) -> "(T) "^x
-		| Nonterminal(x) -> "(NT) "^x
+    | Terminal(x) -> "(T) "^x
+    | Nonterminal(x) -> "(NT) "^x
 
 let is_terminal = function
     | Terminal(_) -> true
@@ -149,9 +149,20 @@ let quoted_string_of_ext_rules = function
 
 let string_of_ext_grammar (g : ext_grammar) : string = "axiom: " ^ (string_of_ext_element g.ext_axiom) ^ "\nRules: " ^ (string_of_ext_rules g.ext_rules)
 
+
+
 (* Conversion d'une règle en chaîne de caractère *)
 let string_of_rule : rule -> string = function
-	| {left_symbol=g;right_part=d} -> string_of_element g ^ " --> " ^ string_of_part d
+    | {left_symbol=g;right_part=d} -> string_of_element g ^ " --> " ^ string_of_part d
+
+
+let string_of_rules = function
+    | t::q -> List.fold_left concat_new_line (string_of_rule t) (List.map string_of_rule q)
+    | [] -> "(no rules)"
+
+let string_of_grammar (g : grammar) : string = "axiom: " ^ (string_of_element g.axiom) ^ "\nRules: " ^ (string_of_rules g.rules)
+
+
 
 (** Fonctions utilitaire **)
 
@@ -167,14 +178,14 @@ let grammar_of_ext_grammar (g: ext_grammar) : grammar = (full_element_of_ext_ele
 
 (* Récupération d'une monade option contenant le premier non terminal d'une part (si il existe !) *)
 let rec first_non_terminal = function
-	| [] -> None
-	| Terminal(x)::rest -> first_non_terminal rest
-	| Nonterminal(x)::rest -> Some(Nonterminal(x))
+    | [] -> None
+    | Terminal(x)::rest -> (first_non_terminal [@tailcall]) rest
+    | Nonterminal(x)::rest -> Some(Nonterminal(x))
 
 let rec first_non_terminal2 : ext_element list -> ext_element option = function
-	| [] -> None
-    | {pf=pre; e=Terminal(x); sf=suf}::rest -> first_non_terminal2 rest
-	| e::rest -> Some(e)
+    | [] -> None
+    | {pf=pre; e=Terminal(x); sf=suf}::rest -> (first_non_terminal2 [@tailcall]) rest
+    | e::rest -> Some(e)
 
 let string_inst_of_element (values : (element, string) Hashtbl.t) : element -> string  = function
     | s when Hashtbl.mem values s -> Hashtbl.find values s
@@ -192,11 +203,10 @@ let print_words (w : part list) : unit = List.iter (fun r -> print_endline ("Mot
 let print_rules rules = List.iter (fun r -> print_endline (string_of_rule r)) rules
 
 (* Affichage d'une grammar *)
-let print_grammar grammar = Printf.printf "axiom : %s \nRegles : \n" (string_of_element grammar.axiom);
-				  print_rules grammar.rules
+let print_grammar grammar = Printf.printf "axiom : %s \nRegles : \n" (string_of_element grammar.axiom); print_rules grammar.rules
 
 let rec print_grammars = function
     | [] -> print_endline "(vide)"
     | t::[] -> print_grammar t
-    | t::q -> print_grammar t; print_grammars q
+    | t::q -> print_grammar t; (print_grammars [@tailcall]) q
 
