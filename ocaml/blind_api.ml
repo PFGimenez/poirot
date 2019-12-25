@@ -16,6 +16,6 @@ let ()=
 
         let g = Blind.search fuzzer oracle grammar goal max_depth in match g with
         | None -> print_endline "No grammar found"
-        | Some(inj_g) -> print_endline ("Injection:  "^(Base.string_inst_of_part values (Fuzzer.derive_word_with_symbol inj_g goal)))
+        | Some(inj_g) -> print_endline ("Injection:  "^(Fuzzer.string_inst_of_part values (Fuzzer.derive_word_with_symbol inj_g goal)))
 
     else print_endline ("Usage : "^Sys.argv.(0)^" <BNF grammar file> <prefix> <suffix> <goal> <max depth>")

@@ -1,5 +1,22 @@
 open Base
 
+let string_inst_of_element (values : (element, string) Hashtbl.t) : element -> string  = function
+    | s when Hashtbl.mem values s -> Hashtbl.find values s
+    | s -> string_of_element s
+
+let string_inst_of_part values = string_of_list " " "ε" (string_inst_of_element values)
+
+let rec first_non_terminal = function
+    | [] -> None
+    | Terminal(x)::rest -> (first_non_terminal [@tailcall]) rest
+    | Nonterminal(x)::rest -> Some(Nonterminal(x))
+
+let rec first_non_terminal_ext_part : ext_element list -> ext_element option = function
+    | [] -> None
+    | {pf=pre; e=Terminal(x); sf=suf}::rest -> (first_non_terminal_ext_part [@tailcall]) rest
+    | e::rest -> Some(e)
+
+
 (* Dérivation gauche d'un mot intermédiaire "dérivation" par une règle "rule" *)
 let rec left_derivation derivation rule =
 	let {left_symbol=base;right_part=transformation} = rule in
@@ -29,7 +46,7 @@ let rec possible_rules motintermediaire rules =
     | _::rest -> possible_rules motintermediaire rest
 
 let rec possible_rules2 (motintermediaire : ext_element list) (rules : ext_rule list) : ext_rule list =
-	let premier = first_non_terminal2 motintermediaire in
+	let premier = first_non_terminal_ext_part motintermediaire in
 	match premier with
 	| None -> []
 	| Some(x) ->
@@ -124,7 +141,7 @@ let rec find_path_symbol2 (grammar : ext_grammar) : (element*ext_rule list) list
 
 let rec derive_with_path2 (grammar : ext_grammar) : (ext_element list * ext_rule list) list -> part = function
     | [] -> failwith "No derivation with path"
-    | (w, path)::q when is_word2 w -> assert (List.length path = 0); word_of_ext_elements w
+    | (w, path)::q when is_word2 w -> assert (List.length path = 0); List.map element_of_ext_element w
     | (w, path)::q -> let ext_rules = possible_rules2 w grammar.ext_rules in
         if List.length path = 0 || not (List.mem (List.hd path) ext_rules) then
             (derive_with_path2 [@tailcall]) grammar (q@(List.map (fun r -> (left_derivation2 w r, path)) ext_rules))

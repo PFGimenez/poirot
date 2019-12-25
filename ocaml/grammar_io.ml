@@ -1,5 +1,21 @@
 open Base
 
+let quoted_string_of_element = function
+    | Terminal(x) -> "\""^(String.escaped x)^"\""
+    | Nonterminal(x) -> x
+
+let quoted_string_of_part = string_of_list " " "" quoted_string_of_element
+
+let quoted_string_of_ext_element e = let str=quoted_string_of_element e.e in match e.pf,e.sf with
+    | [],[] -> str
+    | _,_ -> str ^ "_[" ^ (quoted_string_of_part (List.rev e.pf)) ^ "|" ^ (quoted_string_of_part e.sf) ^ "]"
+
+let quoted_string_of_ext_part = string_of_list " " "" quoted_string_of_ext_element
+
+let quoted_string_of_ext_rule r = (quoted_string_of_ext_element r.ext_left_symbol) ^ " ::= " ^ (quoted_string_of_ext_part r.ext_right_part)^";"
+
+let quoted_string_of_ext_rules = string_of_list "\n" "" quoted_string_of_ext_rule
+
 let bnf_string_of_ext_grammar (g : ext_grammar) : string = (quoted_string_of_ext_element g.ext_axiom) ^ ";" ^ (quoted_string_of_ext_rules g.ext_rules)
 
 let bnf_string_of_grammar (g : grammar) : string = bnf_string_of_ext_grammar (ext_grammar_of_grammar g)
