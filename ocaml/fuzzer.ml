@@ -159,6 +159,15 @@ let delete_recursion (g : grammar) : grammar =
     and order = get_order g in
     g.axiom @@ (del_rec g.rules [] order)
 
-let simple_fuzzer (g : grammar) (order : element list) : element list =
-    []
+let fuzzer (g : grammar) : part list =
+    Base.get_all_tokens g |> List.filter (fun e -> is_reachable g e [g.axiom]) |> List.map (derive_word_with_symbol g)
+
+let oracle
+    (prefix : element list)
+    (suffix : element list)
+    (grammar : grammar)
+    (injections : part list)
+    : bool
+    =   (*List.iter (fun p -> print_endline (string_of_part p)) injections;*)
+        injections |> List.map (fun p -> prefix @ p @ suffix) |> is_list_in_language grammar
 

@@ -112,7 +112,15 @@ let string_of_ext_element e = let str=element2string e.e in match e.pf,e.sf with
     | [],[] -> str
     | _,_ -> str ^ "_[" ^ (string_of_part (List.rev e.pf)) ^ "|" ^ (string_of_part e.sf) ^ "]"
 
+let rec is_reachable (g: grammar) (s: element) (reachable : element list) : bool =
+    if List.mem s reachable then true
+    else
+        let ext_rules = List.filter (fun r -> List.mem r.left_symbol reachable) g.rules in
+        let new_reachable = ext_rules |> List.map (fun r -> r.right_part) |> List.flatten |> List.append reachable |> List.sort_uniq compare in
+        if (List.compare_lengths reachable new_reachable) = 0 then false
+        else (is_reachable [@tailcall]) g s new_reachable
 
+let get_all_tokens (grammar : grammar) : element list = List.sort_uniq compare (List.concat (List.map (fun r -> List.filter is_terminal r.right_part) grammar.rules))
 
 let full_element_of_ext_element (e : ext_element) : element = match e with
     | {pf=_;e=Terminal(x);sf=_} -> e.e
