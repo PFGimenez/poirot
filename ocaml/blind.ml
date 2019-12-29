@@ -16,7 +16,16 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
     and distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create 100
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
 
-    let get_injection_tokens (oracle : part list -> bool) (grammar : grammar) : element list = List.filter (fun p -> oracle [[p]]) (Base.get_all_tokens grammar) in
+    let get_injection_tokens (oracle : part list -> bool) (grammar : grammar) : element list =
+        let check_inj (p: element): element option =
+            if is_terminal p then begin
+                if oracle [[p]] then Some(p)
+                else None
+            end else begin
+                if p@@grammar.rules |> fuzzer |> oracle then Some(p)
+                else None
+            end in
+        Base.get_all_symbols grammar |> List.filter_map check_inj in
 
     let symbols_from_parents (axiom : element) : element list =
         g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in
@@ -100,4 +109,10 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
     let inj = get_injection_tokens oracle g in (* get the possible injections tokens *)
     if not (is_reachable g goal [g.axiom]) then raise Unknown_goal (* the goal is not reachable from the axiom ! *)
     else if inj = [] then raise No_trivial_injection (* no injection token found *)
-    else inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 100) 0 (* search *)
+
+    else begin
+        (* We verify if we can achieve the goal without doing any actual research *)
+        let l = List.filter (fun e -> is_reachable g goal [e]) inj in
+        if l <> [] then Some((List.hd l)@@g.rules)
+        else inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 100) 0 (* search *)
+    end
