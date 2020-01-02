@@ -9,7 +9,7 @@ let ()=
         and max_depth = int_of_string Sys.argv.(5) in
 
         let values = Hashtbl.create 100 in
-        Hashtbl.add values (Base.Terminal("value")) "val1";
+        Hashtbl.add values (Grammar.Terminal("value")) "val1";
 
         let oracle = Fuzzer.oracle prefix suffix grammar and
         fuzzer = Fuzzer.fuzzer in

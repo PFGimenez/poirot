@@ -1,4 +1,4 @@
-open Base
+open Grammar
 
 type rev = Nonrev | Rev
 
@@ -160,11 +160,12 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
                         (* maybe rhs is now epsilon-capable itself *)
                         (*print_endline ("Updated rules: "^(string_of_ext_rules (List.rev_map (fun r -> lhs ---> r) rules)));*)
                     end;
+                    (* lhs is not (yet) useful and no rhs has only useful elements : lhs is useless *)
                     if (Hashtbl.find_opt sure_useful lhs) = None then begin
                         if Hashtbl.find mem lhs |> List.for_all (fun r -> List.exists (fun e -> (Hashtbl.find_opt sure_useful e) = None) r) then
                             ((*print_endline "Not useful !";*)
                             set_useless lhs)
-                        else
+                        else (* otherwise, we know that lhs is useful *)
                             (assert ((Hashtbl.find_opt sure_useful lhs) = None); Hashtbl.add sure_useful lhs true)
                     end;
                     (*if is_useless lhs then
@@ -190,7 +191,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
             else
                 da@@@[]
         end else begin
-            print_endline ("Nb iter: "^(string_of_int (quotient_symbols 0 [e])));
+            print_endline ("Nb iter: "^(string_of_int (quotient_symbols 0 [e]))^", memory size: "^(string_of_int (Hashtbl.length mem))); 
             (* clean the grammar: remove useless, trivial rules, epsilon, etc. *)
             Clean.clean (grammar_of_mem e)
         end

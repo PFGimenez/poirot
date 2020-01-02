@@ -1,4 +1,4 @@
-open Base
+open Grammar
 
 (* iterate a function until its grammar size doesn't change *)
 let rec iterate_until_convergence (f : ext_grammar -> ext_rule list) (g : ext_grammar) : ext_grammar = let new_rules = f g in

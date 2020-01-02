@@ -1,4 +1,4 @@
-open Base
+open Grammar
 
 exception No_trivial_injection
 exception Unknown_goal
@@ -13,8 +13,8 @@ let grammar_of_ext_grammar (g: ext_grammar) : grammar = (full_element_of_ext_ele
 
 let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: grammar) (goal: element) (max_depth: int) : grammar option =
     let quotient = Rec_quotient.quotient_mem g
-    and distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create 100
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
+    let distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
 
     let get_injection_tokens (oracle : part list -> bool) (grammar : grammar) : element list =
         let check_inj (p: element): element option =
@@ -25,7 +25,7 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
                 if p@@grammar.rules |> fuzzer |> oracle then Some(p)
                 else None
             end in
-        Base.get_all_symbols grammar |> List.filter_map check_inj in
+        get_all_symbols grammar |> List.filter_map check_inj in
 
     let symbols_from_parents (axiom : element) : element list =
         g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in

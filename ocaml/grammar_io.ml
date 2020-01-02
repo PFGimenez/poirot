@@ -1,4 +1,4 @@
-open Base
+open Grammar
 
 let quoted_string_of_element : element -> string = function
     | Terminal(x) -> "\""^(String.escaped x)^"\""
