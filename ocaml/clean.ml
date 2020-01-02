@@ -69,19 +69,6 @@ let remove_trivial_rules (g: ext_grammar) : ext_grammar = (* remove the rules a 
     g.ext_axiom @@@ (List.filter (fun r -> not (is_ext_element_non_terminal r.ext_left_symbol) || r.ext_right_part <> [r.ext_left_symbol]
 ) g.ext_rules)
 
-let rec find_not_uniq (l: ext_element list) : ext_element option = match l with
-    | [] -> None
-    | t::q -> if List.mem t q then Some(t) else (find_not_uniq [@tailcall]) q
-
-let replace_non_terminal (e: ext_element) (rlist: ext_rule list) : ext_rule list =
-    let rule : ext_rule = rlist |> List.filter (fun r -> List.exists ((==) e) r.ext_right_part) |> List.hd in
-    rlist |> List.filter ((<>) rule)
-
-let remove_superfluous_nonterminals (g: ext_grammar) : ext_grammar =
-    let e = g.ext_rules |> List.rev_map rhs_of_ext_rule |> List.concat |> find_not_uniq in
-    if e = None then g
-    else g.ext_axiom @@@ (replace_non_terminal (Option.get e) g.ext_rules)
-
 let clean_once (g : ext_grammar) : ext_rule list = (remove_epsilon_symbols (remove_trivial_rules (remove_unreachable_symbols (remove_useless_symbols g)))).ext_rules
 
 (* clean: remove epsilon, trivial rules, unreachable and useless symbols *)

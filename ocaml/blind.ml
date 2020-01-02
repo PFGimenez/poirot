@@ -103,7 +103,7 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
                     if List.compare_length_with uniq_rhs 1 == 0 && (List.hd uniq_rhs).e = t.e then
                         (print_endline "Infinite"; (search_aux [@tailcall]) closedset (step + 1) q)
                     else*)
-                        (print_endline "Not testable"; (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (build_ext_elements t)))
+                    (print_endline "Not testable"; (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (build_ext_elements t)))
                 end
             end
             else (* t is terminal *)
