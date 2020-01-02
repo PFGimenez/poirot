@@ -17,22 +17,17 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
     let distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
 
     let get_injection_tokens (oracle : part list -> bool) (grammar : grammar) : element list =
-        let check_inj (p: element): element option =
-            if is_terminal p then begin
-                if oracle [[p]] then Some(p)
-                else None
-            end else begin
-                if p@@grammar.rules |> fuzzer |> oracle then Some(p)
-                else None
-            end in
-        get_all_symbols grammar |> List.filter_map check_inj in
+        let check_inj (p: element): bool =
+            if is_terminal p then oracle [[p]]
+            else p@@grammar.rules |> fuzzer |> oracle in
+        get_all_symbols grammar |> List.filter check_inj in
 
     let symbols_from_parents (axiom : element) : element list =
         g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in
 
     let rec compute_distance_to_goal (e : element) : (element * int) list -> int = function
     | [] -> failwith "Can't reach at all"
-    | (s,nb)::q when is_reachable g e [s] -> nb
+    | (s,nb)::q when is_reachable g e s -> nb
     | (s,nb)::q -> (compute_distance_to_goal [@tailcall]) e (q@(List.rev_map (fun e -> (e,nb+1)) (symbols_from_parents s))) in
 
     let compute_one_distance (a: element) (b: element) : unit =
@@ -65,7 +60,7 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
 
     (* construct the new ext_elements (the neighborhood) *)
     let build_ext_elements (e: ext_element) : ext_element list =
-        g.rules |> List.filter (fun r -> List.exists (fun s -> s=e.e) r.right_part) |> List.rev_map (split e.e) |> List.flatten |> List.rev_map (fun (pf,sf,lhs) -> {pf=e.pf@pf;e=lhs;sf=e.sf@sf}) in
+        g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e.e) |> List.flatten |> List.rev_map (fun (pf,sf,lhs) -> {pf=e.pf@pf;e=lhs;sf=e.sf@sf}) in
 
     (* core algorithm : an A* algorithm *)
     let rec search_aux (closedset: (ext_element, bool) Hashtbl.t) (step: int) (openset: (int * int * ext_element) list) : grammar option = match openset with
@@ -85,13 +80,14 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
                 let inj_g = quotient t in
                 assert (inj_g.ext_axiom = t);
                 print_endline ("Heuristic: "^(string_of_int (get_distance_to_goal t.e)));
+                print_endline (string_of_ext_grammar inj_g);
                 (* get the rules t -> ... to verify if t is testable or not *)
                 let rules = inj_g.ext_rules |> List.filter (fun r -> inj_g.ext_axiom=r.ext_left_symbol) in
                 assert ((List.compare_length_with rules 1) >= 0);
                 if (List.compare_length_with rules 1) > 0 then begin (* testable *)
                     if not (inj_g |> grammar_of_ext_grammar |> fuzzer |> oracle) then (* this grammar has been invalidated by the oracle: ignore *)
                         (print_endline "Invalid"; (search_aux [@tailcall]) closedset (step + 1) q)
-                    else if is_reachable (grammar_of_ext_grammar inj_g) goal [full_element_of_ext_element inj_g.ext_axiom] then (* the goal has been found ! *)
+                    else if is_reachable (grammar_of_ext_grammar inj_g) goal (full_element_of_ext_element inj_g.ext_axiom) then (* the goal has been found ! *)
                         (print_endline "Found!"; print_endline (string_of_ext_grammar inj_g); Some(grammar_of_ext_grammar inj_g))
                     else if distance = max_depth then (* before we explore, verify if the max depth has been reached *)
                         (print_endline "Depth max"; (search_aux [@tailcall]) closedset (step + 1) q)
@@ -100,19 +96,26 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
                         (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (build_ext_elements t)))
                 end else if distance = max_depth then (* max depth reached *)
                     (print_endline "Depth max"; (search_aux [@tailcall]) closedset (step + 1) q)
-                else (* only one rule: its grammar is the same as its predecessor and so can't be invalidated *)
-                    (print_endline "Not testable"; (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (build_ext_elements t)))
+                else begin (* only one rule: its grammar is the same as its predecessor and so can't be invalidated *)
+                    assert (rules |> List.hd |> rhs_of_ext_rule |> (<>) []); (* since there is always the trivial injection, it can't be an epsilon rule *)
+                    (*let uniq_rhs = (List.hd rules).ext_right_part in
+                    (* if the only rule is A_{alpha} -> A_{beta}, then the successors of A_{alpha} are the same as A_{beta} and are already in the openset/closedset *)
+                    if List.compare_length_with uniq_rhs 1 == 0 && (List.hd uniq_rhs).e = t.e then
+                        (print_endline "Infinite"; (search_aux [@tailcall]) closedset (step + 1) q)
+                    else*)
+                        (print_endline "Not testable"; (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (build_ext_elements t)))
+                end
             end
             else (* t is terminal *)
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (build_ext_elements t))
             end in
     let inj = get_injection_tokens oracle g in (* get the possible injections tokens *)
-    if not (is_reachable g goal [g.axiom]) then raise Unknown_goal (* the goal is not reachable from the axiom ! *)
+    if not (is_reachable g goal g.axiom) then raise Unknown_goal (* the goal is not reachable from the axiom ! *)
     else if inj = [] then raise No_trivial_injection (* no injection token found *)
 
     else begin
         (* We verify if we can achieve the goal without doing any actual research *)
-        let l = List.filter (fun e -> is_reachable g goal [e]) inj in
+        let l = List.filter (is_reachable g goal) inj in
         if l <> [] then Some((List.hd l)@@g.rules)
         else inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 100) 0 (* search *)
     end

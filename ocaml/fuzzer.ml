@@ -177,7 +177,7 @@ let delete_recursion (g : grammar) : grammar =
     g.axiom @@ (del_rec g.rules [] order)
 
 let fuzzer (g : grammar) : part list =
-    get_all_tokens g |> List.filter (fun e -> is_reachable g e [g.axiom]) |> List.map (derive_word_with_symbol g)
+    get_all_tokens g |> List.filter (fun e -> is_reachable g e g.axiom) |> List.map (derive_word_with_symbol g)
 
 let oracle
     (prefix : element list)

@@ -28,7 +28,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
         if is_ext_element_terminal axiom then
             da @@@ [da ---> [axiom]]
         else begin
-            let rules_of_element = fun e -> Hashtbl.find mem e |> List.rev_map (fun (r: ext_part) : ext_rule -> (e--->r)) in
+            let rules_of_element : ext_element -> ext_rule list = fun e -> (Hashtbl.find mem e |> List.rev_map ((--->) e)) in
             let rules = get_reachable_symbols [axiom] |> List.rev_map rules_of_element |> List.concat in axiom @@@ rules
         end
     in
@@ -59,9 +59,9 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
     let add_rule_in_mem (rv: rev) (lhs: ext_element) (r: ext_part) : unit = add_rules_in_mem rv lhs [r] in
 
     (* does e only derive epsilon ? *)
-    let is_epsilon (e: ext_element) : bool = assert (is_seen e); List.for_all (fun r -> r = []) (Hashtbl.find mem e)
+    let is_epsilon (e: ext_element) : bool = assert (is_seen e); List.for_all ((=) []) (Hashtbl.find mem e)
     (* can e derive epsilon ? *)
-    and can_epsilon (e: ext_element) : bool = assert (is_seen e); List.exists (fun r -> r = []) (Hashtbl.find mem e) in
+    and can_epsilon (e: ext_element) : bool = assert (is_seen e); List.exists ((=) []) (Hashtbl.find mem e) in
     (* create variants of a rule depending of whether the first element is or can be epsilon (and only the first element) *)
     let remove_epsilon : ext_part -> ext_part list = function
         | [] -> []
@@ -74,14 +74,14 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
     let remove_pf_sf_epsilon (rlist: ext_part list): ext_part list =
         rlist |> List.filter (List.for_all (fun e -> not (is_useless e))) 
             |> List.rev_map remove_epsilon |> List.flatten (* remove epsilon at beginning *)
-            |> List.map List.rev |> List.rev_map remove_epsilon |> List.flatten |> List.map List.rev (* remove epsilon at end *)
+            |> List.rev_map List.rev |> List.rev_map remove_epsilon |> List.flatten |> List.rev_map List.rev (* remove epsilon at end *)
             |> List.sort_uniq compare in
 
     (* initialize the memory with the grammar *)
     List.iter (fun r -> set_useless r.ext_left_symbol) ext_g.ext_rules;
 
     (* we add the rules A -> A so A_[A|] can derive epsilon *)
-    ext_g.ext_rules |> List.rev_map (fun r -> r.ext_left_symbol) |> List.sort_uniq compare |> List.iter (fun e -> add_rule_in_mem Nonrev e [e]);
+    ext_g.ext_rules |> List.rev_map lhs_of_ext_rule |> List.sort_uniq compare |> List.iter (fun e -> add_rule_in_mem Nonrev e [e]);
 
     (* we add the rules of the base grammar *)
     List.iter (fun r -> add_rule_in_mem Nonrev r.ext_left_symbol r.ext_right_part) ext_g.ext_rules;
@@ -145,9 +145,9 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
                     (*print_endline "  Compute";*)
                     let new_elist = quotient_by_one_element_mem rv qu lhs base_lhs in
                     (* quick check : if a nonterminal is present in the rhs of all its rules, it is useless *)
-                    if Hashtbl.find mem lhs |> List.for_all (fun (p: ext_part) : bool -> List.exists (fun e -> e=lhs) p) then set_useless lhs;
+                    if Hashtbl.find mem lhs |> List.for_all (List.exists ((=) lhs)) then set_useless lhs;
                     (* before we compute all the new elements, we verify if the current lhs is useful. Indeed, there could be an circular dependency structure *)
-                    if Hashtbl.find mem lhs |> List.exists (fun r -> List.for_all (fun e -> (Hashtbl.find_opt sure_useful e) <> None) r) then
+                    if Hashtbl.find mem lhs |> List.exists (List.for_all (fun e -> (Hashtbl.find_opt sure_useful e) <> None)) then
                         ((*print_endline "Already useful";*) Hashtbl.add sure_useful lhs true);
                     (*print_endline "New elements:";
                     List.iter (fun e -> print_endline (string_of_ext_element e)) new_elist;*)
@@ -162,7 +162,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
                     end;
                     (* lhs is not (yet) useful and no rhs has only useful elements : lhs is useless *)
                     if (Hashtbl.find_opt sure_useful lhs) = None then begin
-                        if Hashtbl.find mem lhs |> List.for_all (fun r -> List.exists (fun e -> (Hashtbl.find_opt sure_useful e) = None) r) then
+                        if Hashtbl.find mem lhs |> List.for_all (List.exists (fun e -> (Hashtbl.find_opt sure_useful e) = None)) then
                             ((*print_endline "Not useful !";*)
                             set_useless lhs)
                         else (* otherwise, we know that lhs is useful *)

@@ -32,6 +32,10 @@ let (@@@) (axiom: ext_element) (rules: ext_rule list) : ext_grammar = {ext_axiom
 
 (* Conversion *)
 
+let rhs_of_ext_rule (r: ext_rule): ext_part = r.ext_right_part
+
+let lhs_of_ext_rule (r: ext_rule): ext_element = r.ext_left_symbol
+
 let ext_element_of_element (e: element) : ext_element = {pf=[]; e=e; sf=[]}
 
 let element_of_ext_element (e : ext_element) : element = e.e
@@ -92,13 +96,15 @@ let get_all_symbols (g: grammar) : element list =
 
 (* get the list of rules with some left-hand side *)
 let get_rules (rlist: ext_rule list) (e: ext_element) : ext_rule list =
-    List.filter_map (fun r -> if r.ext_left_symbol = e then Some(r) else None) rlist
+    List.filter (fun r -> r.ext_left_symbol = e) rlist
 
-let rec is_reachable (g: grammar) (s: element) (reachable : element list) : bool =
+let is_reachable (g: grammar) (s: element) (start: element) : bool =
+let rec is_reachable_aux (g: grammar) (s: element) (reachable : element list) : bool =
     if List.mem s reachable then true
     else
         let ext_rules = List.filter (fun r -> List.mem r.left_symbol reachable) g.rules in
         let new_reachable = ext_rules |> List.rev_map (fun r -> r.right_part) |> List.flatten |> List.append reachable |> List.sort_uniq compare in
         if (List.compare_lengths reachable new_reachable) = 0 then false
-        else (is_reachable [@tailcall]) g s new_reachable
+        else (is_reachable_aux [@tailcall]) g s new_reachable in
+    is_reachable_aux g s [start]
 
