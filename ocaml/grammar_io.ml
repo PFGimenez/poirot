@@ -4,21 +4,19 @@ let quoted_string_of_element : element -> string = function
     | Terminal(x) -> "\""^(String.escaped x)^"\""
     | Nonterminal(x) -> x
 
-let quoted_string_of_part : part -> string = string_of_list " " "" quoted_string_of_element
+let bnf_string_of_part : part -> string = string_of_list " " "" string_of_element
 
-let quoted_string_of_ext_element (e: ext_element) : string = let str=quoted_string_of_element e.e in match e.pf,e.sf with
-    | [],[] -> str
-    | _,_ -> str ^ "_[" ^ (quoted_string_of_part (List.rev e.pf)) ^ "|" ^ (quoted_string_of_part e.sf) ^ "]"
+let bnf_string_of_ext_element (e: ext_element) : string = match e.pf,e.sf with
+    | [],[] -> quoted_string_of_element e.e
+    | _,_ -> (string_of_element e.e) ^ "_[" ^ (bnf_string_of_part (List.rev e.pf)) ^ "|" ^ (bnf_string_of_part e.sf) ^ "]"
 
-let quoted_string_of_ext_part : ext_part -> string = string_of_list " " "" quoted_string_of_ext_element
+let bnf_string_of_ext_part : ext_part -> string = string_of_list " " "" bnf_string_of_ext_element
 
-let quoted_string_of_ext_rule (r: ext_rule) : string = (quoted_string_of_ext_element r.ext_left_symbol) ^ " ::= " ^ (quoted_string_of_ext_part r.ext_right_part)^";"
+let bnf_string_of_ext_rule (r: ext_rule) : string = (bnf_string_of_ext_element r.ext_left_symbol) ^ " ::= " ^ (bnf_string_of_ext_part r.ext_right_part) ^ ";\n"
 
-let quoted_string_of_ext_rules : ext_rule list -> string = string_of_list "\n" "" quoted_string_of_ext_rule
+let bnf_string_of_ext_rules : ext_rule list -> string = string_of_list "" "" bnf_string_of_ext_rule
 
-let bnf_string_of_ext_grammar (g : ext_grammar) : string = (quoted_string_of_ext_element g.ext_axiom) ^ ";" ^ (quoted_string_of_ext_rules g.ext_rules)
-
-let bnf_string_of_grammar (g : grammar) : string = bnf_string_of_ext_grammar (ext_grammar_of_grammar g)
+let bnf_string_of_ext_grammar (g : ext_grammar) : string = (bnf_string_of_ext_element g.ext_axiom) ^ ";\n" ^ (bnf_string_of_ext_rules g.ext_rules)
 
 let rec read_part (part : (bool*string) list) (output : element list) : part = match part with
     | [] -> List.rev output
@@ -46,3 +44,11 @@ let rec read_tokens_from_ch (ch: Lexing.lexbuf) : element list =
 
 let read_tokens (str : string) : element list =
     read_tokens_from_ch (Lexing.from_string str)
+
+(*let bnf_of_grammar (g: grammar) : string =
+    bnf_string_of_grammar g*)
+
+let export_bnf (fname : string) (g: ext_grammar) =
+    let channel = open_out fname in
+    output_string channel (bnf_string_of_ext_grammar g);
+    close_out channel

@@ -3,15 +3,7 @@ open Grammar
 exception No_trivial_injection
 exception Unknown_goal
 
-let full_element_of_ext_element (e : ext_element) : element =
-    let underscore_string_of_part = string_of_list "_" "ε" string_of_element in match e with
-    | {pf=_;e=Terminal(x);sf=_} -> e.e
-    | {pf=[];e=Nonterminal(x);sf=[]} -> Nonterminal(x)
-    | {pf=_;e=Nonterminal(x);sf=_} -> Nonterminal((underscore_string_of_part e.pf)^"^"^x^"^"^(underscore_string_of_part e.sf))
-
-let grammar_of_ext_grammar (g: ext_grammar) : grammar = (full_element_of_ext_element g.ext_axiom) @@ (List.rev_map (fun r -> (full_element_of_ext_element r.ext_left_symbol) --> (List.map full_element_of_ext_element r.ext_right_part)) g.ext_rules)
-
-let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: grammar) (goal: element) (max_depth: int) : grammar option =
+let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: grammar) (goal: element) (max_depth: int) : ext_grammar option =
     let quotient = Rec_quotient.quotient_mem g
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
@@ -51,19 +43,19 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
     new_elems |> List.rev_map (fun (e: ext_element) : (int * int * ext_element) -> (g,get_distance_to_goal (element_of_ext_element e),e)) |> List.sort compare_with_score |> List.merge compare_with_score openset in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
-    let split (elem : element) (original_rule: rule) : (element list * element list * element) list =
-        let rec split_aux (prefix : element list) (acc: (element list * element list * element) list) (rhs: part) : (element list * element list * element) list = match rhs with
+    let split (e: ext_element) (original_rule: rule) : ext_element list =
+        let rec split_aux (prefix : element list) (acc: ext_element list) (rhs: part) : (ext_element) list = match rhs with
         | [] -> acc
-        | t::q when t=elem -> (split_aux [@tailcall]) (t::prefix) ((prefix,q,original_rule.left_symbol)::acc) q
+        | t::q when t=e.e -> (split_aux [@tailcall]) (t::prefix) ({pf=e.pf@prefix;e=original_rule.left_symbol;sf=e.sf@q}::acc) q
         | t::q -> (split_aux [@tailcall]) (t::prefix) acc q in
     split_aux [] [] original_rule.right_part in
 
     (* construct the new ext_elements (the neighborhood) *)
     let build_ext_elements (e: ext_element) : ext_element list =
-        g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e.e) |> List.flatten |> List.rev_map (fun (pf,sf,lhs) -> {pf=e.pf@pf;e=lhs;sf=e.sf@sf}) in
+        g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e) |> List.flatten in
 
     (* core algorithm : an A* algorithm *)
-    let rec search_aux (closedset: (ext_element, bool) Hashtbl.t) (step: int) (openset: (int * int * ext_element) list) : grammar option = match openset with
+    let rec search_aux (closedset: (ext_element, bool) Hashtbl.t) (step: int) (openset: (int * int * ext_element) list) : ext_grammar option = match openset with
     | [] -> None (* openset is empty : there is no way *)
     | (distance,_,t)::q ->
         print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element t));
@@ -88,7 +80,7 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
                     if not (inj_g |> grammar_of_ext_grammar |> fuzzer |> oracle) then (* this grammar has been invalidated by the oracle: ignore *)
                         (print_endline "Invalid"; (search_aux [@tailcall]) closedset (step + 1) q)
                     else if is_reachable (grammar_of_ext_grammar inj_g) goal (full_element_of_ext_element inj_g.ext_axiom) then (* the goal has been found ! *)
-                        (print_endline "Found!"; print_endline (string_of_ext_grammar inj_g); Some(grammar_of_ext_grammar inj_g))
+                        (print_endline "Found!"; print_endline (string_of_ext_grammar inj_g); Some(inj_g))
                     else if distance = max_depth then (* before we explore, verify if the max depth has been reached *)
                         (print_endline "Depth max"; (search_aux [@tailcall]) closedset (step + 1) q)
                     else (* we explore in this direction *)
@@ -116,6 +108,6 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
     else begin
         (* We verify if we can achieve the goal without doing any actual research *)
         let l = List.filter (is_reachable g goal) inj in
-        if l <> [] then Some((List.hd l)@@g.rules)
-        else inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 100) 0 (* search *)
+        if l <> [] then Some(ext_grammar_of_grammar ((List.hd l)@@g.rules))
+        else inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 1000) 0 (* search *)
     end
