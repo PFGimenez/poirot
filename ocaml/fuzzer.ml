@@ -4,7 +4,7 @@ let string_inst_of_element (values : (element, string) Hashtbl.t) : element -> s
     | s when Hashtbl.mem values s -> Hashtbl.find values s
     | s -> string_of_element s
 
-let string_inst_of_part values = string_of_list " " "ε" (string_inst_of_element values)
+let string_inst_of_part values = string_of_list "" "" (string_inst_of_element values)
 
 let rec first_non_terminal = function
     | [] -> None

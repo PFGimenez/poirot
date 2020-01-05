@@ -42,11 +42,13 @@ let string_of_list (delim: string) (empty: string) (string_of_a: 'a -> string) (
     | t::q -> List.fold_left concat (string_of_a t) q
     | [] -> empty
 
+let string_of_word : part -> string = string_of_list "" "" string_of_element
+
 let string_of_part : part -> string = string_of_list " " "ε" string_of_element
 
 let string_of_ext_element (e: ext_element) : string = let str=string_of_element e.e in match e.pf,e.sf with
     | [],[] -> str
-    | _,_ -> str ^ "_[" ^ (string_of_part (List.rev e.pf)) ^ "|" ^ (string_of_part e.sf) ^ "]"
+    | _,_ -> str ^ "_[" ^ (string_of_word (List.rev e.pf)) ^ "|" ^ (string_of_word e.sf) ^ "]"
 
 let string_of_ext_part : ext_part -> string = string_of_list " " "ε" string_of_ext_element
 

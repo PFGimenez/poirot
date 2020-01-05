@@ -11,11 +11,13 @@ let ()=
 
         let values = Hashtbl.create 100 in
         Hashtbl.add values (Grammar.Terminal("value")) "val1";
-
         let oracle = Fuzzer.oracle prefix suffix grammar and
         fuzzer = Fuzzer.fuzzer in
+        (*print_endline (Grammar.string_of_word (List.hd (Tree_fuzzer.fuzzer grammar)));
+        print_endline (Grammar.string_of_grammar grammar);
+        exit 0;*)
 
         let g = Blind.search fuzzer oracle grammar goal max_depth in match g with
         | None -> print_endline "No grammar found"
         | Some(inj_g) -> print_endline ("Injection:  "^(Fuzzer.string_inst_of_part values (Fuzzer.derive_word_with_symbol (Grammar.grammar_of_ext_grammar inj_g) goal))); Grammar_io.export_bnf filename inj_g
-    else print_endline ("Usage : "^Sys.argv.(0)^" <BNF grammar file> <prefix> <suffix> <goal> <max depth> <filename>")
+    else print_endline ("Usage : "^Sys.argv.(0)^" <input BNF filename> <prefix> <suffix> <goal> <max depth> <output BNF filename>")
