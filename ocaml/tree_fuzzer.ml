@@ -6,17 +6,24 @@ exception No_word_in_language
 
 (* all nonterminal must be the left-hand side of a rule *)
 let fuzzer (g : grammar) : part list =
+    let nb_nodes = ref 0
+    and nonrec_rules : (element, rule) Hashtbl.t = Hashtbl.create (List.length g.rules) in
     Random.self_init ();
-    let nonrec_rules : (element, rule) Hashtbl.t = Hashtbl.create (List.length g.rules) in
+
+    let compare_rule (r1: rule) (r2: rule) : int =
+        List.compare_lengths (List.filter is_non_terminal r2.right_part) (List.filter is_non_terminal r1.right_part) in
     let rec fuzzer_aux (used_rules: rule list) (e: element) : parse_tree =
+        nb_nodes := (!nb_nodes)+1;
         if is_terminal e then
             Leaf e
         else begin
-            let possible_rules = List.filter (fun r -> r.left_symbol = e && (List.for_all ((<>) r) used_rules)) g.rules in
+            let possible_rules = List.filter (fun r -> r.left_symbol = e && not (List.mem r used_rules)) g.rules in
             let r : rule option = match possible_rules with
             | [] -> Hashtbl.find_opt nonrec_rules e
             | l -> if Hashtbl.mem nonrec_rules e then Hashtbl.find_opt nonrec_rules e else (* remove this line for more complex examples *)
-                    Some(List.nth l (Random.int (List.length l))) in
+                    if !nb_nodes > 50 then
+                        Some(List.nth l (Random.int (List.length l)))
+                    else Some(List.hd (List.sort_uniq compare_rule l)) in (* begin with the most constructive rules *)
             if r = None then
                 Error
             else

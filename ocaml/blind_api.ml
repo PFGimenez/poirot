@@ -12,9 +12,8 @@ let ()=
         let values = Hashtbl.create 100 in
         Hashtbl.add values (Grammar.Terminal("value")) "val1";
         let oracle = Fuzzer.oracle prefix suffix grammar and
-        fuzzer = Fuzzer.fuzzer in
-        (*print_endline (Grammar.string_of_word (List.hd (Tree_fuzzer.fuzzer grammar)));
-        print_endline (Grammar.string_of_grammar grammar);
+        fuzzer = Tree_fuzzer.fuzzer in
+(*        ignore (Tree_fuzzer.fuzzer grammar);
         exit 0;*)
 
         let g = Blind.search fuzzer oracle grammar goal max_depth in match g with
