@@ -1,5 +1,6 @@
 %token <bool*string> TERM
 %token <bool*string> NTERM
+%token EPSILON
 %token EOF
 %token SEP
 %token END_RULE
@@ -26,5 +27,6 @@ rule:
 ext_right_part:
     | NTERM ext_right_part { $1 :: $2 }
     | TERM ext_right_part { $1 :: $2 }
+    | EPSILON ext_right_part { $2 }
     | END_RULE { [] }
 ;
