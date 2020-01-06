@@ -1,5 +1,7 @@
 (** Type definitions **)
 
+(* Simple grammar *)
+
 (* An element represents a rule element that can be either a Terminal or a Nonterminal *)
 type element = Terminal of string | Nonterminal of string
 
@@ -17,6 +19,8 @@ type grammar = {axiom: element; rules: rule list}
 
 let (@@) (axiom: element) (rules: rule list) : grammar = {axiom=axiom;rules=rules}
 
+(* Extented grammar *)
+
 (* An element with a prefix and a suffix *)
 type ext_element = {pf: part; e: element; sf: part}
 
@@ -29,6 +33,26 @@ let (--->) (g: ext_element) (d: ext_part) : ext_rule = {ext_left_symbol=g;ext_ri
 type ext_grammar = {ext_axiom: ext_element; ext_rules: ext_rule list}
 
 let (@@@) (axiom: ext_element) (rules: ext_rule list) : ext_grammar = {ext_axiom=axiom;ext_rules=rules}
+
+(* Grammar with rules based on regular expressions *)
+
+type re_rule = Empty_set | Leaf of ext_part | Union of re_rule * re_rule | Concat of re_rule * re_rule | Star of re_rule
+
+type re_grammar = {re_axiom: ext_element; re_rules: re_rule list}
+
+(* Conversion *)
+
+let rhs_of_ext_rule (r: ext_rule): ext_part = r.ext_right_part
+
+let lhs_of_ext_rule (r: ext_rule): ext_element = r.ext_left_symbol
+
+let ext_element_of_element (e: element) : ext_element = {pf=[]; e=e; sf=[]}
+
+let element_of_ext_element (e : ext_element) : element = e.e
+
+let ext_rule_of_rule (r: rule) : ext_rule = (ext_element_of_element r.left_symbol) ---> (List.map ext_element_of_element r.right_part)
+
+let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element_of_element g.axiom; ext_rules = List.rev_map ext_rule_of_rule g.rules}
 
 (* string of ... *)
 
