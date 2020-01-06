@@ -72,7 +72,7 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
                 let inj_g = quotient t in
                 assert (inj_g.ext_axiom = t);
                 print_endline ("Heuristic: "^(string_of_int (get_distance_to_goal t.e)));
-                print_endline (string_of_ext_grammar inj_g);
+                (*print_endline (string_of_ext_grammar inj_g);*)
                 (* get the rules t -> ... to verify if t is testable or not *)
                 let rules = inj_g.ext_rules |> List.filter (fun r -> inj_g.ext_axiom=r.ext_left_symbol) in
                 assert ((List.compare_length_with rules 1) >= 0);
@@ -92,7 +92,7 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
                     assert (rules |> List.hd |> rhs_of_ext_rule |> (<>) []); (* since there is always the trivial injection, it can't be an epsilon rule *)
                     (*let uniq_rhs = (List.hd rules).ext_right_part in
                     (* if the only rule is A_{alpha} -> A_{beta}, then the successors of A_{alpha} are the same as A_{beta} and are already in the openset/closedset *)
-                    if List.compare_length_with uniq_rhs 1 == 0 && (List.hd uniq_rhs).e = t.e then
+                    if List.compare_length_with uniq_rhs 1 = 0 && (List.hd uniq_rhs).e = t.e then
                         (print_endline "Infinite"; (search_aux [@tailcall]) closedset (step + 1) q)
                     else*)
                     (print_endline "Not testable"; (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (build_ext_elements t)))
@@ -105,9 +105,7 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
     if not (is_reachable g goal g.axiom) then raise Unknown_goal (* the goal is not reachable from the axiom ! *)
     else if inj = [] then raise No_trivial_injection (* no injection token found *)
 
-    else begin
-        (* We verify if we can achieve the goal without doing any actual research *)
-        let l = List.filter (is_reachable g goal) inj in
-        if l <> [] then Some(ext_grammar_of_grammar ((List.hd l)@@g.rules))
-        else inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 1000) 0 (* search *)
-    end
+    (* We verify if we can achieve the goal without doing any actual research *)
+    else match List.find_opt (is_reachable g goal) inj with
+        | Some(ip) -> Some(ext_grammar_of_grammar (ip@@g.rules))
+        | None -> inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 1000) 0 (* search *)

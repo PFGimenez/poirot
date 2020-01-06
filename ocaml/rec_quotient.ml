@@ -18,7 +18,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
     (* has the element been seen / processed ? *)
     let is_seen (e: ext_element) : bool = Hashtbl.find_opt mem e <> None in
 
-    (* is the element useless, i.e. it is processed by is not bound to any rule *)
+    (* is the element useless, i.e. it is processed but is not bound to any rule *)
     let is_useless (e: ext_element) : bool = Hashtbl.find_opt mem e = Some([]) in
 
     let set_useless (e: ext_element) : unit = Hashtbl.replace mem e [] in
@@ -160,7 +160,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
                         (* maybe rhs is now epsilon-capable itself *)
                         (*print_endline ("Updated rules: "^(string_of_ext_rules (List.rev_map (fun r -> lhs ---> r) rules)));*)
                     end;
-                    (* lhs is not (yet) useful and no rhs has only useful elements : lhs is useless *)
+                    (* lhs is not useful and no rhs has only useful elements : lhs is useless *)
                     if (Hashtbl.find_opt sure_useful lhs) = None then begin
                         if Hashtbl.find mem lhs |> List.for_all (List.exists (fun e -> (Hashtbl.find_opt sure_useful e) = None)) then
                             ((*print_endline "Not useful !";*)
