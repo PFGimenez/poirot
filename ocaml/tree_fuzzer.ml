@@ -20,7 +20,7 @@ type parse_tree = Leaf of element | Node of rule * (parse_tree list) | Error
 exception No_word_in_language
 
 (* all nonterminal must be the left-hand side of a rule *)
-let fuzzer (g : grammar) : part list =
+let fuzzer (g : grammar) : part =
     let nb_nodes = ref 0
     and nonrec_rules : (element, rule) Hashtbl.t = Hashtbl.create (List.length g.rules) in
     Random.self_init ();
@@ -57,4 +57,4 @@ let fuzzer (g : grammar) : part list =
         | Node(_,l) -> l |> List.map part_of_tree |> List.flatten in
     let s = part_of_tree (fuzzer_aux [] g.axiom) in
 (*    print_endline ("Fuzzer: "^(string_of_word s));*)
-    [s]
+    s

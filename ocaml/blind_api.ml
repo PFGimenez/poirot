@@ -1,5 +1,3 @@
-(* TODO: avec un vrai fuzzer, passer fuzzer et oracle de "part" à "string" *)
-
 let ()=
     if Array.length Sys.argv = 7 then
         let grammar = Grammar_io.read_bnf_grammar Sys.argv.(1)
@@ -12,13 +10,15 @@ let ()=
         let values = Hashtbl.create 100 in
         Hashtbl.add values (Grammar.Terminal("value")) "val1";
         let oracle = Fuzzer.oracle prefix suffix grammar and
-(*       let oracle = Oracle.oracle and*)
-(*        let oracle = Tree_fuzzer.parenth_oracle prefix suffix and*)
+(*       let oracle = Oracle.oracle_sql_rootme and*)
+(*       let oracle = Tree_fuzzer.parenth_oracle prefix suffix and*)
         fuzzer = Tree_fuzzer.fuzzer in
 (*        ignore (Tree_fuzzer.fuzzer grammar);
         exit 0;*)
 
-        let g = Blind.search fuzzer oracle grammar goal max_depth in match g with
+        let fuzzer_oracle (g: Grammar.grammar) : bool = g |> fuzzer |> oracle in
+
+        let g = Blind.search fuzzer_oracle grammar goal max_depth in match g with
         | None -> print_endline "No grammar found"
-        | Some(inj_g) -> print_endline ("Injection:  "^(Fuzzer.string_inst_of_part values (List.hd (fuzzer (Grammar.grammar_of_ext_grammar inj_g))))); Grammar_io.export_bnf filename inj_g
+        | Some(inj_g) -> print_endline ("Injection:  "^(Fuzzer.string_inst_of_part values (fuzzer (Grammar.grammar_of_ext_grammar inj_g)))); Grammar_io.export_bnf filename inj_g
     else print_endline ("Usage : "^Sys.argv.(0)^" <input BNF filename> <prefix> <suffix> <goal> <max depth> <output BNF filename>")

@@ -183,8 +183,8 @@ let oracle
     (prefix : element list)
     (suffix : element list)
     (grammar : grammar)
-    (injections : part list)
+    (injections : part)
     : bool
     =   (*List.iter (fun p -> print_endline (string_of_part p)) injections;*)
-        injections |> List.map (fun p -> prefix @ p @ suffix) |> is_list_in_language grammar
+        [injections] |> List.map (fun p -> prefix @ p @ suffix) |> is_list_in_language grammar
 

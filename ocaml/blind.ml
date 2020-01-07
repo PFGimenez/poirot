@@ -3,16 +3,10 @@ open Grammar
 exception No_trivial_injection
 exception Unknown_goal
 
-let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: grammar) (goal: element) (max_depth: int) : ext_grammar option =
+let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (max_depth: int) : ext_grammar option =
     let quotient = Rec_quotient.quotient_mem g
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
-
-    let get_injection_tokens (oracle : part list -> bool) (grammar : grammar) : element list =
-        let check_inj (p: element): bool =
-            if is_terminal p then oracle [[p]]
-            else p@@grammar.rules |> fuzzer |> oracle in
-        get_all_symbols grammar |> List.filter check_inj in
 
     let symbols_from_parents (axiom : element) : element list =
         g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in
@@ -77,7 +71,7 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
                 let rules = inj_g.ext_rules |> List.filter (fun r -> inj_g.ext_axiom=r.ext_left_symbol) in
                 assert ((List.compare_length_with rules 1) >= 0);
                 if (List.compare_length_with rules 1) > 0 then begin (* testable *)
-                    if not (inj_g |> grammar_of_ext_grammar |> fuzzer |> oracle) then (* this grammar has been invalidated by the oracle: ignore *)
+                    if not (inj_g |> grammar_of_ext_grammar |> fuzzer_oracle) then (* this grammar has been invalidated by the oracle: ignore *)
                         (print_endline "Invalid"; (search_aux [@tailcall]) closedset (step + 1) q)
                     else if is_reachable (grammar_of_ext_grammar inj_g) goal (full_element_of_ext_element inj_g.ext_axiom) then (* the goal has been found ! *)
                         (print_endline "Found!"; print_endline (string_of_ext_grammar inj_g); Some(inj_g))
@@ -101,7 +95,7 @@ let search (fuzzer: grammar -> part list) (oracle: part list -> bool) (g: gramma
             else (* t is terminal *)
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (build_ext_elements t))
             end in
-    let inj = get_injection_tokens oracle g in (* get the possible injections tokens *)
+    let inj = get_all_symbols g |> List.filter (fun e -> e@@g.rules |> fuzzer_oracle) in (* get the possible injections tokens *)
     if not (is_reachable g goal g.axiom) then raise Unknown_goal (* the goal is not reachable from the axiom ! *)
     else if inj = [] then raise No_trivial_injection (* no injection token found *)
 
