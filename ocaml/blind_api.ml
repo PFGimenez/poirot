@@ -12,6 +12,7 @@ let ()=
         let values = Hashtbl.create 100 in
         Hashtbl.add values (Grammar.Terminal("value")) "val1";
         let oracle = Fuzzer.oracle prefix suffix grammar and
+(*       let oracle = Oracle.oracle and*)
 (*        let oracle = Tree_fuzzer.parenth_oracle prefix suffix and*)
         fuzzer = Tree_fuzzer.fuzzer in
 (*        ignore (Tree_fuzzer.fuzzer grammar);
