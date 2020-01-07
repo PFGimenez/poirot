@@ -15,7 +15,7 @@ let ()=
 
         let fuzzer_oracle (g: Grammar.grammar) : bool = g |> fuzzer |> Grammar.string_of_word |> oracle_from_script oracle_filename in
 
-        let g = Blind.search fuzzer_oracle grammar goal max_depth in match g with
+        let g = Blind.search fuzzer_oracle grammar goal max_depth None in match g with
         | None -> print_endline "No grammar found"
         | Some(inj_g) -> print_endline ("Injection:  "^(Grammar.string_of_word (fuzzer (Grammar.grammar_of_ext_grammar inj_g))))
     else print_endline ("Usage : "^Sys.argv.(0)^" <input BNF filename> <goal> <max depth> <oracle script filename>")
