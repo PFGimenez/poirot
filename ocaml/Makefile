@@ -1,20 +1,21 @@
-all: blind_api gfuzz fuzzer_api
+all: blind_api gfuzz fuzzer_api quotient_api
 
-blind_api: parserbnf.cmx lexerbnf.cmx grammar.ml grammar_io.ml clean.ml rec_quotient.ml fuzzer.ml tree_fuzzer.ml blind.ml blind_api.ml
-	ocamlopt parserbnf.cmx lexerbnf.cmx grammar.ml grammar_io.ml clean.ml rec_quotient.ml blind.ml fuzzer.ml tree_fuzzer.ml blind_api.ml -g -o blind_api
+blind_api: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml blind.ml fuzzer.ml tree_fuzzer.ml blind_api.ml
+	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml blind.ml fuzzer.ml tree_fuzzer.ml blind_api.ml -g -o blind_api
 
-gfuzz: parserbnf.cmx lexerbnf.cmx grammar.ml grammar_io.ml clean.ml rec_quotient.ml tree_fuzzer.ml blind.ml gfuzz.ml
-	ocamlopt parserbnf.cmx lexerbnf.cmx grammar.ml grammar_io.ml clean.ml rec_quotient.ml blind.ml tree_fuzzer.ml gfuzz.ml -g -o gfuzz
+gfuzz: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml tree_fuzzer.ml blind.ml gfuzz.ml
+	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml blind.ml tree_fuzzer.ml gfuzz.ml -g -o gfuzz
 
-fuzzer_api: parserbnf.cmx lexerbnf.cmx grammar.ml grammar_io.ml tree_fuzzer.ml fuzzer_api.ml
-	ocamlopt parserbnf.cmx lexerbnf.cmx grammar.ml grammar_io.ml tree_fuzzer.ml fuzzer_api.ml -g -o fuzzer_api
+fuzzer_api: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml tree_fuzzer.ml fuzzer_api.ml
+	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml tree_fuzzer.ml fuzzer_api.ml -g -o fuzzer_api
 
-clean:
-	rm -f *.cm* *.o *_api gfuzz parserbnf.ml lexerbnf.ml parserbnf.mli
+quotient_api: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml quotient_api.ml
+	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml quotient_api.ml -g -o quotient_api
 
-parserbnf.cmx lexenbnf.cmx: lexerbnf.mll parserbnf.mly
+parserbnf.ml lexerbnf.ml: lexerbnf.mll parserbnf.mly
 	ocamllex lexerbnf.mll
 	ocamlyacc parserbnf.mly
 	ocamlc -c parserbnf.mli
-	ocamlopt -c parserbnf.ml
-	ocamlopt -c lexerbnf.ml
+
+clean:
+	rm -f *.cm* *.o *_api gfuzz parserbnf.ml lexerbnf.ml parserbnf.mli

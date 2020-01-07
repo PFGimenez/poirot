@@ -8,13 +8,13 @@ let ()=
     let goal = ref None in
 
     let speclist = [
-        ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
-        ("-graph",      Arg.String (fun s -> graph_fname := Some(s)),    "Save the search graph");
-        ("-injg",       Arg.String (fun s -> injg_fname := Some(s)),     "Save the injection grammar");
-        ("-grammar",    Arg.String (fun s -> grammar := Some(Grammar_io.read_bnf_grammar s)),     "Save the injection grammar");
+        ("-grammar",    Arg.String (fun s -> grammar := Some(Grammar_io.read_bnf_grammar s)),     "Target grammar");
         ("-pf",         Arg.String (fun s -> prefix := Some(Grammar_io.read_tokens s)),     "Prefix of the request");
         ("-sf",         Arg.String (fun s -> suffix := Some(Grammar_io.read_tokens s)),     "Suffix of the request");
-        ("-goal",         Arg.String (fun s -> goal := Some(List.hd (Grammar_io.read_tokens s))),     "Terminal or nonterminal to reach")
+        ("-goal",         Arg.String (fun s -> goal := Some(List.hd (Grammar_io.read_tokens s))),     "Terminal or nonterminal to reach");
+        ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
+        ("-graph",      Arg.String (fun s -> graph_fname := Some(s)),    "Save the search graph");
+        ("-injg",       Arg.String (fun s -> injg_fname := Some(s)),     "Save the injection grammar")
     ] in
     let usage = "Error: grammar, prefix, suffix and goal are necessary" in
     Arg.parse speclist ignore usage;

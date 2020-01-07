@@ -13,12 +13,12 @@ let ()=
     let goal = ref None in
 
     let speclist = [
+        ("-grammar",    Arg.String (fun s -> grammar := Some(Grammar_io.read_bnf_grammar s)),     "Target grammar");
+        ("-goal",         Arg.String (fun s -> goal := Some(List.hd (Grammar_io.read_tokens s))),     "Terminal or nonterminal to reach");
+        ("-oracle",    Arg.String (fun s -> oracle_fname := Some(s)),     "Oracle script filename");
         ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
         ("-graph",      Arg.String (fun s -> graph_fname := Some(s)),    "Save the search graph");
-        ("-injg",       Arg.String (fun s -> injg_fname := Some(s)),     "Save the injection grammar");
-        ("-grammar",    Arg.String (fun s -> grammar := Some(Grammar_io.read_bnf_grammar s)),     "Save the injection grammar");
-        ("-goal",         Arg.String (fun s -> goal := Some(List.hd (Grammar_io.read_tokens s))),     "Terminal or nonterminal to reach");
-        ("-oracle",    Arg.String (fun s -> oracle_fname := Some(s)),     "Oracle script filename")
+        ("-injg",       Arg.String (fun s -> injg_fname := Some(s)),     "Save the injection grammar")
     ] in
     let usage = "Error: grammar, goal and oracle are necessary" in
     Arg.parse speclist ignore usage;
