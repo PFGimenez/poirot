@@ -57,8 +57,8 @@ let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element
 (* string of ... *)
 
 let string_of_element : element -> string = function
-    | Terminal(x) -> x
-    | Nonterminal(x) -> x
+    | Terminal x  -> x
+    | Nonterminal x -> x
 
 let string_of_list (delim: string) (empty: string) (string_of_a: 'a -> string) (l: 'a list) : string =
     let concat_with_delimiter (d: string) (s1: string) (s2: 'a) : string = s1 ^ d ^ (string_of_a s2) in
@@ -105,9 +105,9 @@ let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element
 
 let full_element_of_ext_element (e : ext_element) : element =
     let underscore_string_of_part = string_of_list "_" "ε" string_of_element in match e with
-    | {pf=_;e=Terminal(x);sf=_} -> e.e
-    | {pf=[];e=Nonterminal(x);sf=[]} -> Nonterminal(x)
-    | {pf=_;e=Nonterminal(x);sf=_} -> Nonterminal((underscore_string_of_part (List.rev e.pf))^"^"^x^"^"^(underscore_string_of_part e.sf))
+    | {pf=_;e=Terminal x;sf=_} -> e.e
+    | {pf=[];e=Nonterminal x;sf=[]} -> Nonterminal(x)
+    | {pf=_;e=Nonterminal x;sf=_} -> Nonterminal((underscore_string_of_part (List.rev e.pf))^"^"^x^"^"^(underscore_string_of_part e.sf))
 
 let grammar_of_ext_grammar (g: ext_grammar) : grammar = (full_element_of_ext_element g.ext_axiom) @@ (List.rev_map (fun r -> (full_element_of_ext_element r.ext_left_symbol) --> (List.map full_element_of_ext_element r.ext_right_part)) g.ext_rules)
 
@@ -115,7 +115,7 @@ let grammar_of_ext_grammar (g: ext_grammar) : grammar = (full_element_of_ext_ele
 (* Utility functions *)
 
 let is_terminal : element -> bool = function
-    | Terminal(_) -> true
+    | Terminal _ -> true
     | _ -> false
 
 let is_non_terminal (s: element) : bool = not (is_terminal s)

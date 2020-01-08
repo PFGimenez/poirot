@@ -89,7 +89,7 @@ let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (max_de
                         (print_endline "Found!";
                         set_node_color_in_graph t "green";
                         print_endline (string_of_ext_grammar inj_g);
-                        Some(inj_g))
+                        Some inj_g)
                     else if distance = max_depth then (* before we explore, verify if the max depth has been reached *)
                         (print_endline "Depth max";
                         set_node_color_in_graph t "orange";
@@ -122,7 +122,7 @@ let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (max_de
 
     else begin
         let out = match List.find_opt (is_reachable g goal) inj with
-        | Some(ip) -> Some(ext_grammar_of_grammar (ip@@g.rules)) (* We verify if we can achieve the goal without doing any actual research *)
+        | Some ip  -> Some (ext_grammar_of_grammar (ip@@g.rules)) (* We verify if we can achieve the goal without doing any actual research *)
         | None -> inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 1000) 0 (* search *) in
         Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
         out

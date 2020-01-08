@@ -19,7 +19,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
     let is_seen (e: ext_element) : bool = Hashtbl.find_opt mem e <> None in
 
     (* is the element useless, i.e. it is processed but is not bound to any rule *)
-    let is_useless (e: ext_element) : bool = Hashtbl.find_opt mem e = Some([]) in
+    let is_useless (e: ext_element) : bool = Hashtbl.find_opt mem e = Some [] in
 
     let set_useless (e: ext_element) : unit = Hashtbl.replace mem e [] in
 
@@ -105,11 +105,11 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
                 (add_rule_in_mem rv new_lhs q; None)
             (* if B can derive a leftmost B *)
             else
-                (add_rules_in_mem rv new_lhs [q;new_elem::q]; Some(new_elem))
+                (add_rules_in_mem rv new_lhs [q;new_elem::q]; Some new_elem)
         (* A -> B_{D|}C *)
         | t::q -> let new_elem = {pf=pf::t.pf;e=t.e;sf=t.sf} in
             if is_useless new_elem then None
-            else (add_rule_in_mem rv new_lhs (new_elem::q); Some(new_elem)) in
+            else (add_rule_in_mem rv new_lhs (new_elem::q); Some new_elem) in
 
     (* compute the rules of e with a new prefix (a single element) pf *)
     (* the new rules (left symbol: new_lhs) are based on the rules of the previous_lhs *)

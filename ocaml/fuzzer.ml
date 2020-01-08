@@ -9,12 +9,12 @@ let string_inst_of_part values = string_of_list "" "" (string_inst_of_element va
 let rec first_non_terminal = function
     | [] -> None
     | Terminal(x)::rest -> (first_non_terminal [@tailcall]) rest
-    | Nonterminal(x)::rest -> Some(Nonterminal(x))
+    | Nonterminal(x)::rest -> Some (Nonterminal(x))
 
 let rec first_non_terminal_ext_part : ext_element list -> ext_element option = function
     | [] -> None
     | {pf=pre; e=Terminal(x); sf=suf}::rest -> (first_non_terminal_ext_part [@tailcall]) rest
-    | e::rest -> Some(e)
+    | e::rest -> Some e
 
 
 (* Dérivation gauche d'un mot intermédiaire "dérivation" par une règle "rule" *)
@@ -38,7 +38,7 @@ let rec possible_rules motintermediaire rules =
 	let premier = first_non_terminal motintermediaire in
 	match premier with
 	| None -> []
-	| Some(x) ->
+	| Some x ->
 	match rules with
 	| [] -> []
     | {left_symbol=gauche;right_part=droite}::rest when x = gauche ->
@@ -49,7 +49,7 @@ let rec possible_rules2 (motintermediaire : ext_element list) (rules : ext_rule 
 	let premier = first_non_terminal_ext_part motintermediaire in
 	match premier with
 	| None -> []
-	| Some(x) ->
+	| Some x ->
 	match rules with
 	| [] -> []
     | {ext_left_symbol=ls;ext_right_part=rp}::rest when x = ls ->

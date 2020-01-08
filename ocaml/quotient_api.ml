@@ -7,10 +7,10 @@ let ()=
     let suffix = ref None in
 
     let speclist = [
-        ("-grammar",    Arg.String (fun s -> grammar := Some(Grammar_io.read_bnf_grammar s)),     "Target grammar");
-        ("-pf",         Arg.String (fun s -> prefix := Some(Grammar_io.read_tokens s)),     "Prefix of the request");
-        ("-sf",         Arg.String (fun s -> suffix := Some(Grammar_io.read_tokens s)),     "Suffix of the request");
-        ("-injg",       Arg.String (fun s -> injg_fname := Some(s)),     "Save the final grammar")
+        ("-grammar",    Arg.String (fun s -> grammar := Some (Grammar_io.read_bnf_grammar s)),     "Target grammar");
+        ("-pf",         Arg.String (fun s -> prefix := Some (Grammar_io.read_tokens s)),     "Prefix of the request");
+        ("-sf",         Arg.String (fun s -> suffix := Some (Grammar_io.read_tokens s)),     "Suffix of the request");
+        ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Save the final grammar")
     ] in
     let usage = "Error: grammar, prefix and suffix are necessary" in
     Arg.parse speclist ignore usage;

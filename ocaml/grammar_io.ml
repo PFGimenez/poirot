@@ -1,8 +1,8 @@
 open Grammar
 
 let quoted_string_of_element : element -> string = function
-    | Terminal(x) -> "\""^(String.escaped x)^"\""
-    | Nonterminal(x) -> x
+    | Terminal x -> "\""^(String.escaped x)^"\""
+    | Nonterminal x -> x
 
 let bnf_string_of_part : part -> string = string_of_list " " "" string_of_element
 
