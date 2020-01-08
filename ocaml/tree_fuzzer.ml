@@ -1,20 +1,5 @@
 open Grammar
 
-(* temporary ! *)
-let parenth_oracle (prefix: part) (suffix: part) (inj: part) : bool =
-    let rec parenth_oracle_aux (word: part) (sofar: part): bool = match (word,sofar) with
-        | [],_ -> sofar = []
-        | ((Terminal "(") as t)::q,_ -> parenth_oracle_aux q (t::sofar)
-        | ((Terminal "[") as t)::q,_ -> parenth_oracle_aux q (t::sofar)
-        | (Terminal ")")::q1,(Terminal "(")::q2 -> parenth_oracle_aux q1 q2
-        | (Terminal ")")::q1,_ -> false
-        | (Terminal "]")::q1,(Terminal "[")::q2 -> parenth_oracle_aux q1 q2
-        | (Terminal "]")::q1,_ -> false
-        | (Terminal "b")::q1,[] -> parenth_oracle_aux q1 []
-        | (Terminal "b")::q1,t::q2 -> false
-        | t::q,_ -> parenth_oracle_aux q sofar in
-    parenth_oracle_aux (prefix@inj@suffix) []
-
 type parse_tree = Leaf of element | Node of rule * (parse_tree list) | Error
 
 exception No_word_in_language

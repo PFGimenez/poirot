@@ -1,9 +1,3 @@
-let oracle_from_script (fname: string) (inj: string) : bool =
-    let cmd = fname^" '"^inj^"'" in
-    let out =  (Sys.command cmd) == 0 in
-    print_endline ("Call to oracle: "^cmd^": "^(string_of_bool out));
-    out
-
 let ()=
     let graph_fname = ref None
     and injg_fname = ref None
@@ -34,7 +28,7 @@ let ()=
         Hashtbl.add values (Grammar.Terminal "value") "val1";
         let fuzzer = Tree_fuzzer.fuzzer 0 (Some values) in
 
-        let fuzzer_oracle (g: Grammar.grammar) : bool = g |> fuzzer |> Grammar.string_of_word |> oracle_from_script oracle_fname in
+        let fuzzer_oracle (g: Grammar.grammar) : bool = g |> fuzzer |> Grammar.string_of_word |> Oracle.oracle_mem_from_script oracle_fname in
 
         let g = Blind.search fuzzer_oracle grammar goal !start !max_depth !graph_fname in match g with
         | None -> print_endline "No grammar found"
