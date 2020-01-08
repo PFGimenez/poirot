@@ -30,7 +30,7 @@ let ()=
 
         let values = Hashtbl.create 100 in
         Hashtbl.add values (Grammar.Terminal "value") "val1";
-        let fuzzer = Tree_fuzzer.fuzzer (Some values) in
+        let fuzzer = Tree_fuzzer.fuzzer 50 (Some values) in
 
         let fuzzer_oracle (g: Grammar.grammar) : bool = g |> fuzzer |> Grammar.string_of_word |> oracle_from_script oracle_fname in
 

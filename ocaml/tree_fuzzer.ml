@@ -20,7 +20,7 @@ type parse_tree = Leaf of element | Node of rule * (parse_tree list) | Error
 exception No_word_in_language
 
 (* all nonterminal must be the left-hand side of a rule *)
-let fuzzer (values: (element,string) Hashtbl.t option) (g : grammar) : part =
+let fuzzer (th: int) (values: (element,string) Hashtbl.t option) (g : grammar) : part =
     let nb_nodes = ref 0
     and nonrec_rules : (element, rule) Hashtbl.t = Hashtbl.create (List.length g.rules) in
     Random.self_init ();
@@ -38,7 +38,7 @@ let fuzzer (values: (element,string) Hashtbl.t option) (g : grammar) : part =
             let r : rule option = match possible_rules with
             | [] -> Hashtbl.find_opt nonrec_rules e
             | l -> if Hashtbl.mem nonrec_rules e then Hashtbl.find_opt nonrec_rules e else (* remove this line for more complex examples *)
-                    if !nb_nodes > 50 then
+                    if !nb_nodes > th then
                         Some (List.nth l (Random.int (List.length l)))
                     else Some (List.hd (List.sort_uniq compare_rule l)) in (* begin with the most constructive rules *)
             if r = None then

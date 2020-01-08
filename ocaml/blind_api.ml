@@ -26,11 +26,11 @@ let ()=
         and goal = Option.get !goal in
 
         let values = Hashtbl.create 100 in
-        let oracle = Fuzzer.oracle prefix suffix grammar and
-(*        let oracle = Tree_fuzzer.parenth_oracle prefix suffix and*)
-        fuzzer = Tree_fuzzer.fuzzer None in
+(*        let oracle = Fuzzer.oracle prefix suffix grammar and*)
+        let oracle = Tree_fuzzer.parenth_oracle prefix suffix and
+        fuzzer = Tree_fuzzer.fuzzer (-1) None in
 
-        let fuzzer_oracle (g: Grammar.grammar) : bool = g |> fuzzer |> oracle in
+        let fuzzer_oracle (g: Grammar.grammar) : bool = g |> fuzzer |> fun p -> print_endline ("Oracle: "^(Grammar.string_of_word p)); p |> oracle in
 
         let g = Blind.search fuzzer_oracle grammar goal !max_depth !graph_fname in match g with
         | None -> print_endline "No grammar found"

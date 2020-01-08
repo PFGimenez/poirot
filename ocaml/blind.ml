@@ -3,6 +3,8 @@ open Grammar
 exception No_trivial_injection
 exception Unknown_goal
 
+type node = {g: int; h: int; e: ext_element; par: ext_element option}
+
 let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (max_depth: int) (graph_fname: string option) : ext_grammar option =
     let quotient = Rec_quotient.quotient_mem g
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
@@ -30,19 +32,25 @@ let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (max_de
     let get_distance_to_goal (e: element) : int =
         Hashtbl.find distance_to_goal (e,goal) in
 
+    let make_non_trivial_grammar (g: ext_grammar) (e: ext_element) (par: ext_element) : ext_grammar =
+        let dummy_axiom : ext_element = {e=Nonterminal ((string_of_element e.e)^"_dummy_axiom"); pf=e.pf; sf=e.sf} in
+        let new_rules = g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = e && r.ext_right_part <> [par]) |> List.map (fun r -> dummy_axiom ---> r.ext_right_part) in
+        dummy_axiom @@@ (new_rules @ g.ext_rules) in
+
+
     (* compute all the distances one and for all *)
     all_sym |> List.iter (fun e -> all_sym |> List.iter (compute_one_distance e));
 
     (* compare for the open set sorting *)
-    let compare_with_score (a: int * int * ext_element) (b: int * int * ext_element) : int = match a,b with
-        | (ag,ah,_),(bg,bh,_) when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
-        | (ag,ah,_),(bg,bh,_) when ag=bg && ah=bh -> 0
+    let compare_with_score (a: node) (b: node) : int = match a,b with
+        | {g=ag;h=ah;e=_;par=_},{g=bg;h=bh;e=_;par=_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
+        | {g=ag;h=ah;e=_;par=_},{g=bg;h=bh;e=_;par=_} when ag=bg && ah=bh -> 0
         | _ -> 1 in
 
     (* add new elements to the open set *)
-    let add_in_list g (openset: (int * int * ext_element) list) (new_elems: ext_element list) : (int * int * ext_element) list =
+    let add_in_list (g: int) (openset: node list) (par: ext_element option) (new_elems: ext_element list) : node list =
     (* openset is already sorted *)
-    new_elems |> List.rev_map (fun (e: ext_element) : (int * int * ext_element) -> (g,get_distance_to_goal (element_of_ext_element e),e)) |> List.sort compare_with_score |> List.merge compare_with_score openset in
+        new_elems |> List.rev_map (fun (e: ext_element) : node -> {g=g;h=get_distance_to_goal (element_of_ext_element e);e=e;par=par}) |> List.sort compare_with_score |> List.merge compare_with_score openset in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
     let split (e: ext_element) (original_rule: rule) : ext_element list =
@@ -59,63 +67,54 @@ let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (max_de
         new_elems in
 
     (* core algorithm : an A* algorithm *)
-    let rec search_aux (closedset: (ext_element, bool) Hashtbl.t) (step: int) (openset: (int * int * ext_element) list) : ext_grammar option = match openset with
+    let rec search_aux (closedset: (ext_element, bool) Hashtbl.t) (step: int) (openset: node list) : ext_grammar option = match openset with
     | [] -> None (* openset is empty : there is no way *)
-    | (distance,_,t)::q ->
-        print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element t));
+    | {g=distance;h=_;e=e;par=par}::q ->
+        print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element e));
         assert (distance <= max_depth);
-        (* verify whether t has already been visited *)
-        if Hashtbl.mem closedset t then
+        (* verify whether e has already been visited *)
+        if Hashtbl.mem closedset e then
             (print_endline "Visited"; (search_aux [@tailcall]) closedset (step + 1) q)
         else begin
             (* now it is visited *)
-            Hashtbl.add closedset t true;
-            (* first case: t is nonterminad *)
-            if is_ext_element_non_terminal t then begin
-                (* compute the grammar of injection *)
-                let inj_g = quotient t in
-                assert (inj_g.ext_axiom = t);
-                print_endline ("Heuristic: "^(string_of_int (get_distance_to_goal t.e)));
-                (*print_endline (string_of_ext_grammar inj_g);*)
-                (* get the rules t -> ... to verify if t is testable or not *)
-                let rules = inj_g.ext_rules |> List.filter (fun r -> inj_g.ext_axiom=r.ext_left_symbol) in
-                assert ((List.compare_length_with rules 1) >= 0);
-                if (List.compare_length_with rules 1) > 0 then begin (* testable *)
-                    if not (inj_g |> grammar_of_ext_grammar |> fuzzer_oracle) then (* this grammar has been invalidated by the oracle: ignore *)
-                        (print_endline "Invalid";
-                        set_node_color_in_graph t "red";
-                        (search_aux [@tailcall]) closedset (step + 1) q)
-                    else if is_reachable (grammar_of_ext_grammar inj_g) goal (full_element_of_ext_element inj_g.ext_axiom) then (* the goal has been found ! *)
-                        (print_endline "Found!";
-                        set_node_color_in_graph t "green";
-                        print_endline (string_of_ext_grammar inj_g);
-                        Some inj_g)
-                    else if distance = max_depth then (* before we explore, verify if the max depth has been reached *)
-                        (print_endline "Depth max";
-                        set_node_color_in_graph t "orange";
-                        (search_aux [@tailcall]) closedset (step + 1) q)
-                    else (* we explore in this direction *)
-                        (print_endline "Explore";
-                        (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (build_ext_elements t)))
-                end else if distance = max_depth then (* max depth reached *)
-                    (print_endline "Depth max";
-                    set_node_color_in_graph t "orange";
-                    (search_aux [@tailcall]) closedset (step + 1) q)
-                else begin (* only one rule: its grammar is the same as its predecessor and so can't be invalidated *)
-                    assert (rules |> List.hd |> rhs_of_ext_rule |> (<>) []); (* since there is always the trivial injection, it can't be an epsilon rule *)
-                    (*let uniq_rhs = (List.hd rules).ext_right_part in
-                    (* if the only rule is A_{alpha} -> A_{beta}, then the successors of A_{alpha} are the same as A_{beta} and are already in the openset/closedset *)
-                    if List.compare_length_with uniq_rhs 1 = 0 && (List.hd uniq_rhs).e = t.e then
-                        (print_endline "Infinite"; (search_aux [@tailcall]) closedset (step + 1) q)
-                    else*)
-                    (print_endline "Not testable";
-                    set_node_color_in_graph t "grey";
-                    (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (build_ext_elements t)))
+            Hashtbl.add closedset e true;
+            (* compute the grammar of injection *)
+            let inj_g = quotient e in
+            print_endline ("Heuristic: "^(string_of_int (get_distance_to_goal e.e)));
+            (*print_endline (string_of_ext_grammar inj_g);*)
+            (* get the rules e -> ... to verify if e is testable or not *)
+            let rules = inj_g.ext_rules |> List.filter (fun r -> inj_g.ext_axiom=r.ext_left_symbol) in
+            assert ((List.compare_length_with rules 1) >= 0);
+            if Option.is_some par && (List.compare_length_with rules 1) > 0 then begin (* testable *)
+                let nt_inj_g = make_non_trivial_grammar inj_g e (Option.get par) in
+                if not (nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle) then begin (* this grammar has been invalidated by the oracle: ignore *)
+                    print_endline "Invalid";
+                    set_node_color_in_graph e "red";
+                    (search_aux [@tailcall]) closedset (step + 1) q
+                end else if is_reachable (grammar_of_ext_grammar nt_inj_g) goal (full_element_of_ext_element nt_inj_g.ext_axiom) then begin (* the goal has been found ! *)
+                    print_endline "Found!";
+                    set_node_color_in_graph e "green";
+                    print_endline (string_of_ext_grammar nt_inj_g);
+                    Some nt_inj_g
+                end else if distance = max_depth then begin (* before we explore, verify if the max depth has been reached *)
+                    print_endline "Depth max";
+                    set_node_color_in_graph e "orange";
+                    (search_aux [@tailcall]) closedset (step + 1) q
+                end else begin (* we explore in this direction *)
+                    print_endline "Explore";
+                    (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (Some e) (build_ext_elements e))
                 end
+            end else if distance = max_depth then begin (* max depth reached *)
+                print_endline "Not testable and depth max";
+                set_node_color_in_graph e "orange";
+                (search_aux [@tailcall]) closedset (step + 1) q
+            end else begin (* only one rule: its grammar is the same as its predecessor and so can't be invalidated *)
+                assert (rules |> List.hd |> rhs_of_ext_rule |> (<>) []); (* since there is always the trivial injection, it can't be an epsilon rule *)
+                print_endline "Not testable";
+                set_node_color_in_graph e "grey";
+                (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (Some e) (build_ext_elements e))
             end
-            else (* t is terminal *)
-                (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (build_ext_elements t))
-            end in
+        end in
     let inj = get_all_symbols g |> List.filter (fun e -> e@@g.rules |> fuzzer_oracle) in (* get the possible injections tokens *)
     if not (is_reachable g goal g.axiom) then raise Unknown_goal (* the goal is not reachable from the axiom ! *)
     else if inj = [] then raise No_trivial_injection (* no injection token found *)
@@ -123,7 +122,7 @@ let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (max_de
     else begin
         let out = match List.find_opt (is_reachable g goal) inj with
         | Some ip  -> Some (ext_grammar_of_grammar (ip@@g.rules)) (* We verify if we can achieve the goal without doing any actual research *)
-        | None -> inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] |> search_aux (Hashtbl.create 1000) 0 (* search *) in
+        | None -> inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] None |> search_aux (Hashtbl.create 1000) 0 (* search *) in
         Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
         out
     end

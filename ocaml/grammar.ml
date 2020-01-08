@@ -109,7 +109,9 @@ let full_element_of_ext_element (e : ext_element) : element =
     | {pf=[];e=Nonterminal x;sf=[]} -> Nonterminal(x)
     | {pf=_;e=Nonterminal x;sf=_} -> Nonterminal((underscore_string_of_part (List.rev e.pf))^"^"^x^"^"^(underscore_string_of_part e.sf))
 
-let grammar_of_ext_grammar (g: ext_grammar) : grammar = (full_element_of_ext_element g.ext_axiom) @@ (List.rev_map (fun r -> (full_element_of_ext_element r.ext_left_symbol) --> (List.map full_element_of_ext_element r.ext_right_part)) g.ext_rules)
+let rule_of_ext_rule (r: ext_rule) : rule = full_element_of_ext_element r.ext_left_symbol --> (List.map full_element_of_ext_element r.ext_right_part)
+
+let grammar_of_ext_grammar (g: ext_grammar) : grammar = (full_element_of_ext_element g.ext_axiom) @@ (List.rev_map rule_of_ext_rule g.ext_rules)
 
 
 (* Utility functions *)
