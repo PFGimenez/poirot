@@ -25,7 +25,9 @@ let ()=
         and oracle_fname = Option.get !oracle_fname in
 
         let values = Hashtbl.create 100 in
-        Hashtbl.add values (Grammar.Terminal "value") "val1";
+(*        Hashtbl.add values (Grammar.Terminal "value") "/tmp";
+        Hashtbl.add values (Grammar.Terminal "key") "dir";
+        Hashtbl.add values (Grammar.Nonterminal "Exe") "ls";*)
         let fuzzer = Tree_fuzzer.fuzzer 0 (Some values) in
 
         let fuzzer_oracle (g: Grammar.grammar) : bool = g |> fuzzer |> Grammar.string_of_word |> Oracle.oracle_mem_from_script oracle_fname in

@@ -1,8 +1,5 @@
 open Grammar
 
-exception No_trivial_injection
-exception Unknown_goal
-
 type node = {g: int; h: int; e: ext_element; par: ext_element option}
 
 let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (graph_fname: string option) : ext_grammar option =
@@ -122,8 +119,8 @@ let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (start:
     let inj = match start with
         | Some l -> l
         | None -> get_all_symbols g |> List.filter (fun e -> e@@g.rules |> fuzzer_oracle) in (* get the possible injections tokens *)
-    if not (is_reachable g goal g.axiom) then raise Unknown_goal (* the goal is not reachable from the axiom ! *)
-    else if inj = [] then raise No_trivial_injection (* no injection token found *)
+    if not (is_reachable g goal g.axiom) then failwith "Unknown goal" (* the goal is not reachable from the axiom ! *)
+    else if inj = [] then failwith "No trivial injection" (* no injection token found *)
     else begin
         let out = inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] None |> search_aux (Hashtbl.create 1000) 0 (* search *) in
         Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
