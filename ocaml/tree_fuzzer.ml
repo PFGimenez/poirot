@@ -1,7 +1,7 @@
 open Grammar
 
 (* temporary ! *)
-let parenth_oracle (prefix: part) (suffix: part) (inj: part list) : bool =
+let parenth_oracle (prefix: part) (suffix: part) (inj: part) : bool =
     let rec parenth_oracle_aux (word: part) (sofar: part): bool = match (word,sofar) with
         | [],_ -> sofar = []
         | ((Terminal "(") as t)::q,_ -> parenth_oracle_aux q (t::sofar)
@@ -13,7 +13,7 @@ let parenth_oracle (prefix: part) (suffix: part) (inj: part list) : bool =
         | (Terminal "b")::q1,[] -> parenth_oracle_aux q1 []
         | (Terminal "b")::q1,t::q2 -> false
         | t::q,_ -> parenth_oracle_aux q sofar in
-    List.for_all (fun i -> parenth_oracle_aux (prefix@i@suffix) []) inj
+    parenth_oracle_aux (prefix@inj@suffix) []
 
 type parse_tree = Leaf of element | Node of rule * (parse_tree list) | Error
 
