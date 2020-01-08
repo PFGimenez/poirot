@@ -30,7 +30,7 @@ let ()=
         let values = Hashtbl.create 100 in
 (*        let oracle = Fuzzer.oracle prefix suffix grammar and*)
         let oracle = Tree_fuzzer.parenth_oracle prefix suffix and
-        fuzzer = Tree_fuzzer.fuzzer (-1) None in
+        fuzzer = Tree_fuzzer.fuzzer 0 None in
 
         let fuzzer_oracle (g: Grammar.grammar) : bool = g |> fuzzer |> fun p -> print_endline ("Oracle: "^(Grammar.string_of_word p)); p |> oracle in
 
