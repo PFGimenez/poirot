@@ -5,7 +5,7 @@ exception Unknown_goal
 
 type node = {g: int; h: int; e: ext_element; par: ext_element option}
 
-let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (max_depth: int) (graph_fname: string option) : ext_grammar option =
+let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (graph_fname: string option) : ext_grammar option =
     let quotient = Rec_quotient.quotient_mem g
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
@@ -15,9 +15,11 @@ let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (max_de
     let symbols_from_parents (axiom : element) : element list =
         g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in
 
+    (* add an edge in the graphviz output *)
     let add_edge_in_graph (from: ext_element) (dest: ext_element): unit =
         Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element from)^"\"->\""^(string_of_ext_element dest)^"\"\n")) graph_channel in
 
+    (* color a node in the graphviz output *)
     let set_node_color_in_graph (e: ext_element) (c: string): unit =
         Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element e)^"\"[color="^c^",style=filled]\n")) graph_channel in
 
@@ -32,11 +34,11 @@ let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (max_de
     let get_distance_to_goal (e: element) : int =
         Hashtbl.find distance_to_goal (e,goal) in
 
+    (* compute the non-trivial grammar. To do that, just add a new axiom with the same rules as the normal axiom EXCEPT the trivial rule (the rule that leads to the parent grammar) *)
     let make_non_trivial_grammar (g: ext_grammar) (e: ext_element) (par: ext_element) : ext_grammar =
         let dummy_axiom : ext_element = {e=Nonterminal ((string_of_element e.e)^"_dummy_axiom"); pf=e.pf; sf=e.sf} in
         let new_rules = g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = e && r.ext_right_part <> [par]) |> List.map (fun r -> dummy_axiom ---> r.ext_right_part) in
         dummy_axiom @@@ (new_rules @ g.ext_rules) in
-
 
     (* compute all the distances one and for all *)
     all_sym |> List.iter (fun e -> all_sym |> List.iter (compute_one_distance e));
@@ -108,21 +110,22 @@ let search (fuzzer_oracle: grammar -> bool) (g: grammar) (goal: element) (max_de
                 print_endline "Not testable and depth max";
                 set_node_color_in_graph e "orange";
                 (search_aux [@tailcall]) closedset (step + 1) q
-            end else begin (* only one rule: its grammar is the same as its predecessor and so can't be invalidated *)
+            end else begin 
+                (* only one rule: its grammar is the same as its predecessor and so can't be invalidated *)
+                (* otherwise, no parent means we already know this is a valid injection *)
                 assert (rules |> List.hd |> rhs_of_ext_rule |> (<>) []); (* since there is always the trivial injection, it can't be an epsilon rule *)
                 print_endline "Not testable";
                 set_node_color_in_graph e "grey";
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_list (distance + 1) q (Some e) (build_ext_elements e))
             end
         end in
-    let inj = get_all_symbols g |> List.filter (fun e -> e@@g.rules |> fuzzer_oracle) in (* get the possible injections tokens *)
+    let inj = match start with
+        | Some l -> l
+        | None -> get_all_symbols g |> List.filter (fun e -> e@@g.rules |> fuzzer_oracle) in (* get the possible injections tokens *)
     if not (is_reachable g goal g.axiom) then raise Unknown_goal (* the goal is not reachable from the axiom ! *)
     else if inj = [] then raise No_trivial_injection (* no injection token found *)
-
     else begin
-        let out = match List.find_opt (is_reachable g goal) inj with
-        | Some ip  -> Some (ext_grammar_of_grammar (ip@@g.rules)) (* We verify if we can achieve the goal without doing any actual research *)
-        | None -> inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] None |> search_aux (Hashtbl.create 1000) 0 (* search *) in
+        let out = inj |> List.rev_map ext_element_of_element |> add_in_list 0 [] None |> search_aux (Hashtbl.create 1000) 0 (* search *) in
         Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
         out
     end
