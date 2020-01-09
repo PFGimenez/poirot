@@ -18,12 +18,11 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     let add_edge_in_graph (from: ext_element) (dest: ext_element): unit =
         Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element from)^"\"->\""^(string_of_ext_element dest)^"\"\n")) graph_channel in
 
-    let set_init_node (e: ext_element): unit =
-        Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element e)^"\"[shape=doublecircle]\n")) graph_channel in
+    let set_init_node : ext_element -> unit =
+        Grammar_io.set_node_attr graph_channel "shape=doublecircle" in
 
-    (* color a node in the graphviz output *)
-    let set_node_color_in_graph (e: ext_element) (c: string): unit =
-        Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element e)^"\"[color="^c^",style=filled]\n")) graph_channel in
+    let set_node_color_in_graph: ext_element -> string -> unit =
+        Grammar_io.set_node_color_in_graph graph_channel in
 
     let rec compute_distance_to_goal (e : element) : (element * int) list -> int = function
     | [] -> failwith "Can't reach at all"

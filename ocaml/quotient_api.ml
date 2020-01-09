@@ -5,12 +5,14 @@ let ()=
     and grammar = ref None
     and prefix = ref None
     and suffix = ref None
+    and axiom = ref None
     and qgraph_fname = ref None in
 
     let speclist = [
         ("-grammar",    Arg.String (fun s -> grammar := Some (Grammar_io.read_bnf_grammar s)),     "Target grammar");
         ("-pf",         Arg.String (fun s -> prefix := Some (Grammar_io.read_tokens s)),     "Prefix of the request");
         ("-sf",         Arg.String (fun s -> suffix := Some (Grammar_io.read_tokens s)),     "Suffix of the request");
+        ("-axiom",         Arg.String (fun s -> axiom := Some (List.hd (Grammar_io.read_tokens s))),     "Axiom of the request");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Save the final grammar");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph")
     ] in
@@ -18,7 +20,9 @@ let ()=
     Arg.parse speclist ignore usage;
 
     if !grammar <> None && !prefix <> None && !suffix <> None then
-        let grammar = Option.get !grammar
+        let grammar = match !axiom with
+            | None -> Option.get !grammar
+            | Some e -> e@@((Option.get !grammar).rules)
         and prefix = Option.get !prefix
         and suffix = Option.get !suffix in
 

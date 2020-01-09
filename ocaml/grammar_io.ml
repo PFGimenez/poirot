@@ -52,3 +52,17 @@ let export_bnf (fname : string) (g: ext_grammar) =
     let channel = open_out fname in
     output_string channel (bnf_string_of_ext_grammar g);
     close_out channel
+
+
+(* add an edge in the graphviz output *)
+let add_edge_in_graph (graph_channel: out_channel option) (color: string) (from: ext_element) (dest: ext_element): unit =
+        Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element from)^"\"->\""^(string_of_ext_element dest)^"\" ["^color^"]\n")) graph_channel
+
+(* set the node attribute in the graphviz output *)
+let set_node_attr (graph_channel: out_channel option) (attr: string) (e: ext_element) : unit =
+    Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element e)^"\""^attr^"\n")) graph_channel
+
+(* color a node in the graphviz output *)
+let set_node_color_in_graph (graph_channel: out_channel option) (e: ext_element) (c: string): unit =
+    set_node_attr graph_channel ("[color="^c^",style=filled]") e
+
