@@ -35,9 +35,10 @@ let oracle_mem2 (o: part -> oracle_status) : part option -> oracle_status =
     fun (inj: part option): oracle_status -> match inj with
         | None -> Grammar_error
         | Some inj ->
-            if Hashtbl.mem mem inj then
+            if Hashtbl.mem mem inj then begin
+                print_endline ("Memoization: "^(string_of_word inj));
                 Hashtbl.find mem inj
-            else begin
+            end else begin
                 let answer = o inj in
                 print_endline ("Call to oracle: "^(string_of_word inj)^": "^(string_of_oracle_status answer));
                 Hashtbl.add mem inj answer;
@@ -49,9 +50,10 @@ let oracle_mem (o: string -> oracle_status) : string option -> oracle_status =
     fun (inj: string option): oracle_status -> match inj with
         | None -> Grammar_error (* no word in the language *)
         | Some inj ->
-            if Hashtbl.mem mem inj then
+            if Hashtbl.mem mem inj then begin
+                print_endline ("Memoization: "^inj);
                 Hashtbl.find mem inj
-            else begin
+            end else begin
                 let answer = o inj in
                 print_endline ("Call to oracle: "^inj^": "^(string_of_oracle_status answer));
                 Hashtbl.add mem inj answer;

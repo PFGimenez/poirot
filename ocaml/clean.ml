@@ -73,3 +73,6 @@ let clean_once (g : ext_grammar) : ext_rule list = (remove_epsilon_symbols (remo
 
 (* clean: remove epsilon, trivial rules, unreachable and useless symbols *)
 let clean : ext_grammar -> ext_grammar = iterate_until_convergence clean_once
+
+(* clean classical grammar *)
+let clean_grammar (g: grammar) : grammar = g |> ext_grammar_of_grammar |> clean |> grammar_of_ext_grammar

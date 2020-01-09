@@ -18,6 +18,9 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     let add_edge_in_graph (from: ext_element) (dest: ext_element): unit =
         Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element from)^"\"->\""^(string_of_ext_element dest)^"\"\n")) graph_channel in
 
+    let set_init_node (e: ext_element): unit =
+        Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element e)^"\"[shape=doublecircle]\n")) graph_channel in
+
     (* color a node in the graphviz output *)
     let set_node_color_in_graph (e: ext_element) (c: string): unit =
         Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element e)^"\"[color="^c^",style=filled]\n")) graph_channel in
@@ -36,7 +39,6 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     let is_allowed (e: ext_element): bool = match e with
         | {pf=_;sf=_;e=Terminal s} -> not (List.exists (String.contains s) forbidden)
         | _ -> true in
-
 
     (* compute the non-trivial grammar. To do that, just add a new axiom with the same rules as the normal axiom EXCEPT the trivial rule (the rule that leads to the parent grammar) *)
     let make_non_trivial_grammar (g: ext_grammar) (e: ext_element) (par: ext_element) : ext_grammar =
@@ -115,9 +117,14 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     if not (is_reachable g goal g.axiom) then failwith "Unknown goal" (* the goal is not reachable from the axiom ! *)
     else if inj = [] then failwith "No trivial injection" (* no injection token found *)
     else begin
-        let ext_inj = List.rev_map ext_element_of_element inj in
-        let openset = List.fold_right (add_in_openset 0) ext_inj [] in
-        let result = search_aux (Hashtbl.create 1000) 0 openset (* search *) in
-        Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
-        result
+        let result = List.find_opt (fun e -> is_reachable g goal e) inj in
+        if result <> None then Option.map (fun e -> ext_grammar_of_grammar (e@@g.rules)) result
+        else begin
+            let ext_inj = List.rev_map ext_element_of_element inj in
+            List.iter (set_init_node) ext_inj;
+            let openset = List.fold_right (add_in_openset 1) ext_inj [] in
+            let result = search_aux (Hashtbl.create 1000) 0 openset (* search *) in
+            Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
+            result
+        end
     end

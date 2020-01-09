@@ -179,6 +179,8 @@ let delete_recursion (g : grammar) : grammar =
 let fuzzer (g : grammar) : part list =
     get_all_tokens g |> List.filter (fun e -> is_reachable g e g.axiom) |> List.map (derive_word_with_symbol g)
 
+(* cet oracle est loin d'être parfait ! et notamment il ne marche pas correctement avec des epsilons productions *)
+
 let oracle
     (prefix : element list)
     (suffix : element list)

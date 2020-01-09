@@ -10,7 +10,7 @@ let ()=
     and avoid = ref "" in
 
     let speclist = [
-        ("-grammar",    Arg.String (fun s -> grammar := Some (Grammar_io.read_bnf_grammar s)),     "Target grammar");
+        ("-grammar",    Arg.String (fun s -> grammar := Some (Clean.clean_grammar (Grammar_io.read_bnf_grammar s))),     "Target grammar");
         ("-pf",         Arg.String (fun s -> prefix := Some (Grammar_io.read_tokens s)),     "Prefix of the request");
         ("-sf",         Arg.String (fun s -> suffix := Some (Grammar_io.read_tokens s)),     "Suffix of the request");
         ("-goal",       Arg.String (fun s -> goal := Some (List.hd (Grammar_io.read_tokens s))),     "Terminal or nonterminal to reach");
@@ -34,7 +34,7 @@ let ()=
 (*        let oracle = Oracle.parenth_oracle prefix suffix and*)
         fuzzer = Tree_fuzzer.fuzzer 0 None in
 
-        let fuzzer_oracle (g: Grammar.grammar) : Oracle.oracle_status = g |> fuzzer |> (*fun p -> print_endline ("Oracle: "^(Grammar.string_of_word p)); p |>*) oracle in
+        let fuzzer_oracle (g: Grammar.grammar) : Oracle.oracle_status = g |> fuzzer |> oracle in
 
         let g = Inference.search fuzzer_oracle grammar goal !start !max_depth (Inference.explode !avoid) !graph_fname in match g with
         | None -> print_endline "No grammar found"
