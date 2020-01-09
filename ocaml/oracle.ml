@@ -16,29 +16,33 @@ let parenth_oracle (prefix: part) (suffix: part) (inj: part) : bool =
     parenth_oracle_aux (prefix@inj@suffix) []
 
 (* temporary ! *)
-let oracle_mem2 (o: part -> bool) : part -> bool =
+let oracle_mem2 (o: part -> bool) : part option -> bool =
     let mem : (part, bool) Hashtbl.t = Hashtbl.create 1000 in
-    fun (inj: part): bool ->
-        if Hashtbl.mem mem inj then
-            Hashtbl.find mem inj
-        else begin
-            let answer = o inj in
-            print_endline ("Call to oracle: "^(string_of_word inj)^": "^(string_of_bool answer));
-            Hashtbl.add mem inj answer;
-            answer
-        end
+    fun (inj: part option): bool -> match inj with
+        | None -> true
+        | Some inj ->
+            if Hashtbl.mem mem inj then
+                Hashtbl.find mem inj
+            else begin
+                let answer = o inj in
+                print_endline ("Call to oracle: "^(string_of_word inj)^": "^(string_of_bool answer));
+                Hashtbl.add mem inj answer;
+                answer
+            end
 
-let oracle_mem (o: string -> bool) : string -> bool =
+let oracle_mem (o: string -> bool) : string option -> bool =
     let mem : (string, bool) Hashtbl.t = Hashtbl.create 1000 in
-    fun (inj: string): bool ->
-        if Hashtbl.mem mem inj then
-            Hashtbl.find mem inj
-        else begin
-            let answer = o inj in
-            print_endline ("Call to oracle: "^inj^": "^(string_of_bool answer));
-            Hashtbl.add mem inj answer;
-            answer
-        end
+    fun (inj: string option): bool -> match inj with
+        | None -> true (* no word in the language : it is untestable *)
+        | Some inj ->
+            if Hashtbl.mem mem inj then
+                Hashtbl.find mem inj
+            else begin
+                let answer = o inj in
+                print_endline ("Call to oracle: "^inj^": "^(string_of_bool answer));
+                Hashtbl.add mem inj answer;
+                answer
+            end
 
 let oracle_from_script (fname: string) (inj: string) : bool =
     let cmd = fname^" '"^inj^"'" in
