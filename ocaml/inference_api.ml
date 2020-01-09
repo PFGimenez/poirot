@@ -32,11 +32,11 @@ let ()=
         let values = Hashtbl.create 100 in
         let oracle = Oracle.oracle_mem2 (Fuzzer.oracle prefix suffix grammar) and
 (*        let oracle = Oracle.parenth_oracle prefix suffix and*)
-        fuzzer = Tree_fuzzer.fuzzer (Tree_fuzzer.explode !avoid) 0 None in
+        fuzzer = Tree_fuzzer.fuzzer 0 None in
 
-        let fuzzer_oracle (g: Grammar.grammar) : bool = g |> fuzzer |> (*fun p -> print_endline ("Oracle: "^(Grammar.string_of_word p)); p |>*) oracle in
+        let fuzzer_oracle (g: Grammar.grammar) : Oracle.oracle_status = g |> fuzzer |> (*fun p -> print_endline ("Oracle: "^(Grammar.string_of_word p)); p |>*) oracle in
 
-        let g = Blind.search fuzzer_oracle grammar goal !start !max_depth !graph_fname in match g with
+        let g = Inference.search fuzzer_oracle grammar goal !start !max_depth (Inference.explode !avoid) !graph_fname in match g with
         | None -> print_endline "No grammar found"
         | Some inj_g -> print_endline ("Injection:  "^(Fuzzer.string_inst_of_part values (Option.get (fuzzer (Grammar.grammar_of_ext_grammar inj_g))))); Option.iter (fun f -> Grammar_io.export_bnf f inj_g) !injg_fname
     else print_endline usage

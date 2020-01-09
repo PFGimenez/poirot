@@ -30,11 +30,11 @@ let ()=
 (*        Hashtbl.add values (Grammar.Terminal "value") "/tmp";
         Hashtbl.add values (Grammar.Terminal "key") "dir";
         Hashtbl.add values (Grammar.Nonterminal "Exe") "ls";*)
-        let fuzzer = Tree_fuzzer.fuzzer (Tree_fuzzer.explode !avoid) 0 (Some values) in
+        let fuzzer = Tree_fuzzer.fuzzer 0 (Some values) in
 
-        let fuzzer_oracle (g: Grammar.grammar) : bool = g |> fuzzer |> Option.map Grammar.string_of_word |> Oracle.oracle_mem_from_script oracle_fname in
+        let fuzzer_oracle (g: Grammar.grammar) : Oracle.oracle_status = g |> fuzzer |> Option.map Grammar.string_of_word |> Oracle.oracle_mem_from_script oracle_fname in
 
-        let g = Blind.search fuzzer_oracle grammar goal !start !max_depth !graph_fname in match g with
+        let g = Inference.search fuzzer_oracle grammar goal !start !max_depth (Inference.explode !avoid) !graph_fname in match g with
         | None -> print_endline "No grammar found"
         | Some inj_g -> print_endline ("Injection:  "^(Grammar.string_of_word (Option.get (fuzzer (Grammar.grammar_of_ext_grammar inj_g))))); Option.iter (fun f -> Grammar_io.export_bnf f inj_g) !injg_fname
     else print_endline usage

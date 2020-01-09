@@ -1,14 +1,12 @@
 open Grammar
 
-let explode s = List.init (String.length s) (String.get s)
-
 type parse_tree = Leaf of element | Node of parse_tree list | Error
 
 (* the fuzzer is deterministic when max_depth = 0
  * this is on purpose, so similar grammars yield same words and the oracle memoization can be exploited *)
 
 (* all nonterminal must be the left-hand side of a rule *)
-let fuzzer (forbidden: char list) (max_depth: int) (values: (element,string) Hashtbl.t option) (g : grammar) : part option =
+let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (g : grammar) : part option =
     Random.self_init ();
     let nonrec_rules : (element, rule) Hashtbl.t = Hashtbl.create (List.length g.rules) in
 
@@ -21,19 +19,13 @@ let fuzzer (forbidden: char list) (max_depth: int) (values: (element,string) Has
             else (Hashtbl.hash r2.right_part) - (Hashtbl.hash r1.right_part) (* to be deterministic we want to compare any couple *)
         end in
 
-    let is_allowed (s: string): bool =
-        not (List.exists (String.contains s) forbidden) in
-
     (* not tail-recursive ! *)
     let rec fuzzer_minimize (used_rules: rule list) (e: element) : parse_tree =
         if Option.map (fun v -> Hashtbl.mem v e) values = Some true then begin
             let s = Hashtbl.find (Option.get values) e in
-            assert (is_allowed s);
             Leaf (Terminal s)
-        end else if is_terminal e && is_allowed (string_of_element e) then
+        end else if is_terminal e then
             Leaf e
-        else if is_terminal e then
-            Error
         else begin
             let possible_rules = List.filter (fun r -> r.left_symbol = e && not (List.mem r used_rules)) g.rules in
             if Hashtbl.mem nonrec_rules e then
@@ -79,7 +71,4 @@ let fuzzer (forbidden: char list) (max_depth: int) (values: (element,string) Has
             if List.exists ((=) None) trees then None
             else Some (trees |> List.map Option.get |> List.flatten) in
 
-    let p = part_of_tree (fuzzer_explode 0 g.axiom) in
-    if p = None then print_endline "No word in language"
-    else print_endline (string_of_word (Option.get p));
-    p
+    part_of_tree (fuzzer_explode 0 g.axiom)

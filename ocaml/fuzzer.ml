@@ -184,7 +184,8 @@ let oracle
     (suffix : element list)
     (grammar : grammar)
     (injections : part)
-    : bool
+    : Oracle.oracle_status
     =   (*List.iter (fun p -> print_endline (string_of_part p)) injections;*)
-        [injections] |> List.map (fun p -> prefix @ p @ suffix) |> is_list_in_language grammar
+        let b = [injections] |> List.map (fun p -> prefix @ p @ suffix) |> is_list_in_language grammar in
+        if b then Oracle.No_error else Oracle.Syntax_error
 
