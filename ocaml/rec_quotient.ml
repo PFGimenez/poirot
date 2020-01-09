@@ -2,7 +2,7 @@ open Grammar
 
 type rev = Nonrev | Rev
 
-let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
+let quotient_mem (g: grammar) (graph_channel: out_channel option) : ext_element -> ext_grammar  =
     let ext_g : ext_grammar = ext_grammar_of_grammar g
     and da = {pf=[];e=Nonterminal("dummy_axiom");sf=[]}
     (* all the computed rules *)
@@ -15,6 +15,14 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
             if List.compare_lengths slist slist2 = 0 then slist else (get_reachable_symbols [@tailcall]) slist2
     in
 
+    (* add an edge in the graphviz output *)
+    let add_edge_in_graph (from: ext_element) (dest: ext_element): unit =
+        Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element from)^"\"->\""^(string_of_ext_element dest)^"\"\n")) graph_channel in
+
+    (* color a node in the graphviz output *)
+    let set_node_color_in_graph (e: ext_element) (c: string): unit =
+        Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element e)^"\"[color="^c^",style=filled]\n")) graph_channel in
+
     (* has the element been seen / processed ? *)
     let is_seen (e: ext_element) : bool = Hashtbl.find_opt mem e <> None in
 
@@ -22,6 +30,8 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
     let is_useless (e: ext_element) : bool = Hashtbl.find_opt mem e = Some [] in
 
     let set_useless (e: ext_element) : unit = Hashtbl.replace mem e [] in
+
+    let set_color (e: ext_element) : unit = set_node_color_in_graph e "grey" in
 
     (* construct a grammar, given an axiom, from the memory *)
     let grammar_of_mem (axiom : ext_element) : ext_grammar =
@@ -128,6 +138,8 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
             (* print_endline ("Work on: "^(string_of_ext_element lhs)); *)
             if lhs.pf = [] && lhs.sf = [] then
                 (assert (is_ext_element_terminal lhs || is_seen lhs); (quotient_symbols [@tailcall]) (nb_iter + 1) q)
+            else if is_seen lhs then
+                    ((*print_endline " Already known";*) (quotient_symbols [@tailcall]) (nb_iter + 1) q)
             else begin
                 let (base_lhs,rv,qu) = match lhs.pf,lhs.sf with
                 | [],[] -> assert false (* impossible : case verified just before *)
@@ -135,15 +147,15 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
                 | _,[] -> assert false (* impossible because of the previous case *)
                 | pf,(tsf::qsf) -> ({pf=pf;e=lhs.e;sf=qsf},Rev,tsf) in
                 (*if rv=Nonrev then print_endline "Nonrev" else print_endline "Rev";*)
-                if is_seen lhs then
-                    ((*print_endline " Already known";*) (quotient_symbols [@tailcall]) (nb_iter + 1) q)
-                else if is_useless base_lhs then
+                if is_useless base_lhs then
                     (* we ignore this element *)
-                    (set_useless lhs; (*print_endline (" Useless because of "^(string_of_ext_element base_lhs));*) (quotient_symbols [@tailcall]) (nb_iter + 1) q)
+                    (set_useless lhs; set_color lhs; (*print_endline (" Useless because of "^(string_of_ext_element base_lhs));*) (quotient_symbols [@tailcall]) (nb_iter + 1) q)
                 else if is_seen base_lhs then begin
+                    add_edge_in_graph lhs base_lhs;
                     (* we can compute the current symbol *)
                     (*print_endline "  Compute";*)
                     let new_elist = quotient_by_one_element_mem rv qu lhs base_lhs in
+                    List.iter (add_edge_in_graph lhs) new_elist;
                     (* quick check : if a nonterminal is present in the rhs of all its rules, it is useless *)
                     if Hashtbl.find mem lhs |> List.for_all (List.exists ((=) lhs)) then set_useless lhs;
                     (* before we compute all the new elements, we verify if the current lhs is useful. Indeed, there could be an circular dependency structure *)
@@ -160,6 +172,7 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
                         (* maybe rhs is now epsilon-capable itself *)
                         (*print_endline ("Updated rules: "^(string_of_ext_rules (List.rev_map (fun r -> lhs ---> r) rules)));*)
                     end;
+                    if is_useless lhs then set_color lhs;
                     (* lhs is not useful and no rhs has only useful elements : lhs is useless *)
                     if (Hashtbl.find_opt sure_useful lhs) = None then begin
                         if Hashtbl.find mem lhs |> List.for_all (List.exists (fun e -> (Hashtbl.find_opt sure_useful e) = None)) then
@@ -175,7 +188,8 @@ let quotient_mem (g: grammar) : ext_element -> ext_grammar  =
                 else begin
                     (*print_endline "  Postpone";*)
                     (* we can't compute the current symbol so we keep it on the list *)
-                    ((quotient_symbols [@tailcall]) (nb_iter + 1) (base_lhs::elist)) end
+                    (quotient_symbols [@tailcall]) (nb_iter + 1) (base_lhs::elist)
+                end
             end
     in
     fun (e: ext_element) : ext_grammar ->

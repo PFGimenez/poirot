@@ -1,5 +1,6 @@
 let ()=
     let graph_fname = ref None
+    and qgraph_fname = ref None
     and injg_fname = ref None
     and max_depth = ref 10
     and grammar = ref None
@@ -16,6 +17,7 @@ let ()=
         ("-avoid",      Arg.Set_string avoid,     "List of characters to avoid");
         ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
         ("-graph",      Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
+        ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Save the injection grammar")
     ] in
     let usage = "Error: grammar, goal and oracle are necessary" in
@@ -34,7 +36,15 @@ let ()=
 
         let fuzzer_oracle (g: Grammar.grammar) : Oracle.oracle_status = g |> fuzzer |> Option.map Grammar.string_of_word |> Oracle.oracle_mem_from_script oracle_fname in
 
-        let g = Inference.search fuzzer_oracle grammar goal !start !max_depth (Inference.explode !avoid) !graph_fname in match g with
-        | None -> print_endline "No grammar found"
-        | Some inj_g -> print_endline ("Injection:  "^(Grammar.string_of_word (Option.get (fuzzer (Grammar.grammar_of_ext_grammar inj_g))))); Option.iter (fun f -> Grammar_io.export_bnf f inj_g) !injg_fname
+        let qgraph_channel = Option.map open_out !qgraph_fname in
+        Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
+
+        let g = Inference.search fuzzer_oracle grammar goal !start !max_depth (Inference.explode !avoid) !graph_fname qgraph_channel in
+        if g = None then print_endline "No grammar found"
+        else begin
+            let inj_g = Option.get g in
+            print_endline ("Injection:  "^(Grammar.string_of_word (Option.get (fuzzer (Grammar.grammar_of_ext_grammar inj_g)))));
+            Option.iter (fun f -> Grammar_io.export_bnf f inj_g) !injg_fname
+        end;
+        Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel
     else print_endline usage

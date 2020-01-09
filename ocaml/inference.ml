@@ -4,8 +4,8 @@ let explode s = List.init (String.length s) (String.get s)
 
 type node = {g: int; h: int; e: ext_element; par: ext_element}
 
-let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) : ext_grammar option =
-    let quotient = Rec_quotient.quotient_mem g
+let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) : ext_grammar option =
+    let quotient = Rec_quotient.quotient_mem g qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
     let graph_channel = Option.map open_out graph_fname in
