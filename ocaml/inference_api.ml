@@ -18,7 +18,7 @@ let ()=
         ("-start",      Arg.String (fun s -> start := Some (Grammar_io.read_tokens s)),     "A valid injection, either terminal or nonterminal");
         ("-avoid",      Arg.Set_string avoid,     "List of characters to avoid");
         ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
-        ("-graph",      Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
+        ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Save the injection grammar")
     ] in
@@ -42,11 +42,12 @@ let ()=
         Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
 
         let g = Inference.search fuzzer_oracle grammar goal !start !max_depth (Inference.explode !avoid) !graph_fname qgraph_channel in
+        Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
+
         if g = None then print_endline "No grammar found"
         else begin
             let inj_g = Option.get g in
             print_endline ("Injection:  "^(Fuzzer.string_inst_of_part values (Option.get (fuzzer (Grammar.grammar_of_ext_grammar inj_g)))));
             Option.iter (fun f -> Grammar_io.export_bnf f inj_g) !injg_fname
         end;
-        Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel
     end else print_endline usage

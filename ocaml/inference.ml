@@ -9,7 +9,6 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
     let graph_channel = Option.map open_out graph_fname in
-    Option.iter (fun ch -> output_string ch "digraph {\n") graph_channel;
 
     let symbols_from_parents (axiom : element) : element list =
         g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in
@@ -67,6 +66,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     let build_ext_elements (e: ext_element) : ext_element list =
         let new_elems = g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e) |> List.flatten in
         List.iter (add_edge_in_graph e) new_elems;
+        if new_elems = [] then set_node_color_in_graph e "mediumpurple"; (* no children *)
         new_elems in
 
     (* add new elements to the open set *)
@@ -113,12 +113,13 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     let inj = match start with
         | Some l -> l
         | None -> get_all_symbols g |> List.filter (fun e -> e@@g.rules |> fuzzer_oracle |> (=) Oracle.No_error) in (* get the possible injections tokens *)
-    if not (is_reachable g goal g.axiom) then failwith "Unknown goal" (* the goal is not reachable from the axiom ! *)
+    if not (is_reachable g goal g.axiom) then failwith "Unknown or unreachable goal" (* the goal is not reachable from the axiom ! *)
     else if inj = [] then failwith "No trivial injection" (* no injection token found *)
     else begin
         let result = List.find_opt (fun e -> is_reachable g goal e) inj in
         if result <> None then Option.map (fun e -> ext_grammar_of_grammar (e@@g.rules)) result
         else begin
+            Option.iter (fun ch -> output_string ch "digraph {\n") graph_channel;
             let ext_inj = List.rev_map ext_element_of_element inj in
             List.iter (set_init_node) ext_inj;
             let openset = List.fold_right (add_in_openset 1) ext_inj [] in

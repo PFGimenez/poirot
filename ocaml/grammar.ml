@@ -139,10 +139,11 @@ let get_rules (rlist: ext_rule list) (e: ext_element) : ext_rule list =
 let is_reachable (g: grammar) (s: element) (start: element) : bool =
 let rec is_reachable_aux (g: grammar) (s: element) (reachable : element list) : bool =
     if List.mem s reachable then true
-    else
-        let ext_rules = List.filter (fun r -> List.mem r.left_symbol reachable) g.rules in
-        let new_reachable = ext_rules |> List.rev_map (fun r -> r.right_part) |> List.flatten |> List.append reachable |> List.sort_uniq compare in
+    else begin
+        let reachable_rules = List.filter (fun r -> List.mem r.left_symbol reachable) g.rules in
+        let new_reachable = reachable_rules |> List.rev_map (fun r -> r.right_part) |> List.flatten |> List.append reachable |> List.sort_uniq compare in
         if (List.compare_lengths reachable new_reachable) = 0 then false
-        else (is_reachable_aux [@tailcall]) g s new_reachable in
+        else (is_reachable_aux [@tailcall]) g s new_reachable
+    end in
     is_reachable_aux g s [start]
 
