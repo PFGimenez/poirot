@@ -1,4 +1,5 @@
-from ANTLRv4ParserListenerIntf import *
+from ANTLRv4ParserListener import *
+import inspect
 
 lhs = None
 mark = "__"
@@ -249,7 +250,7 @@ def do_suffix(suffix, child, ctx):
         raise Exception("do_suffix not handled: " + str([suffix.QUESTION(), suffix.PLUS(), suffix.STAR()]))
 
 # This class defines a complete listener for a parse tree produced by ANTLRv4Parser.
-class ANTLRv4ParserListener(ANTLRv4ParserListenerIntf):
+class ListenerForBNF(ANTLRv4ParserListener):
 
     def exitGrammarDecl(self, ctx:ANTLRv4Parser.GrammarDeclContext):
         print("# Grammar name: ", ctx.getChild(1).X_REGEXP)

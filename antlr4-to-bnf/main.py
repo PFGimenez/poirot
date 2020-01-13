@@ -1,6 +1,6 @@
-from ANTLRv4Lexer import *
+from ANTLRv4LexerPythonTarget import *
 from ANTLRv4Parser import *
-from ANTLRv4ParserListener import *
+from ListenerForBNF import *
 
 
 def show(e, n):
@@ -9,14 +9,14 @@ def show(e, n):
         show(c, n + 1)
 
 def main():
-    lexer = ANTLRv4Lexer(StdinStream())
+    lexer = ANTLRv4LexerPythonTarget(StdinStream())
     stream = CommonTokenStream(lexer)
     parser = ANTLRv4Parser(stream)
     tree = parser.grammarSpec()
     #show(tree, 0)
     #print(type(tree))
 
-    printer = ANTLRv4ParserListener()
+    printer = ListenerForBNF()
     walker = ParseTreeWalker()
     walker.walk(printer, tree)
 
