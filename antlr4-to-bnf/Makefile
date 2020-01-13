@@ -1,7 +1,7 @@
-bnf_sql: SQLite.g4 ANTLRv4Lexer.py ANTLRv4Parser.py
+bnf_sql: SQLite.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py
 	cat SQLite.g4 | python3 main.py > SQLite.bnf
 
-ANTLRv4Lexer.py: ANTLRv4LexerPythonTarget.g4 ANTLRv4Parser.g4 LexerAdaptor.py LexBasic.g4
+ANTLRv4LexerPythonTarget.py: ANTLRv4LexerPythonTarget.g4 ANTLRv4Parser.g4 LexerAdaptor.py LexBasic.g4
 	java org.antlr.v4.Tool -Dlanguage=Python3 ANTLRv4LexerPythonTarget.g4
 
 ANTLRv4Parser.py: ANTLRv4LexerPythonTarget.g4 ANTLRv4Parser.g4 LexerAdaptor.py LexBasic.g4

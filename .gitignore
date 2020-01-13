@@ -164,3 +164,5 @@ parserbnf.mli
 *.g4
 *.tokens
 *.interp
+ANTLRv4*
+LexerAdaptor.py
