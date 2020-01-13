@@ -1,16 +1,16 @@
-all: inference_api gfuzz fuzzer_api quotient_api
+all: poirot_inference poirot poirot_fuzzer poirot_quotient
 
-inference_api: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml inference.ml fuzzer.ml tree_fuzzer.ml oracle.ml inference_api.ml
-	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml oracle.ml rec_quotient.ml inference.ml fuzzer.ml tree_fuzzer.ml inference_api.ml -g -o inference_api
+poirot: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml tree_fuzzer.ml inference.ml oracle.ml poirot.ml
+	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml oracle.ml rec_quotient.ml inference.ml tree_fuzzer.ml poirot.ml -g -o poirot
 
-gfuzz: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml tree_fuzzer.ml inference.ml oracle.ml gfuzz.ml
-	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml oracle.ml rec_quotient.ml inference.ml tree_fuzzer.ml gfuzz.ml -g -o gfuzz
+poirot_inference: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml inference.ml fuzzer.ml tree_fuzzer.ml oracle.ml poirot_inference.ml
+	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml oracle.ml rec_quotient.ml inference.ml fuzzer.ml tree_fuzzer.ml poirot_inference.ml -g -o poirot_inference
 
-fuzzer_api: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml tree_fuzzer.ml fuzzer_api.ml
-	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml tree_fuzzer.ml fuzzer_api.ml -g -o fuzzer_api
+poirot_fuzzer: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml tree_fuzzer.ml poirot_fuzzer.ml
+	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml tree_fuzzer.ml poirot_fuzzer.ml -g -o poirot_fuzzer
 
-quotient_api: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml quotient_api.ml
-	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml quotient_api.ml -g -o quotient_api
+poirot_quotient: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml poirot_quotient.ml
+	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml poirot_quotient.ml -g -o poirot_quotient
 
 parserbnf.ml lexerbnf.ml: lexerbnf.mll parserbnf.mly
 	ocamllex lexerbnf.mll
@@ -18,4 +18,4 @@ parserbnf.ml lexerbnf.ml: lexerbnf.mll parserbnf.mly
 	ocamlc -c parserbnf.mli
 
 clean:
-	rm -f *.cm* *.o *_api gfuzz parserbnf.ml lexerbnf.ml parserbnf.mli
+	rm -f *.cm* *.o poirot_inference poirot_quotient poirot_fuzzer poirot parserbnf.ml lexerbnf.ml parserbnf.mli
