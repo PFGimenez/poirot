@@ -2,7 +2,9 @@ open Grammar
 
 let explode s = List.init (String.length s) (String.get s)
 
-type node = {g: int; h: int; e: ext_element; par: ext_element}
+type node_origin = DERIVATION | INDUCTION
+
+type node = {g: int; h: int; e: ext_element; par: ext_element; origin: node_origin}
 
 let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) : ext_grammar option =
     let quotient = Rec_quotient.quotient_mem g qgraph_channel
@@ -12,10 +14,6 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
 
     let symbols_from_parents (axiom : element) : element list =
         g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in
-
-    (* add an edge in the graphviz output *)
-    let add_edge_in_graph (from: ext_element) (dest: ext_element): unit =
-        Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element from)^"\"->\""^(string_of_ext_element dest)^"\"\n")) graph_channel in
 
     let set_init_node : ext_element -> unit =
         Grammar_io.set_node_attr graph_channel "shape=doublecircle" in
@@ -60,24 +58,41 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
         | [] -> acc
         | t::q when t=e.e -> (split_aux [@tailcall]) (t::prefix) ({pf=e.pf@prefix;e=original_rule.left_symbol;sf=e.sf@q}::acc) q
         | t::q -> (split_aux [@tailcall]) (t::prefix) acc q in
-    split_aux [] [] original_rule.right_part in
+            split_aux [] [] original_rule.right_part in
+
+    (* tail-recursive *)
+    let rec build_derivation (sofar: part) (acc: part list) (p: part) : part list = match p with
+        | [] -> acc
+        | (Terminal _ as t)::q -> (build_derivation [@tailcall]) (t::sofar) acc q
+        | (Nonterminal _ as t)::q-> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> (List.rev sofar)@r.right_part@q) in
+            (build_derivation [@tailcall]) (t::sofar) (new_parts@acc) q in
+
 
     (* construct the new ext_elements (the neighborhood) *)
     let build_ext_elements (e: ext_element) : ext_element list =
         let new_elems = g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e) |> List.flatten in
-        List.iter (add_edge_in_graph e) new_elems;
-        if new_elems = [] then set_node_color_in_graph e "mediumpurple"; (* no children *)
+        List.iter (Grammar_io.add_edge_in_graph graph_channel "" e) new_elems;
         new_elems in
 
     (* add new elements to the open set *)
-    let add_in_openset (g: int) (par: ext_element) (openset: node list) : node list =
+    let add_in_openset (g: int) (origin: node_origin) (par: ext_element) (openset: node list) : node list =
     (* openset is already sorted *)
-        par |> build_ext_elements |> List.rev_map (fun (e: ext_element) : node -> {g=g;h=get_distance_to_goal (element_of_ext_element e);e=e;par=par}) |> List.sort compare_with_score |> List.merge compare_with_score openset in
+        let openset = (* first INDUCTION and then DERIVATION *)
+            if origin=INDUCTION then par |> build_ext_elements |> List.rev_map (fun (e: ext_element) : node -> {g=g;h=get_distance_to_goal e.e;e=e;par=par;origin=INDUCTION}) |> List.sort compare_with_score |> List.merge compare_with_score openset
+            else openset in
+        let openset =
+            if get_distance_to_goal par.e = 0 then begin
+                List.iter (fun p -> print_endline (string_of_part p)) (build_derivation [] [] par.sf);
+                let new_elems = par.sf |> build_derivation [] [] |> List.rev_map (fun (newsf: part) : node -> {g=g;h=get_distance_to_goal par.e;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION}) |> List.sort compare_with_score in
+                List.iter (fun n -> Grammar_io.add_edge_in_graph graph_channel "penwidth=3" par n.e) new_elems;
+                List.merge compare_with_score openset new_elems
+            end else openset in
+        openset in
 
     (* core algorithm : an A* algorithm *)
     let rec search_aux (closedset: (ext_element, bool) Hashtbl.t) (step: int) (openset: node list) : ext_grammar option = match openset with
     | [] -> None (* openset is empty : there is no way *)
-    | {g=distance;h=_;e=e;par=par}::q ->
+    | {g=distance;h=_;e=e;par=par;origin=origin}::q ->
         print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element e));
         assert (distance <= max_depth);
         (* verify whether e has already been visited *)
@@ -87,6 +102,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
             (* now it is visited *)
             Hashtbl.add closedset e true;
             (* compute the non-trivial grammar and avoid some characters *)
+            (* TODO: non-trivial ne concerne que les inductions *)
             let nt_inj_g = make_non_trivial_grammar (quotient e) e par in
             (* call the fuzzer/oracle with this grammar *)
             let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle in
@@ -107,7 +123,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
                 (* get the rules e -> ... to verify if e is testable or not *)
                 if status = Grammar_error then set_node_color_in_graph e "grey";
                 print_endline "Explore";
-                (search_aux [@tailcall]) closedset (step + 1) (add_in_openset (distance + 1) e q)
+                (search_aux [@tailcall]) closedset (step + 1) (add_in_openset (distance + 1) origin e q)
             end
         end in
     let inj = match start with
@@ -122,7 +138,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
             Option.iter (fun ch -> output_string ch "digraph {\n") graph_channel;
             let ext_inj = List.rev_map ext_element_of_element inj in
             List.iter (set_init_node) ext_inj;
-            let openset = List.fold_right (add_in_openset 1) ext_inj [] in
+            let openset = List.fold_right (add_in_openset 1 INDUCTION) ext_inj [] in
             let result = search_aux (Hashtbl.create 1000) 0 openset (* search *) in
             Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
             result
