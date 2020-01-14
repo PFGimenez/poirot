@@ -5,6 +5,12 @@ type parse_tree = Leaf of element | Node of parse_tree list | Error
 (* the fuzzer is deterministic when max_depth = 0
  * this is on purpose, so similar grammars yield same words and the oracle memoization can be exploited *)
 
+(* TODO: quand l'objectif est atteignable, il faut générer une phrase le contenant.
+ * En effet, il est possible parfois de ne pas invalider une grammaire incorrecte. On pourrait donc valider à tort
+ * une grammaire où l'objectif est accessible, puis terminer l'algo avec une fausse grammaire qui produirait des injections
+ * avec objectif potentiellement invalides.
+ * Or, si on valide avec une phrase contenant l'objectif, alors on pourra toujours générer cette injection avec objectif. *)
+
 (* all nonterminal must be the left-hand side of a rule *)
 let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (g : grammar) : part option =
     Random.self_init ();

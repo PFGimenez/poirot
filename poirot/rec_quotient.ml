@@ -135,9 +135,10 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) : ext_element 
         | lhs::q ->
             (* Nothing to do *)
             (*print_endline ("Work on: "^(string_of_ext_element lhs));*)
-            if lhs.pf = [] && lhs.sf = [] then
-                (assert (is_ext_element_terminal lhs || is_processed lhs); (quotient_symbols [@tailcall]) (nb_iter + 1) q)
-            else if is_processed lhs then
+            if lhs.pf = [] && lhs.sf = [] then begin
+                assert (is_ext_element_terminal lhs || is_processed lhs);
+                (quotient_symbols [@tailcall]) (nb_iter + 1) q
+            end else if is_processed lhs then
                     ((*print_endline " Already known";*) (quotient_symbols [@tailcall]) (nb_iter + 1) q)
             else begin
                 let (base_lhs,sd,qu) = match lhs.pf,lhs.sf with
@@ -158,6 +159,7 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) : ext_element 
                     (*print_endline "  Compute";*)
                     Hashtbl.add status lhs In_progress;
                     let new_elist = quotient_by_one_element_mem sd qu lhs base_lhs in
+                    (* List.iter (fun p -> print_endline (string_of_ext_rule (lhs ---> p))) (Hashtbl.find mem lhs);*)
                     (* quick check : if a nonterminal is present in the rhs of all its rules, it is useless *)
                     if Hashtbl.find mem lhs |> List.for_all (List.exists ((=) lhs)) then set_useless lhs;
                     (* before we compute all the new elements, we verify if the current lhs is useful. Indeed, there could be an circular dependency structure *)
@@ -166,11 +168,11 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) : ext_element 
                     let new_nb_iter = quotient_symbols nb_iter new_elist in
                     Hashtbl.add status lhs Processed;
                     assert (Hashtbl.find_opt mem lhs <> None);
-                    if not (is_useless lhs) && new_elist <> [] then begin
-                        (* verify uselessness of the rhs *)
+                    if not (is_useless lhs) then begin
+                        (* remove epsilon productions at the start and the end of the rhs *)
                         let rules = remove_pf_sf_epsilon (Hashtbl.find mem lhs) in
                         Hashtbl.replace mem lhs rules;
-                        (*print_endline ("Updated rules: "^(string_of_ext_rules (List.rev_map (fun r -> lhs ---> r) rules)));*)
+                        (*List.iter (fun p -> print_endline (string_of_ext_rule (lhs ---> p))) (Hashtbl.find mem lhs);*)
                     end;
                     (* we check again: if a nonterminal is present in the rhs of all its rules, it is useless *)
                     if Hashtbl.find mem lhs |> List.for_all (List.exists ((=) lhs)) then set_useless lhs;
