@@ -147,3 +147,12 @@ let rec is_reachable_aux (g: grammar) (s: element) (reachable : element list) : 
     end in
     is_reachable_aux g s [start]
 
+(* tail-recursive *)
+let build_derivation (g: grammar) (p: part) : (rule * part) list =
+    let rec build_derivation_aux (sofar: part) (acc: (rule * part) list) (p: part) : (rule * part) list = match p with
+        | [] -> acc
+        | (Terminal _ as t)::q -> (build_derivation_aux [@tailcall]) (t::sofar) acc q
+        | (Nonterminal _ as t)::q-> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in
+            (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
+    build_derivation_aux [] [] p
+

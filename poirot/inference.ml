@@ -60,14 +60,6 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
         | t::q -> (split_aux [@tailcall]) (t::prefix) acc q in
             split_aux [] [] original_rule.right_part in
 
-    (* tail-recursive *)
-    let rec build_derivation (sofar: part) (acc: part list) (p: part) : part list = match p with
-        | [] -> acc
-        | (Terminal _ as t)::q -> (build_derivation [@tailcall]) (t::sofar) acc q
-        | (Nonterminal _ as t)::q-> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> (List.rev sofar)@r.right_part@q) in
-            (build_derivation [@tailcall]) (t::sofar) (new_parts@acc) q in
-
-
     (* construct the new ext_elements (the neighborhood) *)
     let build_ext_elements (e: ext_element) : ext_element list =
         let new_elems = g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e) |> List.flatten in
@@ -75,15 +67,15 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
         new_elems in
 
     (* add new elements to the open set *)
-    let add_in_openset (g: int) (origin: node_origin) (par: ext_element) (openset: node list) : node list =
+    let add_in_openset (g_val: int) (origin: node_origin) (par: ext_element) (openset: node list) : node list =
     (* openset is already sorted *)
         let openset = (* first INDUCTION and then DERIVATION *)
-            if origin=INDUCTION then par |> build_ext_elements |> List.rev_map (fun (e: ext_element) : node -> {g=g;h=get_distance_to_goal e.e;e=e;par=par;origin=INDUCTION}) |> List.sort compare_with_score |> List.merge compare_with_score openset
+            if origin=INDUCTION then par |> build_ext_elements |> List.rev_map (fun (e: ext_element) : node -> {g=g_val;h=get_distance_to_goal e.e;e=e;par=par;origin=INDUCTION}) |> List.sort compare_with_score |> List.merge compare_with_score openset
             else openset in
         let openset =
             if get_distance_to_goal par.e = 0 then begin
-                List.iter (fun p -> print_endline (string_of_part p)) (build_derivation [] [] par.sf);
-                let new_elems = par.sf |> build_derivation [] [] |> List.rev_map (fun (newsf: part) : node -> {g=g;h=get_distance_to_goal par.e;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION}) |> List.sort compare_with_score in
+(*                List.iter (fun p -> print_endline (string_of_part p)) (build_derivation g par.sf);*)
+                let new_elems = par.sf |> build_derivation g |> List.split |> snd |> List.rev_map (fun (newsf: part) : node -> {g=g_val;h=get_distance_to_goal par.e;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION}) |> List.sort compare_with_score in
                 List.iter (fun n -> Grammar_io.add_edge_in_graph graph_channel "penwidth=3" par n.e) new_elems;
                 List.merge compare_with_score openset new_elems
             end else openset in

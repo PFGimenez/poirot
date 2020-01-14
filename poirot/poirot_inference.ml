@@ -34,7 +34,7 @@ let ()=
         let values = Hashtbl.create 100 in
         let oracle = Oracle.oracle_mem2 (Fuzzer.oracle prefix suffix grammar) and
 (*        let oracle = Oracle.parenth_oracle prefix suffix and*)
-        fuzzer = Tree_fuzzer.fuzzer 0 None in
+        fuzzer = Tree_fuzzer.fuzzer 0 None (Some goal) in
 
         let fuzzer_oracle (g: Grammar.grammar) : Oracle.oracle_status = g |> fuzzer |> oracle in
 
