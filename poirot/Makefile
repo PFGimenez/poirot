@@ -1,3 +1,5 @@
+.PHONY: all clean
+
 all: poirot_inference poirot poirot_fuzzer poirot_quotient
 
 poirot: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml tree_fuzzer.ml inference.ml oracle.ml poirot.ml
