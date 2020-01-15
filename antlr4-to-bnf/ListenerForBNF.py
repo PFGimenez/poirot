@@ -8,6 +8,7 @@ mark = "__"
 counters = {}
 
 parser_or_lexer = None
+first_lhs = True
 
 # Used to translate "NOT"
 char_table = [chr(i) for i in range(32, 127)]
@@ -18,6 +19,7 @@ def escape(s):
         if x in "'\"\\":
             r = r + "\\"
         r = r + x
+    #print("Translate [[%s]] into [[%s]]" % (s, r))
     return r
 
 # nt: non-terminal
@@ -33,7 +35,13 @@ def lexer_regexp_to_bnf(nt, suf, rex):
     # The translation depends on the type of rex.
     if rex[0] == "and":
         for child in rex[1]:
-            if child[0] in ["token", "string"]:
+            if child[0] in ["string"]:
+                # Direct translation for token and string.
+                assert(child[1][0] == '\'')
+                assert(child[1][-1] == '\'')
+                rule += " " + child[1].replace("\"", "\\\"")
+                #rule += " '" + escape(child[1][1:-1]) + "'"
+            elif child[0] in ["token"]:
                 # Direct translation for token and string.
                 rule += " " + escape(child[1])
             else:
@@ -53,7 +61,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
             lexer_regexp_to_bnf(nt, suf, child)
 
     elif rex[0] == "string":
-        print(rule + " " + rex[1] + " ;")
+        print(rule + " " + rex[1].replace("\"", "\\\"") + " ;")
 
     elif rex[0] == "token":
         print(rule + " " + escape(rex[1]) + " ;")
@@ -187,7 +195,9 @@ def parser_regexp_to_bnf(nt, suf, rex):
 
     if rex[0] == "and":
         for child in rex[1]:
-            if child[0] in ["token", "string", "rule"]:
+            if child[0] in ["string"]:
+                rule += " " + (child[1].replace("\"", "\\\""))
+            elif child[0] in ["token", "rule"]:
                 rule += " " + (child[1])
             else:
                 new_suf = counters[lhs] + 1
@@ -268,6 +278,12 @@ class ListenerForBNF(ANTLRv4ParserListener):
         if mark in name:
             raise Exception(("Rule name with '%s' not handled: " % mark) + name)
         lhs = name
+
+        global first_lhs
+
+        if first_lhs:
+            print(lhs + " ;")
+        first_lhs = False
 
         global parser_or_lexer
         parser_or_lexer = "parser"
