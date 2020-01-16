@@ -3,15 +3,16 @@
     open Scanf
     open List
     exception UnknownToken of string
+    let loc = ref 1;;
 }
 
 let eol = "\n"|"\r"|"\r\n"
 
 rule token = parse
-    | "#" [^ '\n' '\r']* eol { token lexbuf } (* comment *)
+    | "#" [^ '\n' '\r']* eol { loc := !loc + 1; token lexbuf } (* comment *)
 
     | [' ' '\t']* { token lexbuf } (* whitespace *)
-    | eol* { token lexbuf } (* new line *)
+    | eol { loc := !loc + 1; print_endline ("line "^(string_of_int !loc)); token lexbuf } (* new line *)
 
     | ';' { END_RULE } (* end of a rule or of the axiom *)
 
