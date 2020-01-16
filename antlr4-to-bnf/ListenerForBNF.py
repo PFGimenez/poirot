@@ -29,6 +29,7 @@ def escape(s):
 # rex: the regular expression to translate
 def lexer_regexp_to_bnf(nt, suf, rex):
     fname = inspect.currentframe().f_code.co_name
+    print("# BEGIN LEXER FOR ", nt, rex[0])
 
     # First part of the rule: will be completed with the translation of rex.
     rule = nt + " ::="
@@ -136,13 +137,24 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                         sb = s[i]
 
                     for j in range(ord(sa), ord(sb) + 1):
-                        print(rule + (" '%s' ;" % escape(chr(j))))
+                        if chr(j) == '\'':
+                            print(rule + (" '\'' ; #X6"))
+                        elif chr(j) == '"':
+                            print(rule + (" '\\\"' ; #X5"))
+                        elif chr(j) == '\\':
+                            print(rule + (" '\\\\' ; #X5"))
+                        else:
+                            print(rule + (" '%s' ; #X4" % chr(j)))
 
                 else:
                     if sa == '\'':
-                        print(rule + (" '\'' ;"))
+                        print(rule + (" '\\'' ; #X1"))
+                    elif sa == '"':
+                        print(rule + (" '\\\"' ; #X2"))
+                    elif sa == '\\':
+                        print(rule + (" '\\\\' ; #X2"))
                     else:
-                        print(rule + (" '%c' ;" % sa))
+                        print(rule + (" '%c' ; #X3 %s" % (sa, sa)))
 
                 i = i + 1
 
@@ -193,6 +205,8 @@ def lexer_regexp_to_bnf(nt, suf, rex):
 
     else:
         raise Exception("Not yet handled: ", nt, suf, rex, fname)
+
+    print("# END")
 
 # See lexer_regexp_to_bnf.
 def parser_regexp_to_bnf(nt, suf, rex):
