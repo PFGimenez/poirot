@@ -1,5 +1,7 @@
 from ANTLRv4ParserListener import *
 import inspect
+import pprint
+import sys
 
 lhs = None
 mark = "__"
@@ -60,6 +62,9 @@ def lexer_regexp_to_bnf(nt, suf, rex):
         for child in rex[1]:
             lexer_regexp_to_bnf(nt, suf, child)
 
+    elif rex[0] == "eps":
+        print(rule + " ;")
+
     elif rex[0] == "string":
         print(rule + " " + rex[1].replace("\"", "\\\"") + " ;")
 
@@ -114,14 +119,14 @@ def lexer_regexp_to_bnf(nt, suf, rex):
             s = rex[1][1:-1]
             i = 0
             while i < len(s):
-
                 sa = s[i]
                 if sa == '\\':
                     if i + 1 >= len(s): raise Exception("Wrong range set: ", nt, suf, rex, fname)
                     i = i + 1
                     sa = s[i]
 
-                if i + 1 < len(s) and s[i + 1] == '-':
+                # "i + 2" because we need at least two more characters
+                if i + 2 < len(s) and s[i + 1] == '-':
                     i = i + 2
                     if i >= len(s): raise Exception("Wrong range set: ", nt, suf, rex, fname)
                     sb = s[i]
@@ -134,7 +139,10 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                         print(rule + (" '%s' ;" % escape(chr(j))))
 
                 else:
-                    print(rule + (" '%c' ;" % escape(sa)))
+                    if sa == '\'':
+                        print(rule + (" '\'' ;"))
+                    else:
+                        print(rule + (" '%c' ;" % sa))
 
                 i = i + 1
 
@@ -284,6 +292,7 @@ class ListenerForBNF(ANTLRv4ParserListener):
         if first_lhs:
             print(lhs + " ;")
         first_lhs = False
+        print("# PARSER: " + lhs)
 
         global parser_or_lexer
         parser_or_lexer = "parser"
@@ -316,8 +325,13 @@ class ListenerForBNF(ANTLRv4ParserListener):
             ctx.X_REGEXP = rex
 
     def exitAlternative(self, ctx:ANTLRv4Parser.AlternativeContext):
+        # TODO: 
+        #if ctx.elementOptions() is not None:
+        #    pprint.pprint(ctx)
+        #    pprint.pprint(ctx.elementOptions())
+        #    raise Exception("Not yet handled: alternative with elementOptions")
         if ctx.elementOptions() is not None:
-            raise Exception("Not yet handled: alternative with elementOptions")
+            print("Not yet handled: alternative with elementOptions", file=sys.stderr)
         children = ctx.element()
         if len(children) == 1:
             ctx.X_REGEXP = children[0].X_REGEXP
@@ -419,6 +433,7 @@ class ListenerForBNF(ANTLRv4ParserListener):
     def enterLexerRuleSpec(self, ctx:ANTLRv4Parser.LexerRuleSpecContext):
         global parser_or_lexer
         parser_or_lexer = "lexer"
+        print("# LEXER: " + str(ctx.TOKEN_REF()))
 
     def exitLexerRuleSpec(self, ctx:ANTLRv4Parser.LexerRuleSpecContext):
         name = str(ctx.TOKEN_REF())
@@ -443,7 +458,10 @@ class ListenerForBNF(ANTLRv4ParserListener):
 
     def exitLexerAlt(self, ctx:ANTLRv4Parser.LexerAltContext):
         # TODO: We ignore lexerCommands
-        ctx.X_REGEXP = ctx.lexerElements().X_REGEXP
+        if ctx.lexerElements() is None:
+            ctx.X_REGEXP = ["eps"]
+        else:
+            ctx.X_REGEXP = ctx.lexerElements().X_REGEXP
 
     def exitLexerElements(self, ctx:ANTLRv4Parser.LexerElementsContext):
         children = ctx.lexerElement()
