@@ -31,7 +31,6 @@ let ()=
         and suffix = Option.get !suffix
         and goal = Option.get !goal in
 
-        let values = Hashtbl.create 100 in
         let oracle = Oracle.oracle_mem2 (Fuzzer.oracle prefix suffix grammar) and
 (*        let oracle = Oracle.parenth_oracle prefix suffix and*)
         fuzzer = Tree_fuzzer.fuzzer 0 None (Some goal) in
@@ -47,7 +46,7 @@ let ()=
         if g = None then print_endline "No grammar found"
         else begin
             let inj_g = Option.get g in
-            print_endline ("Injection:  "^(Fuzzer.string_inst_of_part values (Option.get (fuzzer (Grammar.grammar_of_ext_grammar inj_g)))));
+            print_endline ("Injection:  "^(Grammar.string_of_word (Option.get (fuzzer (Grammar.grammar_of_ext_grammar inj_g)))));
             Option.iter (fun f -> Grammar_io.export_bnf f inj_g) !injg_fname
         end;
     end else print_endline usage

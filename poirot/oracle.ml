@@ -40,8 +40,8 @@ let oracle_mem2 (o: part -> oracle_status) : part option -> oracle_status =
                 Hashtbl.find mem inj
             end else begin
                 let answer = o inj in
-                print_endline ("Call to oracle: "^(string_of_word inj)^": "^(string_of_oracle_status answer));
                 Hashtbl.add mem inj answer;
+                print_endline ((string_of_int (Hashtbl.length mem))^"th call to oracle: "^(string_of_word inj)^" ("^(string_of_oracle_status answer)^")");
                 answer
             end
 
@@ -55,8 +55,8 @@ let oracle_mem (o: string -> oracle_status) : string option -> oracle_status =
                 Hashtbl.find mem inj
             end else begin
                 let answer = o inj in
-                print_endline ("Call to oracle: "^inj^": "^(string_of_oracle_status answer));
                 Hashtbl.add mem inj answer;
+                print_endline ((string_of_int (Hashtbl.length mem))^"th call to oracle: "^inj^" ("^(string_of_oracle_status answer)^")");
                 answer
             end
 
