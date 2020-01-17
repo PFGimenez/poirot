@@ -1,9 +1,9 @@
-S;
-S ::= Msg " ; " S;
-S ::= Exe " ; " S;
-S ::= Msg;
-S ::= Exe;
-Exe ::= "exec " "cmd";
-Msg ::= "msg " Params;
-Params ::= "key" " = " "value";
-Params ::= "key" " = " "value" " & " Params;
+S
+S ::= Msg ' ; ' S
+S ::= Exe ' ; ' S
+S ::= Msg
+S ::= Exe
+Exe ::= 'exec ' 'cmd'
+Msg ::= 'msg ' Params
+Params ::= 'key' ' = ' 'value'
+Params ::= 'key' ' = ' 'value' ' & ' Params

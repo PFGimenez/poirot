@@ -14,7 +14,8 @@ poirot_fuzzer: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml tree_fuzzer.ml 
 poirot_quotient: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml poirot_quotient.ml
 	ocamlopt parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_quotient.ml poirot_quotient.ml -g -o poirot_quotient
 
-parserbnf.ml lexerbnf.ml: lexerbnf.mll parserbnf.mly
+parserbnf.ml lexerbnf.ml: lexerbnf.mll parserbnf.mly grammar.ml
+	ocamlopt grammar.ml
 	ocamllex lexerbnf.mll
 	ocamlyacc parserbnf.mly
 	ocamlc -c parserbnf.mli
