@@ -22,14 +22,13 @@ let read_bnf_grammar (filename : string) : grammar =
     let lexbuf = Lexing.from_channel (open_in filename) in
     Parserbnf.start Lexerbnf.token lexbuf
 
-let rec read_tokens_from_ch (ch: Lexing.lexbuf) : element list =
-    let token = Lexerbnf.token ch in match token with
-    | Parserbnf.EOF -> []
-    | Parserbnf.NTERM(t) | Parserbnf.TERM(t) | Parserbnf.PSEUDO_TERM(t) -> t::(read_tokens_from_ch ch)
-    | _ -> failwith "Error token"
-
 let read_tokens (str : string) : element list =
-    read_tokens_from_ch (Lexing.from_string str)
+    snd (List.split (Parserbnf.right_part Lexerbnf.token (Lexing.from_string str)))
+
+let read_token (str : string) : element =
+    let token = Lexerbnf.token (Lexing.from_string str) in match token with
+    | Parserbnf.TERM e | Parserbnf.NTERM e | Parserbnf.PSEUDO_TERM e -> e
+    | _ -> failwith "No token!"
 
 let export_bnf (fname : string) (g: ext_grammar) =
     let channel = open_out fname in
@@ -38,7 +37,7 @@ let export_bnf (fname : string) (g: ext_grammar) =
 
 (* add an edge in the graphviz output *)
 let add_edge_in_graph (graph_channel: out_channel option) (color: string) (from: ext_element) (dest: ext_element): unit =
-        Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element from)^"\"->\""^(string_of_ext_element dest)^"\" ["^color^"]\n")) graph_channel
+    Option.iter (fun ch -> output_string ch ("\""^(string_of_ext_element from)^"\"->\""^(string_of_ext_element dest)^"\" ["^color^"]\n")) graph_channel
 
 (* set the node attribute in the graphviz output *)
 let set_node_attr (graph_channel: out_channel option) (attr: string) (e: ext_element) : unit =

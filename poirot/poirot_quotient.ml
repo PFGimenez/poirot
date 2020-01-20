@@ -12,7 +12,7 @@ let ()=
         ("-grammar",    Arg.String (fun s -> grammar := Some (Grammar_io.read_bnf_grammar s)),     "Target grammar");
         ("-pf",         Arg.String (fun s -> prefix := Some (Grammar_io.read_tokens s)),     "Prefix of the request");
         ("-sf",         Arg.String (fun s -> suffix := Some (Grammar_io.read_tokens s)),     "Suffix of the request");
-        ("-axiom",         Arg.String (fun s -> axiom := Some (List.hd (Grammar_io.read_tokens s))),     "Axiom of the request");
+        ("-axiom",      Arg.String (fun s -> axiom := Some (Grammar_io.read_token s)),     "Axiom of the request");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Save the final grammar");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph")
     ] in

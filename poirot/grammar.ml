@@ -51,8 +51,7 @@ let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element
 (* string of ... *)
 
 let string_of_element : element -> string = function
-    | Terminal x -> x
-    | Nonterminal x -> x
+    | Terminal x | Nonterminal x -> x
 
 let string_of_list (delim: string) (empty: string) (string_of_a: 'a -> string) (l: 'a list) : string =
     let concat_with_delimiter (d: string) (s1: string) (s2: 'a) : string = s1 ^ d ^ (string_of_a s2) in

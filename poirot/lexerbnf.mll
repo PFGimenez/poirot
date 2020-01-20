@@ -1,8 +1,7 @@
 {
     open Parserbnf
-    exception Syntax_error of string
     let loc = ref 1
-    let syntax_error msg = raise (Syntax_error (msg^" on line "^(string_of_int !loc)))
+    let syntax_error msg = failwith (msg^" on line "^(string_of_int !loc))
 
     let make_term (s: string) : token =
         try

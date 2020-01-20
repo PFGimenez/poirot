@@ -15,7 +15,7 @@ let ()=
         ("-grammar",    Arg.String (fun s -> grammar := Some (Clean.clean_grammar (Grammar_io.read_bnf_grammar s))),     "Target grammar");
         ("-pf",         Arg.String (fun s -> prefix := Some (Grammar_io.read_tokens s)),     "Prefix of the request");
         ("-sf",         Arg.String (fun s -> suffix := Some (Grammar_io.read_tokens s)),     "Suffix of the request");
-        ("-goal",       Arg.String (fun s -> goal := Some (List.hd (Grammar_io.read_tokens s))),     "Terminal or nonterminal to reach");
+        ("-goal",       Arg.String (fun s -> goal := Some (Grammar_io.read_token s)),     "Terminal or nonterminal to reach");
         ("-start",      Arg.String (fun s -> start := Some (Grammar_io.read_tokens s)),     "A valid injection, either terminal or nonterminal");
         ("-avoid",      Arg.Set_string avoid,     "List of characters to avoid");
         ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
