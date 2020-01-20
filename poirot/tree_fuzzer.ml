@@ -21,10 +21,9 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
 
     (* not tail-recursive ! *)
     let rec fuzzer_minimize (goal_rules: rule list) (used_rules: rule list) (e: element) : parse_tree =
-        if Option.map (fun v -> Hashtbl.mem v e) values = Some true then begin
-            let s = Hashtbl.find (Option.get values) e in
-            Leaf (Terminal s)
-        end else if is_terminal e then
+        if Option.map (fun v -> Hashtbl.mem v e) values = Some true then
+            Leaf (Terminal (Hashtbl.find (Option.get values) e))
+        else if is_terminal e then
             Leaf e
         else if goal_rules <> [] then begin
             let r = List.hd goal_rules in
@@ -84,7 +83,7 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
         | [] -> assert false (* we know there is a path since the goal is reachable ! *)
         | (form,path)::_ when List.mem (Option.get goal) form -> List.rev path
         | (form,path)::q when not (has_new seen form) -> (find_path_to_goal_aux [@tailcall]) seen q
-        | (form,path)::q -> let new_items = List.map (fun (r,p) -> (p,r::path)) (build_derivation g form) in
+        | (form,path)::q -> let new_items = List.map (fun (r,p) -> (p,r::path)) (build_derivation true g form) in
             (find_path_to_goal_aux [@tailcall]) (List.sort_uniq compare (form@seen)) (q@new_items) in
 
     let find_path_to_goal () = find_path_to_goal_aux [] [([g.axiom],[])] in

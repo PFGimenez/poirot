@@ -1,6 +1,6 @@
 S
-S ::= Msg ' ; ' S
-S ::= Exe ' ; ' S
+S ::= Msg ';' S
+S ::= Exe ';' S
 S ::= Msg
 S ::= Exe
 Exe ::= 'exec ' 'cmd'

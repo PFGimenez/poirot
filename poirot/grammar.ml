@@ -57,7 +57,7 @@ let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element
 (* string of ... *)
 
 let string_of_element : element -> string = function
-    | Terminal x  -> x
+    | Terminal x -> x
     | Nonterminal x -> x
 
 let string_of_list (delim: string) (empty: string) (string_of_a: 'a -> string) (l: 'a list) : string =
@@ -136,6 +136,7 @@ let get_all_symbols (g: grammar) : element list =
 let get_rules (rlist: ext_rule list) (e: ext_element) : ext_rule list =
     List.filter (fun r -> r.ext_left_symbol = e) rlist
 
+(* is the element s reachable in the grammar g from the element start ? *)
 let is_reachable (g: grammar) (s: element) (start: element) : bool =
 let rec is_reachable_aux (g: grammar) (s: element) (reachable : element list) : bool =
     if List.mem s reachable then true
@@ -148,11 +149,12 @@ let rec is_reachable_aux (g: grammar) (s: element) (reachable : element list) : 
     is_reachable_aux g s [start]
 
 (* tail-recursive *)
-let build_derivation (g: grammar) (p: part) : (rule * part) list =
+(* build all the possible one-step derivation of part p in the grammar g *)
+let build_derivation (deep_derivation: bool) (g: grammar) (p: part) : (rule * part) list =
     let rec build_derivation_aux (sofar: part) (acc: (rule * part) list) (p: part) : (rule * part) list = match p with
         | [] -> acc
         | (Terminal _ as t)::q -> (build_derivation_aux [@tailcall]) (t::sofar) acc q
-        | (Nonterminal _ as t)::q-> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in
+        | (Nonterminal _ as t)::q-> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t && (deep_derivation || (List.exists is_non_terminal r.right_part))) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in
             (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
     build_derivation_aux [] [] p
 

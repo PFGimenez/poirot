@@ -1,7 +1,7 @@
 open Grammar
 
 let quoted_string_of_element : element -> string = function
-    | Terminal x -> "\""^(String.escaped x)^"\""
+    | Terminal x -> "'"^(String.escaped x)^"'"
     | Nonterminal x -> x
 
 let bnf_string_of_part : part -> string = string_of_list " " "" string_of_element
@@ -25,7 +25,7 @@ let read_bnf_grammar (filename : string) : grammar =
 let rec read_tokens_from_ch (ch: Lexing.lexbuf) : element list =
     let token = Lexerbnf.token ch in match token with
     | Parserbnf.EOF -> []
-    | Parserbnf.NTERM(t) | Parserbnf.TERM(t) -> t::(read_tokens_from_ch ch)
+    | Parserbnf.NTERM(t) | Parserbnf.TERM(t) | Parserbnf.PSEUDO_TERM(t) -> t::(read_tokens_from_ch ch)
     | _ -> failwith "Error token"
 
 let read_tokens (str : string) : element list =

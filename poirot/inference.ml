@@ -6,7 +6,7 @@ type node_origin = DERIVATION | INDUCTION
 
 type node = {g: int; h: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) : ext_grammar option =
+let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (deep_search: bool) (graph_fname: string option) (qgraph_channel: out_channel option) : ext_grammar option =
     let quotient = Rec_quotient.quotient_mem g qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
@@ -58,7 +58,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
         | [] -> acc
         | t::q when t=e.e -> (split_aux [@tailcall]) (t::prefix) ({pf=e.pf@prefix;e=original_rule.left_symbol;sf=e.sf@q}::acc) q
         | t::q -> (split_aux [@tailcall]) (t::prefix) acc q in
-            split_aux [] [] original_rule.right_part in
+    split_aux [] [] original_rule.right_part in
 
     (* construct the new ext_elements (the neighborhood) *)
     let build_ext_elements (e: ext_element) : ext_element list =
@@ -75,7 +75,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
         let openset =
             if get_distance_to_goal par.e = 0 then begin
 (*                List.iter (fun p -> print_endline (string_of_part p)) (build_derivation g par.sf);*)
-                let new_elems = par.sf |> build_derivation g |> List.split |> snd |> List.rev_map (fun (newsf: part) : node -> {g=g_val;h=get_distance_to_goal par.e;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION}) |> List.sort compare_with_score in
+                let new_elems = par.sf |> build_derivation deep_search g |> List.split |> snd |> List.rev_map (fun (newsf: part) : node -> {g=g_val;h=get_distance_to_goal par.e;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION}) |> List.sort compare_with_score in
                 List.iter (fun n -> Grammar_io.add_edge_in_graph graph_channel "penwidth=3" par n.e) new_elems;
                 List.merge compare_with_score openset new_elems
             end else openset in
