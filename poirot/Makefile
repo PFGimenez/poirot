@@ -17,7 +17,7 @@ poirot_quotient: parserbnf.ml lexerbnf.ml grammar.ml grammar_io.ml clean.ml rec_
 parserbnf.ml lexerbnf.ml: lexerbnf.mll parserbnf.mly grammar.ml
 	ocamlopt grammar.ml
 	ocamllex lexerbnf.mll
-	ocamlyacc parserbnf.mly
+	menhir parserbnf.mly
 	ocamlc -c parserbnf.mli
 
 clean:

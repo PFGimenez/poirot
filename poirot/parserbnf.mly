@@ -14,13 +14,13 @@
 %%
 
 start:
-    | NTERM EOL rlist EOF { {axiom=$1; rules=List.sort_uniq compare $3} }
+    | NTERM EOL rlist { {axiom=$1; rules=List.sort_uniq compare $3} }
 ;
 
 rlist:
-    | EOL rlist { $2 }
-    | rule { $1 }
     | rule rlist { $1 @ $2 }
+    | EOL rlist { $2 }
+    | EOF { [] }
 ;
 
 rule:

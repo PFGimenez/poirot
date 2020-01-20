@@ -34,12 +34,6 @@ type ext_grammar = {ext_axiom: ext_element; ext_rules: ext_rule list}
 
 let (@@@) (axiom: ext_element) (rules: ext_rule list) : ext_grammar = {ext_axiom=axiom;ext_rules=rules}
 
-(* Grammar with rules based on regular expressions *)
-
-type re_rule = Empty_set | Leaf of ext_part | Union of re_rule * re_rule | Concat of re_rule * re_rule | Star of re_rule
-
-type re_grammar = {re_axiom: ext_element; re_rules: re_rule list}
-
 (* Conversion *)
 
 let rhs_of_ext_rule (r: ext_rule): ext_part = r.ext_right_part
