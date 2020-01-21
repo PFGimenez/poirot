@@ -1,6 +1,5 @@
 open Grammar
 
-let explode s = List.init (String.length s) (String.get s)
 
 type node_origin = DERIVATION | INDUCTION
 
@@ -23,7 +22,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
 
     let rec compute_distance_to_goal (e : element) : (element * int) list -> int = function
     | [] -> failwith "Can't reach at all"
-    | (s,nb)::q when is_reachable g e s -> nb
+    | (s,nb)::_ when is_reachable g e s -> nb
     | (s,nb)::q -> (compute_distance_to_goal [@tailcall]) e (q@(List.rev_map (fun e -> (e,nb+1)) (symbols_from_parents s))) in
 
     let compute_one_distance (a: element) (b: element) : unit =
@@ -48,8 +47,8 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
 
     (* compare for the open set sorting *)
     let compare_with_score (a: node) (b: node) : int = match a,b with
-        | {g=ag;h=ah;e=_;par=_},{g=bg;h=bh;e=_;par=_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
-        | {g=ag;h=ah;e=_;par=_},{g=bg;h=bh;e=_;par=_} when ag=bg && ah=bh -> 0
+        | {g=ag;h=ah;e=_;par=_;origin=_},{g=bg;h=bh;e=_;par=_;origin=_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
+        | {g=ag;h=ah;e=_;par=_;origin=_},{g=bg;h=bh;e=_;par=_;origin=_} when ag=bg && ah=bh -> 0
         | _ -> 1 in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)

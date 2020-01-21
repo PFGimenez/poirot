@@ -1,0 +1,7 @@
+(ocamllex lexerbnf)
+
+(menhir
+ (modules parserbnf))
+
+(library
+    (name poirot))

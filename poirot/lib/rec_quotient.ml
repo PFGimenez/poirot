@@ -56,7 +56,7 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) : ext_element 
     let rev_new_rules = List.rev_map (reverse_rule sd) rlist in
     match rlist with
         | [] -> ()
-        | new_rules -> let prev_rules = Hashtbl.find_opt mem lhs in
+        | _ -> let prev_rules = Hashtbl.find_opt mem lhs in
             if prev_rules = None then Hashtbl.add mem lhs rev_new_rules
             else Hashtbl.replace mem lhs (rev_new_rules@(Option.get prev_rules)) in
 
@@ -72,7 +72,7 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) : ext_element 
     (* create variants of a rule depending of whether the first element is or can be epsilon (and only the first element) *)
     let remove_epsilon : ext_part -> ext_part list = function
         | [] -> []
-        | (t::q) as l when is_ext_element_terminal t -> [l] (* a terminal can't derive an epsilon *)
+        | (t::_) as l when is_ext_element_terminal t -> [l] (* a terminal can't derive an epsilon *)
         | t::q when is_epsilon t -> [q] (* t always derive an epsilon: we remove it *)
         | (t::q) as l when can_epsilon t -> [l;q] (* t can derive an epsilon: we add a new rule without it *)
         | l -> [l] in
@@ -105,7 +105,7 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) : ext_element 
         (* A -> aBC with prefix = a *)
         | t::q when t.e=pf && is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); add_rule_in_mem sd new_lhs q; None
         (* A -> aBC with prefix != a *)
-        | t::q when is_ext_element_terminal t -> None
+        | t::_ when is_ext_element_terminal t -> None
         (* A -> BC with prefix = B *)
         | t::q when t.e=pf && t.pf=[] -> let new_elem = {pf=[pf];e=t.e;sf=t.sf} in
             (* if B_{B|} is a dead end *)

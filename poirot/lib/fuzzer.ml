@@ -8,13 +8,13 @@ let string_inst_of_part values = string_of_list "" "" (string_inst_of_element va
 
 let rec first_non_terminal = function
     | [] -> None
-    | Terminal(x)::rest -> (first_non_terminal [@tailcall]) rest
-    | Nonterminal(x)::rest -> Some (Nonterminal(x))
+    | Terminal(_)::rest -> (first_non_terminal [@tailcall]) rest
+    | Nonterminal(x)::_ -> Some (Nonterminal(x))
 
 let rec first_non_terminal_ext_part : ext_element list -> ext_element option = function
     | [] -> None
-    | {pf=pre; e=Terminal(x); sf=suf}::rest -> (first_non_terminal_ext_part [@tailcall]) rest
-    | e::rest -> Some e
+    | {pf=_; e=Terminal(_); sf=_}::rest -> (first_non_terminal_ext_part [@tailcall]) rest
+    | e::_ -> Some e
 
 
 (* Dérivation gauche d'un mot intermédiaire "dérivation" par une règle "rule" *)
@@ -29,7 +29,7 @@ let rec left_derivation2 (derivation : ext_element list) (rule : ext_rule) =
     let {ext_left_symbol=base;ext_right_part=transformation} = rule in
 	match derivation with
 	| [] -> []
-    | ({pf=pre; e=Nonterminal(x); sf=suf} as e)::rest when e=base -> List.append transformation rest
+    | ({pf=_; e=Nonterminal(_); sf=_} as e)::rest when e=base -> List.append transformation rest
 	| x::rest -> x::left_derivation2 rest rule
 
 
@@ -60,12 +60,12 @@ let rec possible_rules2 (motintermediaire : ext_element list) (rules : ext_rule 
 (* Prédicat indiquant si le mot intermédiaire en argument est un mot (soit si il ne contient que des terminaux) *)
 let rec is_word = function
 	| [] -> true
-	| Terminal(x)::rest -> is_word rest
-	| Nonterminal(x)::rest -> false
+	| Terminal(_)::rest -> is_word rest
+	| Nonterminal(_)::_ -> false
 
 let rec is_word2 : ext_element list -> bool = function
 	| [] -> true
-    | {pf=[]; e=Terminal(x); sf=[]}::rest -> is_word2 rest
+    | {pf=[]; e=Terminal(_); sf=[]}::rest -> is_word2 rest
 	| _ -> false
 
 let rec derive_within_depth profondeur grammar motintermediaire =
@@ -124,7 +124,7 @@ let rec find_path_symbol grammar = function
 
 let rec derive_with_path grammar = function
     | [] -> failwith "No derivation with path"
-    | (w, path)::q when is_word w -> assert (List.length path = 0); w
+    | (w, path)::_ when is_word w -> assert (List.length path = 0); w
     | (w, path)::q -> let ext_rules = possible_rules w grammar.rules in
         if List.length path = 0 || not (List.mem (List.hd path) ext_rules) then
             (derive_with_path [@tailcall]) grammar (q@(List.map (fun r -> (left_derivation w r, path)) ext_rules))
@@ -141,7 +141,7 @@ let rec find_path_symbol2 (grammar : ext_grammar) : (element*ext_rule list) list
 
 let rec derive_with_path2 (grammar : ext_grammar) : (ext_element list * ext_rule list) list -> part = function
     | [] -> failwith "No derivation with path"
-    | (w, path)::q when is_word2 w -> assert (List.length path = 0); List.map element_of_ext_element w
+    | (w, path)::_ when is_word2 w -> assert (List.length path = 0); List.map element_of_ext_element w
     | (w, path)::q -> let ext_rules = possible_rules2 w grammar.ext_rules in
         if List.length path = 0 || not (List.mem (List.hd path) ext_rules) then
             (derive_with_path2 [@tailcall]) grammar (q@(List.map (fun r -> (left_derivation2 w r, path)) ext_rules))
@@ -158,9 +158,9 @@ let get_parents (g : grammar) (all : element list) (x : element) : element * (el
 
 let rec get_order_from_par (par : (element * (element list)) list) (output : element list) : element list = match par with
     | [] -> output
-    | l -> let l_nopar = List.filter (fun (t,tl) -> (first_non_terminal tl = None)) par in match l_nopar with
+    | _ -> let l_nopar = List.filter (fun (_,tl) -> (first_non_terminal tl = None)) par in match l_nopar with
         | [] -> failwith "Impossible, entirely recursive grammar"
-        | (ht,_)::q -> let new_par = List.filter (fun (t,tl) -> t <> ht) par in
+        | (ht,_)::_ -> let new_par = List.filter (fun (t,_) -> t <> ht) par in
                 let new_par_filtered = List.map (fun (t,tl) -> (t,List.filter (fun t -> t<>ht) tl)) new_par in
                 (get_order_from_par [@tailcall]) new_par_filtered (ht::output)
 

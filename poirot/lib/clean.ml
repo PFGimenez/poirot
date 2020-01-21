@@ -37,7 +37,7 @@ let rec power_set : int -> bool list list = function
 let rec get_occurrences_number (s : ext_element) (nb: int) : ext_element list -> int = function
     | [] -> nb
     | t::q when s=t -> (get_occurrences_number [@tailcall]) s (nb + 1) q
-    | t::q -> (get_occurrences_number [@tailcall]) s nb q
+    | _::q -> (get_occurrences_number [@tailcall]) s nb q
 
 (* not tail-recursive *)
 let rec filter_symbol (s : ext_element) (rhs : ext_element list) (blist : bool list) : ext_element list = match rhs with
@@ -51,7 +51,7 @@ let rec filter_symbol (s : ext_element) (rhs : ext_element list) (blist : bool l
 let rec get_rules_with_symbol (s : ext_element) : ext_rule list -> ext_rule list = function
     | [] -> []
     | r::q when List.mem s (r.ext_right_part) -> r::(get_rules_with_symbol s q)
-    | r::q -> get_rules_with_symbol s q
+    | _::q -> get_rules_with_symbol s q
 
 let duplicate_epsilon_symbol_from_rule (s : ext_element) (r : ext_rule) : ext_rule list = let ps = power_set (get_occurrences_number s 0 r.ext_right_part) in
     List.rev_map (fun blist -> r.ext_left_symbol ---> (filter_symbol s r.ext_right_part blist)) ps

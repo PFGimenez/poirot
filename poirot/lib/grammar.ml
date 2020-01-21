@@ -34,20 +34,6 @@ type ext_grammar = {ext_axiom: ext_element; ext_rules: ext_rule list}
 
 let (@@@) (axiom: ext_element) (rules: ext_rule list) : ext_grammar = {ext_axiom=axiom;ext_rules=rules}
 
-(* Conversion *)
-
-let rhs_of_ext_rule (r: ext_rule): ext_part = r.ext_right_part
-
-let lhs_of_ext_rule (r: ext_rule): ext_element = r.ext_left_symbol
-
-let ext_element_of_element (e: element) : ext_element = {pf=[]; e=e; sf=[]}
-
-let element_of_ext_element (e : ext_element) : element = e.e
-
-let ext_rule_of_rule (r: rule) : ext_rule = (ext_element_of_element r.left_symbol) ---> (List.map ext_element_of_element r.right_part)
-
-let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element_of_element g.axiom; ext_rules = List.rev_map ext_rule_of_rule g.rules}
-
 (* string of ... *)
 
 let string_of_element : element -> string = function
@@ -88,9 +74,11 @@ let rhs_of_ext_rule (r: ext_rule): ext_part = r.ext_right_part
 
 let lhs_of_ext_rule (r: ext_rule): ext_element = r.ext_left_symbol
 
+let element_of_ext_element (e : ext_element) : element = e.e
+
 let ext_element_of_element (e: element) : ext_element = {pf=[]; e=e; sf=[]}
 
-let element_of_ext_element (e : ext_element) : element = e.e
+(*let element_of_ext_element (e : ext_element) : element = e.e*)
 
 let ext_rule_of_rule (r: rule) : ext_rule = (ext_element_of_element r.left_symbol) ---> (List.map ext_element_of_element r.right_part)
 
@@ -98,7 +86,7 @@ let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element
 
 let full_element_of_ext_element (e : ext_element) : element =
     let underscore_string_of_part = string_of_list "_" "ε" string_of_element in match e with
-    | {pf=_;e=Terminal x;sf=_} -> e.e
+    | {pf=_;e=Terminal _;sf=_} -> e.e
     | {pf=[];e=Nonterminal x;sf=[]} -> Nonterminal(x)
     | {pf=_;e=Nonterminal x;sf=_} -> Nonterminal((underscore_string_of_part (List.rev e.pf))^"^"^x^"^"^(underscore_string_of_part e.sf))
 
