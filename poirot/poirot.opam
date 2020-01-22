@@ -1,0 +1,19 @@
+opam-version: "2.0"
+name: "poirot"
+version: "~dev"
+synopsis: "Grammar-based injection fuzzer for black box system"
+maintainer: "Pierre-François Gimenez <pierre-francois.gimenez@laas.fr>"
+authors: "Pierre-François Gimenez <pierre-francois.gimenez@laas.fr>"
+license: "MIT"
+homepage: "https://github.com/PFGimenez/poirot"
+bug-reports: "https://github.com/PFGimenez/poirot/issues"
+dev-repo: "git+https://github.com/PFGimenez/poirot"
+depends: [
+    "ocaml" {>= "4.08.0"}
+    "menhir" {build}
+    "dune" {>= "2.1.2"}
+]
+build: [
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-p" name "-j" jobs]
+]

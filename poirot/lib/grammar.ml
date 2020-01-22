@@ -61,7 +61,7 @@ let string_of_ext_rules : ext_rule list -> string = string_of_list "\n" "(no rul
 
 let string_of_ext_grammar (g : ext_grammar) : string = "axiom: " ^ (string_of_ext_element g.ext_axiom) ^ "\nRules: " ^ (string_of_ext_rules g.ext_rules)
 
-let string_of_rule ({left_symbol=g;right_part=d}: rule) : string = string_of_element g ^ " --> " ^ string_of_part d
+let string_of_rule ({left_symbol;right_part}: rule) : string = string_of_element left_symbol ^ " --> " ^ string_of_part right_part
 
 let string_of_rules : rule list -> string = string_of_list "\n" "(no rules)" string_of_rule
 
@@ -74,7 +74,7 @@ let rhs_of_ext_rule (r: ext_rule): ext_part = r.ext_right_part
 
 let lhs_of_ext_rule (r: ext_rule): ext_element = r.ext_left_symbol
 
-let element_of_ext_element (e : ext_element) : element = e.e
+let element_of_ext_element ({e;_} : ext_element) : element = e
 
 let ext_element_of_element (e: element) : ext_element = {pf=[]; e=e; sf=[]}
 

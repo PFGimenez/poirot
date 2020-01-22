@@ -3,7 +3,7 @@ open Grammar
 
 type node_origin = DERIVATION | INDUCTION
 
-type node = {g: int; h: int; e: ext_element; par: ext_element; origin: node_origin}
+type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
 let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (deep_search: bool) (graph_fname: string option) (qgraph_channel: out_channel option) : ext_grammar option =
     let quotient = Rec_quotient.quotient_mem g qgraph_channel
@@ -31,8 +31,8 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     let get_distance_to_goal (e: element) : int =
         Hashtbl.find distance_to_goal (e,goal) in
 
-    let is_allowed (e: ext_element): bool = match e with
-        | {pf=_;sf=_;e=Terminal s} -> not (List.exists (String.contains s) forbidden)
+    let is_allowed ({e;_}: ext_element): bool = match e with
+        | Terminal s -> not (List.exists (String.contains s) forbidden)
         | _ -> true in
 
     (* compute the non-trivial grammar. To do that, just add a new axiom with the same rules as the normal axiom EXCEPT the trivial rule (the rule that leads to the parent grammar) *)
@@ -47,8 +47,8 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
 
     (* compare for the open set sorting *)
     let compare_with_score (a: node) (b: node) : int = match a,b with
-        | {g=ag;h=ah;e=_;par=_;origin=_},{g=bg;h=bh;e=_;par=_;origin=_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
-        | {g=ag;h=ah;e=_;par=_;origin=_},{g=bg;h=bh;e=_;par=_;origin=_} when ag=bg && ah=bh -> 0
+        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
+        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag=bg && ah=bh -> 0
         | _ -> 1 in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
@@ -69,12 +69,12 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     let add_in_openset (g_val: int) (origin: node_origin) (par: ext_element) (openset: node list) : node list =
     (* openset is already sorted *)
         let openset = (* first INDUCTION and then DERIVATION *)
-            if origin=INDUCTION then par |> build_ext_elements |> List.rev_map (fun (e: ext_element) : node -> {g=g_val;h=get_distance_to_goal e.e;e=e;par=par;origin=INDUCTION}) |> List.sort compare_with_score |> List.merge compare_with_score openset
+            if origin=INDUCTION then par |> build_ext_elements |> List.rev_map (fun (e: ext_element) : node -> {g_val;h_val=get_distance_to_goal e.e;e=e;par=par;origin=INDUCTION}) |> List.sort compare_with_score |> List.merge compare_with_score openset
             else openset in
         let openset =
             if get_distance_to_goal par.e = 0 then begin
 (*                List.iter (fun p -> print_endline (string_of_part p)) (build_derivation g par.sf);*)
-                let new_elems = par.sf |> build_derivation deep_search g |> List.split |> snd |> List.rev_map (fun (newsf: part) : node -> {g=g_val;h=get_distance_to_goal par.e;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION}) |> List.sort compare_with_score in
+                let new_elems = par.sf |> build_derivation deep_search g |> List.split |> snd |> List.rev_map (fun (newsf: part) : node -> {g_val=g_val;h_val=get_distance_to_goal par.e;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION}) |> List.sort compare_with_score in
                 List.iter (fun n -> Grammar_io.add_edge_in_graph graph_channel "penwidth=3" par n.e) new_elems;
                 List.merge compare_with_score openset new_elems
             end else openset in
@@ -83,9 +83,9 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     (* core algorithm : an A* algorithm *)
     let rec search_aux (closedset: (ext_element, bool) Hashtbl.t) (step: int) (openset: node list) : ext_grammar option = match openset with
     | [] -> None (* openset is empty : there is no way *)
-    | {g=distance;h=_;e=e;par=par;origin=origin}::q ->
+    | {g_val;e;par;origin;_}::q ->
         print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element e));
-        assert (distance <= max_depth);
+        assert (g_val <= max_depth);
         (* verify whether e has already been visited *)
         if Hashtbl.mem closedset e then
             (print_endline "Visited"; (search_aux [@tailcall]) closedset (step + 1) q)
@@ -106,7 +106,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
                 set_node_color_in_graph e "forestgreen";
                 print_endline (string_of_ext_grammar nt_inj_g);
                 Some nt_inj_g
-            end else if distance = max_depth then begin (* before we explore, verify if the max depth has been reached *)
+            end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
                 print_endline "Depth max";
                 set_node_color_in_graph e "orange";
                 (search_aux [@tailcall]) closedset (step + 1) q
@@ -114,7 +114,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
                 (* get the rules e -> ... to verify if e is testable or not *)
                 if status = Grammar_error then set_node_color_in_graph e "grey";
                 print_endline "Explore";
-                (search_aux [@tailcall]) closedset (step + 1) (add_in_openset (distance + 1) origin e q)
+                (search_aux [@tailcall]) closedset (step + 1) (add_in_openset (g_val + 1) origin e q)
             end
         end in
     let inj = match start with
