@@ -20,7 +20,7 @@ let bnf_string_of_ext_grammar (g : ext_grammar) : string = (bnf_string_of_ext_el
 
 let read_bnf_grammar (filename : string) : grammar =
     let lexbuf = Lexing.from_channel (open_in filename) in
-    Parserbnf.start Lexerbnf.token lexbuf
+    Clean.clean_grammar (Parserbnf.start Lexerbnf.token lexbuf)
 
 let read_tokens (str : string) : element list =
     snd (List.split (Parserbnf.right_part Lexerbnf.token (Lexing.from_string str)))

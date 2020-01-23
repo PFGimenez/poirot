@@ -126,12 +126,14 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
         let result = List.find_opt (fun e -> is_reachable g goal e) inj in
         if result <> None then Option.map (fun e -> ext_grammar_of_grammar (e@@g.rules)) result
         else begin
+            Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
             Option.iter (fun ch -> output_string ch "digraph {\n") graph_channel;
             let ext_inj = List.rev_map ext_element_of_element inj in
             List.iter (set_init_node) ext_inj;
             let openset = List.fold_right (add_in_openset 1 INDUCTION) ext_inj [] in
             let result = search_aux (Hashtbl.create 1000) 0 openset (* search *) in
             Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
+            Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
             result
         end
     end
