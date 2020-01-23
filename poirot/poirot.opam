@@ -9,9 +9,9 @@ homepage: "https://github.com/PFGimenez/poirot"
 bug-reports: "https://github.com/PFGimenez/poirot/issues"
 dev-repo: "git+https://github.com/PFGimenez/poirot"
 depends: [
-    "ocaml" {>= "4.08.0"}
+    "ocaml" {>= "4.08.1"}
     "menhir" {build}
-    "dune" {>= "2.1.2"}
+    "dune" {>= "2.0.1"}
 ]
 build: [
   ["dune" "subst"] {pinned}
