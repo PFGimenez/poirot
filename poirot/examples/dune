@@ -1,0 +1,3 @@
+(executable
+    (name poirot_example)
+    (libraries poirot))

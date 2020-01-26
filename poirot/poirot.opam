@@ -1,7 +1,7 @@
 opam-version: "2.0"
 name: "poirot"
 version: "~dev"
-synopsis: "Grammar-based injection fuzzer for black box system"
+synopsis: "Grammar-based injection fuzzer for black box systems"
 maintainer: "Pierre-François Gimenez <pierre-francois.gimenez@laas.fr>"
 authors: "Pierre-François Gimenez <pierre-francois.gimenez@laas.fr>"
 license: "MIT"

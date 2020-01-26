@@ -4,4 +4,4 @@
  (modules parserbnf))
 
 (library
-    (name poirot))
+    (name poirot) (public_name poirot))

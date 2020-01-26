@@ -13,7 +13,7 @@ let ()=
     and avoid = ref "" in
 
     let speclist = [
-        ("-grammar",    Arg.String (fun s -> grammar := Some (Poirot.clean_grammar (Poirot.read_bnf_grammar s))),     "Target grammar");
+        ("-grammar",    Arg.String (fun s -> grammar := Some (Poirot.read_bnf_grammar s)),     "Target grammar");
         ("-goal",       Arg.String (fun s -> goal := Some (Poirot.read_token s)),     "Terminal or nonterminal to reach");
         ("-oracle",     Arg.String (fun s -> oracle_fname := Some s),     "Oracle script filename");
         ("-start",      Arg.String (fun s -> start := Some (Poirot.read_tokens s)),     "A valid injection, either terminal or nonterminal");
@@ -33,22 +33,11 @@ let ()=
         and oracle_fname = Option.get !oracle_fname in
 
         let values = Hashtbl.create 100 in
-(*        Hashtbl.add values (Poirot.Terminal "value") "/tmp";
-        Hashtbl.add values (Poirot.Terminal "key") "dir";
-        Hashtbl.add values (Poirot.Nonterminal "Exe") "ls";*)
-        let fuzzer = Poirot.fuzzer 0 (Some values) (Some goal) in
-
-        let fuzzer_oracle (g: Poirot.grammar) : Poirot.oracle_status = g |> fuzzer |> Option.map Poirot.string_of_word |> Poirot.oracle_mem_from_script oracle_fname in
 
         let qgraph_channel = Option.map open_out !qgraph_fname in
         Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
 
-        let g = Poirot.search fuzzer_oracle grammar goal !start !max_depth (explode !avoid) !deep !graph_fname qgraph_channel in
-        if g = None then print_endline "No grammar found"
-        else begin
-            let inj_g = Option.get g in
-            print_endline ("Injection:  "^(Poirot.string_of_word (Option.get (fuzzer (Poirot.grammar_of_ext_grammar inj_g)))));
-            (*Option.iter (fun f -> Poirot.export_bnf f inj_g) !injg_fname*)
-        end;
+        let g = Poirot.search (Some values) oracle_fname grammar goal !start !max_depth (explode !avoid) !deep !graph_fname qgraph_channel in
+        if g = None then print_endline "No grammar found";
         Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel
     else print_endline usage
