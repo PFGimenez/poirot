@@ -8,6 +8,9 @@ let search (values: (element,string) Hashtbl.t option) (oracle_fname: string)  (
 let quotient (g: grammar) (prefix: element list) (suffix: element list) : grammar =
     Grammar.grammar_of_ext_grammar (Rec_quotient.quotient_mem g None {pf=List.rev prefix;e=g.axiom;sf=suffix})
 
+let to_uppercase (g: grammar) : grammar = Clean.to_uppercase g
+let to_lowercase (g: grammar) : grammar = Clean.to_lowercase g
+
 let string_of_grammar : grammar -> string = Grammar.string_of_grammar
 let read_bnf_grammar : string -> grammar = Grammar_io.read_bnf_grammar
 let read_tokens : string -> element list = Grammar_io.read_tokens

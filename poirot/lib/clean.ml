@@ -1,5 +1,18 @@
 open Grammar
 
+
+let change_case (f: string -> string) (g: grammar): grammar =
+    let e_change_case (e: element) : element = match e with
+        | Terminal s -> Terminal (f s)
+        | Nonterminal s -> Nonterminal s in
+    let r_change_case (r: rule) : rule =
+        (e_change_case r.left_symbol) --> (List.map e_change_case r.right_part) in
+    (e_change_case g.axiom) @@ (List.map r_change_case g.rules)
+
+let to_lowercase = change_case String.lowercase_ascii
+
+let to_uppercase = change_case String.uppercase_ascii
+
 (* iterate a function until its grammar size doesn't change *)
 let rec iterate_until_convergence (f : ext_grammar -> ext_rule list) (g : ext_grammar) : ext_grammar = let new_rules = f g in
     if List.compare_lengths g.ext_rules new_rules = 0 then g
