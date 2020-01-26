@@ -41,18 +41,16 @@ let ()=
     and suffix = ref None
     and goal = ref None
     and start = ref None
-    and deep = ref false
     and avoid = ref "" in
 
     let speclist = [
-        ("-grammar",    Arg.String (fun s -> grammar := Some (Clean.clean_grammar (Grammar_io.read_bnf_grammar s))),     "Target grammar");
+        ("-grammar",    Arg.String (fun s -> grammar := Some (Clean.merge_consecutive_terminals (Clean.simplify_nonterminals (Clean.clean_grammar (Grammar_io.read_bnf_grammar s))))),     "Target grammar");
         ("-pf",         Arg.String (fun s -> prefix := Some (Grammar_io.read_tokens s)),     "Prefix of the request");
         ("-sf",         Arg.String (fun s -> suffix := Some (Grammar_io.read_tokens s)),     "Suffix of the request");
         ("-goal",       Arg.String (fun s -> goal := Some (Grammar_io.read_token s)),     "Terminal or nonterminal to reach");
         ("-start",      Arg.String (fun s -> start := Some (Grammar_io.read_tokens s)),     "A valid injection, either terminal or nonterminal");
         ("-avoid",      Arg.Set_string avoid,     "List of characters to avoid");
         ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
-        ("-deep",       Arg.Set deep,    "Set the deep (character-based) search");
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Save the injection grammar")
@@ -75,7 +73,7 @@ let ()=
         let qgraph_channel = Option.map open_out !qgraph_fname in
         Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
 
-        let g = Inference.search fuzzer_oracle grammar goal !start !max_depth (explode !avoid) !deep !graph_fname qgraph_channel in
+        let g = Inference.search fuzzer_oracle grammar goal !start !max_depth (explode !avoid) !graph_fname qgraph_channel in
         Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
 
         if g = None then print_endline "No grammar found"

@@ -36,6 +36,10 @@ let (@@@) (axiom: ext_element) (rules: ext_rule list) : ext_grammar = {ext_axiom
 
 (* string of ... *)
 
+let string_of_element2 : element -> string = function
+    | Terminal x -> "'"^x^"'"
+    | Nonterminal x -> "<"^x^">"
+
 let string_of_element : element -> string = function
     | Terminal x | Nonterminal x -> x
 
@@ -47,7 +51,7 @@ let string_of_list (delim: string) (empty: string) (string_of_a: 'a -> string) (
 
 let string_of_word : part -> string = string_of_list "" "" string_of_element
 
-let string_of_part : part -> string = string_of_list " " "ε" string_of_element
+let string_of_part : part -> string = string_of_list " " "ε" string_of_element2
 
 let string_of_ext_element (e: ext_element) : string = let str=string_of_element e.e in match e.pf,e.sf with
     | [],[] -> str
@@ -61,7 +65,7 @@ let string_of_ext_rules : ext_rule list -> string = string_of_list "\n" "(no rul
 
 let string_of_ext_grammar (g : ext_grammar) : string = "axiom: " ^ (string_of_ext_element g.ext_axiom) ^ "\nRules: " ^ (string_of_ext_rules g.ext_rules)
 
-let string_of_rule ({left_symbol;right_part}: rule) : string = string_of_element left_symbol ^ " --> " ^ string_of_part right_part
+let string_of_rule ({left_symbol;right_part}: rule) : string = string_of_element2 left_symbol ^ " --> " ^ string_of_part right_part
 
 let string_of_rules : rule list -> string = string_of_list "\n" "(no rules)" string_of_rule
 
@@ -131,11 +135,11 @@ let rec is_reachable_aux (g: grammar) (s: element) (reachable : element list) : 
 
 (* tail-recursive *)
 (* build all the possible one-step derivation of part p in the grammar g *)
-let build_derivation (deep_derivation: bool) (g: grammar) (p: part) : (rule * part) list =
+let build_derivation (g: grammar) (p: part) : (rule * part) list =
     let rec build_derivation_aux (sofar: part) (acc: (rule * part) list) (p: part) : (rule * part) list = match p with
         | [] -> acc
         | (Terminal _ as t)::q -> (build_derivation_aux [@tailcall]) (t::sofar) acc q
-        | (Nonterminal _ as t)::q-> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t && (deep_derivation || (List.exists is_non_terminal r.right_part))) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in
+        | (Nonterminal _ as t)::q-> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in
             (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
     build_derivation_aux [] [] p
 

@@ -83,7 +83,7 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
         | [] -> assert false (* we know there is a path since the goal is reachable ! *)
         | (form,path)::_ when List.mem (Option.get goal) form -> List.rev path
         | (form,_)::q when not (has_new seen form) -> (find_path_to_goal_aux [@tailcall]) seen q
-        | (form,path)::q -> let new_items = List.map (fun (r,p) -> (p,r::path)) (build_derivation true g form) in
+        | (form,path)::q -> let new_items = List.map (fun (r,p) -> (p,r::path)) (build_derivation g form) in
             (find_path_to_goal_aux [@tailcall]) (List.sort_uniq compare (form@seen)) (q@new_items) in
 
     let find_path_to_goal () = find_path_to_goal_aux [] [([g.axiom],[])] in
