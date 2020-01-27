@@ -5,14 +5,15 @@ type node_origin = DERIVATION | INDUCTION
 
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
+let symbols_from_parents (g: grammar) (axiom : element) : element list =
+    g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare
+
+
 let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) : ext_grammar option =
     let quotient = Rec_quotient.quotient_mem g qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
     let graph_channel = Option.map open_out graph_fname in
-
-    let symbols_from_parents (axiom : element) : element list =
-        g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in
 
     let set_init_node : ext_element -> unit =
         Grammar_io.set_node_attr graph_channel "shape=doublecircle" in
@@ -23,7 +24,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     let rec compute_distance_to_goal (e : element) : (element * int) list -> int = function
     | [] -> failwith "Can't reach at all"
     | (s,nb)::_ when is_reachable g e s -> nb
-    | (s,nb)::q -> (compute_distance_to_goal [@tailcall]) e (q@(List.rev_map (fun e -> (e,nb+1)) (symbols_from_parents s))) in
+    | (s,nb)::q -> (compute_distance_to_goal [@tailcall]) e (q@(List.rev_map (fun e -> (e,nb+1)) (symbols_from_parents g s))) in
 
     let compute_one_distance (a: element) (b: element) : unit =
         Hashtbl.add distance_to_goal (a,b) (compute_distance_to_goal b [a,0]) in
@@ -35,6 +36,12 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
         | Terminal s -> not (List.exists (String.contains s) forbidden)
         | _ -> true in
 
+    (* compare for the open set sorting *)
+    let compare_with_score (a: node) (b: node) : int = match a,b with
+        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
+        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag=bg && ah=bh -> 0
+        | _ -> 1 in
+
     (* compute the non-trivial grammar. To do that, just add a new axiom with the same rules as the normal axiom EXCEPT the trivial rule (the rule that leads to the parent grammar) *)
     let make_non_trivial_grammar (g: ext_grammar) (e: ext_element) (par: ext_element) : ext_grammar =
         let dummy_axiom : ext_element = {e=Nonterminal ((string_of_element e.e)^"_dummy_axiom"); pf=e.pf; sf=e.sf} in
@@ -44,12 +51,6 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
 
     (* compute all the distances one and for all *)
     all_sym |> List.iter (fun e -> all_sym |> List.iter (compute_one_distance e));
-
-    (* compare for the open set sorting *)
-    let compare_with_score (a: node) (b: node) : int = match a,b with
-        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
-        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag=bg && ah=bh -> 0
-        | _ -> 1 in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
     let split (e: ext_element) (original_rule: rule) : ext_element list =

@@ -10,6 +10,7 @@ let quotient (g: grammar) (prefix: element list) (suffix: element list) : gramma
 
 let to_uppercase (g: grammar) : grammar = Clean.to_uppercase g
 let to_lowercase (g: grammar) : grammar = Clean.to_lowercase g
+let simplify (g: grammar) : grammar = Clean.simplify g
 
 let string_of_grammar : grammar -> string = Grammar.string_of_grammar
 let read_bnf_grammar : string -> grammar = Grammar_io.read_bnf_grammar

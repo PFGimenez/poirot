@@ -26,6 +26,6 @@ rule token = parse
     | "EOF" { TERM (Grammar.Terminal "") }
     | '\'' (([^ '\'' '\n' '\r']|"\\\'")* as s) '\'' { make_term s } (* terminal *)
 (*    | '"' (([^ '"' '\n' '\r']|"\\\"")* as s) '"' { make_term s } (* terminal *)*)
-    | ['A'-'Z' 'a'-'z'] ['A'-'Z' 'a'-'z' '0'-'9' '_']* ("_[" [^ ']' '\n' '\r']* "]")? as s { NTERM (Grammar.Nonterminal s) } (* nonterminal *)
+    | '<' ([^ '>' '\n' '\r']* as s) '>' { NTERM (Grammar.Nonterminal s) } (* nonterminal *)
 
     | _ as c { syntax_error ("couldn't identify the token '"^(String.make 1 c)^"'")}

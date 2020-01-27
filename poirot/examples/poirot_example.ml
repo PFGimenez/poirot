@@ -30,12 +30,8 @@ let ()=
         and goal = Option.get !goal
         and oracle_fname = Option.get !oracle_fname in
 
-        let values = Hashtbl.create 100 in
-
         let qgraph_channel = Option.map open_out !qgraph_fname in
-        Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
 
-        let g = Poirot.search (Some values) oracle_fname grammar goal !start !max_depth (explode !avoid) !graph_fname qgraph_channel in
+        let g = Poirot.search None oracle_fname grammar goal !start !max_depth (explode !avoid) !graph_fname qgraph_channel in
         if g = None then print_endline "No grammar found";
-        Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel
     else print_endline usage

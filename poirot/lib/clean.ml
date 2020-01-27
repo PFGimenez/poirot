@@ -23,7 +23,7 @@ let merge_consecutive_terminals (g: grammar) : grammar =
         | t::l -> t::(merge_consecutive_terminals_aux l) in
     g.axiom @@ (List.map (fun r -> (r.left_symbol --> merge_consecutive_terminals_aux r.right_part)) g.rules)
 
-let simplify_nonterminals (g: grammar) : grammar =
+let rec simplify_nonterminals (g: grammar) : grammar =
     let rec simplify_one_nonterminal (rhs: part) (rlist: (element*part) list) : part = match rhs with
         | [] -> []
         | t::l when List.mem_assoc t rlist -> List.assoc t rlist @ (simplify_one_nonterminal l rlist)
@@ -32,17 +32,21 @@ let simplify_nonterminals (g: grammar) : grammar =
         | [] -> uniq_list
         | t::q when not (List.mem t q) && not (List.mem t sofar) -> (uniq [@tailcall]) (t::sofar) q (t::uniq_list)
         | t::q -> (uniq [@tailcall]) (t::sofar) q uniq_list in
-    let elems = List.filter ((<>) g.axiom) (uniq [] (List.map (fun r -> r.left_symbol) g.rules) []) in
-    let rules = List.map (fun r -> (r.left_symbol,r.right_part)) (List.filter (fun r -> List.mem r.left_symbol elems) g.rules) in
-    let rec update_rule (r: rule) : rule option =
+    let rec update_rule (elems: element list) (rules: (element*part) list) (r: rule) : rule option =
         if List.mem r.left_symbol elems then None
         else begin
             let new_rhs = simplify_one_nonterminal r.right_part rules in
             let new_r = {left_symbol=r.left_symbol; right_part=new_rhs} in
             if new_rhs = r.right_part then Some new_r
-            else update_rule new_r
+            else update_rule elems rules new_r
         end in
-    g.axiom @@ (List.filter_map update_rule g.rules)
+    let simplify_once (g: grammar) : grammar =
+        let elems = List.filter ((<>) g.axiom) (uniq [] (List.map (fun r -> r.left_symbol) g.rules) []) in
+        let rules = List.map (fun r -> (r.left_symbol,r.right_part)) (List.filter (fun r -> List.mem r.left_symbol elems) g.rules) in
+        g.axiom @@ (List.filter_map (update_rule elems rules) g.rules) in
+    let new_g = remove_duplicated_rules (simplify_once g) in
+    if List.compare_lengths new_g.rules g.rules <> 0 then simplify_nonterminals new_g
+    else new_g
 
 (* iterate a function until its grammar size doesn't change *)
 let rec iterate_until_convergence (f : ext_grammar -> ext_rule list) (g : ext_grammar) : ext_grammar = let new_rules = f g in
@@ -120,3 +124,6 @@ let clean : ext_grammar -> ext_grammar = iterate_until_convergence clean_once
 
 (* clean classical grammar *)
 let clean_grammar (g: grammar) : grammar = g |> ext_grammar_of_grammar |> clean |> grammar_of_ext_grammar
+
+let simplify (g: grammar) =
+    g |> remove_duplicated_rules |> simplify_nonterminals |> merge_consecutive_terminals |> clean_grammar
