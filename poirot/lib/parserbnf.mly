@@ -4,7 +4,7 @@
 %token EPSILON
 %token EOF
 %token SEP
-%token EOL
+%token END_RULE
 
 %start <Grammar.grammar> start
 %start <(bool*Grammar.element) list> right_part
@@ -13,13 +13,11 @@
 %%
 
 start:
-    | NTERM EOL rlist { {axiom=$1; rules=List.sort_uniq compare $3} }
-    | rlist { {axiom=(List.hd $1).left_symbol; rules=List.sort_uniq compare $1} }
+    | NTERM END_RULE rlist { {axiom=$1; rules=List.sort_uniq compare $3} }
 ;
 
 rlist:
     | rule rlist { $1 @ $2 }
-    | EOL rlist { $2 }
     | EOF { [] }
 ;
 
@@ -39,6 +37,5 @@ right_part:
     | NTERM right_part { (false, $1) :: $2 }
     | TERM right_part { (false, $1) :: $2 }
     | EPSILON right_part { $2 }
-    | EOL { [] }
-    | EOF { [] }
+    | END_RULE { [] }
 ;

@@ -26,7 +26,7 @@ antlr-4.7.2-complete.jar:
 
 # Conversion from .g4 to .bnf
 
-%.bnf: %.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py
+%.bnf: %.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py
 	cat $< | python3 main.py > $@
 
 # Some grammars

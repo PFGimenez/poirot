@@ -36,7 +36,7 @@ let (@@@) (axiom: ext_element) (rules: ext_rule list) : ext_grammar = {ext_axiom
 
 (* string of ... *)
 
-let string_of_element2 : element -> string = function
+let decorated_string_of_element : element -> string = function
     | Terminal x -> "'"^x^"'"
     | Nonterminal x -> "<"^x^">"
 
@@ -51,7 +51,7 @@ let string_of_list (delim: string) (empty: string) (string_of_a: 'a -> string) (
 
 let string_of_word : part -> string = string_of_list "" "" string_of_element
 
-let string_of_part : part -> string = string_of_list " " "ε" string_of_element2
+let string_of_part : part -> string = string_of_list " " "ε" decorated_string_of_element
 
 let string_of_ext_element (e: ext_element) : string = let str=string_of_element e.e in match e.pf,e.sf with
     | [],[] -> str
@@ -65,7 +65,7 @@ let string_of_ext_rules : ext_rule list -> string = string_of_list "\n" "(no rul
 
 let string_of_ext_grammar (g : ext_grammar) : string = "axiom: " ^ (string_of_ext_element g.ext_axiom) ^ "\nRules: " ^ (string_of_ext_rules g.ext_rules)
 
-let string_of_rule ({left_symbol;right_part}: rule) : string = string_of_element2 left_symbol ^ " --> " ^ string_of_part right_part
+let string_of_rule ({left_symbol;right_part}: rule) : string = decorated_string_of_element left_symbol ^ " --> " ^ string_of_part right_part
 
 let string_of_rules : rule list -> string = string_of_list "\n" "(no rules)" string_of_rule
 

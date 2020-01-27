@@ -1,11 +1,12 @@
-<S> ::= <Msg> ' ; ' <S>
-<S> ::= <Exe> ';' <S>
-<S> ::= <Msg>
-<S> ::= <Exe>
-<Exe> ::= 'EXEC ' 'CMD'
-<Exe> ::= 'exec ' 'cmd'
-<Msg> ::= 'msg ' <Params>
-<Params> ::= <key> ' = ' 'value'
-<Params> ::= <key> ' = ' 'value' ' & ' <Params>
-<key> ::= 'key'
-<key> ::= 'KEY'
+<S>;
+<S> ::= <Msg> ' ; ' <S>;
+<S> ::= <Exe> ';' <S>;
+<S> ::= <Msg>;
+<S> ::= <Exe>;
+<Exe> ::= 'EXEC ' 'CMD';
+<Exe> ::= 'exec ' 'cmd';
+<Msg> ::= 'msg ' <Params>;
+<Params> ::= <key> ' = ' 'value';
+<Params> ::= <key> ' = ' 'value' ' & ' <Params>;
+<key> ::= 'key';
+<key> ::= 'KEY';
