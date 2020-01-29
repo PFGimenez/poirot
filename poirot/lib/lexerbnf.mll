@@ -4,10 +4,14 @@
     let syntax_error msg = failwith (msg^" on line "^(string_of_int !loc))
 
     let make_term (s: string) : token =
+        if String.length s = 1 then TERM (Grammar.Terminal (s))
+        else PSEUDO_TERM (Grammar.Nonterminal (s))
+
+    let make_term_from_int (i: int) : token =
         try
-            if String.length s = 1 then TERM (Grammar.Terminal (Scanf.unescaped s))
-            else PSEUDO_TERM (Grammar.Nonterminal (Scanf.unescaped s))
-        with Scanf.Scan_failure str -> syntax_error ("Error while unescaping "^s^": "^str)
+            TERM (Grammar.Terminal (String.make 1 (Char.chr i)))
+        with
+            Invalid_argument str -> syntax_error ("Error while reading char "^(string_of_int i)^": "^str)
 }
 
 let eol = "\n"|"\r"|"\r\n"
@@ -26,7 +30,11 @@ rule token = parse
 
     | "EOF" { TERM (Grammar.Terminal "") }
     | "<EOF>" { TERM (Grammar.Terminal "") }
-    | '\'' (([^ '\'' '\n' '\r']|"\\\'")* as s) '\'' { make_term s } (* terminal *)
+
+    | "\'\'" { token lexbuf } (* empty terminal *)
+    | '\'' (([^ '\'' '\n' '\r'])+ as s) '\'' { make_term s } (* terminal *)
+    | (['0'-'9']+ as s) { make_term_from_int (int_of_string s) } (* terminal *)
+
     | ['A'-'Z' 'a'-'z'] ['A'-'Z' 'a'-'z' '0'-'9' '_']* ("_[" [^ ']' '\n' '\r']* "]")? as s { NTERM (Grammar.Nonterminal s) } (* nonterminal *)
     | '<' ([^ '>' '\n' '\r']* as s) '>' { NTERM (Grammar.Nonterminal s) } (* nonterminal *)
 

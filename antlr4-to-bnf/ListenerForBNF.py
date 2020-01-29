@@ -16,13 +16,14 @@ first_lhs = True
 char_table = [chr(i) for i in range(32, 127)]
 
 def escape(s):
-    r = ""
-    for x in s:
-        if x in "'\"\\":
-            r = r + "\\"
-        r = r + x
-    #print("Translate [[%s]] into [[%s]]" % (s, r))
-    return r
+    if all([ord(c)>=32 and ord(c)<=126 for c in s]):
+        l = s.split("'")
+        out = "'"+("' "+str(ord('\''))+" '").join(l)+"'"
+        out = out.replace("\'\'","")
+    else:
+        for i in s:
+            out += " "+str(ord(i))
+    return out
 
 # nt: non-terminal
 # suff: integer used for the creation of new non-terminal (with mark)
@@ -42,11 +43,11 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                 # Direct translation for token and string.
                 assert(child[1][0] == '\'')
                 assert(child[1][-1] == '\'')
-                rule += " " + child[1].replace("\"", "\\\"")
+                rule += " " + escape(child[1][1::-1])
                 #rule += " '" + escape(child[1][1:-1]) + "'"
             elif child[0] in ["token"]:
                 # Direct translation for token and string.
-                rule += " <" + escape(child[1]) + ">"
+                rule += " <" + child[1] + ">"
             else:
                 # For complex element (sub-and, sub-or, star, etc.), we must create
                 # a new non-terminal that will generate the corresponding language.
@@ -67,10 +68,10 @@ def lexer_regexp_to_bnf(nt, suf, rex):
         print(rule + " ;")
 
     elif rex[0] == "string":
-        print(rule + " " + rex[1].replace("\"", "\\\"") +" ;")
+        print(rule + " " + escape(rex[1]) +" ;")
 
     elif rex[0] == "token":
-        print(rule + " <" + escape(rex[1]) + "> ;")
+        print(rule + " <" + rex[1] + "> ;")
 
     elif rex[0] == "*":
         # The translation of '*' need one new non-terminal.
@@ -112,7 +113,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
 
     elif rex[0] == ".":
         for x in char_table:
-            print(rule + (" '%s' ;" % escape(x)))
+            print(rule + (" %s ;" % escape(x)))
 
     elif rex[0] == "char_set":
         if rex[1][0] == '[' and rex[1][-1] == ']':
@@ -137,24 +138,26 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                         sb = s[i]
 
                     for j in range(ord(sa), ord(sb) + 1):
-                        if chr(j) == '\'':
-                            print(rule + (" '\'' ; #X6"))
-                        elif chr(j) == '"':
-                            print(rule + (" '\\\"' ; #X5"))
-                        elif chr(j) == '\\':
-                            print(rule + (" '\\\\' ; #X5"))
-                        else:
-                            print(rule + (" '%s' ; #X4" % chr(j)))
+                        print(rule + " " + escape(chr(j)) + " ;")
+                        # if chr(j) == '\'':
+                        #     print(rule + (" '\'' ; #X6"))
+                        # elif chr(j) == '"':
+                        #     print(rule + (" '\\\"' ; #X5"))
+                        # elif chr(j) == '\\':
+                        #     print(rule + (" '\\\\' ; #X5"))
+                        # else:
+                        #     print(rule + (" '%s' ; #X4" % chr(j)))
 
                 else:
-                    if sa == '\'':
-                        print(rule + (" '\\'' ; #X1"))
-                    elif sa == '"':
-                        print(rule + (" '\\\"' ; #X2"))
-                    elif sa == '\\':
-                        print(rule + (" '\\\\' ; #X2"))
-                    else:
-                        print(rule + (" '%c' ; #X3 %s" % (sa, sa)))
+                    print(rule + escape(sa) + " ;")
+                    # if sa == '\'':
+                    #     print(rule + (" '\\'' ; #X1"))
+                    # elif sa == '"':
+                    #     print(rule + (" '\\\"' ; #X2"))
+                    # elif sa == '\\':
+                    #     print(rule + (" '\\\\' ; #X2"))
+                    # else:
+                    #     print(rule + (" '%c' ; #X3 %s" % (sa, sa)))
 
                 i = i + 1
 
@@ -177,7 +180,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
             if c is not None:
                 for x in char_table:
                     if x != c:
-                        print(rule + (" '%s' ;" % escape(x)))
+                        print(rule + (" %s ;" % escape(x)))
             else:
                 raise Exception("Not yet handled: ", nt, suf, rex, fname)
         elif rex[1][1][0] == '[':
@@ -196,7 +199,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                     i = i +1
                 rem = [x for x in char_table if x not in flat]
                 for x in rem:
-                    print(rule + (" '%s' ;" % escape(x)))
+                    print(rule + (" %s ;" % escape(x)))
             else:
                 raise Exception("Not yet handled: ", nt, suf, rex, fname)
 
@@ -218,7 +221,7 @@ def parser_regexp_to_bnf(nt, suf, rex):
     if rex[0] == "and":
         for child in rex[1]:
             if child[0] in ["string"]:
-                rule += " " + (child[1].replace("\"", "\\\"")) + ""
+                rule += " " + escape(child[1]) + ""
             elif child[0] in ["token", "rule"]:
                 rule += " <" + (child[1]) + ">"
             else:
@@ -260,13 +263,13 @@ def parser_regexp_to_bnf(nt, suf, rex):
         print(rule+ " ;")
 
     elif rex[0] == "string":
-        print(rule + " " + (rex[1]) + " ;")
+        print(rule + " " + escape(rex[1]) + " ;")
 
     elif rex[0] == "token":
-        print(rule + " <" + escape(rex[1]) + "> ;")
+        print(rule + " <" + rex[1] + "> ;")
 
     elif rex[0] == "rule":
-        print(rule + " <" + escape(rex[1]) + "> ;")
+        print(rule + " <" + rex[1] + "> ;")
 
     else:
         raise Exception("Error parser_regexp_to_bnf: " + str(rex))
