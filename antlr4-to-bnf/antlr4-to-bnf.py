@@ -13,8 +13,6 @@ def main():
     stream = CommonTokenStream(lexer)
     parser = ANTLRv4Parser(stream)
     tree = parser.grammarSpec()
-    #show(tree, 0)
-    #print(type(tree))
 
     printer = ListenerForBNF()
     walker = ParseTreeWalker()

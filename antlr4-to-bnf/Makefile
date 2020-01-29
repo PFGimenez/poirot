@@ -24,10 +24,15 @@ LexBasic.g4:
 antlr-4.7.2-complete.jar:
 	wget https://www.antlr.org/download/antlr-4.7.2-complete.jar
 
+# Generate the lexer and parsers file from the grammar
+
+%Lexer.py %Parser.py: %.g4
+	java -jar antlr-4.7.2-complete.jar -Dlanguage=Python3 $<
+
 # Conversion from .g4 to .bnf
 
-%.bnf: %.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py
-	cat $< | python3 main.py > $@
+%.bnf: %.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py antlr4-to-bnf.py
+	cat $< | python3 antlr4-to-bnf.py > $@
 
 # Some grammars
 
