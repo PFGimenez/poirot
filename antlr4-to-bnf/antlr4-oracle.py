@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from antlr4 import *
 import importlib
 import sys
@@ -24,9 +26,10 @@ class MyErrorListener(ErrorListener):
 
 def main():
     grammar = sys.argv[1]
-    prefix = sys.argv[2]
-    suffix = sys.argv[3]
-    injection = sys.argv[4]
+    axiom = sys.argv[2]
+    prefix = sys.argv[3]
+    suffix = sys.argv[4]
+    injection = sys.argv[5]
 
     lexer_name = sys.argv[1]+"Lexer"
     lexer_module = importlib.import_module(lexer_name)
@@ -40,8 +43,9 @@ def main():
     parser.addErrorListener(MyErrorListener())
 
     try:
-        parser.parse()
-    except:
+        getattr(parser, axiom)()
+    except Exception as e:
+        print(e)
         exit(1)
     exit(0)
 
