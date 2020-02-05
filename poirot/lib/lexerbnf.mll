@@ -4,6 +4,7 @@
     let syntax_error msg = failwith (msg^" on line "^(string_of_int !loc))
 
     let make_term (s: string) : token =
+        assert (String.length s > 0);
         if String.length s = 1 then TERM (Grammar.Terminal (s))
         else PSEUDO_TERM (Grammar.Nonterminal (s))
 

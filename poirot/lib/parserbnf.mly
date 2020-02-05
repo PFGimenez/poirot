@@ -7,7 +7,8 @@
 %token END_RULE
 
 %start <Grammar.grammar> start
-%start <(bool*Grammar.element) list> right_part
+%start <Grammar.element list> token_list
+%type <(bool*Grammar.element) list> right_part
 %type <Grammar.rule list> rlist
 %type <Grammar.rule list> rule
 %%
@@ -38,4 +39,12 @@ right_part:
     | TERM right_part { (false, $1) :: $2 }
     | EPSILON right_part { $2 }
     | END_RULE { [] }
+;
+
+token_list:
+    | PSEUDO_TERM token_list { $1 :: $2 }
+    | NTERM token_list { $1 :: $2 }
+    | TERM token_list { $1 :: $2 }
+    | EPSILON token_list { $2 }
+    | EOF { [] }
 ;

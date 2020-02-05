@@ -23,7 +23,7 @@ let read_bnf_grammar (filename : string) : grammar =
     Clean.clean_grammar (Parserbnf.start Lexerbnf.token lexbuf)
 
 let read_tokens (str : string) : element list =
-    snd (List.split (Parserbnf.right_part Lexerbnf.token (Lexing.from_string str)))
+    Parserbnf.token_list Lexerbnf.token (Lexing.from_string (str))
 
 let read_token (str : string) : element =
     let token = Lexerbnf.token (Lexing.from_string str) in match token with
