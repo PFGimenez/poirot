@@ -45,4 +45,4 @@ Lua.g4:
 # Remove generated files
 
 clean:
-	rm *.bnf
+	rm -f *.bnf *Parser.py *Lexer.py

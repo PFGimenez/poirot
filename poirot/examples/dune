@@ -1,3 +1,9 @@
 (executable
     (name poirot_example)
+    (modules poirot_example)
+    (libraries poirot))
+
+(executable
+    (name bnf2antlr4)
+    (modules bnf2antlr4)
     (libraries poirot))

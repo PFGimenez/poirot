@@ -13,6 +13,7 @@ let to_lowercase (g: grammar) : grammar = Clean.to_lowercase g
 let simplify (g: grammar) : grammar = Clean.simplify g
 
 let string_of_grammar : grammar -> string = Grammar.string_of_grammar
-let read_bnf_grammar : string -> grammar = Grammar_io.read_bnf_grammar
-let read_tokens : string -> element list = Grammar_io.read_tokens
-let read_token : string -> element = Grammar_io.read_token
+let read_bnf_grammar (unravel: bool) (fname: string) : grammar = Grammar_io.read_bnf_grammar unravel fname
+let read_tokens (unravel: bool) (str: string) : element list = Grammar_io.read_tokens unravel str
+let read_token (unravel: bool) (str: string) : element = Grammar_io.read_token unravel str
+let export_antlr4 (fname: string) (g: grammar) : unit = Grammar_io.export_antlr4 fname g
