@@ -82,7 +82,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
         openset in
 
     (* core algorithm : an A* algorithm *)
-    let rec search_aux (closedset: (ext_element, bool) Hashtbl.t) (step: int) (openset: node list) : ext_grammar option = match openset with
+    let rec search_aux (closedset: (ext_element, unit) Hashtbl.t) (step: int) (openset: node list) : ext_grammar option = match openset with
     | [] -> None (* openset is empty : there is no way *)
     | {g_val;e;par;origin;_}::q ->
         print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element e));
@@ -92,7 +92,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
             (print_endline "Visited"; (search_aux [@tailcall]) closedset (step + 1) q)
         else begin
             (* now it is visited *)
-            Hashtbl.add closedset e true;
+            Hashtbl.add closedset e ();
             (* compute the non-trivial grammar and avoid some characters *)
             (* TODO: non-trivial ne concerne que les inductions *)
             let nt_inj_g = make_non_trivial_grammar (quotient e) e par in
