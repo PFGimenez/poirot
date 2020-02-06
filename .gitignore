@@ -36,3 +36,6 @@ parserbnf.mli
 *.interp
 ANTLRv4*
 LexerAdaptor.py
+
+# python cache directory
+__pycache__/

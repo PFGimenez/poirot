@@ -4,6 +4,16 @@
     (libraries poirot))
 
 (executable
+    (name quotient_example)
+    (modules quotient_example)
+    (libraries poirot))
+
+(executable
+    (name fuzzer_example)
+    (modules fuzzer_example)
+    (libraries poirot))
+
+(executable
     (name bnf2antlr4)
     (modules bnf2antlr4)
     (libraries poirot))

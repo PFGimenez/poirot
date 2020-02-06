@@ -1,8 +1,8 @@
 let () =
     if Array.length Sys.argv = 3 then
-        let w = Grammar_io.read_bnf_grammar true Sys.argv.(1) |> Clean.to_lowercase |> Clean.simplify |> Tree_fuzzer.fuzzer (int_of_string Sys.argv.(2)) None None in
+        let w = Poirot.read_bnf_grammar true Sys.argv.(1) |> Poirot.to_lowercase |> Poirot.simplify |> Poirot.fuzzer (int_of_string Sys.argv.(2)) in
         match w with
         | None -> print_endline "No word in language !"
-        | Some p -> print_endline (Grammar.string_of_word p)
+        | Some s -> print_endline s
     else
         print_endline ("Usage: "^Sys.argv.(0)^" <input BNF filename> <explosion depth size>")
