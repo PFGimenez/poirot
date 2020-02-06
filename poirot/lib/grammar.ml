@@ -82,8 +82,6 @@ let element_of_ext_element ({e;_} : ext_element) : element = e
 
 let ext_element_of_element (e: element) : ext_element = {pf=[]; e=e; sf=[]}
 
-(*let element_of_ext_element (e : ext_element) : element = e.e*)
-
 let ext_rule_of_rule (r: rule) : ext_rule = (ext_element_of_element r.left_symbol) ---> (List.map ext_element_of_element r.right_part)
 
 let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element_of_element g.axiom; ext_rules = List.rev_map ext_rule_of_rule g.rules}
@@ -120,6 +118,9 @@ let get_all_symbols (g: grammar) : element list =
 (* get the list of rules with some left-hand side *)
 let get_rules (rlist: ext_rule list) (e: ext_element) : ext_rule list =
     List.filter (fun r -> r.ext_left_symbol = e) rlist
+
+let get_all_rhs (rlist: rule list) (e: element) : part list =
+    List.map (fun r -> r.right_part) (List.filter (fun r -> r.left_symbol = e) rlist)
 
 (* is the element s reachable in the grammar g from the element start ? *)
 let is_reachable (g: grammar) (s: element) (start: element) : bool =
