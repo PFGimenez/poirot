@@ -10,7 +10,7 @@ Then, clone the Poirot repository: `git clone https://github.com/PFGimenez/poiro
 
 Go into the directory `poirot/poirot`.
 
-Finally, install Poirot: `opam install .`
+Finally, install Poirot: `opam pin poirot .` and then `opam install .`
 
 ## Use the library in your own project
 
@@ -24,7 +24,7 @@ Poirot uses a simple grammar format inspired from the BNF format.
 
 ### Install antlr4
 
-You will certainly need ANTLR4. Make sure you have Python 3 and Java JRE installed. Go into the directory `antlr4-to-bnf` and execute `pip3 install requirements.txt`
+You will certainly need ANTLR4. Make sure you have Python 3 and Java JRE installed. Go into the directory `antlr4-to-bnf` and execute `pip3 install -r requirements.txt`
 
 ### ANTLR4 → BNF
 
@@ -36,7 +36,7 @@ Go into the directory `antlr4-to-bnf`. If you have a grammar named `test.g4`, yo
 
 Make sure the project is built. Otherwise, run `dune build` in the `poirot` directory.
 
-Go into the directory `poirot/_build/default/examples`. If you have a grammar `test.bnf`, run `./bnf2antlr4.exe test.bnf`. It will generate the file `test.g4`.
+Go into the directory `poirot/_build/default/examples`. If you have a grammar `test.bnf`, run `./bnf2antlr4.exe test.bnf`. It will generate the file `test.g4`. Its axiom is named `axiom`.
 
 ## Oracles
 

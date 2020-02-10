@@ -1,4 +1,5 @@
 from ANTLRv4ParserListener import *
+from ANTLRv4Parser import ANTLRv4Parser
 import inspect
 import pprint
 import sys
