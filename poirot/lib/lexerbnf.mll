@@ -29,8 +29,8 @@ rule token = parse
     | "::=" { SEP } (* separator of the rule *)
     | "ε" { EPSILON } (* empty sentence *)
 
-    | "EOF" { TERM "" }
-    | "<EOF>" { TERM "" }
+    | "EOF" { token lexbuf }
+    | "<EOF>" { token lexbuf }
 
     | "\'\'" { token lexbuf } (* empty terminal *)
     | '\'' (([^ '\'' '\n' '\r'])+ as s) '\'' { make_term s } (* terminal *)

@@ -3,7 +3,7 @@
 grammar msg_exec;
 
 axiom : s EOF;
-exe : 'e' 'x' 'e' 'c' ' ' 'c' 'm' 'd';
-msg : 'm' 's' 'g' ' ' params;
-params : 'k' 'e' 'y' ' ' '=' ' ' 'v' 'a' 'l' 'u' 'e' | 'k' 'e' 'y' ' ' '=' ' ' 'v' 'a' 'l' 'u' 'e' ' ' '&' ' ' params;
-s : exe | exe ' ' ';' ' ' s | msg | msg ' ' ';' ' ' s;
+exe : 'exec ' 'cmd';
+msg : 'msg ' params;
+params : 'key' ' = ' 'value' | 'key' ' = ' 'value' ' & ' params;
+s : exe | exe ' ; ' s | msg | msg ' ; ' s;

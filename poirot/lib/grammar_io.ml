@@ -44,11 +44,11 @@ let export_bnf (fname : string) (g: ext_grammar) =
 let export_antlr4 (fname: string) (g: grammar) =
     (* all the non-terminals are written in lowercase to have parser rule and not lexer rule *)
     let export_antlr4_char (c: char) : string = match c with
-        | '\'' -> "'\\''"
-        | _ -> "'"^(String.make 1 c)^"'" in
+        | '\'' -> "\\'"
+        | _ -> String.make 1 c in
     let export_antlr4_elem (e: element) : string = match e with
         | Nonterminal s -> String.lowercase_ascii s
-        | Terminal s -> string_of_list " " "" export_antlr4_char (List.init (String.length s) (String.get s)) in
+        | Terminal s -> "'" ^(string_of_list "" "" export_antlr4_char (List.init (String.length s) (String.get s))) ^ "'" in
     let export_antlr4_rhs (elist: element list): string =
         (string_of_list " " "" export_antlr4_elem elist) in
     let export_antlr4_rules (e: element): string =

@@ -222,7 +222,7 @@ def parser_regexp_to_bnf(nt, suf, rex):
     if rex[0] == "and":
         for child in rex[1]:
             if child[0] in ["string"]:
-                rule += " " + escape(child[1]) + ""
+                rule += " " + escape(child[1][1:-1]) + ""
             elif child[0] in ["token", "rule"]:
                 rule += " <" + (child[1]) + ">"
             else:
