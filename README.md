@@ -12,6 +12,8 @@ Go into the directory `poirot/poirot`.
 
 Finally, install Poirot: `opam pin poirot .` and then `opam install .`
 
+To generate the documentation, make sure `odoc` is installed or install it with `opam install odoc`. You can then generate the documentation with `dune build @doc`. It will be stored in `poirot/_build/default/_doc/`.
+
 ## Use the library in your own project
 
 Using Poirot in your project with `dune` is easy: just add `poirot` in the list of the dependencies. Poirot should be available to `ocamlfind` as well (you can check with `ocamlfind query poirot`).
