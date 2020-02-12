@@ -13,6 +13,9 @@ type element
  @param max_depth Poirot won't search beyond the maximal depth. By default, we recommend 10. *)
 val search : (element,string) Hashtbl.t option -> string -> grammar -> element -> element list option -> int -> char list -> string option -> out_channel option -> grammar option
 
+(** [read_conf filename] read the semantics substitution from the file [filename] *)
+val read_subst : string -> (element,string) Hashtbl.t
+
 (** [quotient g left_quotient right_quotient] returns the grammar [g] after a left quotient by [left_quotient] and a right quotient by [right_quotient]. [left_quotient] and [right_quotient] can contain nonterminals or be empty. *)
 val quotient : grammar -> element list -> element list -> grammar
 

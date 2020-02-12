@@ -36,6 +36,16 @@ let read_token (unravel: bool) (str : string) : element =
         | _ -> Terminal e)
     | _ -> failwith "No token!"
 
+let read_subst (fname: string) : (element,string) Hashtbl.t =
+    let rec read_subst_tokens lexbuf : (element * string) list =
+        match (Lexerconf.token lexbuf : Lexerconf.token) with
+        | LINE (e,s) -> (e,s)::(read_subst_tokens lexbuf)
+        | EOF -> [] in
+    let l = read_subst_tokens (Lexing.from_channel (open_in fname)) in
+    let table = Hashtbl.create (List.length l) in
+    List.iter (fun (e,s) -> Hashtbl.add table e s) l;
+    table
+
 let export_bnf (fname : string) (g: ext_grammar) =
     let channel = open_out fname in
     output_string channel (bnf_string_of_ext_grammar g);

@@ -1,4 +1,4 @@
-(ocamllex lexerbnf)
+(ocamllex lexerbnf lexerconf)
 
 (menhir
  (modules parserbnf))

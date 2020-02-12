@@ -6,6 +6,8 @@ let search (values: (element,string) Hashtbl.t option) (oracle_fname: string)  (
         fun g -> g |> Tree_fuzzer.fuzzer 0 values goal |> Option.map Grammar.string_of_word |> oracle in
     Option.map Grammar.grammar_of_ext_grammar (Inference.search (fuzzer_oracle values (Some goal) oracle_fname) g goal start max_depth forbidden sgraph_fname qgraph_channel)
 
+let read_subst : string -> (element,string) Hashtbl.t = Grammar_io.read_subst
+
 let quotient (g: grammar) (prefix: element list) (suffix: element list) : grammar =
     Grammar.grammar_of_ext_grammar (Rec_quotient.quotient_mem g None {pf=List.rev prefix;e=g.axiom;sf=suffix})
 
