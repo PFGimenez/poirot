@@ -7,11 +7,12 @@ type grammar
 (** A symbol of the grammar, either a terminal or a nonterminal *)
 type element
 
-(** [search None oracle_filename g goal start max_depth [] None None] returns the grammar of injection from the base grammar [g] according to the oracle [oracle_filename].
+(** [search oracle_filename g goal start] returns the grammar of injection from the base grammar [g] according to the oracle [oracle_filename]
+ @param oracle_filename the filename of an oracle script that returns error code 0 if the injection is lexically correct, 1 otherwise.
+ @param g the grammar of the query language (e.g. SQL)
  @param goal the goal of the search, i.e. the element (terminal or nonterminal) you seek to get in the grammar of injection. Poirot stops the search once it is reached.
- @param start a element (terminal or nonterminal) that is a injection
- @param max_depth Poirot won't search beyond the maximal depth. By default, we recommend 10. *)
-val search : (element,string) Hashtbl.t option -> string -> grammar -> element -> element list option -> int -> char list -> string option -> out_channel option -> grammar option
+ @param start a element (terminal or nonterminal) that is a injection. *)
+val search : ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> string -> grammar -> element -> element list option -> grammar option
 
 (** [read_conf filename] read the semantics substitution from the file [filename] *)
 val read_subst : string -> (element,string) Hashtbl.t

@@ -30,8 +30,6 @@ let ()=
         and goal = Option.get !goal
         and oracle_fname = Option.get !oracle_fname in
 
-        let qgraph_channel = Option.map open_out !qgraph_fname in
-
-        let g = Poirot.search None oracle_fname grammar goal !start !max_depth (explode !avoid) !graph_fname qgraph_channel in
+        let g = Poirot.search ~max_depth:!max_depth ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle_fname grammar goal !start in
         if g = None then print_endline "No grammar found";
     else print_endline usage
