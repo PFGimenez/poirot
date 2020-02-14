@@ -5,10 +5,10 @@ let ()=
     and axiom = ref None in
 
     let speclist = [
-        ("-grammar",    Arg.String (fun s -> grammar := Some (Poirot.read_bnf_grammar false s)),     "Target grammar");
-        ("-pf",         Arg.String (fun s -> prefix := Some (Poirot.read_tokens false s)),     "Prefix of the request");
-        ("-sf",         Arg.String (fun s -> suffix := Some (Poirot.read_tokens false s)),     "Suffix of the request");
-        ("-axiom",      Arg.String (fun s -> axiom := Some (Poirot.read_token false s)),     "Axiom of the request")
+        ("-grammar",    Arg.String (fun s -> grammar := Some (Poirot.read_bnf_grammar s)),     "Target grammar");
+        ("-pf",         Arg.String (fun s -> prefix := Some (Poirot.read_tokens s)),     "Prefix of the request");
+        ("-sf",         Arg.String (fun s -> suffix := Some (Poirot.read_tokens s)),     "Suffix of the request");
+        ("-axiom",      Arg.String (fun s -> axiom := Some (Poirot.read_token s)),     "Axiom of the request")
     ] in
     let usage = "Error: grammar, prefix and suffix are necessary" in
     Arg.parse speclist ignore usage;
