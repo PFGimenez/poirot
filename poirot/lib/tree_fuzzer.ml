@@ -59,9 +59,10 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
 
     (* not tail-recursive ! but the max depth is controlled *)
     let rec fuzzer_explode (depth: int) (e: element) : parse_tree =
-        if Option.map (fun v -> Hashtbl.mem v e) values = Some true then
-            Leaf (Terminal (Hashtbl.find (Option.get values) e))
-        else if is_terminal e then
+        if Option.map (fun v -> Hashtbl.mem v e) values = Some true then begin
+            let all_bindings = Hashtbl.find_all (Option.get values) e in
+            Leaf (Terminal (List.nth all_bindings (Random.int (List.length all_bindings))))
+        end else if is_terminal e then
             Leaf e
         else if depth >= max_depth then
             fuzzer_minimize [] [] e
