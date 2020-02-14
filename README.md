@@ -66,4 +66,4 @@ Here is an example that uses the simple grammar `msg_exec`. First, create its le
 
 Run `poirot/_build/default/examples/poirot_example.exe -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"`
 
-It should generates the injection `value ; exec cmd ; msg key = value` and outputs its predicted injection grammar.
+It should generates the injection `value ; exec cmd ; msg key = value`.

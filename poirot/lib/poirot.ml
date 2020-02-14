@@ -12,8 +12,8 @@ let read_subst : string -> (element,string) Hashtbl.t = Grammar_io.read_subst
 let quotient (g: grammar) (prefix: element list) (suffix: element list) : grammar =
     Grammar.grammar_of_ext_grammar (Rec_quotient.quotient_mem g None false {pf=List.rev prefix;e=g.axiom;sf=suffix})
 
-let fuzzer ?(subst: (element,string) Hashtbl.t option = None) (complexity: int) (g: grammar) : string option =
-    Option.map Grammar.string_of_word (Tree_fuzzer.fuzzer complexity subst None g)
+let fuzzer ?(subst: (element,string) Hashtbl.t option = None) ?(complexity: int = 10) ?(goal: element option = None) (g: grammar) : string option =
+    Option.map Grammar.string_of_word (Tree_fuzzer.fuzzer complexity subst goal g)
 
 let to_uppercase : grammar -> grammar = Clean.to_uppercase
 let to_lowercase : grammar -> grammar = Clean.to_lowercase

@@ -27,10 +27,12 @@ let oracle_mem (o: string -> oracle_status) (verbose: bool) : string option -> o
                 answer
             end
 
-let oracle_from_script (fname: string) (inj: string) : oracle_status =
-    let cmd = fname^" '"^inj^"' >/dev/null 2>&1" in
+let oracle_from_script (verbose: bool) (fname: string) (inj: string) : oracle_status =
+    let cmd = match verbose with
+        | true -> fname^" '"^inj^"'"
+        | _ -> fname^" '"^inj^"' >/dev/null 2>&1" in
     let answer = oracle_status_of_int (Sys.command cmd) in
     print_endline ("Call to oracle: '"^inj^"': "^(string_of_oracle_status answer));
     answer
 
-let oracle_mem_from_script (fname: string) (verbose: bool) = oracle_mem (oracle_from_script fname) verbose
+let oracle_mem_from_script (fname: string) (verbose: bool) = oracle_mem (oracle_from_script verbose fname) verbose

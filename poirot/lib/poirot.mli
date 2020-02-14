@@ -20,8 +20,8 @@ val read_subst : string -> (element,string) Hashtbl.t
 (** [quotient g left_quotient right_quotient] returns the grammar [g] after a left quotient by [left_quotient] and a right quotient by [right_quotient]. [left_quotient] and [right_quotient] can contain nonterminals or be empty. *)
 val quotient : grammar -> element list -> element list -> grammar
 
-(** [fuzzer depth g] returns a word from [g]. If [depth] is high, longer words should be generated. If [depth = 0], the returned word is deterministic (always the same). This is a primitive fuzzer. *)
-val fuzzer : ?subst:(element,string) Hashtbl.t option -> int -> grammar -> string option
+(** [fuzzer ~complexity:10 ~goal:e g] returns a word from [g]. If [complexity] is high, longer words should be generated. If [complexity = 0], the returned word is deterministic (always the same) and should be short. If a goal is specified, then it will be included in the generated word. Beware: this is a primitive fuzzer. *)
+val fuzzer : ?subst:(element,string) Hashtbl.t option -> ?complexity:int -> ?goal:element option -> grammar -> string option
 
 (** [to_uppercase g] returns the grammar [g] with uppercased chars. *)
 val to_uppercase :  grammar -> grammar
