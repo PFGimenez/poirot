@@ -26,13 +26,13 @@ Poirot uses a simple grammar format inspired from the BNF format.
 
 ### Install antlr4
 
-You will certainly need ANTLR4. Make sure you have Python 3 and Java JRE installed. Go into the directory `antlr4-to-bnf` and execute `pip3 install -r requirements.txt`
+You will certainly need ANTLR4. Make sure you have Python 3 and Java JRE installed. Go into the directory `antlr4-utils` and execute `pip3 install -r requirements.txt`
 
 ### ANTLR4 → BNF
 
 You can find many grammars in ANTLR4 format in this repository: https://github.com/antlr/grammars-v4.
 
-Go into the directory `antlr4-to-bnf`. If you have a grammar named `test.g4`, you can simply write `make test.bnf` to generate its BNF version. The Makefile will automatically download the ANTLR4 jar file if necessary.
+Go into the directory `antlr4-utils`. If you have a grammar named `test.g4`, you can simply write `make test.bnf` to generate its BNF version. The Makefile will automatically download the ANTLR4 jar file if necessary.
 
 ### BNF → ANTLR4
 
@@ -50,9 +50,9 @@ The oracles are in the directory `oracles`.
 
 ### Use the prefix/suffix oracle
 
-Put an ANTLR4 grammar (such as `example.g4`) into the `antlr4-to-bnf` directory. Execute `make exampleLexer.py` (change accordingly to the name of your grammar). For example, you can use the simple `msg_exec.g4` grammar; in this case, type `make msg_execLexer.py`.
+Put an ANTLR4 grammar (such as `example.g4`) into the `antlr4-utils` directory. Execute `make exampleLexer.py` (change accordingly to the name of your grammar). For example, you can use the simple `msg_exec.g4` grammar; in this case, type `make msg_execLexer.py`.
 
-### Run the example with the prefix/suffix oracle
+## Run the example with the prefix/suffix oracle
 
 Make sure the project is built. Otherwise, run `dune build` in the `poirot` directory.
 
