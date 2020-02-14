@@ -12,25 +12,25 @@ let oracle_status_of_int : int -> oracle_status = function
     | 2 -> Semantic_error
     | _ -> failwith "Unknown error code!"
 
-let oracle_mem (o: string -> oracle_status) : string option -> oracle_status =
+let oracle_mem (o: string -> oracle_status) (verbose: bool) : string option -> oracle_status =
     let mem : (string, oracle_status) Hashtbl.t = Hashtbl.create 1000 in
     fun (inj: string option): oracle_status -> match inj with
         | None -> Grammar_error (* no word in the language *)
         | Some inj ->
             if Hashtbl.mem mem inj then begin
-                print_endline ("Memoization: "^inj);
+                if verbose then print_endline ("Memoization: "^inj);
                 Hashtbl.find mem inj
             end else begin
                 let answer = o inj in
                 Hashtbl.add mem inj answer;
-                print_endline ((string_of_int (Hashtbl.length mem))^"th call to oracle: "^inj^" ("^(string_of_oracle_status answer)^")");
+                if verbose then print_endline ((string_of_int (Hashtbl.length mem))^"th call to oracle: "^inj^" ("^(string_of_oracle_status answer)^")");
                 answer
             end
 
 let oracle_from_script (fname: string) (inj: string) : oracle_status =
-    let cmd = fname^" '"^inj^"'" in
+    let cmd = fname^" '"^inj^"' >/dev/null 2>&1" in
     let answer = oracle_status_of_int (Sys.command cmd) in
-    print_endline ("Call to oracle: "^cmd^": "^(string_of_oracle_status answer));
+    print_endline ("Call to oracle: '"^inj^"': "^(string_of_oracle_status answer));
     answer
 
-let oracle_mem_from_script (fname: string) = oracle_mem (oracle_from_script fname)
+let oracle_mem_from_script (fname: string) (verbose: bool) = oracle_mem (oracle_from_script fname) verbose

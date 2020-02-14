@@ -12,7 +12,7 @@ type element
  @param g the grammar of the query language (e.g. SQL)
  @param goal the goal of the search, i.e. the element (terminal or nonterminal) you seek to get in the grammar of injection. Poirot stops the search once it is reached.
  @param start a element (terminal or nonterminal) that is a injection. *)
-val search : ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> string -> grammar -> element -> element list -> grammar option
+val search : ?verbose:bool -> ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> string -> grammar -> element -> element list -> grammar option
 
 (** [read_subst filename] read the semantics substitution from the file [filename]. *)
 val read_subst : string -> (element,string) Hashtbl.t

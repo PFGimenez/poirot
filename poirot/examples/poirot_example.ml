@@ -10,6 +10,7 @@ let ()=
     and subst = ref None
     and goal = ref None
     and start = ref None
+    and verbose = ref false
     and avoid = ref "" in
 
     let speclist = [
@@ -22,7 +23,8 @@ let ()=
         ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
-        ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format")
+        ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
+        ("-verbose",    Arg.Set verbose,     "Make Poirot verbose")
     ] in
     let usage = "Error: grammar, goal, start and oracle are necessary" in
     Arg.parse speclist ignore usage;
@@ -33,9 +35,9 @@ let ()=
         and start = Option.get !start
         and oracle_fname = Option.get !oracle_fname in
 
-        let g = Poirot.search ~subst:(Option.map Poirot.read_subst !subst) ~max_depth:!max_depth ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle_fname grammar goal start in
+        let g = Poirot.search ~verbose:!verbose ~subst:(Option.map Poirot.read_subst !subst) ~max_depth:!max_depth ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle_fname grammar goal start in
         match (g,!injg_fname) with
-        | Some gram, Some fname -> Poirot.export_antlr4 fname gram
+        | Some gram, Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^(Option.get (Poirot.fuzzer 0 gram)))
+        | Some gram, _ -> print_endline ("Injection: "^(Option.get (Poirot.fuzzer 0 gram)))
         | None, _ -> print_endline "No grammar found";
-        | _ -> ();
     else print_endline usage

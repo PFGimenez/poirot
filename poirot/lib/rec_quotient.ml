@@ -3,7 +3,7 @@ open Grammar
 type side = Left | Right
 type elem_status = In_progress | Processed
 
-let quotient_mem (g: grammar) (graph_channel: out_channel option) : ext_element -> ext_grammar  =
+let quotient_mem (g: grammar) (graph_channel: out_channel option) (verbose: bool): ext_element -> ext_grammar  =
     let ext_g : ext_grammar = ext_grammar_of_grammar g
     and da = {pf=[];e=Nonterminal("dummy_axiom");sf=[]}
     (* all the computed rules *)
@@ -200,7 +200,8 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) : ext_element 
             else
                 da@@@[]
         end else begin
-            print_endline ("Nb iter: "^(string_of_int (quotient_symbols 0 [e]))^", memory size: "^(string_of_int (Hashtbl.length mem))); 
+            let nb_iter = quotient_symbols 0 [e] in
+            if verbose then print_endline ("Nb iter: "^(string_of_int nb_iter)^", memory size: "^(string_of_int (Hashtbl.length mem)));
             (* clean the grammar: remove useless, trivial rules, epsilon, etc. *)
             Clean.clean (grammar_of_mem e)
         end

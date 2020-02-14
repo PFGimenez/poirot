@@ -9,8 +9,8 @@ let symbols_from_parents (g: grammar) (axiom : element) : element list =
     g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare
 
 
-let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) : ext_grammar option =
-    let quotient = Rec_quotient.quotient_mem g qgraph_channel
+let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (verbose: bool) : ext_grammar option =
+    let quotient = Rec_quotient.quotient_mem g qgraph_channel verbose
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let distance_to_goal : (element * element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
     let graph_channel = Option.map open_out graph_fname in
@@ -85,11 +85,11 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
     let rec search_aux (closedset: (ext_element, unit) Hashtbl.t) (step: int) (openset: node list) : ext_grammar option = match openset with
     | [] -> None (* openset is empty : there is no way *)
     | {g_val;e;par;origin;_}::q ->
-        print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element e));
+        if verbose then print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element e));
         assert (g_val <= max_depth);
         (* verify whether e has already been visited *)
         if Hashtbl.mem closedset e then
-            (print_endline "Visited"; (search_aux [@tailcall]) closedset (step + 1) q)
+            (if verbose then print_endline "Visited"; (search_aux [@tailcall]) closedset (step + 1) q)
         else begin
             (* now it is visited *)
             Hashtbl.add closedset e ();
@@ -99,22 +99,22 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
             (* call the fuzzer/oracle with this grammar *)
             let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle in
             if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
-                print_endline "Invalid";
+                if verbose then print_endline "Invalid";
                 set_node_color_in_graph e "crimson";
                 (search_aux [@tailcall]) closedset (step + 1) q
             end else if is_reachable (grammar_of_ext_grammar nt_inj_g) goal (full_element_of_ext_element nt_inj_g.ext_axiom) then begin (* the goal has been found ! *)
-                print_endline "Found!";
+                if verbose then print_endline "Found!";
                 set_node_color_in_graph e "forestgreen";
-                print_endline (string_of_ext_grammar nt_inj_g);
+                if verbose then print_endline (string_of_ext_grammar nt_inj_g);
                 Some nt_inj_g
             end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
-                print_endline "Depth max";
+                if verbose then print_endline "Depth max";
                 set_node_color_in_graph e "orange";
                 (search_aux [@tailcall]) closedset (step + 1) q
             end else begin (* we explore in this direction *)
                 (* get the rules e -> ... to verify if e is testable or not *)
                 if status = Grammar_error then set_node_color_in_graph e "grey";
-                print_endline "Explore";
+                if verbose then print_endline "Explore";
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset (g_val + 1) origin e q)
             end
         end in
