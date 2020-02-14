@@ -4,7 +4,7 @@ _Poirot is still a work in progress_
 
 ## Install the library
 
-First, install the Ocaml package manager, `opam`: https://opam.ocaml.org/doc/Install.html
+First, you need the OCaml package manager, `opam`: https://opam.ocaml.org/doc/Install.html. Beware, Poirot needs at least OCaml 4.08.1. See https://ocaml.org/docs/install.html for more information on how to install OCaml.
 
 Then, clone the Poirot repository: `git clone https://github.com/PFGimenez/poirot.git`
 
@@ -16,7 +16,7 @@ Finally, install Poirot: `opam pin poirot .` and then `opam install .`
 
 Using Poirot in your project with `dune` is easy: just add `poirot` in the list of the dependencies. Poirot should be available to `ocamlfind` as well (you can check with `ocamlfind query poirot`).
 
-To generate the documentation, make sure `odoc` is installed (or install it with `opam install odoc`). You can then generate the documentation with `dune build @doc`. It will be stored in `poirot/_build/default/_doc/`.
+To generate the documentation, make sure `odoc` is installed (or install it with `opam install odoc`). You can then generate the documentation with `dune build @doc`. It will be stored in `_build/default/_doc/`.
 
 Check `poirot/poirot/examples/poirot_example.ml` for an example.
 
@@ -36,9 +36,7 @@ Go into the directory `antlr4-utils`. If you have a grammar named `test.g4`, you
 
 ### BNF → ANTLR4
 
-Make sure the project is built. Otherwise, run `dune build` in the `poirot` directory.
-
-If you have a grammar `test.bnf`, run `poirot/_build/default/examples/bnf2antlr4.exe test.bnf`. It will generate the file `test.g4`. Its axiom is named `axiom`.
+If you have a grammar `test.bnf`, run `dune exec poirot/examples/bnf2antlr4.exe test.bnf`. It will generate the file `test.g4` containing the grammar in ANTLR4 format. Its axiom is named `axiom`.
 
 ## Oracles
 
@@ -58,12 +56,6 @@ This oracle needs five parameters: the ANTLR4 grammar name (without the `.g4` ex
 
 ## Use Poirot directly
 
-Inside the directory `poirot/_build/default/examples`, there is the executable `poirot_example.exe` that allows you to use Poirot without building your own program (provided you ran `dune build` in the `poirot` directory). You can run `poirot/_build/default/examples/poirot_example.exe -help` to get the list of parameters.
+The example code `poirot_example` allows you to use Poirot without making your own program. You can run `dune exec -- poirot/examples/poirot_example.exe -help` to get the list of parameters on how to use it.
 
-### Example
-
-Here is an example that uses the simple grammar `msg_exec`. First, create its lexer and perser by executing `make msg_execLexer.py` from the `antlr4-utils` directory.
-
-Run `poirot/_build/default/examples/poirot_example.exe -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"`
-
-It should generates the injection `value ; exec cmd ; msg key = value`.
+Here is an example that uses the simple grammar `msg_exec`. This example uses the prefix/suffix oracle, so first create the lexer and parser by executing `make msg_execLexer.py` from the `antlr4-utils` directory. Then, run `dune exec -- poirot/examples/poirot_example.exe -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"`. It should generates the injection `value ; exec cmd ; msg key = value`.
