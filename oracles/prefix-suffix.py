@@ -1,1 +1,1 @@
-../antlr4-to-bnf/antlr4-oracle.py
+../antlr4-utils/antlr4-oracle.py

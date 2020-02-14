@@ -1,7 +1,7 @@
 # Poirot: grammar-based injection fuzzer for black box systems
-  
+
 _Poirot is still a work in progress_
-  
+
 ## Install the library
 
 First, install the Ocaml package manager, `opam`: https://opam.ocaml.org/doc/Install.html
@@ -12,11 +12,11 @@ Go into the directory `poirot/poirot`.
 
 Finally, install Poirot: `opam pin poirot .` and then `opam install .`
 
-To generate the documentation, make sure `odoc` is installed or install it with `opam install odoc`. You can then generate the documentation with `dune build @doc`. It will be stored in `poirot/_build/default/_doc/`.
-
 ## Use the library in your own project
 
 Using Poirot in your project with `dune` is easy: just add `poirot` in the list of the dependencies. Poirot should be available to `ocamlfind` as well (you can check with `ocamlfind query poirot`).
+
+To generate the documentation, make sure `odoc` is installed (or install it with `opam install odoc`). You can then generate the documentation with `dune build @doc`. It will be stored in `poirot/_build/default/_doc/`.
 
 Check `poirot/poirot/examples/poirot_example.ml` for an example.
 
@@ -38,24 +38,32 @@ Go into the directory `antlr4-utils`. If you have a grammar named `test.g4`, you
 
 Make sure the project is built. Otherwise, run `dune build` in the `poirot` directory.
 
-Go into the directory `poirot/_build/default/examples`. If you have a grammar `test.bnf`, run `./bnf2antlr4.exe test.bnf`. It will generate the file `test.g4`. Its axiom is named `axiom`.
+If you have a grammar `test.bnf`, run `poirot/_build/default/examples/bnf2antlr4.exe test.bnf`. It will generate the file `test.g4`. Its axiom is named `axiom`.
 
 ## Oracles
 
-The oracles are in the directory `oracles`.
-
 ### What is an oracle ?
 
-(TODO)
+An oracle is a script that can send injection to the black-box system and, by examining this system, tell whether this injection is syntactically correct or not. Poirot gets the answer by checking its error code: 0 if the injection is syntactically correct, 1 otherwise.
+
+More precisely, Poirot will use this oracle by calling it with a single parameter, the injection. If you need more parameters for your oracle (e.g. an URL), you should give a partial application of the oracle to Poirot. For example, if your oracle script is `oracle.sh param1 param2 param3 inj`, just tell Poirot your script is `oracle.sh param1 param2 param3`.
+
+The oracles are in the directory `oracles`.
 
 ### Use the prefix/suffix oracle
 
-Put an ANTLR4 grammar (such as `example.g4`) into the `antlr4-utils` directory. Execute `make exampleLexer.py` (change accordingly to the name of your grammar). For example, you can use the simple `msg_exec.g4` grammar; in this case, type `make msg_execLexer.py`.
+We provide an oracle that simulates a black-box, given a grammar, a prefix and a suffix. To use it, you must first create the ANTLR4 lexer and parser of its grammar. To do that, put the ANTLR4 grammar (such as `example.g4`) into the `antlr4-utils` directory and execute `make exampleLexer.py` (change accordingly to the name of your grammar).
 
-## Run the example with the prefix/suffix oracle
+This oracle needs five parameters: the ANTLR4 grammar name (without the `.g4` extension), the axiom, a prefix, a suffix and an injection.
 
-Make sure the project is built. Otherwise, run `dune build` in the `poirot` directory.
+## Use Poirot directly
 
-Go into the directory `poirot/_build/default/examples`.
+Inside the directory `poirot/_build/default/examples`, there is the executable `poirot_example.exe` that allows you to use Poirot without building your own program (provided you ran `dune build` in the `poirot` directory). You can run `poirot/_build/default/examples/poirot_example.exe -help` to get the list of parameters.
 
-Run the example with: `./poirot_example.exe -grammar ../../../../bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "../../../../oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"`
+### Example
+
+Here is an example that uses the simple grammar `msg_exec`. First, create its lexer and perser by executing `make msg_execLexer.py` from the `antlr4-utils` directory.
+
+Run `poirot/_build/default/examples/poirot_example.exe -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"`
+
+It should generates the injection `value ; exec cmd ; msg key = value` and outputs its predicted injection grammar.
