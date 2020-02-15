@@ -109,7 +109,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
             end else if is_reachable (grammar_of_ext_grammar nt_inj_g) goal (full_element_of_ext_element nt_inj_g.ext_axiom) then begin (* the goal has been found ! *)
                 if verbose then print_endline "Found!";
                 set_node_color_in_graph e "forestgreen";
-                if verbose then print_endline (string_of_ext_grammar nt_inj_g);
+(*                if verbose then print_endline (string_of_ext_grammar nt_inj_g);*)
                 Some nt_inj_g
             end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
                 if verbose then print_endline "Depth max";
