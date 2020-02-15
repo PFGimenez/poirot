@@ -1,3 +1,5 @@
+open Grammar
+
 type oracle_status = Syntax_error | Semantic_error | No_error | Grammar_error
 
 let string_of_oracle_status (s: oracle_status) : string = match s with
@@ -23,15 +25,19 @@ let oracle_mem (o: string -> oracle_status) (verbose: bool) : string option -> o
             end else begin
                 let answer = o inj in
                 Hashtbl.add mem inj answer;
-                if verbose then print_endline ((string_of_int (Hashtbl.length mem))^"th call to oracle: "^inj^" ("^(string_of_oracle_status answer)^")");
+                (*if verbose then print_endline ((string_of_int (Hashtbl.length mem))^"th call to oracle: "^inj^" ("^(string_of_oracle_status answer)^")");*)
                 answer
             end
 
 let oracle_from_script (verbose: bool) (fname: string) (inj: string) : oracle_status =
+    let escape_char (c: char) : string = match c with
+        | '"' -> "\\\""
+        | '\\' -> "\\"
+        | _ -> String.make 1 c in
+    let inj = (string_of_list "" "" escape_char (List.init (String.length inj) (String.get inj))) in
     let cmd = match verbose with
-    (* TODO: entourer avec ", échapper " et \ seulement *)
-        | true -> fname^" '"^inj^"'"
-        | _ -> fname^" '"^inj^"' >/dev/null 2>&1" in
+        | true -> fname^" \""^inj^"\""
+        | _ -> fname^" \""^inj^"\" >/dev/null 2>&1" in
     let answer = oracle_status_of_int (Sys.command cmd) in
     print_endline ("Call to oracle: '"^inj^"': "^(string_of_oracle_status answer));
     answer
