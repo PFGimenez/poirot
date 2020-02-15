@@ -69,7 +69,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
         print(rule + " ;")
 
     elif rex[0] == "string":
-        print(rule + " " + escape(rex[1]) +" ;")
+        print(rule + " " + escape(rex[1][1:-1]) +" ;")
 
     elif rex[0] == "token":
         print(rule + " <" + rex[1] + "> ;")
@@ -150,7 +150,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                         #     print(rule + (" '%s' ; #X4" % chr(j)))
 
                 else:
-                    print(rule + escape(sa) + " ;")
+                    print(rule + " " + escape(sa) + " ;")
                     # if sa == '\'':
                     #     print(rule + (" '\\'' ; #X1"))
                     # elif sa == '"':
@@ -264,7 +264,7 @@ def parser_regexp_to_bnf(nt, suf, rex):
         print(rule+ " ;")
 
     elif rex[0] == "string":
-        print(rule + " " + escape(rex[1]) + " ;")
+        print(rule + " " + escape(rex[1][1:-1]) + " ;")
 
     elif rex[0] == "token":
         print(rule + " <" + rex[1] + "> ;")

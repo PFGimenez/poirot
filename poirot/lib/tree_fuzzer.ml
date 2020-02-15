@@ -6,7 +6,7 @@ type parse_tree = Leaf of element | Node of parse_tree list | Error
  * this is on purpose, so similar grammars yield same words and the oracle memoization can be exploited *)
 
 (* all nonterminal must be the left-hand side of a rule *)
-let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: element option) (g : grammar) : part option =
+let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: element option) (verbose: bool) (g : grammar) : part option =
     Random.self_init ();
     let nonrec_rules : (element, rule) Hashtbl.t = Hashtbl.create (List.length g.rules) in
 
@@ -96,6 +96,7 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
             if List.exists ((=) None) trees then None
             else Some (trees |> List.map Option.get |> List.flatten) in
 
+    if verbose then print_endline "Fuzzing";
     let tree = if Option.is_some goal && is_reachable g (Option.get goal) g.axiom then fuzzer_minimize (find_path_to_goal ()) [] g.axiom
     else (fuzzer_explode 0 g.axiom) in
     part_of_tree tree

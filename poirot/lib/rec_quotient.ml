@@ -202,6 +202,5 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) (verbose: bool
         end else begin
             let nb_iter = quotient_symbols 0 [e] in
             if verbose then print_endline ("Nb iter: "^(string_of_int nb_iter)^", memory size: "^(string_of_int (Hashtbl.length mem)));
-            (* clean the grammar: remove useless, trivial rules, epsilon, etc. *)
-            Clean.clean (grammar_of_mem e)
+            grammar_of_mem e
         end

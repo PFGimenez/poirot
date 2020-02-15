@@ -14,7 +14,7 @@ let ()=
     and avoid = ref "" in
 
     let speclist = [
-        ("-grammar",    Arg.String (fun s -> print_endline "Loading grammar…"; grammar := Some (Poirot.read_bnf_grammar s); print_endline "Grammar loaded!"),     "Target grammar");
+        ("-grammar",    Arg.String (fun s -> print_endline "Loading grammar…"; grammar := Some (Poirot.read_bnf_grammar s)),     "Target grammar");
         ("-goal",       Arg.String (fun s -> goal := Some (Poirot.read_token s)),     "Terminal or nonterminal to reach");
         ("-oracle",     Arg.String (fun s -> oracle_fname := Some s),     "Oracle script filename");
         ("-start",      Arg.String (fun s -> start := Some (Poirot.read_tokens s)),     "A valid injection, either terminal or nonterminal");
