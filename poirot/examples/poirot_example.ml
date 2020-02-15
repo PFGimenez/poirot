@@ -14,7 +14,7 @@ let ()=
     and avoid = ref "" in
 
     let speclist = [
-        ("-grammar",    Arg.String (fun s -> grammar := Some (Poirot.read_bnf_grammar s)),     "Target grammar");
+        ("-grammar",    Arg.String (fun s -> print_endline "Loading grammar…"; grammar := Some (Poirot.read_bnf_grammar s); print_endline "Grammar loaded!"),     "Target grammar");
         ("-goal",       Arg.String (fun s -> goal := Some (Poirot.read_token s)),     "Terminal or nonterminal to reach");
         ("-oracle",     Arg.String (fun s -> oracle_fname := Some s),     "Oracle script filename");
         ("-start",      Arg.String (fun s -> start := Some (Poirot.read_tokens s)),     "A valid injection, either terminal or nonterminal");
@@ -34,7 +34,7 @@ let ()=
         and goal = Option.get !goal
         and start = Option.get !start
         and oracle_fname = Option.get !oracle_fname in
-
+        print_endline "Start searching…";
         let g = Poirot.search ~verbose:!verbose ~subst:(Option.map Poirot.read_subst !subst) ~max_depth:!max_depth ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle_fname grammar goal start in
         match (g,!injg_fname) with
         | Some gram, Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^(Option.get (Poirot.fuzzer ~complexity:0 ~goal:(Some goal) gram)))

@@ -29,6 +29,7 @@ let oracle_mem (o: string -> oracle_status) (verbose: bool) : string option -> o
 
 let oracle_from_script (verbose: bool) (fname: string) (inj: string) : oracle_status =
     let cmd = match verbose with
+    (* TODO: entourer avec ", échapper " et \ seulement *)
         | true -> fname^" '"^inj^"'"
         | _ -> fname^" '"^inj^"' >/dev/null 2>&1" in
     let answer = oracle_status_of_int (Sys.command cmd) in
