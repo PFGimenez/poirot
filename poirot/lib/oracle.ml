@@ -38,7 +38,7 @@ let oracle_from_script (verbose: bool) (fname: string) (inj: string) : oracle_st
     let cmd = match verbose with
         | true -> fname^" \""^inj^"\""
         | _ -> fname^" \""^inj^"\" >/dev/null 2>&1" in
-    print_endline ("Call to oracle: '"^inj);
+    print_endline ("Call to oracle: "^inj);
     let answer = oracle_status_of_int (Sys.command cmd) in
     print_endline ((string_of_oracle_status answer));
     answer
