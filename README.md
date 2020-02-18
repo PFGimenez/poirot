@@ -16,9 +16,9 @@ Finally, install Poirot: `opam pin poirot .` and then `opam install .`
 
 Using Poirot in your project with `dune` is easy: just add `poirot` in the list of the dependencies. Poirot should be available to `ocamlfind` as well (you can check with `ocamlfind query poirot`).
 
-To generate the documentation, make sure `odoc` is installed (or install it with `opam install odoc`). You can then generate the documentation with `dune build @doc`. It will be stored in `_build/default/_doc/`.
+The documentation is available online at https://pfgimenez.github.io/poirot/poirot/Poirot/index.html. To generate the documentation locally, make sure `odoc` is installed (or install it with `opam install odoc`). You can then generate the documentation with `dune build @doc`. It will be stored in `_build/default/_doc/_html/poirot/Poirot/index.html`.
 
-Check `poirot/poirot/examples/poirot_example.ml` for an example.
+Check `poirot/poirot/examples/poirot_example.ml` for an example using the library.
 
 ## Use the ANTLR4 ⇌ BNF converter
 

@@ -15,9 +15,8 @@ let quotient (g: grammar) (prefix: element list) (suffix: element list) : gramma
 let fuzzer ?(subst: (element,string) Hashtbl.t option = None) ?(complexity: int = 10) ?(goal: element option = None) (g: grammar) : string option =
     Option.map Grammar.string_of_word (Tree_fuzzer.fuzzer complexity subst goal false g)
 
-let to_uppercase : grammar -> grammar = Clean.to_uppercase
-let to_lowercase : grammar -> grammar = Clean.to_lowercase
-let simplify : grammar -> grammar = Clean.simplify
+let to_uppercase (g: grammar) : grammar = Clean.simplify (Clean.to_uppercase g)
+let to_lowercase (g: grammar) : grammar = Clean.simplify (Clean.to_lowercase g)
 
 let set_axiom (g: grammar) (axiom: element) : grammar = {axiom; rules=g.rules}
 
