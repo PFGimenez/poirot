@@ -58,6 +58,13 @@ This oracle needs five parameters: the ANTLR4 grammar name (without the `.g4` ex
 
 The example code `poirot_example` allows you to use Poirot without making your own program. You can run `dune exec -- poirot/examples/poirot_example.exe -help` to get the list of parameters on how to use it.
 
-Here is an example that uses the simple grammar `msg_exec`. This example uses the prefix/suffix oracle, so first create the lexer and parser by executing `make msg_execLexer.py` from the `antlr4-utils` directory. Then, run `dune exec -- poirot/examples/poirot_example.exe -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"`. It should generates the injection `value ; exec cmd ; msg key = value`.
+Here is an example that uses the simple grammar `msg_exec`. This example uses the prefix/suffix oracle, so first create the lexer and parser by executing `make msg_execLexer.py` from the `antlr4-utils` directory. Then, run `dune exec -- poirot/examples/poirot_example.exe -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"`. It will generates the injection `value ; exec cmd ; msg key = value`.
 
-You can experiment with the more complex grammar `parenthesis` as well. Create its lexer and parser and then run `dune exec -- poirot/examples/poirot_example.exe -grammar bnf_grammars/parenthesis.bnf -goal "'b'" -start "'a'" -oracle "oracles/prefix-suffix.py parenthesis axiom '([[([' '])]])'"`. It should generate the injection `a])]])b([[([a`.
+You can experiment with the more complex grammar `parenthesis` as well. Create its lexer and parser and then run `dune exec -- poirot/examples/poirot_example.exe -grammar bnf_grammars/parenthesis.bnf -goal "'b'" -start "'a'" -oracle "oracles/prefix-suffix.py parenthesis axiom '([[([' '])]])'"`. It will generate the injection `a])]])b([[([a`.
+
+## Injection grammar of white-box systems
+
+If you know the query (i.e. the prefix and the suffix surrounding the injection point), you can directly use Poirot to get the grammar of the injection with the `quotient` function, export it to ANTLR4 grammar, or ask directly Poirot to generate an injection containing some symbol by using the `fuzzer` function. White-box fuzzing is of course greatly faster than black-box fuzzing.
+
+For example, you can run: `dune exec -- poirot/examples/quotient_example.exe -grammar bnf_grammars/msg_exec.bnf -pf "'msg ' 'key' ' = '" -sf "' & ' 'key' ' = ' 'value'" -goal "Exe"`. It will generate the injection `value ; exec cmd ; msg key = value`.
+
