@@ -52,10 +52,12 @@ The oracles are in the directory `oracles`.
 
 We provide an oracle that simulates a black-box, given a grammar, a prefix and a suffix. To use it, you must first create the ANTLR4 lexer and parser of its grammar. To do that, put the ANTLR4 grammar (such as `example.g4`) into the `antlr4-utils` directory and execute `make exampleLexer.py` (change accordingly to the name of your grammar).
 
-This oracle needs five parameters: the ANTLR4 grammar name (without the `.g4` extension), the axiom, a prefix, a suffix and an injection.
+This oracle needs five parameters: the ANTLR4 grammar name (without the `.g4` extension), the axiom, a prefix, a suffix and an injection. Beware, the grammar path is relative to the directory `antlr4-utils`.
 
 ## Use Poirot directly
 
 The example code `poirot_example` allows you to use Poirot without making your own program. You can run `dune exec -- poirot/examples/poirot_example.exe -help` to get the list of parameters on how to use it.
 
 Here is an example that uses the simple grammar `msg_exec`. This example uses the prefix/suffix oracle, so first create the lexer and parser by executing `make msg_execLexer.py` from the `antlr4-utils` directory. Then, run `dune exec -- poirot/examples/poirot_example.exe -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"`. It should generates the injection `value ; exec cmd ; msg key = value`.
+
+You can experiment with the more complex grammar `parenthesis` as well. Create its lexer and parser and then run `dune exec -- poirot/examples/poirot_example.exe -grammar bnf_grammars/parenthesis.bnf -goal "'b'" -start "'a'" -oracle "oracles/prefix-suffix.py parenthesis axiom '([[([' '])]])'"`. It should generate the injection `a])]])b([[([a`.
