@@ -11,9 +11,11 @@ dev-repo: "git+https://github.com/PFGimenez/poirot"
 depends: [
     "ocaml" {>= "4.08.1"}
     "menhir" {build}
-    "dune" {>= "2.0.1"}
+    "dune"
+    "odoc" {with-doc}
 ]
 build: [
   ["dune" "subst"] {pinned}
   ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "build" "@doc" "-p" name "-j" jobs] {with-doc}
 ]
