@@ -123,7 +123,7 @@ let string_of_grammar (g : grammar) : string = "axiom: " ^ (string_of_element g.
 let string_of_grammar (g: grammar) : string =
     let string_of_rules_of_elem (e: element): string =
         (decorated_string_of_element e)^" --> "^(string_of_list " | " "" string_of_part (get_all_rhs g.rules e))^";\n" in
-    "axiom: " ^ (string_of_element g.axiom) ^ (string_of_list "" "(no rules)" (fun e -> (string_of_rules_of_elem e)) (List.filter is_non_terminal (get_all_symbols g)))
+    "axiom: " ^ (string_of_element g.axiom) ^ "\n" ^ (string_of_list "" "(no rules)" (fun e -> (string_of_rules_of_elem e)) (List.filter is_non_terminal (get_all_symbols g)))
 
 (* Conversion *)
 
