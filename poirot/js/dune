@@ -2,14 +2,16 @@
     (name js_poirot)
     (modules js_poirot)
     (modes byte)
-    (libraries poirot)
+    (libraries poirot js_of_ocaml)
     (preprocess (pps js_of_ocaml-ppx)))
 
 (rule
   (targets js_poirot.js)
+  (deps (glob_files msg_exec.bnf))
   (action
     (run %{bin:js_of_ocaml} --noruntime %{lib:js_of_ocaml-compiler:runtime.js}
-         --source-map %{dep:js_poirot.bc} -o %{targets} --pretty)))
+         --source-map %{dep:js_poirot.bc} -o %{targets} --pretty
+         -I ./ --file %{dep:msg_exec.bnf})))
 
 (alias
   (name default)
