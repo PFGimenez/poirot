@@ -4,4 +4,5 @@
  (modules parserbnf))
 
 (library
-    (name poirot) (public_name poirot))
+    (name poirot) (public_name poirot)
+    (private_modules ("clean" grammar grammar_io inference lexerbnf lexerconf oracle parserbnf rec_quotient tree_fuzzer)))
