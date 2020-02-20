@@ -39,6 +39,7 @@ antlr-$(antlr_version)-complete.jar:
 
 SQLite.g4:
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/sql/sqlite/SQLite.g4
+	patch < SQLite.diff
 
 Lua.g4:
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/lua/Lua.g4

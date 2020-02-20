@@ -1,0 +1,23 @@
+--- SQLite.g4	2020-02-20 23:17:52.707752245 +0100
++++ SQLite-new.g4	2020-02-20 23:17:39.032001449 +0100
+@@ -31,18 +31,11 @@
+ grammar SQLite;
+ 
+ parse
+- : ( sql_stmt_list | error )* EOF
+- ;
+-
+-error
+- : UNEXPECTED_CHAR 
+-   { 
+-     throw new RuntimeException("UNEXPECTED_CHAR=" + $UNEXPECTED_CHAR.text); 
+-   }
++ : ( sql_stmt_list )+ EOF
+  ;
+ 
+ sql_stmt_list
+- : ';'* sql_stmt ( ';'+ sql_stmt )* ';'*
++ : sql_stmt ( ';'+ sql_stmt )*
+  ;
+ 
+ sql_stmt
