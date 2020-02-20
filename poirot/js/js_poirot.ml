@@ -23,11 +23,11 @@ let exec_poirot grammar_str goal_str start_str =
         let grammar = Poirot.read_bnf_grammar grammar_str
         and goal = Poirot.read_token goal_str
         and start = Poirot.read_tokens start_str
-        and oracle_fname = "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'" in (* TODO: js externe ? *)
+        and oracle = Poirot.make_oracle_from_script "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'" in (* TODO: js externe ? *)
         print_endline "Start searching…";
-        let g = Poirot.search oracle_fname grammar goal start in
+        let g = Poirot.search oracle grammar goal start in
         match g with
-        | Some gram -> Html.window##alert ("Injection: "^(Option.get (Poirot.fuzzer ~complexity:0 ~goal:(Some goal) gram)))
+        | Some gram -> Html.window##alert (js ("Injection: "^(Option.get (Poirot.fuzzer ~complexity:0 ~goal:(Some goal) gram))))
         | None -> Html.window##alert (js "No injection found")
     with Failure str | Sys_error str -> Html.window##alert (js ("Error: "^str))
         | _ -> Html.window##alert (js "Unknown error!")
