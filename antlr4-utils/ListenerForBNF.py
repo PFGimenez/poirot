@@ -12,7 +12,7 @@ counters = {}
 
 parser_or_lexer = None
 first_lhs = True
-
+ws_poirot = '\' \''
 # Used to translate "NOT"
 char_table = [chr(i) for i in range(32, 127)]
 
@@ -222,13 +222,13 @@ def parser_regexp_to_bnf(nt, suf, rex):
     if rex[0] == "and":
         for child in rex[1]:
             if child[0] in ["string"]:
-                rule += " " + escape(child[1][1:-1]) + ""
+                rule += " " + escape(child[1][1:-1]) + " "+ws_poirot
             elif child[0] in ["token", "rule"]:
-                rule += " <" + (child[1]) + ">"
+                rule += " <" + (child[1]) + "> "+ws_poirot
             else:
                 new_suf = counters[lhs] + 1
                 counters[lhs] = new_suf
-                rule += " <" + nt + mark + str(new_suf) + ">"
+                rule += " <" + nt + mark + str(new_suf) + "> "+ws_poirot
                 parser_regexp_to_bnf(nt, new_suf, child)
         print(rule+ " ;")
 
@@ -240,7 +240,7 @@ def parser_regexp_to_bnf(nt, suf, rex):
         new_suf = counters[lhs] + 1
         counters[lhs] = new_suf
         rule += " <" + nt + mark + str(new_suf) + ">"
-        print(rule+ " ;")
+        print(rule+ " "+ws_poirot+" ;")
         rule = "<" + nt + mark + str(new_suf) + "> ::="
         print(rule+ " ;")
         parser_regexp_to_bnf(nt, new_suf, ("and", [rex[1], ("token", nt + mark + str(new_suf))])) # Y ::= b Y
@@ -250,10 +250,10 @@ def parser_regexp_to_bnf(nt, suf, rex):
         new_suf2 = counters[lhs] + 2
         counters[lhs] = new_suf2
         rule += " <" + nt + mark + str(new_suf1) + ">"
-        print(rule+ " ;")
+        print(rule+ " "+ws_poirot+" ;")
         rule = "<" + nt + mark + str(new_suf1) + "> ::="
-        print(rule + " <" + nt + mark + str(new_suf2) + "> ;")
-        print(rule + " <" + nt + mark + str(new_suf2) + "> <" + nt + mark + str(new_suf1) + "> ;")
+        print(rule + " <" + nt + mark + str(new_suf2) + "> "+ws_poirot+" ;")
+        print(rule + " <" + nt + mark + str(new_suf2) + "> "+ws_poirot+" <" + nt + mark + str(new_suf1) + "> "+ws_poirot+" ;")
         parser_regexp_to_bnf(nt, new_suf2, rex[1])
 
     elif rex[0] == "?":
@@ -264,13 +264,13 @@ def parser_regexp_to_bnf(nt, suf, rex):
         print(rule+ " ;")
 
     elif rex[0] == "string":
-        print(rule + " " + escape(rex[1][1:-1]) + " ;")
+        print(rule + " " + escape(rex[1][1:-1]) + " "+ws_poirot+" ;")
 
     elif rex[0] == "token":
-        print(rule + " <" + rex[1] + "> ;")
+        print(rule + " <" + rex[1] + "> "+ws_poirot+" ;")
 
     elif rex[0] == "rule":
-        print(rule + " <" + rex[1] + "> ;")
+        print(rule + " <" + rex[1] + "> "+ws_poirot+" ;")
 
     else:
         raise Exception("Error parser_regexp_to_bnf: " + str(rex))
