@@ -2,7 +2,7 @@
     (name js_poirot)
     (modules js_poirot)
     (modes byte)
-    (libraries poirot js_of_ocaml)
+    (libraries poirot js_of_ocaml-lwt)
     (preprocess (pps js_of_ocaml-ppx)))
 
 (rule
