@@ -1,11 +1,18 @@
 type grammar = Grammar.grammar
 type element = Grammar.element
+type oracle_status = Oracle.oracle_status
 
-let search ?(verbose: bool = false) ?(subst: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) (oracle_fname: string)  (g: grammar) (goal: element) (start: element list) : grammar option =
-    let fuzzer_oracle (subst: (element,string) Hashtbl.t option) (goal: element option) (oracle_fname: string) : (grammar -> Oracle.oracle_status) = let oracle = Oracle.oracle_mem_from_script oracle_fname verbose in (* create the oracle first because it is memoized *)
+let search ?(verbose: bool = false) ?(subst: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) (oracle: string option -> oracle_status)  (g: grammar) (goal: element) (start: element list) : grammar option =
+
+    let fuzzer_oracle (subst: (element,string) Hashtbl.t option) (goal: element option) (oracle: string option -> oracle_status) : (grammar -> Oracle.oracle_status) =
         fun g -> g |> Tree_fuzzer.fuzzer 0 subst goal verbose |> Option.map Grammar.string_of_word |> oracle in
+
     let qgraph_channel = Option.map open_out qgraph_fname in
-    Option.map Grammar.grammar_of_ext_grammar (Inference.search (fuzzer_oracle subst (Some goal) oracle_fname) g goal (Some start) max_depth forbidden_chars sgraph_fname qgraph_channel verbose)
+    Option.map Grammar.grammar_of_ext_grammar (Inference.search (fuzzer_oracle subst (Some goal) oracle) g goal (Some start) max_depth forbidden_chars sgraph_fname qgraph_channel verbose)
+
+let make_oracle_from_script ?(verbose: bool = false) (fname: string) = Oracle.oracle_mem_from_script fname verbose
+
+let make_oracle_from_fun ?(verbose: bool = false) (f: string -> int) = Oracle.oracle_mem verbose (fun s -> Oracle.oracle_status_of_int (f s))
 
 let read_subst : string -> (element,string) Hashtbl.t = Grammar_io.read_subst
 

@@ -9,11 +9,13 @@ type grammar
 (** A symbol of the grammar, either a terminal or a nonterminal *)
 type element
 
+(** A variant type describing the oracle status *)
+type oracle_status
 
 (** {1 Main functions} *)
 
-(** [search oracle_filename g goal start] returns the grammar of injection from the base grammar [g] according to the oracle [oracle_filename], starting from the trivial injection [start].
- @param oracle_filename the filename of an oracle script that returns error code 0 if the injection is lexically correct, 1 otherwise.
+(** [search oracle g goal start] returns the grammar of injection from the base grammar [g] according to the oracle [oracle], starting from the trivial injection [start].
+ @param oracle an oracle built with [make_oracle_from_script] or [make_oracle_from_fun]
  @param g the grammar of the query language (e.g. SQL)
  @param goal the goal of the search, i.e. the element (terminal or nonterminal) you seek to get in the grammar of injection. Poirot stops the search once it is reached.
  @param start a element (terminal or nonterminal) that is a injection.
@@ -24,7 +26,7 @@ type element
  @param sgraph_fname (optional, for debug) export the search graph in graphviz dot format.
  @param qgraph_fname (optional, for debug) export the quotient graph in graphviz dot format.
  *)
-val search : ?verbose:bool -> ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> string -> grammar -> element -> element list -> grammar option
+val search : ?verbose:bool -> ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> (string option -> oracle_status) -> grammar -> element -> element list -> grammar option
 
 (** [quotient g left_quotient right_quotient] returns the grammar [g] after a left quotient by [left_quotient] and a right quotient by [right_quotient]. [left_quotient] and [right_quotient] can contain nonterminals or be empty. *)
 val quotient : grammar -> element list -> element list -> grammar
@@ -32,6 +34,13 @@ val quotient : grammar -> element list -> element list -> grammar
 (** [fuzzer ~complexity:10 ~goal:e g] returns a word from [g]. If [complexity] is high, longer words should be generated. If [complexity = 0], the returned word is deterministic (always the same) and should be short. If a goal is specified, then it will be included in the generated word. Beware: this is a primitive fuzzer. *)
 val fuzzer : ?subst:(element,string) Hashtbl.t option -> ?complexity:int -> ?goal:element option -> grammar -> string option
 
+(** {1 Oracle functions} *)
+
+(** [make_oracle_from_script filename] returns an oracle based on the script [filename]. The script must return error code 0 if the injection is lexically correct, 1 otherwise. *)
+val make_oracle_from_script : ?verbose: bool -> string -> (string option -> oracle_status)
+
+(** [make_oracle_from_fun f] returns an oracle based on the function [f]. The function must return 0 if the injection is lexically correct, 1 otherwise. *)
+val make_oracle_from_fun : ?verbose: bool -> (string -> int) -> (string option -> oracle_status)
 
 (** {1 Grammar manipulation functions} *)
 
@@ -49,9 +58,6 @@ val string_of_grammar : grammar -> string
 
 (** {1 I/O functions} *)
 
-(** [read_subst filename] read the semantics substitution from the file [filename]. *)
-val read_subst : string -> (element,string) Hashtbl.t
-
 (** [read_bnf_grammar filename] reads a grammar from a bnf file [filename]. *)
 val read_bnf_grammar : ?unravel:bool -> string -> grammar
 
@@ -63,3 +69,6 @@ val read_token : ?unravel:bool -> string -> element
 
 (** [export_antlr4 filename g] export the grammar [g] to antlr4 format into the file [filename].g4 *)
 val export_antlr4 : string -> grammar -> unit
+
+(** [read_subst filename] read the semantics substitution from the file [filename]. *)
+val read_subst : string -> (element,string) Hashtbl.t
