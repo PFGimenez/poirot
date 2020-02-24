@@ -22,6 +22,7 @@ def escape(s):
         out = "'"+("' "+str(ord('\''))+" '").join(l)+"'"
         out = out.replace("\'\'","")
     else:
+        out = ""
         for i in s:
             out += " "+str(ord(i))
     return out
@@ -44,7 +45,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                 # Direct translation for token and string.
                 assert(child[1][0] == '\'')
                 assert(child[1][-1] == '\'')
-                rule += " " + escape(child[1][1::-1])
+                rule += " " + escape(child[1][1::-1].encode('utf-8').decode('unicode_escape'))
                 #rule += " '" + escape(child[1][1:-1]) + "'"
             elif child[0] in ["token"]:
                 # Direct translation for token and string.
@@ -69,7 +70,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
         print(rule + " ;")
 
     elif rex[0] == "string":
-        print(rule + " " + escape(rex[1][1:-1]) +" ;")
+        print(rule + " " + escape(rex[1][1:-1].encode('utf-8').decode('unicode_escape')) +" ;")
 
     elif rex[0] == "token":
         print(rule + " <" + rex[1] + "> ;")
@@ -119,7 +120,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
     elif rex[0] == "char_set":
         if rex[1][0] == '[' and rex[1][-1] == ']':
             flat = []
-            s = rex[1][1:-1]
+            s = rex[1][1:-1].encode('utf-8').decode('unicode_escape')
             i = 0
             while i < len(s):
                 sa = s[i]
@@ -222,7 +223,7 @@ def parser_regexp_to_bnf(nt, suf, rex):
     if rex[0] == "and":
         for child in rex[1]:
             if child[0] in ["string"]:
-                rule += " " + escape(child[1][1:-1]) + " "+ws_poirot
+                rule += " " + escape(child[1][1:-1].encode('utf-8').decode('unicode_escape')) + " "+ws_poirot
             elif child[0] in ["token", "rule"]:
                 rule += " <" + (child[1]) + "> "+ws_poirot
             else:
@@ -264,7 +265,7 @@ def parser_regexp_to_bnf(nt, suf, rex):
         print(rule+ " ;")
 
     elif rex[0] == "string":
-        print(rule + " " + escape(rex[1][1:-1]) + " "+ws_poirot+" ;")
+        print(rule + " " + escape(rex[1][1:-1].encode('utf-8').decode('unicode_escape')) + " "+ws_poirot+" ;")
 
     elif rex[0] == "token":
         print(rule + " <" + rex[1] + "> "+ws_poirot+" ;")
