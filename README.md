@@ -8,7 +8,7 @@ First, you need the OCaml package manager, `opam`: https://opam.ocaml.org/doc/In
 
 Then, clone the Poirot repository: `git clone https://github.com/PFGimenez/poirot.git`
 
-Go into the directory `poirot/poirot`.
+Go into the directory `poirot`.
 
 Finally, install Poirot: `opam pin poirot .` and then `opam install .`
 
@@ -16,9 +16,9 @@ Finally, install Poirot: `opam pin poirot .` and then `opam install .`
 
 Using Poirot in your project with `dune` is easy: just add `poirot` in the list of the dependencies. Poirot should be available to `ocamlfind` as well (you can check with `ocamlfind query poirot`).
 
-The documentation is available online at https://pfgimenez.github.io/poirot/poirot/Poirot/index.html. To generate the documentation locally, make sure `odoc` is installed (or install it with `opam install odoc`). You can then generate the documentation with `dune build @doc`. It will be stored in `_build/default/_doc/_html/poirot/Poirot/index.html`.
+The documentation is available online at https://pfgimenez.github.io/poirot/Poirot/index.html. To generate the documentation locally, make sure `odoc` is installed (or install it with `opam install odoc`). You can then generate the documentation with `dune build @doc`. It will be stored in `_build/default/_doc/_html/poirot/Poirot/index.html`.
 
-Check `poirot/poirot/examples/poirot_example.ml` for an example using the library.
+Check `examples/poirot_example.ml` for an example using the library.
 
 ## Use the ANTLR4 ⇌ BNF converter
 
@@ -36,7 +36,7 @@ Go into the directory `antlr4-utils`. If you have a grammar named `test.g4`, you
 
 ### BNF → ANTLR4
 
-If you have a grammar `test.bnf`, run `dune exec poirot/examples/bnf2antlr4.exe test.bnf`. It will generate the file `test.g4` containing the grammar in ANTLR4 format. Its axiom is named `axiom`.
+If you have a grammar `test.bnf`, run `dune exec examples/bnf2antlr4.exe test.bnf`. It will generate the file `test.g4` containing the grammar in ANTLR4 format. Its axiom is named `axiom`.
 
 ## Oracles
 
@@ -56,15 +56,15 @@ This oracle needs five parameters: the ANTLR4 grammar name (without the `.g4` ex
 
 ## Use Poirot directly
 
-The example code `poirot_example` allows you to use Poirot without making your own program. You can run `dune exec -- poirot/examples/poirot_example.exe -help` to get the list of parameters on how to use it.
+The example code `poirot_example` allows you to use Poirot without making your own program. You can run `dune exec -- examples/poirot_example.exe -help` to get the list of parameters on how to use it.
 
-Here is an example that uses the simple grammar `msg_exec`. This example uses the prefix/suffix oracle, so first create the lexer and parser by executing `make msg_execLexer.py` from the `antlr4-utils` directory. Then, run `dune exec -- poirot/examples/poirot_example.exe -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"`. It will generates the injection `value ; exec cmd ; msg key = value`.
+Here is an example that uses the simple grammar `msg_exec`. This example uses the prefix/suffix oracle, so first create the lexer and parser by executing `make msg_execLexer.py` from the `antlr4-utils` directory. Then, run `dune exec -- examples/poirot_example.exe -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"`. It will generates the injection `value ; exec cmd ; msg key = value`.
 
-You can experiment with the more complex grammar `parenthesis` as well. Create its lexer and parser and then run `dune exec -- poirot/examples/poirot_example.exe -grammar bnf_grammars/parenthesis.bnf -goal "'b'" -start "'a'" -oracle "oracles/prefix-suffix.py parenthesis axiom '([[([' '])]])'"`. It will generate the injection `a])]])b([[([a`.
+You can experiment with the more complex grammar `parenthesis` as well. Create its lexer and parser and then run `dune exec -- examples/poirot_example.exe -grammar bnf_grammars/parenthesis.bnf -goal "'b'" -start "'a'" -oracle "oracles/prefix-suffix.py parenthesis axiom '([[([' '])]])'"`. It will generate the injection `a])]])b([[([a`.
 
 ## Injection grammar of white-box systems
 
 If you know the query (i.e. the prefix and the suffix surrounding the injection point), you can directly use Poirot to get the grammar of the injection with the `quotient` function, export it to ANTLR4 grammar, or ask directly Poirot to generate an injection containing some symbol by using the `fuzzer` function. White-box fuzzing is of course greatly faster than black-box fuzzing.
 
-For example, you can run: `dune exec -- poirot/examples/quotient_example.exe -grammar bnf_grammars/msg_exec.bnf -pf "'msg ' 'key' ' = '" -sf "' & ' 'key' ' = ' 'value'" -goal "Exe"`. It will generate the injection `value ; exec cmd ; msg key = value`.
+For example, you can run: `dune exec -- examples/quotient_example.exe -grammar bnf_grammars/msg_exec.bnf -pf "'msg ' 'key' ' = '" -sf "' & ' 'key' ' = ' 'value'" -goal "Exe"`. It will generate the injection `value ; exec cmd ; msg key = value`.
 
