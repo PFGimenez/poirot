@@ -10,7 +10,8 @@ let symbols_from_parents (g: grammar) (axiom : element) : element list =
     g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare
 
 
-let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (verbose: bool) : ext_grammar option =
+let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (verbose: bool) : ext_grammar option =
+    let g = Clean.clean_grammar unclean_g in
     let quotient = Rec_quotient.quotient_mem g qgraph_channel verbose
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
@@ -122,9 +123,15 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (g: grammar) (goal: 
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset (g_val + 1) origin e q)
             end
         end in
+    let get_epsilon_possible_symbols (g : grammar) : element list =
+        g.rules |> List.filter (fun r -> List.length r.right_part = 0) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in
     let inj = match start with
         | Some l -> l
-        | None -> get_all_symbols g |> List.filter (fun e -> e@@g.rules |> fuzzer_oracle |> (=) Oracle.No_error) in (* get the possible injections tokens *)
+        | None -> get_all_symbols g |> List.filter (fun e -> e@@g.rules |> fuzzer_oracle |> (=) Oracle.No_error) in
+    let inj = match List.mem (Terminal "") inj with
+        | true -> (get_epsilon_possible_symbols unclean_g) @ (List.filter ((<>) (Terminal "")) inj)
+        | false -> inj in
+    (* get the possible injections tokens *)
     if not (is_reachable g goal g.axiom) then failwith "Unknown or unreachable goal" (* the goal is not reachable from the axiom ! *)
     else if inj = [] then failwith "No trivial injection" (* no injection token found *)
     else begin

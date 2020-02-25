@@ -75,7 +75,7 @@ token_list_unravel:
     | PSEUDO_TERM token_list { Nonterminal $1 :: $2 }
     | NTERM token_list { Nonterminal $1 :: $2 }
     | TERM token_list { Terminal $1 :: $2 }
-    | EPSILON token_list { $2 }
+    | EPSILON token_list { Terminal "" :: $2 }
     | EOF { [] }
 ;
 
@@ -83,6 +83,6 @@ token_list:
     | PSEUDO_TERM token_list { Terminal $1 :: $2 }
     | NTERM token_list { Nonterminal $1 :: $2 }
     | TERM token_list { Terminal $1 :: $2 }
-    | EPSILON token_list { $2 }
+    | EPSILON token_list { Terminal "" :: $2 }
     | EOF { [] }
 ;

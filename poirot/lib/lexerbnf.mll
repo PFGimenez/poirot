@@ -27,12 +27,13 @@ rule token = parse
 
     | ";" { END_RULE } (* end of a rule *)
     | "::=" { SEP } (* separator of the rule *)
-    | "ε" { EPSILON } (* empty sentence *)
 
     | "EOF" { token lexbuf }
     | "<EOF>" { token lexbuf }
 
-    | "\'\'" { token lexbuf } (* empty terminal *)
+    | "\'\'" { EPSILON } (* empty terminal *)
+    | "ε" { EPSILON } (* empty sentence *)
+
     | '\'' (([^ '\'' '\n' '\r'])+ as s) '\'' { make_term s } (* terminal *)
     | (['0'-'9']+ as s) { make_term_from_int (int_of_string s) } (* terminal *)
 

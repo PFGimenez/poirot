@@ -20,8 +20,8 @@ let bnf_string_of_ext_grammar (g : ext_grammar) : string = (bnf_string_of_ext_el
 
 let read_bnf_grammar (unravel: bool) (filename : string) : grammar =
     let lexbuf = Lexing.from_channel (open_in filename) in match unravel with
-    | true -> Clean.clean_grammar (Parserbnf.start_unravel Lexerbnf.token lexbuf)
-    | _ -> Clean.clean_grammar (Parserbnf.start Lexerbnf.token lexbuf)
+    | true -> Parserbnf.start_unravel Lexerbnf.token lexbuf
+    | _ -> Parserbnf.start Lexerbnf.token lexbuf
 
 let read_tokens (unravel: bool) (str : string) : element list = match unravel with
     | true -> Parserbnf.token_list_unravel Lexerbnf.token (Lexing.from_string (str))
