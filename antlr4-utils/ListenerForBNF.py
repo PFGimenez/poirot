@@ -13,7 +13,7 @@ counters = {}
 is_fragment = False
 parser_or_lexer = None
 first_lhs = True
-ws_poirot_parser = ''
+ws_poirot_parser = '\' \''
 ws_poirot_lexer = '\' \''
 
 # Used to translate "NOT"
@@ -131,20 +131,20 @@ def lexer_regexp_to_bnf(nt, suf, rex):
             i = 0
             while i < len(s):
                 sa = s[i]
-                if sa == '\\':
-                    if i + 1 >= len(s): raise Exception("Wrong range set: ", nt, suf, rex, fname)
-                    i = i + 1
-                    sa = s[i]
+                # if sa == '\\':
+                #     if i + 1 >= len(s): raise Exception("Wrong range set: ", nt, suf, rex, fname)
+                #     i = i + 1
+                #     sa = s[i]
 
                 # "i + 2" because we need at least two more characters
                 if i + 2 < len(s) and s[i + 1] == '-':
                     i = i + 2
                     if i >= len(s): raise Exception("Wrong range set: ", nt, suf, rex, fname)
                     sb = s[i]
-                    if sb == '\\':
-                        if i + 1 >= len(s): raise Exception("Wrong range set: ", nt, suf, rex, fname)
-                        i = i + 1
-                        sb = s[i]
+                    # if sb == '\\':
+                    #     if i + 1 >= len(s): raise Exception("Wrong range set: ", nt, suf, rex, fname)
+                    #     i = i + 1
+                    #     sb = s[i]
 
                     for j in range(ord(sa), ord(sb) + 1):
                         print(rule + " " + escape(chr(j)) +" "+rule_end)
@@ -295,6 +295,11 @@ def do_suffix(suffix, child, ctx):
 
 # This class defines a complete listener for a parse tree produced by ANTLRv4Parser.
 class ListenerForBNF(ANTLRv4ParserListener):
+
+    def __init__(self, poirot_lex="", poirot_parser=""):
+        global ws_poirot_parser,ws_poirot_lexer
+        ws_poirot_parser = poirot_parser
+        ws_poirot_lexer = poirot_lex
 
     def exitGrammarDecl(self, ctx:ANTLRv4Parser.GrammarDeclContext):
         print("# Grammar name: ", ctx.getChild(1).X_REGEXP)
