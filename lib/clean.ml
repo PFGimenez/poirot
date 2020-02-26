@@ -7,7 +7,7 @@ let change_case (f: string -> string) (g: grammar): grammar =
         | Nonterminal s -> Nonterminal s in
     let r_change_case (r: rule) : rule =
         (e_change_case r.left_symbol) --> (List.map e_change_case r.right_part) in
-    (e_change_case g.axiom) @@ (List.map r_change_case g.rules)
+    (e_change_case g.axiom) @@ (List.sort_uniq compare (List.map r_change_case g.rules))
 
 let to_lowercase = change_case String.lowercase_ascii
 

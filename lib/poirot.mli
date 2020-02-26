@@ -44,11 +44,11 @@ val make_oracle_from_fun : ?verbose: bool -> (string -> int) -> (string option -
 
 (** {1 Grammar manipulation functions} *)
 
-(** [to_uppercase g] returns the grammar [g] with uppercased chars. The grammar is simplified, and nonterminals may disappear. *)
-val to_uppercase :  grammar -> grammar
+(** [to_uppercase g] returns the grammar [g] with uppercased chars. If simplified, nonterminals may disappear. *)
+val to_uppercase : ?simplify: bool -> grammar -> grammar
 
-(** [to_lowercase g] returns the grammar [g] with lowercased chars. The grammar is simplified, and nonterminals may disappear. *)
-val to_lowercase : grammar -> grammar
+(** [to_lowercase g] returns the grammar [g] with lowercased chars. If simplified, nonterminals may disappear. *)
+val to_lowercase : ?simplify: bool -> grammar -> grammar
 
 (** [set_axiom g new_axiom] modifies the axiom of [g] with [new_axiom]. *)
 val set_axiom : grammar -> element -> grammar

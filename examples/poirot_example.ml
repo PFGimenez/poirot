@@ -10,6 +10,9 @@ let ()=
     and subst = ref None
     and goal = ref None
     and start = ref None
+    and lowercase = ref false
+    and uppercase = ref false
+    and simplify = ref false
     and verbose = ref false
     and avoid = ref "" in
 
@@ -24,6 +27,9 @@ let ()=
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
+        ("-lowercase",  Arg.Set lowercase,     "Convert all terminals to lowercase");
+        ("-uppercase",  Arg.Set uppercase,     "Convert all terminals to uppercase");
+        ("-simplify",   Arg.Set simplify,     "If used with -lowercase or -uppercase, simplify the grammar");
         ("-verbose",    Arg.Set verbose,     "Make Poirot verbose")
     ] in
     let usage = "Error: grammar, goal, start and oracle are necessary" in
@@ -34,6 +40,9 @@ let ()=
         and goal = Option.get !goal
         and start = Option.get !start
         and oracle = Poirot.make_oracle_from_script (Option.get !oracle_fname) in
+
+        let grammar = if !lowercase then Poirot.to_lowercase ~simplify:!simplify grammar else (if !uppercase then Poirot.to_uppercase ~simplify:!simplify grammar else grammar) in
+
         print_endline "Start searching…";
         let g = Poirot.search ~verbose:!verbose ~subst:(Option.map Poirot.read_subst !subst) ~max_depth:!max_depth ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle grammar goal start in
         match (g,!injg_fname) with
