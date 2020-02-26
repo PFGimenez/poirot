@@ -52,7 +52,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                 # Direct translation for token and string.
                 assert(child[1][0] == '\'')
                 assert(child[1][-1] == '\'')
-                rule += " " + escape(child[1][1::-1].encode('utf-8').decode('unicode_escape'))
+                rule += " " + escape(child[1][1:-1].encode('utf-8').decode('unicode_escape'))
                 #rule += " '" + escape(child[1][1:-1]) + "'"
             elif child[0] in ["token"]:
                 # Direct translation for token and string.
