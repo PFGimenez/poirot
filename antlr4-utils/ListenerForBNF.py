@@ -10,9 +10,12 @@ mark = "__"
 # Counters for new non-terminals
 counters = {}
 
+is_fragment = False
 parser_or_lexer = None
 first_lhs = True
-ws_poirot = '\' \''
+ws_poirot_parser = ''
+ws_poirot_lexer = '\' \''
+
 # Used to translate "NOT"
 char_table = [chr(i) for i in range(32, 127)]
 
@@ -33,6 +36,10 @@ def escape(s):
 def lexer_regexp_to_bnf(nt, suf, rex):
     fname = inspect.currentframe().f_code.co_name
     print("# BEGIN LEXER FOR ", nt, rex[0])
+
+    rule_end = ";"
+    if suf == 0 and not is_fragment:
+        rule_end = ws_poirot_lexer + " ;"
 
     # First part of the rule: will be completed with the translation of rex.
     rule = "<" + nt + "> ::="
@@ -59,7 +66,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                 counters[lhs] = new_suf
                 rule += " <" + nt + mark + str(new_suf) + ">"
                 lexer_regexp_to_bnf(nt, new_suf, child)
-        print(rule + " ;")
+        print(rule + " " +rule_end)
 
     elif rex[0] == "or":
         # Translate for one rule per alternative for this non-terminal.
@@ -67,13 +74,13 @@ def lexer_regexp_to_bnf(nt, suf, rex):
             lexer_regexp_to_bnf(nt, suf, child)
 
     elif rex[0] == "eps":
-        print(rule + " ;")
+        print(rule + " " + rule_end)
 
     elif rex[0] == "string":
-        print(rule + " " + escape(rex[1][1:-1].encode('utf-8').decode('unicode_escape')) +" ;")
+        print(rule + " " + escape(rex[1][1:-1].encode('utf-8').decode('unicode_escape')) + " " + rule_end)
 
     elif rex[0] == "token":
-        print(rule + " <" + rex[1] + "> ;")
+        print(rule + " <" + rex[1] + "> "+rule_end)
 
     elif rex[0] == "*":
         # The translation of '*' need one new non-terminal.
@@ -90,9 +97,9 @@ def lexer_regexp_to_bnf(nt, suf, rex):
         new_suf = counters[lhs] + 1
         counters[lhs] = new_suf
         rule += " <" + nt + mark + str(new_suf) + ">"
-        print(rule+ " ;")  # X ::= Y
+        print(rule+ " "+rule_end)  # X ::= Y
         rule = "<" + nt + mark + str(new_suf) + "> ::="
-        print(rule+ " ;")  # Y ::=
+        print(rule+ " "+rule_end)  # Y ::=
         # XXX Token is not necessarily the best name: It should be rule?
         lexer_regexp_to_bnf(nt, new_suf, ("and", [rex[1], ("token", nt + mark + str(new_suf))])) # Y ::= b Y
 
@@ -103,19 +110,19 @@ def lexer_regexp_to_bnf(nt, suf, rex):
         new_suf2 = counters[lhs] + 2
         counters[lhs] = new_suf2
         rule += " <" + nt + mark + str(new_suf1) + ">"
-        print(rule+ " ;")
+        print(rule+ " "+rule_end)
         rule = "<" + nt + mark + str(new_suf1) + "> ::="
-        print(rule + " <" + nt + mark + str(new_suf2)+"> ;")
-        print(rule + " <" + nt + mark + str(new_suf2) + "> <" + nt + mark + str(new_suf1)+"> ;")
+        print(rule + " <" + nt + mark + str(new_suf2)+"> "+rule_end)
+        print(rule + " <" + nt + mark + str(new_suf2) + "> <" + nt + mark + str(new_suf1)+"> "+rule_end)
         lexer_regexp_to_bnf(nt, new_suf2, rex[1])
 
     elif rex[0] == "?":
-        print(rule+ " ;")                   # X ::=
+        print(rule+ " "+rule_end)                   # X ::=
         lexer_regexp_to_bnf(nt, suf, rex[1]) # X ::= b
 
     elif rex[0] == ".":
         for x in char_table:
-            print(rule + (" %s ;" % escape(x)))
+            print(rule + (" %s " % escape(x))+" "+rule_end)
 
     elif rex[0] == "char_set":
         if rex[1][0] == '[' and rex[1][-1] == ']':
@@ -140,7 +147,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                         sb = s[i]
 
                     for j in range(ord(sa), ord(sb) + 1):
-                        print(rule + " " + escape(chr(j)) + " ;")
+                        print(rule + " " + escape(chr(j)) +" "+rule_end)
                         # if chr(j) == '\'':
                         #     print(rule + (" '\'' ; #X6"))
                         # elif chr(j) == '"':
@@ -151,7 +158,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                         #     print(rule + (" '%s' ; #X4" % chr(j)))
 
                 else:
-                    print(rule + " " + escape(sa) + " ;")
+                    print(rule + " " + escape(sa)+" "+rule_end)
                     # if sa == '\'':
                     #     print(rule + (" '\\'' ; #X1"))
                     # elif sa == '"':
@@ -182,7 +189,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
             if c is not None:
                 for x in char_table:
                     if x != c:
-                        print(rule + (" %s ;" % escape(x)))
+                        print(rule + (" %s" % escape(x))+" "+rule_end)
             else:
                 raise Exception("Not yet handled: ", nt, suf, rex, fname)
         elif rex[1][1][0] == '[':
@@ -201,7 +208,7 @@ def lexer_regexp_to_bnf(nt, suf, rex):
                     i = i +1
                 rem = [x for x in char_table if x not in flat]
                 for x in rem:
-                    print(rule + (" %s ;" % escape(x)))
+                    print(rule + (" %s " % escape(x))+" "+rule_end)
             else:
                 raise Exception("Not yet handled: ", nt, suf, rex, fname)
 
@@ -223,13 +230,13 @@ def parser_regexp_to_bnf(nt, suf, rex):
     if rex[0] == "and":
         for child in rex[1]:
             if child[0] in ["string"]:
-                rule += " " + escape(child[1][1:-1].encode('utf-8').decode('unicode_escape')) + " "+ws_poirot
+                rule += " " + escape(child[1][1:-1].encode('utf-8').decode('unicode_escape')) + " "+ws_poirot_parser
             elif child[0] in ["token", "rule"]:
-                rule += " <" + (child[1]) + "> "+ws_poirot
+                rule += " <" + (child[1]) + "> "+ws_poirot_parser
             else:
                 new_suf = counters[lhs] + 1
                 counters[lhs] = new_suf
-                rule += " <" + nt + mark + str(new_suf) + "> "+ws_poirot
+                rule += " <" + nt + mark + str(new_suf) + "> "+ws_poirot_parser
                 parser_regexp_to_bnf(nt, new_suf, child)
         print(rule+ " ;")
 
@@ -241,7 +248,7 @@ def parser_regexp_to_bnf(nt, suf, rex):
         new_suf = counters[lhs] + 1
         counters[lhs] = new_suf
         rule += " <" + nt + mark + str(new_suf) + ">"
-        print(rule+ " "+ws_poirot+" ;")
+        print(rule+ " "+ws_poirot_parser+" ;")
         rule = "<" + nt + mark + str(new_suf) + "> ::="
         print(rule+ " ;")
         parser_regexp_to_bnf(nt, new_suf, ("and", [rex[1], ("token", nt + mark + str(new_suf))])) # Y ::= b Y
@@ -251,10 +258,10 @@ def parser_regexp_to_bnf(nt, suf, rex):
         new_suf2 = counters[lhs] + 2
         counters[lhs] = new_suf2
         rule += " <" + nt + mark + str(new_suf1) + ">"
-        print(rule+ " "+ws_poirot+" ;")
+        print(rule+ " "+ws_poirot_parser+" ;")
         rule = "<" + nt + mark + str(new_suf1) + "> ::="
-        print(rule + " <" + nt + mark + str(new_suf2) + "> "+ws_poirot+" ;")
-        print(rule + " <" + nt + mark + str(new_suf2) + "> "+ws_poirot+" <" + nt + mark + str(new_suf1) + "> "+ws_poirot+" ;")
+        print(rule + " <" + nt + mark + str(new_suf2) + "> "+ws_poirot_parser+" ;")
+        print(rule + " <" + nt + mark + str(new_suf2) + "> "+ws_poirot_parser+" <" + nt + mark + str(new_suf1) + "> "+ws_poirot_parser+" ;")
         parser_regexp_to_bnf(nt, new_suf2, rex[1])
 
     elif rex[0] == "?":
@@ -265,13 +272,13 @@ def parser_regexp_to_bnf(nt, suf, rex):
         print(rule+ " ;")
 
     elif rex[0] == "string":
-        print(rule + " " + escape(rex[1][1:-1].encode('utf-8').decode('unicode_escape')) + " "+ws_poirot+" ;")
+        print(rule + " " + escape(rex[1][1:-1].encode('utf-8').decode('unicode_escape')) + " "+ws_poirot_parser+" ;")
 
     elif rex[0] == "token":
-        print(rule + " <" + rex[1] + "> "+ws_poirot+" ;")
+        print(rule + " <" + rex[1] + "> "+ws_poirot_parser+" ;")
 
     elif rex[0] == "rule":
-        print(rule + " <" + rex[1] + "> "+ws_poirot+" ;")
+        print(rule + " <" + rex[1] + "> "+ws_poirot_parser+" ;")
 
     else:
         raise Exception("Error parser_regexp_to_bnf: " + str(rex))
@@ -315,6 +322,8 @@ class ListenerForBNF(ANTLRv4ParserListener):
 
         global parser_or_lexer
         parser_or_lexer = "parser"
+        global is_fragment
+        is_fragment = False
 
     def exitRuleAltList(self, ctx:ANTLRv4Parser.RuleAltListContext):
         global lhs
@@ -451,7 +460,12 @@ class ListenerForBNF(ANTLRv4ParserListener):
 
     def enterLexerRuleSpec(self, ctx:ANTLRv4Parser.LexerRuleSpecContext):
         global parser_or_lexer
+        global is_fragment
+        is_fragment = ctx.start.type == 16
         parser_or_lexer = "lexer"
+        # print(ctx.__dict__)
+        # print(ctx.start.__dict__)
+        # print(ctx.start)
         print("# LEXER: " + str(ctx.TOKEN_REF()))
 
     def exitLexerRuleSpec(self, ctx:ANTLRv4Parser.LexerRuleSpecContext):

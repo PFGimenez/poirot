@@ -1,5 +1,5 @@
---- SQLite.g4	2020-02-20 23:17:52.707752245 +0100
-+++ SQLite-new.g4	2020-02-20 23:17:39.032001449 +0100
+--- SQLite.g4	2020-02-26 10:38:32.079377494 +0100
++++ SQLite_new.g4	2020-02-26 10:40:46.620469963 +0100
 @@ -31,18 +31,11 @@
  grammar SQLite;
  
@@ -12,7 +12,7 @@
 -   { 
 -     throw new RuntimeException("UNEXPECTED_CHAR=" + $UNEXPECTED_CHAR.text); 
 -   }
-+ : ( sql_stmt_list )+ EOF
++ : ( sql_stmt_list )+ (SINGLE_LINE_COMMENT | MULTILINE_COMMENT_EOF)?
   ;
  
  sql_stmt_list
@@ -21,3 +21,17 @@
   ;
  
  sql_stmt
+@@ -862,8 +855,12 @@
+  : '--' ~[\r\n]* -> channel(HIDDEN)
+  ;
+ 
++MULTILINE_COMMENT_EOF
++ : '/*' .*? -> channel(HIDDEN)
++ ;
++
+ MULTILINE_COMMENT
+- : '/*' .*? ( '*/' | EOF ) -> channel(HIDDEN)
++ : '/*' .*? '*/' -> channel(HIDDEN)
+  ;
+ 
+ SPACES
