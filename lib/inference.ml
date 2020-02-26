@@ -15,6 +15,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     let quotient = Rec_quotient.quotient_mem g qgraph_channel verbose
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
+    let reachable : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
     let graph_channel = Option.map open_out graph_fname in
 
     let set_init_node : ext_element -> unit =
@@ -23,18 +24,24 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     let set_node_color_in_graph: ext_element -> string -> unit =
         Grammar_io.set_node_color_in_graph graph_channel in
 
+    let is_reachable_mem (e: element) : bool =
+        match Hashtbl.find_opt reachable e with
+        | Some b -> b
+        | None -> let b = is_reachable g goal e in
+            Hashtbl.add reachable e b; b in
+
     (* breadth-first search *)
-    let rec compute_heuristic (e : element) (seen: (element,unit) Hashtbl.t) (queue: (element list) list) : element list = match queue with
+    let rec compute_heuristic (e: element) (seen: (element,unit) Hashtbl.t) (queue: (element list) list) : element list = match queue with
     | [] -> []
     | []::_ -> failwith "impossible"
     | (t::_)::q2 when Hashtbl.mem seen t -> (compute_heuristic [@tailcall]) e seen q2
-    | ((t::_) as t2)::_ when is_reachable g goal t -> t2
+    | ((t::_) as t2)::_ when is_reachable_mem t -> t2
     | ((t::_) as t2)::q2 -> Hashtbl.add seen t (); (compute_heuristic [@tailcall]) e seen (q2@(List.rev_map (fun e -> e::t2) (symbols_from_parents g t))) in
 
     (* compute the heuristic if needed *)
     let get_heuristic (e: element) : int =
         if not (Hashtbl.mem heuristic e) then begin
-            let path = compute_heuristic e (Hashtbl.create 50) [[e]] in
+            let path = compute_heuristic e (Hashtbl.create (List.length all_sym)) [[e]] in
             if path <> [] then List.iteri (fun index elem -> Hashtbl.add heuristic elem index) path
             else Hashtbl.add heuristic e inf
         end;
@@ -75,12 +82,24 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     let add_in_openset (g_val: int) (origin: node_origin) (par: ext_element) (openset: node list) : node list =
     (* openset is already sorted *)
         let openset = (* first INDUCTION and then DERIVATION *)
-            if origin=INDUCTION then par |> build_ext_elements |> List.rev_map (fun (e: ext_element) : node -> {g_val;h_val=get_heuristic e.e;e=e;par=par;origin=INDUCTION}) |> List.filter (fun {h_val;_} -> h_val <> inf) |> List.sort compare_with_score |> List.merge compare_with_score openset
+            if origin=INDUCTION then
+                par
+                |> build_ext_elements
+                |> List.rev_map (fun (e: ext_element) : node -> {g_val;h_val=get_heuristic e.e;e=e;par=par;origin=INDUCTION})
+                |> List.filter (fun {h_val;_} -> h_val <> inf)
+                |> List.sort compare_with_score
+                |> List.merge compare_with_score openset
             else openset in
         let openset =
             if get_heuristic par.e = 0 then begin
 (*                List.iter (fun p -> print_endline (string_of_part p)) (build_derivation g par.sf);*)
-                let new_elems = par.sf |> build_derivation g |> List.split |> snd |> List.rev_map (fun (newsf: part) : node -> {g_val=g_val;h_val=get_heuristic par.e;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION}) |> List.sort compare_with_score in
+                let new_elems =
+                    par.sf
+                    |> build_derivation g
+                    |> List.split
+                    |> snd
+                    |> List.rev_map (fun (newsf: part) : node -> {g_val=g_val;h_val=get_heuristic par.e;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION})
+                    |> List.sort compare_with_score in
                 List.iter (fun n -> Grammar_io.add_edge_in_graph graph_channel "penwidth=3" par n.e) new_elems;
                 List.merge compare_with_score openset new_elems
             end else openset in
@@ -132,22 +151,29 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
         | true -> (get_epsilon_possible_symbols unclean_g) @ (List.filter ((<>) (Terminal "")) inj)
         | false -> inj in
     (* get the possible injections tokens *)
-    if not (is_reachable g goal g.axiom) then failwith "Unknown or unreachable goal" (* the goal is not reachable from the axiom ! *)
+    if not (is_reachable_mem g.axiom) then failwith "Unknown or unreachable goal" (* the goal is not reachable from the axiom ! *)
     else if inj = [] then failwith "No trivial injection" (* no injection token found *)
     else begin
-        if verbose then print_endline "Verify direct injection";
-        let result = List.find_opt (fun e -> is_reachable g goal e) inj in
+        let result = find_start g goal inj in
         if result <> None then begin
-            if verbose then print_endline "Directly found!";
+            if verbose then print_endline "Directly injection found!";
             Option.map (fun e -> ext_grammar_of_grammar (e@@g.rules)) result
         end
         else begin
+            (* the injection token can't reach the goal *)
+            List.iter (fun e -> Hashtbl.add reachable e false) inj;
+
+            (* prepare the dot files *)
             Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
             Option.iter (fun ch -> output_string ch "digraph {\n") graph_channel;
+
             let ext_inj = List.rev_map ext_element_of_element inj in
             List.iter (set_init_node) ext_inj;
+            if verbose then print_endline "Computing some heuristic values…";
             let openset = List.fold_right (add_in_openset 1 INDUCTION) ext_inj [] in
             let result = search_aux (Hashtbl.create 1000) 0 openset (* search *) in
+
+            (* close the dot files *)
             Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
             Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
             result
