@@ -39,7 +39,7 @@ let ()=
         let grammar = Option.get !grammar
         and goal = Option.get !goal
         and start = Option.get !start
-        and oracle = Poirot.make_oracle_from_script (Option.get !oracle_fname) in
+        and oracle = Poirot.make_oracle_from_script ~verbose:!verbose (Option.get !oracle_fname) in
 
         let grammar = if !lowercase then Poirot.to_lowercase ~simplify:!simplify grammar else (if !uppercase then Poirot.to_uppercase ~simplify:!simplify grammar else grammar) in
 

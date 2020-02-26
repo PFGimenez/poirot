@@ -13,16 +13,7 @@ class MyErrorListener(ErrorListener):
         super(MyErrorListener, self).__init__()
 
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        raise Exception
-
-    def reportAmbiguity(self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs):
-        raise Exception
-
-    def reportAttemptingFullContext(self, recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs):
-        raise Exception
-
-    def reportContextSensitivity(self, recognizer, dfa, startIndex, stopIndex, prediction, configs):
-        raise Exception
+        raise Exception("syntax error")
 
 def main():
     grammar = sys.argv[1]
@@ -45,7 +36,7 @@ def main():
     try:
         getattr(parser, axiom)()
     except Exception as e:
-        print(e)
+        print("Exception:",e)
         exit(1)
     exit(0)
 
