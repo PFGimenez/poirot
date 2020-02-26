@@ -11,7 +11,7 @@ let symbols_from_parents (g: grammar) (axiom : element) : element list =
 
 
 let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (verbose: bool) : ext_grammar option =
-    let g = Clean.clean_grammar unclean_g in
+    let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
     let quotient = Rec_quotient.quotient_mem g qgraph_channel verbose
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
@@ -55,7 +55,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
         let dummy_axiom : ext_element = {e=Nonterminal ((string_of_element e.e)^"_dummy_axiom"); pf=e.pf; sf=e.sf} in
         let new_rules = g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = e && r.ext_right_part <> [par]) |> List.map (fun r -> dummy_axiom ---> r.ext_right_part) in
         let allowed_rules = List.filter (fun r -> List.for_all is_allowed r.ext_right_part) (new_rules @ g.ext_rules) in
-        Clean.clean (dummy_axiom @@@ allowed_rules) in
+        dummy_axiom @@@ allowed_rules in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
     let split (e: ext_element) (original_rule: rule) : ext_element list =
@@ -111,7 +111,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
                 if verbose then print_endline "Found!";
                 set_node_color_in_graph e "forestgreen";
 (*                if verbose then print_endline (string_of_ext_grammar nt_inj_g);*)
-                Some nt_inj_g
+                Some (Clean.clean nt_inj_g)
             end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
                 if verbose then print_endline "Depth max";
                 set_node_color_in_graph e "orange";

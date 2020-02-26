@@ -4,6 +4,7 @@ type side = Left | Right
 type elem_status = In_progress | Processed
 
 let quotient_mem (g: grammar) (graph_channel: out_channel option) (verbose: bool): ext_element -> ext_grammar  =
+    (* the grammar must be clean ! *)
     let ext_g : ext_grammar = ext_grammar_of_grammar g
     and da = {pf=[];e=Nonterminal("dummy_axiom");sf=[]}
     (* all the computed rules *)
