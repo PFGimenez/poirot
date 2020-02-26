@@ -135,8 +135,12 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     if not (is_reachable g goal g.axiom) then failwith "Unknown or unreachable goal" (* the goal is not reachable from the axiom ! *)
     else if inj = [] then failwith "No trivial injection" (* no injection token found *)
     else begin
+        if verbose then print_endline "Verify direct injection";
         let result = List.find_opt (fun e -> is_reachable g goal e) inj in
-        if result <> None then Option.map (fun e -> ext_grammar_of_grammar (e@@g.rules)) result
+        if result <> None then begin
+            if verbose then print_endline "Directly found!";
+            Option.map (fun e -> ext_grammar_of_grammar (e@@g.rules)) result
+        end
         else begin
             Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
             Option.iter (fun ch -> output_string ch "digraph {\n") graph_channel;

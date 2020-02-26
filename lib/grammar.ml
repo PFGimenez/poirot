@@ -62,15 +62,15 @@ let get_all_rhs (rlist: rule list) (e: element) : part list =
 
 (* is the element s reachable in the grammar g from the element start ? *)
 let is_reachable (g: grammar) (s: element) (start: element) : bool =
-let rec is_reachable_aux (g: grammar) (s: element) (reachable : element list) : bool =
-    if List.mem s reachable then true
-    else begin
-        let reachable_rules = List.filter (fun r -> List.mem r.left_symbol reachable) g.rules in
-        let new_reachable = reachable_rules |> List.rev_map (fun r -> r.right_part) |> List.flatten |> List.append reachable |> List.sort_uniq compare in
-        if (List.compare_lengths reachable new_reachable) = 0 then false
-        else (is_reachable_aux [@tailcall]) g s new_reachable
-    end in
-    is_reachable_aux g s [start]
+    let rec is_reachable_aux (seen: (element,unit) Hashtbl.t) (queue: element list) : bool = match queue with
+        | [] -> false
+        | t::_ when t=s -> true
+        | t::q when Hashtbl.mem seen t -> (is_reachable_aux [@tailcall]) seen q
+        | t::q -> let new_elems = List.flatten (List.filter_map (fun r -> if r.left_symbol = t then Some r.right_part else None) g.rules) in
+                Hashtbl.add seen t ();
+                (is_reachable_aux [@tailcall]) seen (q@new_elems) in
+
+    is_reachable_aux (Hashtbl.create 500) [start]
 
 (* tail-recursive *)
 (* build all the possible one-step derivation of part p in the grammar g *)

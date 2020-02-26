@@ -10,7 +10,7 @@ Then, clone the Poirot repository: `git clone https://github.com/PFGimenez/poiro
 
 Go into the directory `poirot`.
 
-Finally, install Poirot: `opam pin poirot .` and then `opam install .`
+Finally, install Poirot: `opam install .`
 
 ## Use the library in your own project
 
