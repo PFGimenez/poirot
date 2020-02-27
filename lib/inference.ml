@@ -12,7 +12,7 @@ let symbols_from_parents (g: grammar) (axiom : element) : element list =
 let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (verbose: bool) : ext_grammar option =
     if verbose then print_endline "Clean grammar…";
     let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
-    let quotient = Rec_quotient.quotient_mem g qgraph_channel verbose
+    let quotient = Quotient.quotient_mem g qgraph_channel verbose
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
     let reachable : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
