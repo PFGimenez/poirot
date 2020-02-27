@@ -26,6 +26,8 @@ let ()=
 
         let inj_g = Poirot.quotient grammar prefix suffix in
         Option.iter (fun fname -> Poirot.export_antlr4 fname inj_g) !injg_fname;
-        print_endline ("Injection: "^(Option.get (Poirot.fuzzer ~complexity:0 ~goal:!goal inj_g)))
+        match Poirot.fuzzer ~complexity:0 ~goal:!goal inj_g with
+        | None -> print_endline "No injection"
+        | Some inj ->  print_endline ("Injection: "^inj)
     end else print_endline usage
 

@@ -8,8 +8,8 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) (verbose: bool
     let ext_g : ext_grammar = ext_grammar_of_grammar g
     and da = {pf=[];e=Nonterminal("dummy_axiom");sf=[]}
     (* all the computed rules *)
-    and mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 1000
-    and status : (ext_element, elem_status) Hashtbl.t = Hashtbl.create 1000 in
+    and mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 100000
+    and status : (ext_element, elem_status) Hashtbl.t = Hashtbl.create 100000 in
 
     let rec get_reachable_symbols (slist : ext_element list) : ext_element list =
         let get_reachable_symbols_once (slist : ext_element list) : ext_element list = slist |> List.rev_map (Hashtbl.find mem) |> List.concat |> List.cons slist |> List.concat |> List.sort_uniq compare |> List.filter is_ext_element_non_terminal in

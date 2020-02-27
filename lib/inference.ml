@@ -129,7 +129,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
                 set_node_color_in_graph e "crimson";
                 (search_aux [@tailcall]) closedset (step + 1) q
             end else if is_reachable (grammar_of_ext_grammar nt_inj_g) goal (full_element_of_ext_element nt_inj_g.ext_axiom) then begin (* the goal has been found ! *)
-                if verbose then print_endline "Found!";
+                print_endline ("Found on step "^(string_of_int step));
                 set_node_color_in_graph e "forestgreen";
 (*                if verbose then print_endline (string_of_ext_grammar nt_inj_g);*)
                 Some (Clean.clean nt_inj_g)
