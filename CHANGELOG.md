@@ -2,6 +2,7 @@
 - Bugfix oracle and antlr4-to-bnf
 - Add the `make_oracle_from_…` functions.
 - Rewrite the heuristic computation
+- Rewrite the fuzzer
 - The initial injection can be empty
 - Read substitutions from a file
 - API has default values

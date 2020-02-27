@@ -9,7 +9,6 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 let symbols_from_parents (g: grammar) (axiom : element) : element list =
     g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare
 
-
 let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (verbose: bool) : ext_grammar option =
     if verbose then print_endline "Clean grammar…";
     let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
@@ -17,6 +16,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
     let reachable : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+    let seen_hashtbl = Hashtbl.create (List.length all_sym) in
     let graph_channel = Option.map open_out graph_fname in
 
     let set_init_node : ext_element -> unit =
@@ -42,7 +42,8 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     (* compute the heuristic if needed *)
     let get_heuristic (e: element) : int =
         if not (Hashtbl.mem heuristic e) then begin
-            let path = compute_heuristic e (Hashtbl.create (List.length all_sym)) [[e]] in
+            Hashtbl.clear seen_hashtbl;
+            let path = compute_heuristic e seen_hashtbl [[e]] in
             if path <> [] then List.iteri (fun index elem -> Hashtbl.add heuristic elem index) path
             else Hashtbl.add heuristic e inf
         end;
@@ -119,8 +120,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
             (* now it is visited *)
             Hashtbl.add closedset e ();
             (* compute the non-trivial grammar and avoid some characters *)
-            (* TODO: non-trivial ne concerne que les inductions *)
-            let nt_inj_g = Clean.clean (make_non_trivial_grammar (quotient e) e par) in
+            let nt_inj_g = if origin=INDUCTION then (*Clean.clean*) (make_non_trivial_grammar (quotient e) e par) else quotient e in
             (* Grammar_io.export_bnf "out.bnf" nt_inj_g; *)
             (* call the fuzzer/oracle with this grammar *)
             let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle in

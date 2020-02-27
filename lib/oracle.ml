@@ -27,8 +27,8 @@ let oracle_mem (o: string -> oracle_status) (verbose: bool) : string -> oracle_s
             answer
         end
 
-let handle_option (oracle : string -> oracle_status): string option -> oracle_status = function
-    | None -> Grammar_error (* no word in the language *)
+let handle_option (verbose: bool) (oracle : string -> oracle_status): string option -> oracle_status = function
+    | None -> if verbose then print_endline "No word in language"; Grammar_error (* no word in the language *)
     | Some inj -> oracle inj
 
 let oracle_from_script (verbose: bool) (fname: string) (inj: string) : oracle_status =
@@ -45,6 +45,6 @@ let oracle_from_script (verbose: bool) (fname: string) (inj: string) : oracle_st
     print_endline ((string_of_oracle_status answer));
     answer
 
-let oracle_mem (verbose: bool) (oracle: string -> oracle_status) : (string option -> oracle_status) = handle_option (oracle_mem oracle verbose)
+let oracle_mem (verbose: bool) (oracle: string -> oracle_status) : (string option -> oracle_status) = handle_option verbose (oracle_mem oracle verbose)
 
 let oracle_mem_from_script (fname: string) (verbose: bool) : (string option -> oracle_status) = oracle_mem verbose (oracle_from_script verbose fname)
