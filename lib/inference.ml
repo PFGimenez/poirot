@@ -77,7 +77,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     (* construct the new ext_elements (the neighborhood) *)
     let build_ext_elements (e: ext_element) : ext_element list =
         let new_elems = g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e) |> List.flatten in
-        List.iter (Grammar_io.add_edge_in_graph graph_channel "" e) new_elems;
+(*        List.iter (Grammar_io.add_edge_in_graph graph_channel "" e) new_elems;*)
         new_elems in
 
     (* add new elements to the open set *)
@@ -102,7 +102,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
                     |> snd
                     |> List.rev_map (fun (newsf: part) : node -> {g_val=g_val;h_val=get_heuristic par.e;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION})
                     |> List.sort compare_with_score in
-                List.iter (fun n -> Grammar_io.add_edge_in_graph graph_channel "penwidth=3" par n.e) new_elems;
+(*                List.iter (fun n -> Grammar_io.add_edge_in_graph graph_channel "penwidth=3" par n.e) new_elems;*)
                 List.merge compare_with_score openset new_elems
             end else openset in
         openset in
@@ -110,13 +110,15 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     (* core algorithm : an A* algorithm *)
     let rec search_aux (closedset: (ext_element, unit) Hashtbl.t) (step: int) (openset: node list) : ext_grammar option = match openset with
     | [] -> None (* openset is empty : there is no way *)
-    | {g_val;e;par;origin;_}::q ->
+    | {g_val;h_val;e;par;origin}::q ->
         if verbose then print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element e));
         assert (g_val <= max_depth);
         (* verify whether e has already been visited *)
         if Hashtbl.mem closedset e then
             (if verbose then print_endline "Visited"; (search_aux [@tailcall]) closedset (step + 1) q)
         else begin
+            Grammar_io.set_node_attr graph_channel ("[label=\""^(string_of_ext_element e)^"\nstep="^(string_of_int step)^" g="^(string_of_int g_val)^" h="^(string_of_int h_val)^"\"]") e;
+            Grammar_io.add_edge_in_graph graph_channel (if origin=INDUCTION then "" else "penwidth=3") par e;
             (* now it is visited *)
             Hashtbl.add closedset e ();
             (* compute the non-trivial grammar and avoid some characters *)
