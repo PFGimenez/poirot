@@ -11,6 +11,7 @@ let symbols_from_parents (g: grammar) (axiom : element) : element list =
 
 
 let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (verbose: bool) : ext_grammar option =
+    if verbose then print_endline "Clean grammar…";
     let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
     let quotient = Rec_quotient.quotient_mem g qgraph_channel verbose
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
@@ -119,7 +120,8 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
             Hashtbl.add closedset e ();
             (* compute the non-trivial grammar and avoid some characters *)
             (* TODO: non-trivial ne concerne que les inductions *)
-            let nt_inj_g = make_non_trivial_grammar (quotient e) e par in
+            let nt_inj_g = Clean.clean (make_non_trivial_grammar (quotient e) e par) in
+            (* Grammar_io.export_bnf "out.bnf" nt_inj_g; *)
             (* call the fuzzer/oracle with this grammar *)
             let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle in
             if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
@@ -171,11 +173,17 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
             List.iter (set_init_node) ext_inj;
             if verbose then print_endline "Computing some heuristic values…";
             let openset = List.fold_right (add_in_openset 1 INDUCTION) ext_inj [] in
-            let result = search_aux (Hashtbl.create 1000) 0 openset (* search *) in
-
-            (* close the dot files *)
-            Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
-            Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
-            result
+            try
+                Sys.catch_break true;
+                let result = search_aux (Hashtbl.create 1000) 0 openset (* search *) in
+                (* close the dot files *)
+                Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
+                Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
+                Sys.catch_break false;
+                result
+            with Sys.Break ->
+                Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
+                Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
+                raise Sys.Break
         end
     end

@@ -35,7 +35,7 @@ antlr-$(antlr_version)-complete.jar:
 SQLite.bnf: SQLite.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py antlr4-to-bnf.py
 	cat SQLite.g4 | python3 antlr4-to-bnf.py "<WS_POIROT>" > SQLite.bnf
 	echo "<WS_POIROT> ::= ' ';" >> SQLite.bnf
-	echo "<WS_POIROT> ::= <MULTILINE_COMMENT>;" >> SQLite.bnf
+#	echo "<WS_POIROT> ::= <MULTILINE_COMMENT>;" >> SQLite.bnf
 
 Lua.bnf: SQLite.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py antlr4-to-bnf.py
 	cat Lua.g4 | python3 antlr4-to-bnf.py "" "' '" > Lua.bnf
