@@ -60,26 +60,30 @@ let get_rules (rlist: ext_rule list) (e: ext_element) : ext_rule list =
 let get_all_rhs (rlist: rule list) (e: element) : part list =
     List.map (fun r -> r.right_part) (List.filter (fun r -> r.left_symbol = e) rlist)
 
+let seen : (element,unit) Hashtbl.t = Hashtbl.create 500
+
 let find_start (g: grammar) (goal: element) (start: element list) : element option =
-let rec find_start_aux (g: grammar) (goal: element) (seen: (element,unit) Hashtbl.t) (queue: (element*element) list) : element option = match queue with
+let rec find_start_aux (g: grammar) (goal: element) (queue: (element*element) list) : element option = match queue with
     | [] -> None
     | (t,s)::_ when t=goal -> Some s
-    | (t,_)::q when Hashtbl.mem seen t -> (find_start_aux [@tailcall]) g goal seen q
+    | (t,_)::q when Hashtbl.mem seen t -> (find_start_aux [@tailcall]) g goal q
     | (t,s)::q -> let new_elems = List.flatten (List.filter_map (fun r -> if r.left_symbol = t then Some (List.map (fun e -> e,s) r.right_part) else None) g.rules) in
             Hashtbl.add seen t ();
-            (find_start_aux [@tailcall]) g goal seen (q@new_elems) in
-    find_start_aux g goal (Hashtbl.create 500) (List.map (fun s -> (s,s)) start)
+            (find_start_aux [@tailcall]) g goal (q@new_elems) in
+    Hashtbl.clear seen;
+    find_start_aux g goal (List.map (fun s -> (s,s)) start)
 
 (* is the element s reachable in the grammar g from the element start ? *)
 let is_reachable (g: grammar) (s: element) (start: element) : bool =
-    let rec is_reachable_aux (seen: (element,unit) Hashtbl.t) (queue: element list) : bool = match queue with
+    let rec is_reachable_aux (queue: element list) : bool = match queue with
         | [] -> false
         | t::_ when t=s -> true
-        | t::q when Hashtbl.mem seen t -> (is_reachable_aux [@tailcall]) seen q
+        | t::q when Hashtbl.mem seen t -> (is_reachable_aux [@tailcall]) q
         | t::q -> let new_elems = List.flatten (List.filter_map (fun r -> if r.left_symbol = t then Some r.right_part else None) g.rules) in
                 Hashtbl.add seen t ();
-                (is_reachable_aux [@tailcall]) seen (q@new_elems) in
-    is_reachable_aux (Hashtbl.create 500) [start]
+                (is_reachable_aux [@tailcall]) (q@new_elems) in
+    Hashtbl.clear seen;
+    is_reachable_aux [start]
 
 (* tail-recursive *)
 (* build all the possible one-step derivation of part p in the grammar g *)

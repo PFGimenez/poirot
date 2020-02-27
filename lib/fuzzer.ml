@@ -5,10 +5,12 @@ type parse_tree = Leaf of element | Node of parse_tree list | Error
 (* the fuzzer is deterministic when max_depth = 0
  * this is on purpose, so similar grammars yield same words and the oracle memoization can be exploited *)
 
+let nonrec_rules : (element, rule) Hashtbl.t = Hashtbl.create 500
+
 (* all nonterminal must be the left-hand side of a rule *)
 let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: element option) (verbose: bool) (g : grammar) : part option =
     Random.self_init ();
-    let nonrec_rules : (element, rule) Hashtbl.t = Hashtbl.create (List.length g.rules) in
+    Hashtbl.clear nonrec_rules;
 
     let compare_rule (r1: rule) (r2: rule) : int =
         let diff = List.compare_lengths (List.filter is_non_terminal r1.right_part) (List.filter is_non_terminal r2.right_part) in
