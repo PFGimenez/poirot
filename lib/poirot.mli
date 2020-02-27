@@ -22,11 +22,12 @@ type oracle_status
  @param verbose (optional) makes Poirot verbose when true.
  @param subst (optional) an Hashtable containing the semantics substitution.
  @param max_depth (optional) modify the maximal depth of the search
+ @param max_steps (optional) modify the maximal number of steps of the search
  @param forbidden_chars (optional) a list of forbidden characters. Such characters won't be used in injection. Useful to avoid escaped characters.
  @param sgraph_fname (optional, for debug) export the search graph in graphviz dot format.
  @param qgraph_fname (optional, for debug) export the quotient graph in graphviz dot format.
  *)
-val search : ?verbose:bool -> ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> (string option -> oracle_status) -> grammar -> element -> element list -> grammar option
+val search : ?verbose:bool -> ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?max_steps:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> (string option -> oracle_status) -> grammar -> element -> element list -> grammar option
 
 (** [quotient g left_quotient right_quotient] returns the grammar [g] after a left quotient by [left_quotient] and a right quotient by [right_quotient]. [left_quotient] and [right_quotient] can contain nonterminals or be empty. *)
 val quotient : grammar -> element list -> element list -> grammar

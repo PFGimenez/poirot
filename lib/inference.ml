@@ -9,7 +9,7 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 let symbols_from_parents (g: grammar) (axiom : element) : element list =
     g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare
 
-let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (verbose: bool) : ext_grammar option =
+let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (verbose: bool) : ext_grammar option =
     if verbose then print_endline "Clean grammar…";
     let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
     let quotient = Quotient.quotient_mem g qgraph_channel verbose
@@ -113,8 +113,10 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     | {g_val;h_val;e;par;origin}::q ->
         if verbose then print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element e));
         assert (g_val <= max_depth);
+        if step = max_steps then
+            None
         (* verify whether e has already been visited *)
-        if Hashtbl.mem closedset e then
+        else if Hashtbl.mem closedset e then
             (if verbose then print_endline "Visited"; (search_aux [@tailcall]) closedset (step + 1) q)
         else begin
             Grammar_io.set_node_attr graph_channel ("[label=\""^(string_of_ext_element e)^"\nstep="^(string_of_int step)^" g="^(string_of_int g_val)^" h="^(string_of_int h_val)^"\"]") e;

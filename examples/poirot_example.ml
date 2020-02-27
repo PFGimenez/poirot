@@ -5,6 +5,7 @@ let ()=
     and qgraph_fname = ref None
     and injg_fname = ref None
     and max_depth = ref 10
+    and max_steps = ref 1000
     and grammar = ref None
     and oracle_fname = ref None
     and subst = ref None
@@ -24,6 +25,7 @@ let ()=
         ("-avoid",      Arg.Set_string avoid,     "List of characters to avoid");
         ("-subst",      Arg.String (fun s -> subst := Some s),     "Filename of the substitutions configuration file");
         ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
+        ("-maxsteps",   Arg.Set_int max_steps,    "Set the max steps search (default: "^(string_of_int !max_steps)^")");
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
@@ -44,7 +46,7 @@ let ()=
         let grammar = if !lowercase then Poirot.to_lowercase ~simplify:!simplify grammar else (if !uppercase then Poirot.to_uppercase ~simplify:!simplify grammar else grammar) in
 
         print_endline "Start searching…";
-        let g = Poirot.search ~verbose:!verbose ~subst:(Option.map Poirot.read_subst !subst) ~max_depth:!max_depth ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle grammar goal start in
+        let g = Poirot.search ~verbose:!verbose ~subst:(Option.map Poirot.read_subst !subst) ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle grammar goal start in
         match (g,!injg_fname) with
         | Some gram, Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^(Option.get (Poirot.fuzzer ~complexity:0 ~goal:(Some goal) gram)))
         | Some gram, _ -> print_endline ("Injection: "^(Option.get (Poirot.fuzzer ~complexity:0 ~goal:(Some goal) gram)))
