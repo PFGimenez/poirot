@@ -16,6 +16,11 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
     let reachable : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+    let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+
+    List.iter (fun e -> Hashtbl.add uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) g.rules) 1) == 0)) all_sym;
+(*    List.iter (fun e -> print_endline ((string_of_element e)^" "^(string_of_bool (Hashtbl.find uniq_rule e)))) all_sym;*)
+
     let seen_hashtbl = Hashtbl.create (List.length all_sym) in
     let graph_channel = Option.map open_out graph_fname in
 
@@ -36,7 +41,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     | [] -> []
     | []::_ -> failwith "impossible"
     | (t::_)::q2 when Hashtbl.mem seen t -> (compute_heuristic [@tailcall]) e seen q2
-    | ((t::_) as t2)::_ when is_reachable_mem t -> t2
+    | ((t::_) as t2)::_ when (not (Hashtbl.find uniq_rule t)) && is_reachable_mem t -> t2
     | ((t::_) as t2)::q2 -> Hashtbl.add seen t (); (compute_heuristic [@tailcall]) e seen (q2@(List.rev_map (fun e -> e::t2) (symbols_from_parents g t))) in
 
     (* compute the heuristic if needed *)
@@ -81,7 +86,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
         new_elems in
 
     (* add new elements to the open set *)
-    let add_in_openset (g_val: int) (origin: node_origin) (par: ext_element) (openset: node list) : node list =
+    let add_in_openset (allow_derivation: bool) (g_val: int) (origin: node_origin) (par: ext_element) (openset: node list) : node list =
     (* openset is already sorted *)
         let openset = (* first INDUCTION and then DERIVATION *)
             if origin=INDUCTION then
@@ -93,7 +98,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
                 |> List.merge compare_with_score openset
             else openset in
         let openset =
-            if get_heuristic par.e = 0 then begin
+            if allow_derivation && get_heuristic par.e = 0 then begin
 (*                List.iter (fun p -> print_endline (string_of_part p)) (build_derivation g par.sf);*)
                 let new_elems =
                     par.sf
@@ -123,29 +128,35 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
             Grammar_io.add_edge_in_graph graph_channel (if origin=INDUCTION then "" else "penwidth=3") par e;
             (* now it is visited *)
             Hashtbl.add closedset e ();
-            (* compute the non-trivial grammar and avoid some characters *)
-            let nt_inj_g = if origin=INDUCTION then (*Clean.clean*) (make_non_trivial_grammar (quotient e) e par) else quotient e in
-            (* Grammar_io.export_bnf "out.bnf" nt_inj_g; *)
-            (* call the fuzzer/oracle with this grammar *)
-            let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle in
-            if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
-                if verbose then print_endline "Invalid";
-                set_node_color_in_graph e "crimson";
-                (search_aux [@tailcall]) closedset (step + 1) q
-            end else if is_reachable (grammar_of_ext_grammar nt_inj_g) goal (full_element_of_ext_element nt_inj_g.ext_axiom) then begin (* the goal has been found ! *)
-                print_endline ("Found on step "^(string_of_int step));
-                set_node_color_in_graph e "forestgreen";
-(*                if verbose then print_endline (string_of_ext_grammar nt_inj_g);*)
-                Some (Clean.clean nt_inj_g)
-            end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
-                if verbose then print_endline "Depth max";
-                set_node_color_in_graph e "orange";
-                (search_aux [@tailcall]) closedset (step + 1) q
-            end else begin (* we explore in this direction *)
-                (* get the rules e -> ... to verify if e is testable or not *)
-                if status = Grammar_error then set_node_color_in_graph e "grey";
-                if verbose then print_endline "Explore";
-                (search_aux [@tailcall]) closedset (step + 1) (add_in_openset (g_val + 1) origin e q)
+            (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
+            if Hashtbl.find uniq_rule (element_of_ext_element e) then begin
+                if verbose then print_endline "Explore uniq";
+                (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) origin e q)
+            end else begin
+                (* compute the non-trivial grammar and avoid some characters *)
+                let nt_inj_g = if origin=INDUCTION then (*Clean.clean*) (make_non_trivial_grammar (quotient e) e par) else quotient e in
+                (* Grammar_io.export_bnf "out.bnf" nt_inj_g; *)
+                (* call the fuzzer/oracle with this grammar *)
+                let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle in
+                if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
+                    if verbose then print_endline "Invalid";
+                    set_node_color_in_graph e "crimson";
+                    (search_aux [@tailcall]) closedset (step + 1) q
+                end else if is_reachable (grammar_of_ext_grammar nt_inj_g) goal (full_element_of_ext_element nt_inj_g.ext_axiom) then begin (* the goal has been found ! *)
+                    print_endline ("Found on step "^(string_of_int step));
+                    set_node_color_in_graph e "forestgreen";
+    (*                if verbose then print_endline (string_of_ext_grammar nt_inj_g);*)
+                    Some (Clean.clean nt_inj_g)
+                end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
+                    if verbose then print_endline "Depth max";
+                    set_node_color_in_graph e "orange";
+                    (search_aux [@tailcall]) closedset (step + 1) q
+                end else begin (* we explore in this direction *)
+                    (* get the rules e -> ... to verify if e is testable or not *)
+                    if status = Grammar_error then set_node_color_in_graph e "grey";
+                    if verbose then print_endline "Explore";
+                    (search_aux [@tailcall]) closedset (step + 1) (add_in_openset true (g_val + 1) origin e q)
+                end
             end
         end in
     let get_epsilon_possible_symbols (g : grammar) : element list =
@@ -176,7 +187,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
             let ext_inj = List.rev_map ext_element_of_element inj in
             List.iter (set_init_node) ext_inj;
             if verbose then print_endline "Computing some heuristic values…";
-            let openset = List.fold_right (add_in_openset 1 INDUCTION) ext_inj [] in
+            let openset = List.fold_right (add_in_openset true 1 INDUCTION) ext_inj [] in
             try
                 Sys.catch_break true;
                 let result = search_aux (Hashtbl.create 1000) 0 openset (* search *) in
