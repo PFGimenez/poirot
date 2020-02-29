@@ -17,7 +17,7 @@ let make_oracle_from_fun ?(verbose: bool = false) (f: string -> int) = Oracle.or
 let read_subst : string -> (element,string) Hashtbl.t = Grammar_io.read_subst
 
 let quotient (g: grammar) (prefix: element list) (suffix: element list) : grammar =
-    Grammar.grammar_of_ext_grammar (Clean.clean (Quotient.quotient_mem (Clean.clean_grammar g) None false {pf=List.rev prefix;e=g.axiom;sf=suffix}))
+    Grammar.grammar_of_ext_grammar (Clean.clean (Quotient.quotient_mem (Clean.clean_grammar g) None {pf=List.rev prefix;e=g.axiom;sf=suffix}))
 
 let fuzzer ?(subst: (element,string) Hashtbl.t option = None) ?(complexity: int = 10) ?(goal: element option = None) (g: grammar) : string option =
     Option.map Grammar.string_of_word (Fuzzer.fuzzer complexity subst goal false g)

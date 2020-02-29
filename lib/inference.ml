@@ -12,16 +12,15 @@ let symbols_from_parents (g: grammar) (axiom : element) : element list =
 let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (verbose: bool) : ext_grammar option =
     if verbose then print_endline "Clean grammar…";
     let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
-    let quotient = Quotient.quotient_mem g qgraph_channel verbose
+    let quotient = Quotient.quotient_mem g qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
-    let heuristic : (element, int) Hashtbl.t = Hashtbl.create ((List.length all_sym)*(List.length all_sym)) in
-    let reachable : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+    let heuristic : (ext_element, int) Hashtbl.t = Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
+    let reachable : (ext_element, bool) Hashtbl.t = Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
     let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+    let seen_hashtbl = Hashtbl.create (List.length all_sym) in
 
     List.iter (fun e -> Hashtbl.add uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) g.rules) 1) == 0)) all_sym;
-(*    List.iter (fun e -> print_endline ((string_of_element e)^" "^(string_of_bool (Hashtbl.find uniq_rule e)))) all_sym;*)
 
-    let seen_hashtbl = Hashtbl.create (List.length all_sym) in
     let graph_channel = Option.map open_out graph_fname in
 
     let set_init_node : ext_element -> unit =
@@ -30,82 +29,89 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     let set_node_color_in_graph: ext_element -> string -> unit =
         Grammar_io.set_node_color_in_graph graph_channel in
 
-    let is_reachable_mem (e: element) : bool =
-        match Hashtbl.find_opt reachable e with
-        | Some b -> b
-        | None -> let b = is_reachable g goal e in
-            Hashtbl.add reachable e b; b in
-
-    (* breadth-first search *)
-    let rec compute_heuristic (e: element) (seen: (element,unit) Hashtbl.t) (queue: (element list) list) : element list = match queue with
-    | [] -> []
-    | []::_ -> failwith "impossible"
-    | (t::_)::q2 when Hashtbl.mem seen t -> (compute_heuristic [@tailcall]) e seen q2
-    | ((t::_) as t2)::_ when (not (Hashtbl.find uniq_rule t)) && is_reachable_mem t -> t2
-    | ((t::_) as t2)::q2 -> Hashtbl.add seen t (); (compute_heuristic [@tailcall]) e seen (q2@(List.rev_map (fun e -> e::t2) (symbols_from_parents g t))) in
-
-    (* compute the heuristic if needed *)
-    let get_heuristic (e: element) : int =
-        if not (Hashtbl.mem heuristic e) then begin
-            Hashtbl.clear seen_hashtbl;
-            let path = compute_heuristic e seen_hashtbl [[e]] in
-            if path <> [] then List.iteri (fun index elem -> Hashtbl.add heuristic elem index) path
-            else Hashtbl.add heuristic e inf
-        end;
-        Hashtbl.find heuristic e in
-
     let is_allowed ({e;_}: ext_element): bool = match e with
         | Terminal s -> not (List.exists (String.contains s) forbidden)
         | _ -> true in
 
-    (* compare for the open set sorting *)
-    let compare_with_score (a: node) (b: node) : int = match a,b with
-        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
-        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag=bg && ah=bh -> 0
-        | _ -> 1 in
-
-    (* compute the non-trivial grammar. To do that, just add a new axiom with the same rules as the normal axiom EXCEPT the trivial rule (the rule that leads to the parent grammar) *)
-    let make_non_trivial_grammar (g: ext_grammar) (e: ext_element) (par: ext_element) : ext_grammar =
+     (* compute the non-trivial grammar. To do that, just add a new axiom with the same rules as the normal axiom EXCEPT the trivial rule (the rule that leads to the parent grammar) *)
+    let make_non_trivial_grammar (g: ext_grammar) (par: ext_element) : ext_grammar =
+        let e = g.ext_axiom in
         let dummy_axiom : ext_element = {e=Nonterminal ((string_of_element e.e)^"_dummy_axiom"); pf=e.pf; sf=e.sf} in
         let new_rules = g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = e && r.ext_right_part <> [par]) |> List.map (fun r -> dummy_axiom ---> r.ext_right_part) in
         let allowed_rules = List.filter (fun r -> List.for_all is_allowed r.ext_right_part) (new_rules @ g.ext_rules) in
         dummy_axiom @@@ allowed_rules in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
-    let split (e: ext_element) (original_rule: rule) : ext_element list =
-        let rec split_aux (prefix : element list) (acc: ext_element list) (rhs: part) : (ext_element) list = match rhs with
+    let split (e: ext_element) (original_rule: rule) : (ext_element * ext_element) list =
+        let rec split_aux (prefix : element list) (acc: (ext_element * ext_element) list) (rhs: part) : (ext_element * ext_element) list = match rhs with
         | [] -> acc
-        | t::q when t=e.e -> (split_aux [@tailcall]) (t::prefix) ({pf=e.pf@prefix;e=original_rule.left_symbol;sf=e.sf@q}::acc) q
+        | t::q when t=e.e -> (split_aux [@tailcall]) (t::prefix) (({pf=prefix;e=original_rule.left_symbol;sf=q}, {pf=e.pf@prefix;e=original_rule.left_symbol;sf=e.sf@q})::acc) q
         | t::q -> (split_aux [@tailcall]) (t::prefix) acc q in
     split_aux [] [] original_rule.right_part in
 
+    let is_reachable_mem (par: element option) (e: ext_element) : bool =
+        match Hashtbl.find_opt reachable e with
+        | Some b -> b
+        | None -> let g_local = match par with
+            | Some p -> make_non_trivial_grammar (quotient e) (ext_element_of_element p)
+            | None -> quotient e in
+            let b = is_reachable (grammar_of_ext_grammar g_local) goal (full_element_of_ext_element e) in
+            Hashtbl.add reachable e b; b in
+
+    (* breadth-first search *)
+    let rec compute_heuristic (queue: (element * ext_element) list list) : ext_element list = match queue with
+    | [] -> []
+    | []::_ -> failwith "impossible"
+    | ((_,t)::_)::q2 when Hashtbl.mem seen_hashtbl t -> (compute_heuristic [@tailcall]) q2
+    | (((p,t)::_) as t2)::_ when (not (Hashtbl.find uniq_rule t.e)) && is_reachable_mem (Some p) t -> List.map snd t2 (* plusieurs règles pour t et objectif accessible : on arrête *)
+    | (((_,t)::_) as t2)::q2 -> Hashtbl.add seen_hashtbl t ();
+                    let neighbours = g.rules
+                                    |> List.map (split (ext_element_of_element t.e))
+                                    |> List.flatten
+                                    |> List.map (fun (e,_) -> (t.e,e)::t2) in
+                    (compute_heuristic [@tailcall]) (q2@neighbours) in
+
+    (* compute the heuristic if needed *)
+    let get_heuristic (eh: ext_element) (par: element) : int =
+(*        print_endline ("get_heuristic of "^(string_of_ext_element eh));*)
+        if not (Hashtbl.mem heuristic eh) then begin
+            Hashtbl.clear seen_hashtbl;
+            let path = compute_heuristic [[(par,eh)]] in
+            if path <> [] then List.iteri (fun index elem -> (*print_endline ((string_of_ext_element elem)^" "^(string_of_int index));*) Hashtbl.add heuristic elem index) path
+            else Hashtbl.add heuristic eh inf
+        end;
+        Hashtbl.find heuristic eh in
+
+   (* compare for the open set sorting *)
+    let compare_with_score (a: node) (b: node) : int = match a,b with
+        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
+        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag=bg && ah=bh -> 0
+        | _ -> 1 in
+
     (* construct the new ext_elements (the neighborhood) *)
-    let build_ext_elements (e: ext_element) : ext_element list =
-        let new_elems = g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e) |> List.flatten in
+    let build_ext_elements (e: ext_element) : (ext_element* ext_element) list =
+        g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e) |> List.flatten in
 (*        List.iter (Grammar_io.add_edge_in_graph graph_channel "" e) new_elems;*)
-        new_elems in
 
     (* add new elements to the open set *)
-    let add_in_openset (allow_derivation: bool) (g_val: int) (origin: node_origin) (par: ext_element) (openset: node list) : node list =
+    let add_in_openset (allow_derivation: bool) (g_val: int) (null_h: bool) (origin: node_origin) (par: ext_element) (openset: node list) : node list =
     (* openset is already sorted *)
         let openset = (* first INDUCTION and then DERIVATION *)
             if origin=INDUCTION then
                 par
                 |> build_ext_elements
-                |> List.rev_map (fun (e: ext_element) : node -> {g_val;h_val=get_heuristic e.e;e=e;par=par;origin=INDUCTION})
+                |> List.rev_map (fun (eh, e: ext_element * ext_element) : node -> {g_val;h_val=get_heuristic eh par.e;e=e;par=par;origin=INDUCTION})
                 |> List.filter (fun {h_val;_} -> h_val <> inf)
                 |> List.sort compare_with_score
                 |> List.merge compare_with_score openset
             else openset in
         let openset =
-            if allow_derivation && get_heuristic par.e = 0 then begin
+            if allow_derivation && null_h then begin
 (*                List.iter (fun p -> print_endline (string_of_part p)) (build_derivation g par.sf);*)
                 let new_elems =
                     par.sf
                     |> build_derivation g
-                    |> List.split
-                    |> snd
-                    |> List.rev_map (fun (newsf: part) : node -> {g_val=g_val;h_val=get_heuristic par.e;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION})
+                    |> List.rev_map (fun (_, newsf) : node -> {g_val=g_val;h_val=0;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION})
                     |> List.sort compare_with_score in
 (*                List.iter (fun n -> Grammar_io.add_edge_in_graph graph_channel "penwidth=3" par n.e) new_elems;*)
                 List.merge compare_with_score openset new_elems
@@ -119,7 +125,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
         if verbose then print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element e));
         assert (g_val <= max_depth);
         if step = max_steps then
-            None
+            (if verbose then print_endline "Steps limit reached"; None)
         (* verify whether e has already been visited *)
         else if Hashtbl.mem closedset e then
             (if verbose then print_endline "Visited"; (search_aux [@tailcall]) closedset (step + 1) q)
@@ -129,12 +135,12 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
             (* now it is visited *)
             Hashtbl.add closedset e ();
             (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
-            if Hashtbl.find uniq_rule (element_of_ext_element e) then begin
+            if Hashtbl.find uniq_rule e.e then begin
                 if verbose then print_endline "Explore uniq";
-                (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) origin e q)
+                (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
                 (* compute the non-trivial grammar and avoid some characters *)
-                let nt_inj_g = if origin=INDUCTION then (*Clean.clean*) (make_non_trivial_grammar (quotient e) e par) else quotient e in
+                let nt_inj_g = if origin=INDUCTION then (*Clean.clean*) (make_non_trivial_grammar (quotient e) par) else quotient e in
                 (* Grammar_io.export_bnf "out.bnf" nt_inj_g; *)
                 (* call the fuzzer/oracle with this grammar *)
                 let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle in
@@ -155,7 +161,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
                     (* get the rules e -> ... to verify if e is testable or not *)
                     if status = Grammar_error then set_node_color_in_graph e "grey";
                     if verbose then print_endline "Explore";
-                    (search_aux [@tailcall]) closedset (step + 1) (add_in_openset true (g_val + 1) origin e q)
+                    (search_aux [@tailcall]) closedset (step + 1) (add_in_openset true (g_val + 1) (h_val = 0) origin e q)
                 end
             end
         end in
@@ -168,7 +174,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
         | true -> (get_epsilon_possible_symbols unclean_g) @ (List.filter ((<>) (Terminal "")) inj)
         | false -> inj in
     (* get the possible injections tokens *)
-    if not (is_reachable_mem g.axiom) then failwith "Unknown or unreachable goal" (* the goal is not reachable from the axiom ! *)
+    if not (is_reachable_mem None (ext_element_of_element g.axiom)) then failwith "Unknown or unreachable goal" (* the goal is not reachable from the axiom ! *)
     else if inj = [] then failwith "No trivial injection" (* no injection token found *)
     else begin
         let result = find_start g goal inj in
@@ -178,7 +184,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
         end
         else begin
             (* the injection token can't reach the goal *)
-            List.iter (fun e -> Hashtbl.add reachable e false) inj;
+            List.iter (fun e -> Hashtbl.add reachable (ext_element_of_element e) false) inj;
 
             (* prepare the dot files *)
             Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
@@ -187,7 +193,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
             let ext_inj = List.rev_map ext_element_of_element inj in
             List.iter (set_init_node) ext_inj;
             if verbose then print_endline "Computing some heuristic values…";
-            let openset = List.fold_right (add_in_openset true 1 INDUCTION) ext_inj [] in
+            let openset = List.fold_right (add_in_openset true 1 false INDUCTION) ext_inj [] in (* injection tokens won't be derived *)
             try
                 Sys.catch_break true;
                 let result = search_aux (Hashtbl.create 1000) 0 openset (* search *) in
