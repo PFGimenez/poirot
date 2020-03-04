@@ -85,7 +85,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
    (* compare for the open set sorting *)
     let compare_with_score (a: node) (b: node) : int = match a,b with
         | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
-        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag=bg && ah=bh -> 0
+        | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag=bg && ah=bh -> (List.length (b.e.pf) + List.length (b.e.sf)) - (List.length (a.e.pf) + List.length (a.e.sf)) (* prefer the longest prefix/suffix *)
         | _ -> 1 in
 
     (* construct the new ext_elements (the neighborhood) *)
