@@ -101,15 +101,27 @@ let rec get_rules_with_symbol (s : ext_element) : ext_rule list -> ext_rule list
     | r::q when List.mem s (r.ext_right_part) -> r::(get_rules_with_symbol s q)
     | _::q -> get_rules_with_symbol s q
 
-let duplicate_epsilon_symbol_from_rule (s : ext_element) (r : ext_rule) : ext_rule list = let ps = power_set (get_occurrences_number s 0 r.ext_right_part) in
+let duplicate_epsilon_symbol_from_rule (s : ext_element) (r : ext_rule) : ext_rule list =
+    let ps = power_set (get_occurrences_number s 0 r.ext_right_part) in
     List.rev_map (fun blist -> r.ext_left_symbol ---> (filter_symbol s r.ext_right_part blist)) ps
 
 let remove_epsilon_rules_except_ext_axiom epsilon_symbols (g : ext_grammar) : ext_rule list = List.filter (fun r -> r.ext_right_part <> [] || r.ext_left_symbol = g.ext_axiom || not (List.mem r.ext_left_symbol epsilon_symbols)) g.ext_rules
 
 let remove_epsilon_symbols_once (g : ext_grammar) : ext_rule list =
+    let remove_epsilon_one_symbol (rules: ext_rule list) (symbol: ext_element) : ext_rule list =
+        get_rules_with_symbol symbol rules
+        |> List.rev_map (duplicate_epsilon_symbol_from_rule symbol)
+        |> List.flatten
+        |> List.append rules
+        |> List.sort_uniq compare in
+
     let epsilon_symbols = get_epsilon_symbols g in
-    let new_rules = epsilon_symbols |> List.rev_map (fun s -> List.rev_map (duplicate_epsilon_symbol_from_rule s) (get_rules_with_symbol s g.ext_rules)) |> List.flatten |> List.flatten in
-    remove_epsilon_rules_except_ext_axiom epsilon_symbols (g.ext_axiom @@@ (List.sort_uniq compare (g.ext_rules@new_rules)))
+    if epsilon_symbols = [] then
+        g.ext_rules
+    else begin
+        let new_rules = List.fold_left remove_epsilon_one_symbol g.ext_rules epsilon_symbols in
+        remove_epsilon_rules_except_ext_axiom epsilon_symbols (g.ext_axiom @@@ (List.sort_uniq compare (g.ext_rules@new_rules)))
+    end
 
 let remove_epsilon_symbols : ext_grammar -> ext_grammar = iterate_until_convergence remove_epsilon_symbols_once
 
