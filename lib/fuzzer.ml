@@ -1,6 +1,6 @@
 open Grammar
 
-type parse_tree = Leaf of element | Node of parse_tree list | Error
+type parse_tree = Leaf of element | Node of element * parse_tree list | Error
 
 (* the fuzzer is deterministic when max_depth = 0
  * this is on purpose, so similar grammars yield same words and the oracle memoization can be exploited *)
@@ -12,7 +12,8 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
     Random.self_init ();
     Hashtbl.clear nonrec_rules;
 
-    let compare_rule (r1: rule) (r2: rule) : int =
+    let compare_rule (reverse: bool) (r1: rule) (r2: rule) : int =
+        let r1, r2 = if reverse then r2,r1 else r1,r2 in
         let diff = List.compare_lengths (List.filter is_non_terminal r1.right_part) (List.filter is_non_terminal r2.right_part) in
         if diff <> 0 then diff
         else begin
@@ -29,7 +30,7 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
                 | Error -> [Error]
                 | x -> x::(lazy_map f q) end in
 
-    let rec fuzzer_minimize (goal_rules: rule list) (used_symbols: element list) (used_rules: rule list) (root: element) : parse_tree =
+    let rec fuzzer_minimize (depth: int) (goal_rules: rule list) (used_symbols: element list) (used_rules: rule list) (root: element) : parse_tree =
         if Option.map (fun v -> Hashtbl.mem v root) values = Some true then
             Leaf (Terminal (Hashtbl.find (Option.get values) root))
         else if is_terminal root then
@@ -38,35 +39,36 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
             let r = List.hd goal_rules in
             if List.tl goal_rules = [] then
                 (* don't update used_symbols as the path to goal may require producing a tree with two identical symbols in the same branch *)
-                Node (List.map (fuzzer_minimize [] used_symbols (r::used_rules)) r.right_part)
+                Node (root,List.map (fuzzer_minimize (depth+1) [] used_symbols (r::used_rules)) r.right_part)
             else begin
                 let q = List.tl goal_rules in
                 let next_sym = (List.hd q).left_symbol in
                 let first = List.find ((=) next_sym) r.right_part in
                 (* the PHYSICAL equality is not an error : we want the first, not all of them *)
-                Node (List.map (fun e -> fuzzer_minimize (if e == first then q else []) used_symbols (r::used_rules) e) r.right_part)
+                Node (root,List.map (fun e -> fuzzer_minimize (depth+1)(if e == first then q else []) used_symbols (r::used_rules) e) r.right_part)
             end
         end else if List.mem root used_symbols then Error
         else begin
             (* goal_rules is empty *)
             match Hashtbl.find_opt nonrec_rules root with
-            | Some r -> Node (List.map (fuzzer_minimize [] (root::used_symbols) (r::used_rules)) r.right_part) (* a good rule is already known *)
+            | Some r -> Node (root,List.map (fuzzer_minimize (depth+1)[] (root::used_symbols) (r::used_rules)) r.right_part) (* a good rule is already known *)
             | None ->
                 (* get the rules root -> ... that are not used and with unused symbols in the RHS *)
-                let possible_rules = List.sort compare_rule (List.filter (fun r -> r.left_symbol = root && not (List.mem r used_rules) && not (List.exists (fun e -> List.mem e used_symbols) r.right_part)) g.rules) in
-                use_rule possible_rules (root::used_symbols) used_rules root
+                let possible_rules = List.sort (compare_rule (depth=0)) (List.filter (fun r -> r.left_symbol = root && not (List.mem r used_rules) && not (List.exists (fun e -> List.mem e used_symbols) r.right_part)) g.rules) in
+                use_rule depth possible_rules (root::used_symbols) used_rules root
         end
 
-    and use_rule (possible_rules: rule list) (used_symbols: element list) (used_rules: rule list) (root: element) : parse_tree = match possible_rules with
+    and use_rule (depth: int) (possible_rules: rule list) (used_symbols: element list) (used_rules: rule list) (root: element) : parse_tree = match possible_rules with
         | [] -> Error
         | r::q ->
-            let trees = lazy_map (fuzzer_minimize [] used_symbols (r::used_rules)) r.right_part in
+            let trees = lazy_map (fuzzer_minimize (depth+1)[] used_symbols (r::used_rules)) r.right_part in
             if List.exists ((=) Error) trees then
-                (use_rule [@tailcall]) q used_symbols used_rules root
+                (use_rule [@tailcall]) depth q used_symbols used_rules root
             else begin
                 (* we need to verify the hashtable after the recursive call. This rule is safe since the recursive call succeeded! *)
+                assert (not (Hashtbl.mem nonrec_rules root));
                 Hashtbl.replace nonrec_rules root r;
-                Node trees
+                Node (root,trees)
             end in
 
     (* not tail-recursive ! but the max depth is controlled *)
@@ -77,7 +79,7 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
         end else if is_terminal e then
             Leaf e
         else if depth >= max_depth then
-            fuzzer_minimize [] [] [] e
+            fuzzer_minimize 1 [] [] [] e
             (*fuzzer_minimize [] [] e*)
         else begin
             let possible_rules = List.filter (fun r -> r.left_symbol = e) g.rules in
@@ -85,7 +87,7 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
             let trees = List.map (fuzzer_explode (depth + 1)) r.right_part in
             if List.exists ((=) Error) trees then
                 (fuzzer_explode [@tailcall]) depth e (* restart *)
-            else Node trees
+            else Node (e,trees)
         end in
 
     let rec has_new (seen: element list) (p: element list) : bool = match p with
@@ -104,17 +106,18 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
 
     let find_path_to_goal () = find_path_to_goal_aux [] [([g.axiom],[])] in
 
-    let rec part_of_tree (t: parse_tree) : part option = match t with
+    let rec part_of_tree (verbose_pf: string) (t: parse_tree) : part option = match t with
         | Error -> None
-        | Leaf e -> Some [e]
-        | Node l -> let trees = List.map part_of_tree l in
+        | Leaf e -> if verbose then print_endline (verbose_pf^(decorated_string_of_element e)); Some [e]
+        | Node (e,l) -> if verbose then print_endline (verbose_pf^(decorated_string_of_element e));
+                let trees = List.map (part_of_tree (verbose_pf^"   ")) l in
             if List.exists ((=) None) trees then None
             else Some (trees |> List.map Option.get |> List.flatten) in
 
-    part_of_tree (
+    part_of_tree "" (
         if Option.is_some goal && is_reachable g (Option.get goal) g.axiom then begin
             if verbose then print_endline "Fuzzing with goal";
-            fuzzer_minimize (find_path_to_goal ()) [] [] g.axiom
+            fuzzer_minimize 1 (find_path_to_goal ()) [] [] g.axiom
 (*        fuzzer_minimize (find_path_to_goal ()) [] g.axiom*)
         end else begin
             if verbose then print_endline "Fuzzing";

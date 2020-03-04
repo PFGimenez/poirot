@@ -124,7 +124,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     | {g_val;h_val;e;par;origin}::q ->
         if verbose then print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element e));
         assert (g_val <= max_depth);
-        if step = max_steps then
+        if step > max_steps then
             (if verbose then print_endline "Steps limit reached"; None)
         (* verify whether e has already been visited *)
         else if Hashtbl.mem closedset e then
@@ -140,7 +140,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
                 (* compute the non-trivial grammar and avoid some characters *)
-                let nt_inj_g = if origin=INDUCTION then (*Clean.clean*) (make_non_trivial_grammar (quotient e) par) else quotient e in
+                let nt_inj_g = if origin=INDUCTION then Clean.clean (make_non_trivial_grammar (quotient e) par) else quotient e in
                 (* Grammar_io.export_bnf "out.bnf" nt_inj_g; *)
                 (* call the fuzzer/oracle with this grammar *)
                 let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle in
@@ -196,7 +196,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
             let openset = List.fold_right (add_in_openset true 1 false INDUCTION) ext_inj [] in (* injection tokens won't be derived *)
             try
                 Sys.catch_break true;
-                let result = search_aux (Hashtbl.create 1000) 0 openset (* search *) in
+                let result = search_aux (Hashtbl.create 1000) 1 openset (* search *) in
                 (* close the dot files *)
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
