@@ -5,17 +5,20 @@ _Poirot is still a work in progress !_
 ## Requirements
 
 To use Poirot, you will need the OCaml package manager, `opam`. You can also follow these steps:
+
     sh <(curl -sL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
     eval `opam env`
     opam switch create 4.08.1
     eval `opam env`
 
 To install Poirot, run the following steps. `opam` will automatically install the dependencies of Poirot.
+
     git clone https://github.com/PFGimenez/poirot.git
     cd poirot
     opam install .
 
 You will certainly need ANTLR4. Make sure you have Python 3 and Java JRE installed. Execute:
+
     pip3 install --user -r antlr4-utils/requirements.txt
 
 # Use Poirot directly
@@ -25,11 +28,13 @@ You will certainly need ANTLR4. Make sure you have Python 3 and Java JRE install
 The script `poirot.sh` allows you to use Poirot without making your own program. You can run `./poirot.sh -help` to get the list of parameters on how to use it.
 
 Here is an example that uses the simple grammar `msg_exec`. This example uses the prefix/suffix oracle, so first create the lexer and parser by executing `make msg_execLexer.py` from the `antlr4-utils` directory. Then run:
+
     ./poirot.sh -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"
 
 It will generates the injection `value ; exec cmd ; msg key = value`.
 
 You can experiment with the more complex grammar `parenthesis` as well. Create its lexer and parser and then run:
+
     ./poirot.sh -grammar bnf_grammars/parenthesis.bnf -goal "'b'" -start "'a'" -oracle "oracles/prefix-suffix.py parenthesis axiom '([[([' '])]])'"
 
 It will generate the injection `a])]])b([[([a`.
@@ -39,6 +44,7 @@ It will generate the injection `a])]])b([[([a`.
 If you know the query (i.e. the prefix and the suffix surrounding the injection point), you can directly use Poirot to get the grammar of the injection with the `quotient` function, export it to an ANTLR4 grammar, or ask directly Poirot to generate an injection containing some symbol by using the `fuzzer` function. White-box fuzzing is of course greatly faster than black-box fuzzing.
 
 For example, you can run:
+
     ./poirot_whitebox.sh -grammar bnf_grammars/msg_exec.bnf -pf "'msg ' 'key' ' = '" -sf "' & ' 'key' ' = ' 'value'" -goal "Exe"
 
 It will generate the injection `value ; exec cmd ; msg key = value`.
@@ -64,6 +70,7 @@ Go into the directory `antlr4-utils`. If you have a grammar named `test.g4`, you
 ## BNF → ANTLR4
 
 If you have a grammar `test.bnf`, run
+
     dune exec examples/bnf2antlr4.exe test.bnf
 
 It will generate the file `test.g4` containing the grammar in ANTLR4 format. Its axiom is named `axiom`.
