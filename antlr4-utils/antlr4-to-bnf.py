@@ -14,9 +14,10 @@ def main():
     parser = ANTLRv4Parser(stream)
     tree = parser.grammarSpec()
 
-    poirot_lex = sys.argv[1] if len(sys.argv)>=2 else ""
-    poirot_parser = sys.argv[2] if len(sys.argv)>=3 else ""
-    printer = ListenerForBNF(poirot_lex, poirot_parser)
+    add_axiom = sys.argv[1].lower() == "true"
+    poirot_lex = sys.argv[2] if len(sys.argv)>=3 else ""
+    poirot_parser = sys.argv[3] if len(sys.argv)>=4 else ""
+    printer = ListenerForBNF(add_axiom, poirot_lex, poirot_parser)
     walker = ParseTreeWalker()
     walker.walk(printer, tree)
 

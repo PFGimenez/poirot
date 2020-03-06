@@ -15,6 +15,7 @@ parser_or_lexer = None
 first_lhs = True
 ws_poirot_parser = '\' \''
 ws_poirot_lexer = '\' \''
+add_axiom = None
 
 # Used to translate "NOT"
 char_table = [chr(i) for i in range(32, 127)]
@@ -296,10 +297,11 @@ def do_suffix(suffix, child, ctx):
 # This class defines a complete listener for a parse tree produced by ANTLRv4Parser.
 class ListenerForBNF(ANTLRv4ParserListener):
 
-    def __init__(self, poirot_lex="", poirot_parser=""):
-        global ws_poirot_parser,ws_poirot_lexer
+    def __init__(self, add_ax, poirot_lex="", poirot_parser=""):
+        global ws_poirot_parser,ws_poirot_lexer,add_axiom
         ws_poirot_parser = poirot_parser
         ws_poirot_lexer = poirot_lex
+        add_axiom = add_ax
 
     def exitGrammarDecl(self, ctx:ANTLRv4Parser.GrammarDeclContext):
         print("# Grammar name: ", ctx.getChild(1).X_REGEXP)
@@ -318,9 +320,8 @@ class ListenerForBNF(ANTLRv4ParserListener):
             raise Exception(("Rule name with '%s' not handled: " % mark) + name)
         lhs = name
 
-        global first_lhs
-
-        if first_lhs:
+        global first_lhs,add_axiom
+        if first_lhs and add_axiom:
             print("<" + lhs + "> ;")
         first_lhs = False
         print("# PARSER: " + lhs)
@@ -552,6 +553,8 @@ class ListenerForBNF(ANTLRv4ParserListener):
             ctx.X_REGEXP = (".", )
         elif ctx.LEXER_CHAR_SET() is not None:
             ctx.X_REGEXP = ("char_set", str(ctx.LEXER_CHAR_SET()))
+        elif ctx.characterRange is not None:
+            raise Exception("Not yet handled (???): " + fname)
         else:
             raise Exception("Not yet handled (???): " + fname)
 
