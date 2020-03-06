@@ -27,7 +27,10 @@ antlr-$(antlr_version)-complete.jar:
 
 # Generate the lexer and parsers file from the grammar
 
-%Lexer.py %Parser.py: %.g4 antlr-$(antlr_version)-complete.jar
+PhpLexer.py: PhpLexer.g4 PhpParser.g4 antlr-$(antlr_version)-complete.jar
+	java -jar antlr-$(antlr_version)-complete.jar -Dlanguage=Python3 PhpLexer.g4 PhpParser.g4
+
+%Lexer.py: %.g4 antlr-$(antlr_version)-complete.jar
 	java -jar antlr-$(antlr_version)-complete.jar -Dlanguage=Python3 $<
 
 # Conversion from .g4 to .bnf
@@ -40,10 +43,19 @@ SQLite.bnf: SQLite.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBN
 Lua.bnf: SQLite.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py antlr4-to-bnf.py
 	cat Lua.g4 | python3 antlr4-to-bnf.py "" "' '" > Lua.bnf
 
+Php.bnf: PhpLexer.g4 PhpParser.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py antlr4-to-bnf.py
+	cat PhpLexer.g4 | python3 antlr4-to-bnf.py "' '" > $@
+	cat PhpParser.g4 | python3 antlr4-to-bnf.py "' '" >> $@
+
 %.bnf: %.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py antlr4-to-bnf.py
 	cat $< | python3 antlr4-to-bnf.py "' '" > $@
 
 # Some grammars
+
+PhpLexer.g4:
+	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/php/PhpLexer.g4
+	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/php/PhpParser.g4
+	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/php/Python/PhpBaseLexer.py
 
 SQLite.g4:
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/sql/sqlite/SQLite.g4

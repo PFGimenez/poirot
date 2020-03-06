@@ -5,7 +5,7 @@ import pprint
 import sys
 
 lhs = None
-mark = "__"
+mark = "_-_"
 
 # Counters for new non-terminals
 counters = {}
