@@ -32,7 +32,8 @@ let ()=
         ("-lowercase",  Arg.Set lowercase,     "Convert all terminals to lowercase");
         ("-uppercase",  Arg.Set uppercase,     "Convert all terminals to uppercase");
         ("-simplify",   Arg.Set simplify,     "If used with -lowercase or -uppercase, simplify the grammar");
-        ("-verbose",    Arg.Set verbose,     "Make Poirot verbose")
+        ("-verbose",    Arg.Set verbose,     "Make Poirot verbose");
+        ("-v",          Arg.Set verbose,     "Make Poirot verbose")
     ] in
     let usage = "Error: grammar, goal, start and oracle are necessary" in
     Arg.parse speclist ignore usage;

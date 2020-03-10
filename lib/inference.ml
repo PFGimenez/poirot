@@ -9,15 +9,18 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 let symbols_from_parents (g: grammar) (axiom : element) : element list =
     g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare
 
-let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (verbose: bool) : ext_grammar option =
+let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) (verbose: bool) : ext_grammar option =
     if verbose then print_endline "Clean grammar…";
     let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
     let quotient = Quotient.quotient_mem g qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
-    let heuristic : (ext_element, int) Hashtbl.t = Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
+    let heuristic : (ext_element, int) Hashtbl.t =
+        try Marshal.from_channel (open_in_bin h_fname)
+        with _ -> Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
+    if verbose then (print_endline ("Imported heuristic values from "^h_fname^": "); Hashtbl.iter (fun k v -> print_endline ((string_of_ext_element k)^": "^(string_of_int v))) heuristic);
     let reachable : (ext_element, bool) Hashtbl.t = Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
     let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
-    let seen_hashtbl = Hashtbl.create (List.length all_sym) in
+    let seen_hashtbl : (ext_element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in
 
     List.iter (fun e -> Hashtbl.add uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) g.rules) 1) == 0)) all_sym;
 
@@ -77,8 +80,8 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
         if not (Hashtbl.mem heuristic eh) then begin
             Hashtbl.clear seen_hashtbl;
             let path = compute_heuristic [[(par,eh)]] in
-            if path <> [] then List.iteri (fun index elem -> (*print_endline ((string_of_ext_element elem)^" "^(string_of_int index));*) Hashtbl.add heuristic elem index) path
-            else Hashtbl.add heuristic eh inf
+            if path <> [] then List.iteri (fun index elem -> (*print_endline ((string_of_ext_element elem)^" "^(string_of_int index));*) Hashtbl.replace heuristic elem index) path
+            else Hashtbl.replace heuristic eh inf
         end;
         Hashtbl.find heuristic eh in
 
@@ -200,11 +203,13 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
                 (* close the dot files *)
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
+                Marshal.to_channel (open_out_bin h_fname) heuristic [];
                 Sys.catch_break false;
                 result
             with Sys.Break ->
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
+                Marshal.to_channel (open_out_bin h_fname) heuristic [];
                 raise Sys.Break
         end
     end
