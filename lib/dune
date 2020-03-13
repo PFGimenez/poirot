@@ -5,4 +5,5 @@
 
 (library
     (name poirot) (public_name poirot)
-    (private_modules ("clean" grammar grammar_io inference lexerbnf lexerconf oracle parserbnf quotient fuzzer)))
+    (libraries logs)
+    (private_modules ("clean" grammar grammar_io inference lexerbnf lexerconf oracle parserbnf quotient fuzzer log)))

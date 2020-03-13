@@ -1,7 +1,7 @@
 (executable
     (name poirot_example)
     (modules poirot_example)
-    (libraries poirot))
+    (libraries poirot logs.fmt))
 
 (executable
     (name quotient_example)

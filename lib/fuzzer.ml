@@ -8,7 +8,7 @@ type parse_tree = Leaf of element | Node of element * parse_tree list | Error
 let nonrec_rules : (element, rule) Hashtbl.t = Hashtbl.create 500
 
 (* all nonterminal must be the left-hand side of a rule *)
-let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: element option) (verbose: bool) (g : grammar) : part option =
+let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: element option) (g : grammar) : part option =
     Random.self_init ();
     Hashtbl.clear nonrec_rules;
 
@@ -108,18 +108,18 @@ let fuzzer (max_depth: int) (values: (element,string) Hashtbl.t option) (goal: e
 
     let rec part_of_tree (verbose_pf: string) (t: parse_tree) : part option = match t with
         | Error -> None
-        | Leaf e -> if verbose then print_endline (verbose_pf^(decorated_string_of_element e)); Some [e]
-        | Node (e,l) -> if verbose then print_endline (verbose_pf^(decorated_string_of_element e));
+        | Leaf e -> Log.L.debug (fun m -> m "%s" (verbose_pf^(decorated_string_of_element e))); Some [e]
+        | Node (e,l) -> Log.L.debug (fun m -> m "%s" (verbose_pf^(decorated_string_of_element e)));
                 let trees = List.map (part_of_tree (verbose_pf^"   ")) l in
             if List.exists ((=) None) trees then None
             else Some (trees |> List.map Option.get |> List.flatten) in
 
     part_of_tree "" (
         if Option.is_some goal && is_reachable g (Option.get goal) g.axiom then begin
-            if verbose then print_endline "Fuzzing with goal";
+            Log.L.debug (fun m -> m "Fuzzing with goal");
             fuzzer_minimize 1 (find_path_to_goal ()) [] [] g.axiom
 (*        fuzzer_minimize (find_path_to_goal ()) [] g.axiom*)
         end else begin
-            if verbose then print_endline "Fuzzing";
+            Log.L.debug (fun m -> m "Fuzzing");
             fuzzer_explode 0 g.axiom
         end)

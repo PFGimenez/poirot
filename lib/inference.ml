@@ -9,15 +9,16 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 let symbols_from_parents (g: grammar) (axiom : element) : element list =
     g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare
 
-let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) (verbose: bool) : ext_grammar option =
-    if verbose then print_endline "Clean grammar…";
+let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) : ext_grammar option =
+    Log.L.info (fun m -> m "Clean grammar…");
     let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
     let quotient = Quotient.quotient_mem g qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (ext_element, int) Hashtbl.t =
         try Marshal.from_channel (open_in_bin h_fname)
         with _ -> Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
-    if verbose then (print_endline ("Imported heuristic values from "^h_fname^": "); Hashtbl.iter (fun k v -> print_endline ((string_of_ext_element k)^": "^(string_of_int v))) heuristic);
+    Log.L.info (fun m -> m "Imported heuristic values from %s" h_fname);
+    (*if verbose then (Hashtbl.iter (fun k v -> print_endline ((string_of_ext_element k)^": "^(string_of_int v))) heuristic);*)
     let reachable : (ext_element, bool) Hashtbl.t = Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
     let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
     let seen_hashtbl : (ext_element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in
@@ -125,21 +126,23 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     let rec search_aux (closedset: (ext_element, unit) Hashtbl.t) (step: int) (openset: node list) : ext_grammar option = match openset with
     | [] -> None (* openset is empty : there is no way *)
     | {g_val;h_val;e;par;origin}::q ->
-        if verbose then print_endline ("Search "^(string_of_int step)^" (queue: "^(string_of_int (List.length q))^"): "^(string_of_ext_element e));
+        Log.L.info (fun m -> m "Search %d (queue: %d): %s" step (List.length q) (string_of_ext_element e));
         assert (g_val <= max_depth);
-        if step > max_steps then
-            (if verbose then print_endline "Steps limit reached"; None)
+        if step > max_steps then begin
+            Log.L.info (fun m -> m "Steps limit reached");
+            None
         (* verify whether e has already been visited *)
-        else if Hashtbl.mem closedset e then
-            (if verbose then print_endline "Visited"; (search_aux [@tailcall]) closedset (step + 1) q)
-        else begin
+        end else if Hashtbl.mem closedset e then begin
+            Log.L.info (fun m -> m "Visited");
+            (search_aux [@tailcall]) closedset (step + 1) q
+        end else begin
             Grammar_io.set_node_attr graph_channel ("[label=\""^(string_of_ext_element e)^"\nstep="^(string_of_int step)^" g="^(string_of_int g_val)^" h="^(string_of_int h_val)^"\"]") e;
             Grammar_io.add_edge_in_graph graph_channel (if origin=INDUCTION then "" else "penwidth=3") par e;
             (* now it is visited *)
             Hashtbl.add closedset e ();
             (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
             if Hashtbl.find uniq_rule e.e then begin
-                if verbose then print_endline "Explore uniq";
+                Log.L.info (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
                 (* compute the non-trivial grammar and avoid some characters *)
@@ -148,22 +151,22 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
                 (* call the fuzzer/oracle with this grammar *)
                 let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle in
                 if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
-                    if verbose then print_endline "Invalid";
+                    Log.L.info (fun m -> m "Invalid");
                     set_node_color_in_graph e "crimson";
                     (search_aux [@tailcall]) closedset (step + 1) q
                 end else if is_reachable (grammar_of_ext_grammar nt_inj_g) goal (full_element_of_ext_element nt_inj_g.ext_axiom) then begin (* the goal has been found ! *)
-                    print_endline ("Found on step "^(string_of_int step));
+                    Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar nt_inj_g);*)
                     Some (Clean.clean nt_inj_g)
                 end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
-                    if verbose then print_endline "Depth max";
+                    Log.L.info (fun m -> m "Depth max");
                     set_node_color_in_graph e "orange";
                     (search_aux [@tailcall]) closedset (step + 1) q
                 end else begin (* we explore in this direction *)
                     (* get the rules e -> ... to verify if e is testable or not *)
                     if status = Grammar_error then set_node_color_in_graph e "grey";
-                    if verbose then print_endline "Explore";
+                    Log.L.info (fun m -> m "Explore");
                     (search_aux [@tailcall]) closedset (step + 1) (add_in_openset true (g_val + 1) (h_val = 0) origin e q)
                 end
             end
@@ -182,7 +185,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     else begin
         let result = find_start g goal inj in
         if result <> None then begin
-            if verbose then print_endline "Directly injection found!";
+            Log.L.info (fun m -> m "Injection directly found!");
             Option.map (fun e -> ext_grammar_of_grammar (e@@g.rules)) result
         end
         else begin
@@ -195,7 +198,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
 
             let ext_inj = List.rev_map ext_element_of_element inj in
             List.iter (set_init_node) ext_inj;
-            if verbose then print_endline "Computing some heuristic values…";
+            Log.L.info (fun m -> m "Computing some heuristic values…");
             let openset = List.fold_right (add_in_openset true 1 false INDUCTION) ext_inj [] in (* injection tokens won't be derived *)
             try
                 Sys.catch_break true;

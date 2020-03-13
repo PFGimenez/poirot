@@ -14,7 +14,7 @@ let ()=
     and lowercase = ref false
     and uppercase = ref false
     and simplify = ref false
-    and verbose = ref false
+    and verbose_lvl = ref None
     and avoid = ref "" in
 
     let speclist = [
@@ -32,8 +32,7 @@ let ()=
         ("-lowercase",  Arg.Set lowercase,     "Convert all terminals to lowercase");
         ("-uppercase",  Arg.Set uppercase,     "Convert all terminals to uppercase");
         ("-simplify",   Arg.Set simplify,     "If used with -lowercase or -uppercase, simplify the grammar");
-        ("-verbose",    Arg.Set verbose,     "Make Poirot verbose");
-        ("-v",          Arg.Set verbose,     "Make Poirot verbose")
+        ("-verbose_lvl",    Arg.String(fun s -> verbose_lvl := Result.get_ok (Logs.level_of_string s)),     "Choose Poirot verbosity: debug, info, warning or error")
     ] in
     let usage = "Error: grammar, goal, start and oracle are necessary" in
     Arg.parse speclist ignore usage;
@@ -42,12 +41,15 @@ let ()=
         let grammar = Option.get !grammar
         and goal = Option.get !goal
         and start = Option.get !start
-        and oracle = Poirot.make_oracle_from_script ~verbose:!verbose (Option.get !oracle_fname) in
+        and oracle = Poirot.make_oracle_from_script (Option.get !oracle_fname) in
 
         let grammar = if !lowercase then Poirot.to_lowercase ~simplify:!simplify grammar else (if !uppercase then Poirot.to_uppercase ~simplify:!simplify grammar else grammar) in
 
+        Poirot.set_log_level !verbose_lvl;
+        Poirot.set_reporter (Logs_fmt.reporter ());
+
         print_endline "Start searching…";
-        let g = Poirot.search ~verbose:!verbose ~subst:(Option.map Poirot.read_subst !subst) ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle grammar goal start in
+        let g = Poirot.search ~subst:(Option.map Poirot.read_subst !subst) ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle grammar goal start in
         match (g,!injg_fname) with
         | Some gram, Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^(Option.get (Poirot.fuzzer ~complexity:0 ~goal:(Some goal) gram)))
         | Some gram, _ -> print_endline ("Injection: "^(Option.get (Poirot.fuzzer ~complexity:0 ~goal:(Some goal) gram)))

@@ -1,3 +1,7 @@
+# v0.3
+- Use the Logs library
+- Handle ctrl-C
+
 # v0.2
 - Heuristic serialization and memoization
 - Optimization of the A* openset ordering

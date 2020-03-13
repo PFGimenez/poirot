@@ -19,7 +19,6 @@ type oracle_status
  @param g the grammar of the query language (e.g. SQL)
  @param goal the goal of the search, i.e. the element (terminal or nonterminal) you seek to get in the grammar of injection. Poirot stops the search once it is reached.
  @param start a element (terminal or nonterminal) that is a injection.
- @param verbose (optional) makes Poirot verbose when true.
  @param subst (optional) an Hashtable containing the semantics substitution.
  @param max_depth (optional) modify the maximal depth of the search
  @param max_steps (optional) modify the maximal number of steps of the search
@@ -27,7 +26,7 @@ type oracle_status
  @param sgraph_fname (optional, for debug) export the search graph in graphviz dot format.
  @param qgraph_fname (optional, for debug) export the quotient graph in graphviz dot format.
  *)
-val search : ?verbose:bool -> ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?max_steps:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> (string option -> oracle_status) -> grammar -> element -> element list -> grammar option
+val search : ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?max_steps:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> (string option -> oracle_status) -> grammar -> element -> element list -> grammar option
 
 (** [quotient g left_quotient right_quotient] returns the grammar [g] after a left quotient by [left_quotient] and a right quotient by [right_quotient]. [left_quotient] and [right_quotient] can contain nonterminals or be empty. *)
 val quotient : grammar -> element list -> element list -> grammar
@@ -38,10 +37,10 @@ val fuzzer : ?subst:(element,string) Hashtbl.t option -> ?complexity:int -> ?goa
 (** {1 Oracle functions} *)
 
 (** [make_oracle_from_script filename] returns an oracle based on the script [filename]. The script must return error code 0 if the injection is lexically correct, 1 otherwise. *)
-val make_oracle_from_script : ?verbose: bool -> string -> (string option -> oracle_status)
+val make_oracle_from_script : string -> (string option -> oracle_status)
 
 (** [make_oracle_from_fun f] returns an oracle based on the function [f]. The function must return 0 if the injection is lexically correct, 1 otherwise. *)
-val make_oracle_from_fun : ?verbose: bool -> (string -> int) -> (string option -> oracle_status)
+val make_oracle_from_fun : (string -> int) -> (string option -> oracle_status)
 
 (** {1 Grammar manipulation functions} *)
 
@@ -73,3 +72,11 @@ val export_antlr4 : string -> grammar -> unit
 
 (** [read_subst filename] read the semantics substitution from the file [filename]. *)
 val read_subst : string -> (element,string) Hashtbl.t
+
+(** {1 Log parameters} *)
+
+(** [set_log_level lvl] sets the verbosity level of Poirot to [lvl]. *)
+val set_log_level : Logs.level option -> unit
+
+(** [set_log_reporter r] sets the reporter of Poirot. *)
+val set_reporter : Logs.reporter -> unit
