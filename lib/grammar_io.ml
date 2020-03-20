@@ -18,15 +18,18 @@ let bnf_string_of_ext_rules : ext_rule list -> string = string_of_list "" "" bnf
 
 let bnf_string_of_ext_grammar (g : ext_grammar) : string = (bnf_string_of_ext_element g.ext_axiom) ^ ";\n" ^ (bnf_string_of_ext_rules g.ext_rules)
 
+(* read a grammar from a BNF file *)
 let read_bnf_grammar (unravel: bool) (filename : string) : grammar =
     let lexbuf = Lexing.from_channel (open_in filename) in match unravel with
     | true -> Parserbnf.start_unravel Lexerbnf.token lexbuf
     | _ -> Parserbnf.start Lexerbnf.token lexbuf
 
+(* read a list of tokens from a string *)
 let read_tokens (unravel: bool) (str : string) : element list = match unravel with
     | true -> Parserbnf.token_list_unravel Lexerbnf.token (Lexing.from_string (str))
     | _ -> Parserbnf.token_list Lexerbnf.token (Lexing.from_string (str))
 
+(* read a single token from a string *)
 let read_token (unravel: bool) (str : string) : element =
     let token = Lexerbnf.token (Lexing.from_string str) in match token with
     | Parserbnf.TERM e -> Terminal e
@@ -36,6 +39,7 @@ let read_token (unravel: bool) (str : string) : element =
         | _ -> Terminal e)
     | _ -> failwith "No token!"
 
+(* read a substitution file *)
 let read_subst (fname: string) : (element,string) Hashtbl.t =
     let rec read_subst_tokens lexbuf : (element * string) list =
         match (Lexerconf.token lexbuf : Lexerconf.token) with
@@ -46,12 +50,14 @@ let read_subst (fname: string) : (element,string) Hashtbl.t =
     List.iter (fun (e,s) -> Hashtbl.add table e s) l;
     table
 
+(* export to BNF format FIXME *)
 let export_bnf (fname : string) (g: ext_grammar) =
     let channel = open_out fname in
     output_string channel (bnf_string_of_ext_grammar g);
     close_out channel
 
-let export_antlr4 (fname: string) (g: grammar) =
+(* export a grammar in ANTR4 format *)
+let export_antlr4 (fname: string) (g: grammar) : unit =
     (* all the non-terminals are written in lowercase to have parser rule and not lexer rule *)
     let export_antlr4_char (c: char) : string = match c with
         | '\'' -> "\\'"

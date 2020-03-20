@@ -47,9 +47,11 @@ let is_ext_element_terminal (e: ext_element) : bool = is_terminal e.e
 
 let is_ext_element_non_terminal (e: ext_element) : bool = not (is_terminal e.e)
 
+(* returns all terminals *)
 let get_all_tokens (grammar : grammar) : element list =
     grammar.rules |> List.rev_map (fun r -> List.filter is_terminal r.right_part) |> List.concat |> List.sort_uniq compare
 
+(* returns all symbols: terminals and nonterminals *)
 let get_all_symbols (g: grammar) : element list =
     g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare
 
@@ -60,14 +62,16 @@ let get_rules (rlist: ext_rule list) (e: ext_element) : ext_rule list =
 let get_all_rhs (rlist: rule list) (e: element) : part list =
     List.map (fun r -> r.right_part) (List.filter (fun r -> r.left_symbol = e) rlist)
 
+(* an hashtbl used to explore a grammar *)
 let seen : (element,unit) Hashtbl.t = Hashtbl.create 500
 
+(* look for a goal from a list of starting tokens. Returns the starting token that found the goal (or None) *)
 let find_start (g: grammar) (goal: element) (start: element list) : element option =
-let rec find_start_aux (g: grammar) (goal: element) (queue: (element*element) list) : element option = match queue with
-    | [] -> None
-    | (t,s)::_ when t=goal -> Some s
-    | (t,_)::q when Hashtbl.mem seen t -> (find_start_aux [@tailcall]) g goal q
-    | (t,s)::q -> let new_elems = List.flatten (List.filter_map (fun r -> if r.left_symbol = t then Some (List.map (fun e -> e,s) r.right_part) else None) g.rules) in
+    let rec find_start_aux (g: grammar) (goal: element) (queue: (element*element) list) : element option = match queue with
+        | [] -> None
+        | (t,s)::_ when t=goal -> Some s
+        | (t,_)::q when Hashtbl.mem seen t -> (find_start_aux [@tailcall]) g goal q
+        | (t,s)::q -> let new_elems = List.flatten (List.filter_map (fun r -> if r.left_symbol = t then Some (List.map (fun e -> e,s) r.right_part) else None) g.rules) in
             Hashtbl.add seen t ();
             (find_start_aux [@tailcall]) g goal (q@new_elems) in
     Hashtbl.clear seen;
@@ -95,6 +99,9 @@ let build_derivation (g: grammar) (p: part) : (rule * part) list =
             (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
     build_derivation_aux [] [] p
 
+(* get the list of token that can directly produce "axiom" *)
+let symbols_from_parents (g: grammar) (axiom : element) : element list =
+    g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare
 
 (* string of ... *)
 

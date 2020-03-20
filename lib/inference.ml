@@ -1,13 +1,13 @@
 open Grammar
 
+(* infinity *)
 let inf = 100000
 
+(* the origin of a node *)
 type node_origin = DERIVATION | INDUCTION
 
+(* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
-
-let symbols_from_parents (g: grammar) (axiom : element) : element list =
-    g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare
 
 let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) : ext_grammar option =
     Log.L.info (fun m -> m "Clean grammar…");
@@ -210,6 +210,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
                 Sys.catch_break false;
                 result
             with Sys.Break ->
+                (* in case of Crtl+C : save the work *)
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
                 Marshal.to_channel (open_out_bin h_fname) heuristic [];

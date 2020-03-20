@@ -1,7 +1,7 @@
 open Grammar
 
-
-let change_case (f: string -> string) (g: grammar): grammar =
+(* change the case (to upper case or to lower case) of a grammar *)
+let change_case (f: string -> string) (g: grammar) : grammar =
     let e_change_case (e: element) : element = match e with
         | Terminal s -> Terminal (f s)
         | Nonterminal s -> Nonterminal s in
@@ -9,12 +9,16 @@ let change_case (f: string -> string) (g: grammar): grammar =
         (e_change_case r.left_symbol) --> (List.map e_change_case r.right_part) in
     (e_change_case g.axiom) @@ (List.sort_uniq compare (List.map r_change_case g.rules))
 
-let to_lowercase = change_case String.lowercase_ascii
+(* change a grammar to lower case *)
+let to_lowercase : grammar -> grammar = change_case String.lowercase_ascii
 
-let to_uppercase = change_case String.uppercase_ascii
+(* change a grammar to upper case *)
+let to_uppercase : grammar -> grammar = change_case String.uppercase_ascii
 
+(* remove duplicated rules of a grammar *)
 let remove_duplicated_rules (g: grammar) : grammar = g.axiom @@ (List.sort_uniq compare g.rules)
 
+(* merge the consecutive terminals of the RHS of the rules. For example, A -> "a" "b" is transformed into A -> "ab" *)
 let merge_consecutive_terminals (g: grammar) : grammar =
     let rec merge_consecutive_terminals_aux (p: part) : part = match p with
         | [] -> p
@@ -23,6 +27,7 @@ let merge_consecutive_terminals (g: grammar) : grammar =
         | t::l -> t::(merge_consecutive_terminals_aux l) in
     g.axiom @@ (List.map (fun r -> (r.left_symbol --> merge_consecutive_terminals_aux r.right_part)) g.rules)
 
+(* simplify a grammar : if a nonterminal (that is not the axiom) A is the LHS of a single rule, say A -> alpha, then replace each occurence of A in RHS with alpha, and remove the rule of A. *)
 let rec simplify_nonterminals (g: grammar) : grammar =
     let rec simplify_one_nonterminal (rhs: part) (rlist: (element*part) list) : part = match rhs with
         | [] -> []
@@ -76,6 +81,7 @@ let remove_unreachable_symbols (g : ext_grammar) : ext_grammar = g.ext_axiom @@@
 let get_epsilon_symbols (g : ext_grammar) : ext_element list =
     g.ext_rules |> List.filter (fun r -> List.length r.ext_right_part = 0 && r.ext_left_symbol <> g.ext_axiom) |> List.rev_map lhs_of_ext_rule |> List.sort_uniq compare
 
+(* returns the power set of a number. For exemple, 2 yields [[true,true],[true,false],[false,true],[false,false]] *)
 (* not tail-recursive *)
 let rec power_set : int -> bool list list = function
     | 0 -> [[]]
@@ -123,6 +129,7 @@ let remove_epsilon_symbols_once (g : ext_grammar) : ext_rule list =
         remove_epsilon_rules_except_ext_axiom epsilon_symbols (g.ext_axiom @@@ (List.sort_uniq compare (g.ext_rules@new_rules)))
     end
 
+(* remove the epsilon symbols of a grammar *)
 let remove_epsilon_symbols : ext_grammar -> ext_grammar = iterate_until_convergence remove_epsilon_symbols_once
 
 let remove_trivial_rules (g: ext_grammar) : ext_grammar = (* remove the rules a -> ... and A -> A *)
@@ -137,5 +144,5 @@ let clean : ext_grammar -> ext_grammar = iterate_until_convergence clean_once
 (* clean classical grammar *)
 let clean_grammar (g: grammar) : grammar = g |> ext_grammar_of_grammar |> clean |> grammar_of_ext_grammar
 
-let simplify (g: grammar) =
+let simplify (g: grammar) : grammar =
     g |> remove_duplicated_rules |> simplify_nonterminals |> merge_consecutive_terminals |> clean_grammar

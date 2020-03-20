@@ -1,6 +1,8 @@
 open Grammar
 
 type side = Left | Right
+
+(* a small finite-state automata for the element. not in status hashtable -> In_progress -> Processed *)
 type elem_status = In_progress | Processed
 
 let quotient_mem (g: grammar) (graph_channel: out_channel option) (*(verbose: bool)*): ext_element -> ext_grammar  =
