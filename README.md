@@ -15,9 +15,10 @@ To install Poirot, run the following steps. `opam` will automatically install th
 
     git clone https://github.com/PFGimenez/poirot.git
     cd poirot
+    opam install fmt
     opam install .
 
-You will certainly need ANTLR4. Make sure you have Python 3 and Java JRE installed. Execute:
+You will certainly need ANTLR4. Make sure you have python 3 and Java JRE installed. Execute:
 
     pip3 install --user -r antlr4-utils/requirements.txt
 
