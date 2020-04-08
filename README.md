@@ -26,9 +26,13 @@ You will certainly need ANTLR4. Make sure you have python 3 and Java JRE install
 
 ## Injection in black-box systems
 
+The workflow of injection searching in black-box systems is described in the following figure:
+
+![poirot.sh workflow](https://raw.githubusercontent.com/PFGimenez/poirot/master/resources/poirot_workflow.png)
+
 The script `poirot.sh` allows you to use Poirot without making your own program. You can run `./poirot.sh -help` to get the list of parameters on how to use it.
 
-Here is an example that uses the simple grammar `msg_exec`. This example uses the prefix/suffix oracle, so first create the lexer and parser by executing `make msg_execLexer.py` from the `antlr4-utils` directory. Then run:
+Here is an example that uses the simple grammar `msg_exec`. This example uses the prefix/suffix oracle generator (explained in a later section), so first create the lexer and parser by executing `make msg_execLexer.py` from the `antlr4-utils` directory. Then run:
 
     ./poirot.sh -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"
 
@@ -86,9 +90,13 @@ More precisely, Poirot will use this oracle by calling it with a single paramete
 
 The oracles are in the directory `oracles`.
 
-### Use the prefix/suffix oracle
+### Use the prefix/suffix oracle generator
 
-We provide an oracle that simulates a black-box, given a grammar, a prefix and a suffix. To use it, you must first create the ANTLR4 lexer and parser of its grammar. To do that, put the ANTLR4 grammar (such as `example.g4`) into the `antlr4-utils` directory and execute `make exampleLexer.py` (change accordingly to the name of your grammar).
+The workflow of creating an oracle with the prefix/suffix oracle generator is described in the following figure:
 
-This oracle needs five parameters: the ANTLR4 grammar name (without the `.g4` extension), the axiom, a prefix, a suffix and an injection. Beware, the grammar path is relative to the directory `antlr4-utils`.
+![Prefix/suffix oracle generator workflow](https://raw.githubusercontent.com/PFGimenez/poirot/master/resources/prefix_suffix_oracle_workflow.png)
+
+We provide an oracle generator that simulates a black-box, given a grammar, a prefix and a suffix. To use it, you must first create the ANTLR4 lexer and parser of its grammar. To do that, put the ANTLR4 grammar (such as `example.g4`) into the `antlr4-utils` directory and execute `make exampleLexer.py` (change accordingly to the name of your grammar).
+
+This oracle generator needs four parameters: the ANTLR4 grammar name (without the `.g4` extension), the axiom, a prefix and a suffix. Beware, the grammar path is relative to the directory `antlr4-utils`.
 
