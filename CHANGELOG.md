@@ -1,4 +1,5 @@
 # v0.3
+- Fuzzer update
 - Use the Logs library
 - Handle ctrl-C
 
