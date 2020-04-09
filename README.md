@@ -18,7 +18,7 @@ To install Poirot, run the following steps. `opam` will automatically install th
     opam install fmt
     opam install .
 
-You will certainly need ANTLR4. Make sure you have python 3 and Java JRE installed. Execute:
+You will need ANTLR4 to convert grammars from .g4 format and to use the prefix/suffix oracle generator. Make sure you have python 3 and Java JRE installed. Execute:
 
     pip3 install --user -r antlr4-utils/requirements.txt
 
@@ -26,21 +26,21 @@ You will certainly need ANTLR4. Make sure you have python 3 and Java JRE install
 
 ## Injection in black-box systems
 
-The workflow of injection searching in black-box systems is described in the following figure:
+The script `poirot.sh` allows you to use Poirot without making your own program. You can run `./poirot.sh -help` to get the list of parameters on how to use it. The workflow of injection searching in black-box systems is described in the following figure:
 
 ![poirot.sh workflow](https://raw.githubusercontent.com/PFGimenez/poirot/master/resources/poirot_workflow.png)
 
-The script `poirot.sh` allows you to use Poirot without making your own program. You can run `./poirot.sh -help` to get the list of parameters on how to use it.
+The following examples use the prefix/suffix oracle generator described in a later section.
 
-Here is an example that uses the simple grammar `msg_exec`. This example uses the prefix/suffix oracle generator (explained in a later section), so first create the lexer and parser by executing `make msg_execLexer.py` from the `antlr4-utils` directory. Then run:
+Here is an example that uses the simple grammar `msg_exec`. Run:
 
-    ./poirot.sh -grammar bnf_grammars/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"
+    ./poirot.sh -grammar bnf_grammars/toy/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"
 
 It will generates the injection `value ; exec cmd ; msg key = value`.
 
-You can experiment with the more complex grammar `parenthesis` as well. Create its lexer and parser and then run:
+You can experiment with the more complex grammar `parenthesis` as well. Run:
 
-    ./poirot.sh -grammar bnf_grammars/parenthesis.bnf -goal "'b'" -start "'a'" -oracle "oracles/prefix-suffix.py parenthesis axiom '([[([' '])]])'"
+    ./poirot.sh -grammar bnf_grammars/toy/parenthesis.bnf -goal "'b'" -start "'a'" -oracle "oracles/prefix-suffix.py parenthesis axiom '([[([' '])]])'"
 
 It will generate the injection `a])]])b([[([a`.
 
@@ -50,7 +50,7 @@ If you know the query (i.e. the prefix and the suffix surrounding the injection 
 
 For example, you can run:
 
-    ./poirot_whitebox.sh -grammar bnf_grammars/msg_exec.bnf -pf "'msg ' 'key' ' = '" -sf "' & ' 'key' ' = ' 'value'" -goal "Exe"
+    ./poirot_whitebox.sh -grammar bnf_grammars/toy/msg_exec.bnf -pf "'msg ' 'key' ' = '" -sf "' & ' 'key' ' = ' 'value'" -goal "Exe"
 
 It will generate the injection `value ; exec cmd ; msg key = value`.
 
