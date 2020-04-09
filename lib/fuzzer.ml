@@ -103,7 +103,6 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
             if Option.is_some goal && is_reachable g (Option.get goal) g.axiom then begin
                 Log.L.debug (fun m -> m "Fuzzing with goal");
                 fuzzer_minimize (find_path_to_goal ()) g.axiom
-    (*        fuzzer_minimize (find_path_to_goal ()) [] g.axiom*)
             end else begin
                 Log.L.debug (fun m -> m "Fuzzing");
                 fuzzer_explode 5 g.axiom

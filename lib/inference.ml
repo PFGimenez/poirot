@@ -141,7 +141,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
             (* now it is visited *)
             Hashtbl.add closedset e ();
             (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
-            if Hashtbl.find uniq_rule e.e then begin
+            if Hashtbl.find uniq_rule e.e && g_val < max_depth then begin
                 Log.L.info (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
