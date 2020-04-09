@@ -1,0 +1,115 @@
+--- PhpParser.g4	2020-04-09 16:56:29.404452283 +0200
++++ PhpParser_new.g4	2020-04-09 16:51:40.133976765 +0200
+@@ -457,67 +457,67 @@
+ // Expressions
+ // Grouped by priorities: http://php.net/manual/en/language.operators.precedence.php
+ expression
+-    : Clone expression                                          #CloneExpression
+-    | newExpr                                                   #NewExpression
++    : Clone expression
++    | newExpr
+     
+-    | stringConstant '[' expression ']'                         #IndexerExpression
++    | stringConstant '[' expression ']'
+ 
+-    | '(' castOperation ')' expression                          #CastExpression
+-    | ('~' | '@') expression                                    #UnaryOperatorExpression
++    | '(' castOperation ')' expression
++    | ('~' | '@') expression
+ 
+-    | ('!' | '+' | '-') expression                              #UnaryOperatorExpression
++    | ('!' | '+' | '-') expression
+ 
+-    | ('++' | '--') chain                                       #PrefixIncDecExpression
+-    | chain ('++' | '--')                                       #PostfixIncDecExpression
++    | ('++' | '--') chain
++    | chain ('++' | '--')
+ 
+-    | Print expression                                          #PrintExpression
++    | Print expression
+ 
+-    | chain                                                     #ChainExpression
+-    | constant                                                  #ScalarExpression
+-    | string                                                    #ScalarExpression
+-    | Label                                                     #ScalarExpression
++    | chain
++    | constant
++    | string
++    | Label
+ 
+-    | BackQuoteString                                           #BackQuoteStringExpression
+-    | parentheses                                               #ParenthesisExpression
+-    | arrayCreation                                             #ArrayCreationExpression
++    | BackQuoteString
++    | parentheses
++    | arrayCreation
+ 
+-    | Yield                                                     #SpecialWordExpression
+-    | List '(' assignmentList ')' Eq expression                 #SpecialWordExpression
+-    | IsSet '(' chainList ')'                                   #SpecialWordExpression
+-    | Empty '(' chain ')'                                       #SpecialWordExpression
+-    | Eval '(' expression ')'                                   #SpecialWordExpression
+-    | Exit ( '(' ')' | parentheses )?                           #SpecialWordExpression
+-    | (Include | IncludeOnce) expression                        #SpecialWordExpression
+-    | (Require | RequireOnce) expression                        #SpecialWordExpression
++    | Yield
++    | List '(' assignmentList ')' Eq expression
++    | IsSet '(' chainList ')'
++    | Empty '(' chain ')'
++    | Eval '(' expression ')'
++    | Exit ( '(' ')' | parentheses )?
++    | (Include | IncludeOnce) expression
++    | (Require | RequireOnce) expression
+ 
+-    | lambdaFunctionExpr                                        #LambdaFunctionExpression
++    | lambdaFunctionExpr
+ 
+-    | <assoc=right> expression op='**' expression               #ArithmeticExpression
+-    | expression InstanceOf typeRef                             #InstanceOfExpression
+-    | expression op=('*' | Divide | '%') expression             #ArithmeticExpression
++    | <assoc=right> expression '**' expression
++    | expression InstanceOf typeRef
++    | expression ('*' | Divide | '%') expression
+ 
+-    | expression op=('+' | '-' | '.') expression                #ArithmeticExpression
++    | expression ('+' | '-' | '.') expression
+ 
+-    | expression op=('<<' | '>>') expression                    #ComparisonExpression
+-    | expression op=(Less | '<=' | Greater | '>=') expression   #ComparisonExpression
+-    | expression op=('===' | '!==' | '==' | IsNotEq) expression #ComparisonExpression
++    | expression ('<<' | '>>') expression
++    | expression (Less | '<=' | Greater | '>=') expression
++    | expression ('===' | '!==' | '==' | IsNotEq) expression
+ 
+-    | expression op='&' expression                              #BitwiseExpression
+-    | expression op='^' expression                              #BitwiseExpression
+-    | expression op='|' expression                              #BitwiseExpression
+-    | expression op='&&' expression                             #BitwiseExpression
+-    | expression op='||' expression                             #BitwiseExpression
++    | expression '&' expression
++    | expression '^' expression
++    | expression '|' expression
++    | expression '&&' expression
++    | expression '||' expression
+ 
+-    | expression op=QuestionMark expression? ':' expression     #ConditionalExpression
+-    | expression op='??' expression                             #NullCoalescingExpression
+-    | expression op='<=>' expression                            #SpaceshipExpression
++    | expression QuestionMark expression? ':' expression
++    | expression '??' expression
++    | expression '<=>' expression
+ 
+-    | assignable assignmentOperator expression     #AssignmentExpression
+-    | assignable Eq '&' (chain | newExpr)          #AssignmentExpression
++    | assignable assignmentOperator expression
++    | assignable Eq '&' (chain | newExpr)
+ 
+-    | expression op=LogicalAnd expression                       #LogicalExpression
+-    | expression op=LogicalXor expression                       #LogicalExpression
+-    | expression op=LogicalOr expression                        #LogicalExpression
++    | expression LogicalAnd expression
++    | expression LogicalXor expression
++    | expression LogicalOr expression
+     ;
+ 
+ assignable

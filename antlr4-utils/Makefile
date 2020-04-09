@@ -64,6 +64,8 @@ PhpLexer.g4:
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/php/PhpLexer.g4
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/php/PhpParser.g4
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/php/Python/PhpBaseLexer.py
+	patch < PhpLexer.diff
+	patch < PhpParser.diff
 
 XMLLexer.g4:
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/xml/XMLLexer.g4

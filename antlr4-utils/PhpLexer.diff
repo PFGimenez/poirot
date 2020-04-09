@@ -1,0 +1,30 @@
+--- PhpLexer.g4	2020-04-09 16:56:24.432413449 +0200
++++ PhpLexer_new.g4	2020-04-09 16:53:22.114912574 +0200
+@@ -341,8 +341,8 @@
+ // fragments.
+ // '<?=' will be transformed to 'echo' token.
+ // '<?= "Hello world"; ?>' will be transformed to '<?php echo "Hello world"; ?>'
+-fragment PhpStartEchoFragment: '<' ('?' '=' | { this.HasAspTags() }? '%' '=');
+-fragment PhpStartFragment:     '<' ('?' 'php'? | { this.HasAspTags() }? '%');
++fragment PhpStartEchoFragment: '<' ('?' '=' '%' '=');
++fragment PhpStartFragment:     '<' ('?' 'php'? '%');
+ fragment NameChar
+     : NameStartChar
+     | '-'
+@@ -350,16 +350,9 @@
+     | '.'
+     | Digit
+     | '\u00B7'
+-    | '\u0300'..'\u036F'
+-    | '\u203F'..'\u2040'
+     ;
+ fragment NameStartChar
+     : [:a-zA-Z]
+-    | '\u2070'..'\u218F'
+-    | '\u2C00'..'\u2FEF'
+-    | '\u3001'..'\uD7FF'
+-    | '\uF900'..'\uFDCF'
+-    | '\uFDF0'..'\uFFFD'
+     ;
+ fragment ExponentPart:         'e' [+-]? Digit+;
+ fragment Digit:                [0-9_];

@@ -1,0 +1,5652 @@
+# Grammar LEXER= None
+# Grammar PARSER= parser
+# Grammar GRAMMAR= grammar
+# Grammar name:  ('token', 'PhpParser')
+<htmlDocument> ;
+# PARSER: htmlDocument
+<htmlDocument_-_1> ::= ;
+<htmlDocument_-_1> ::= <Shebang>  ;
+<htmlDocument_-_2> ::= <htmlDocument_-_3>  ;
+<htmlDocument_-_3> ::= ;
+<htmlDocument_-_3> ::= <htmlElementOrPhpBlock>  <htmlDocument_-_3>  ;
+<htmlDocument> ::= <htmlDocument_-_1>  <htmlDocument_-_2>  <EOF>  ;
+# PARSER: htmlElementOrPhpBlock
+<htmlElementOrPhpBlock> ::= <htmlElements>  ;
+<htmlElementOrPhpBlock> ::= <phpBlock>  ;
+<htmlElementOrPhpBlock> ::= <scriptTextPart>  ;
+# PARSER: htmlElements
+<htmlElements> ::= <htmlElements_-_1>  ;
+<htmlElements_-_1> ::= <htmlElements_-_2>  ;
+<htmlElements_-_1> ::= <htmlElements_-_2>  <htmlElements_-_1>  ;
+<htmlElements_-_2> ::= <htmlElement>  ;
+# PARSER: htmlElement
+<htmlElement> ::= <HtmlDtd>  ;
+<htmlElement> ::= <HtmlScriptOpen>  ;
+<htmlElement> ::= <HtmlClose>  ;
+<htmlElement> ::= <HtmlStyleOpen>  ;
+<htmlElement> ::= <HtmlOpen>  ;
+<htmlElement> ::= <HtmlName>  ;
+<htmlElement> ::= <HtmlSlashClose>  ;
+<htmlElement> ::= <HtmlSlash>  ;
+<htmlElement> ::= <HtmlText>  ;
+<htmlElement> ::= <HtmlEquals>  ;
+<htmlElement> ::= <HtmlStartQuoteString>  ;
+<htmlElement> ::= <HtmlEndQuoteString>  ;
+<htmlElement> ::= <HtmlStartDoubleQuoteString>  ;
+<htmlElement> ::= <HtmlEndDoubleQuoteString>  ;
+<htmlElement> ::= <HtmlHex>  ;
+<htmlElement> ::= <HtmlDecimal>  ;
+<htmlElement> ::= <HtmlQuoteString>  ;
+<htmlElement> ::= <HtmlDoubleQuoteString>  ;
+<htmlElement> ::= <StyleBody>  ;
+<htmlElement> ::= <ScriptClose>  ;
+<htmlElement_-_1> ::= <htmlElement_-_2>  ;
+<htmlElement_-_2> ::= ;
+<htmlElement_-_2> ::= <XmlText>  <htmlElement_-_2>  ;
+<htmlElement> ::= <XmlStart>  <htmlElement_-_1>  <XmlClose>  ;
+# PARSER: scriptTextPart
+<scriptTextPart> ::= <scriptTextPart_-_1>  ;
+<scriptTextPart_-_1> ::= <scriptTextPart_-_2>  ;
+<scriptTextPart_-_1> ::= <scriptTextPart_-_2>  <scriptTextPart_-_1>  ;
+<scriptTextPart_-_2> ::= <ScriptText>  ;
+# PARSER: phpBlock
+<phpBlock_-_1> ::= <phpBlock_-_2>  ;
+<phpBlock_-_2> ::= ;
+<phpBlock_-_2> ::= <importStatement>  <phpBlock_-_2>  ;
+<phpBlock_-_3> ::= <phpBlock_-_4>  ;
+<phpBlock_-_4> ::= <phpBlock_-_5>  ;
+<phpBlock_-_4> ::= <phpBlock_-_5>  <phpBlock_-_4>  ;
+<phpBlock_-_5> ::= <topStatement>  ;
+<phpBlock> ::= <phpBlock_-_1>  <phpBlock_-_3>  ;
+# PARSER: importStatement
+<importStatement> ::= <Import>  <Namespace>  <namespaceNameList>  ';'  ;
+# PARSER: topStatement
+<topStatement> ::= <statement>  ;
+<topStatement> ::= <useDeclaration>  ;
+<topStatement> ::= <namespaceDeclaration>  ;
+<topStatement> ::= <functionDeclaration>  ;
+<topStatement> ::= <classDeclaration>  ;
+<topStatement> ::= <globalConstantDeclaration>  ;
+# PARSER: useDeclaration
+<useDeclaration_-_1> ::= ;
+<useDeclaration_-_1> ::= <Function>  ;
+<useDeclaration_-_1> ::= <Const>  ;
+<useDeclaration> ::= <Use>  <useDeclaration_-_1>  <useDeclarationContentList>  ';'  ;
+# PARSER: useDeclarationContentList
+<useDeclarationContentList_-_1> ::= ;
+<useDeclarationContentList_-_1> ::= '\'  ;
+<useDeclarationContentList_-_2> ::= <useDeclarationContentList_-_3>  ;
+<useDeclarationContentList_-_3> ::= ;
+<useDeclarationContentList_-_5> ::= ;
+<useDeclarationContentList_-_5> ::= '\'  ;
+<useDeclarationContentList_-_4> ::= ','  <useDeclarationContentList_-_5>  <useDeclarationContent>  ;
+<useDeclarationContentList_-_3> ::= <useDeclarationContentList_-_4>  <useDeclarationContentList_-_3>  ;
+<useDeclarationContentList> ::= <useDeclarationContentList_-_1>  <useDeclarationContent>  <useDeclarationContentList_-_2>  ;
+# PARSER: useDeclarationContent
+<useDeclarationContent> ::= <namespaceNameList>  ;
+# PARSER: namespaceDeclaration
+<namespaceDeclaration_-_2> ::= ;
+<namespaceDeclaration_-_2> ::= <namespaceNameList>  ;
+<namespaceDeclaration_-_3> ::= <namespaceDeclaration_-_4>  ;
+<namespaceDeclaration_-_4> ::= ;
+<namespaceDeclaration_-_4> ::= <namespaceStatement>  <namespaceDeclaration_-_4>  ;
+<namespaceDeclaration_-_1> ::= <namespaceDeclaration_-_2>  <OpenCurlyBracket>  <namespaceDeclaration_-_3>  '}'  ;
+<namespaceDeclaration_-_1> ::= <namespaceNameList>  ';'  ;
+<namespaceDeclaration> ::= <Namespace>  <namespaceDeclaration_-_1>  ;
+# PARSER: namespaceStatement
+<namespaceStatement> ::= <statement>  ;
+<namespaceStatement> ::= <useDeclaration>  ;
+<namespaceStatement> ::= <functionDeclaration>  ;
+<namespaceStatement> ::= <classDeclaration>  ;
+<namespaceStatement> ::= <globalConstantDeclaration>  ;
+# PARSER: functionDeclaration
+<functionDeclaration_-_1> ::= ;
+<functionDeclaration_-_1> ::= '&'  ;
+<functionDeclaration_-_2> ::= ;
+<functionDeclaration_-_2> ::= <typeParameterListInBrackets>  ;
+<functionDeclaration_-_3> ::= ;
+<functionDeclaration_-_4> ::= ;
+<functionDeclaration_-_4> ::= <QuestionMark>  ;
+<functionDeclaration_-_3> ::= ':'  <functionDeclaration_-_4>  <typeHint>  ;
+<functionDeclaration> ::= <attributes>  <Function>  <functionDeclaration_-_1>  <identifier>  <functionDeclaration_-_2>  '('  <formalParameterList>  ')'  <functionDeclaration_-_3>  <blockStatement>  ;
+# PARSER: classDeclaration
+<classDeclaration_-_1> ::= ;
+<classDeclaration_-_1> ::= <Private>  ;
+<classDeclaration_-_2> ::= ;
+<classDeclaration_-_2> ::= <modifier>  ;
+<classDeclaration_-_3> ::= ;
+<classDeclaration_-_3> ::= <Partial>  ;
+<classDeclaration_-_5> ::= ;
+<classDeclaration_-_5> ::= <typeParameterListInBrackets>  ;
+<classDeclaration_-_6> ::= ;
+<classDeclaration_-_6> ::= <Extends>  <qualifiedStaticTypeRef>  ;
+<classDeclaration_-_7> ::= ;
+<classDeclaration_-_7> ::= <Implements>  <interfaceList>  ;
+<classDeclaration_-_4> ::= <classEntryType>  <identifier>  <classDeclaration_-_5>  <classDeclaration_-_6>  <classDeclaration_-_7>  ;
+<classDeclaration_-_8> ::= ;
+<classDeclaration_-_8> ::= <typeParameterListInBrackets>  ;
+<classDeclaration_-_9> ::= ;
+<classDeclaration_-_9> ::= <Extends>  <interfaceList>  ;
+<classDeclaration_-_4> ::= <Interface>  <identifier>  <classDeclaration_-_8>  <classDeclaration_-_9>  ;
+<classDeclaration_-_10> ::= <classDeclaration_-_11>  ;
+<classDeclaration_-_11> ::= ;
+<classDeclaration_-_11> ::= <classStatement>  <classDeclaration_-_11>  ;
+<classDeclaration> ::= <attributes>  <classDeclaration_-_1>  <classDeclaration_-_2>  <classDeclaration_-_3>  <classDeclaration_-_4>  <OpenCurlyBracket>  <classDeclaration_-_10>  '}'  ;
+# PARSER: classEntryType
+<classEntryType> ::= <Class>  ;
+<classEntryType> ::= <Trait>  ;
+# PARSER: interfaceList
+<interfaceList_-_1> ::= <interfaceList_-_2>  ;
+<interfaceList_-_2> ::= ;
+<interfaceList_-_3> ::= ','  <qualifiedStaticTypeRef>  ;
+<interfaceList_-_2> ::= <interfaceList_-_3>  <interfaceList_-_2>  ;
+<interfaceList> ::= <qualifiedStaticTypeRef>  <interfaceList_-_1>  ;
+# PARSER: typeParameterListInBrackets
+<typeParameterListInBrackets> ::= '<:'  <typeParameterList>  ':>'  ;
+<typeParameterListInBrackets> ::= '<:'  <typeParameterWithDefaultsList>  ':>'  ;
+<typeParameterListInBrackets> ::= '<:'  <typeParameterList>  ','  <typeParameterWithDefaultsList>  ':>'  ;
+# PARSER: typeParameterList
+<typeParameterList_-_1> ::= <typeParameterList_-_2>  ;
+<typeParameterList_-_2> ::= ;
+<typeParameterList_-_3> ::= ','  <typeParameterDecl>  ;
+<typeParameterList_-_2> ::= <typeParameterList_-_3>  <typeParameterList_-_2>  ;
+<typeParameterList> ::= <typeParameterDecl>  <typeParameterList_-_1>  ;
+# PARSER: typeParameterWithDefaultsList
+<typeParameterWithDefaultsList_-_1> ::= <typeParameterWithDefaultsList_-_2>  ;
+<typeParameterWithDefaultsList_-_2> ::= ;
+<typeParameterWithDefaultsList_-_3> ::= ','  <typeParameterWithDefaultDecl>  ;
+<typeParameterWithDefaultsList_-_2> ::= <typeParameterWithDefaultsList_-_3>  <typeParameterWithDefaultsList_-_2>  ;
+<typeParameterWithDefaultsList> ::= <typeParameterWithDefaultDecl>  <typeParameterWithDefaultsList_-_1>  ;
+# PARSER: typeParameterDecl
+<typeParameterDecl> ::= <attributes>  <identifier>  ;
+# PARSER: typeParameterWithDefaultDecl
+<typeParameterWithDefaultDecl_-_1> ::= <qualifiedStaticTypeRef>  ;
+<typeParameterWithDefaultDecl_-_1> ::= <primitiveType>  ;
+<typeParameterWithDefaultDecl> ::= <attributes>  <identifier>  <Eq>  <typeParameterWithDefaultDecl_-_1>  ;
+# PARSER: genericDynamicArgs
+<genericDynamicArgs_-_1> ::= <genericDynamicArgs_-_2>  ;
+<genericDynamicArgs_-_2> ::= ;
+<genericDynamicArgs_-_3> ::= ','  <typeRef>  ;
+<genericDynamicArgs_-_2> ::= <genericDynamicArgs_-_3>  <genericDynamicArgs_-_2>  ;
+<genericDynamicArgs> ::= '<:'  <typeRef>  <genericDynamicArgs_-_1>  ':>'  ;
+# PARSER: attributes
+<attributes> ::= <attributes_-_1>  ;
+<attributes_-_1> ::= ;
+<attributes_-_1> ::= <attributesGroup>  <attributes_-_1>  ;
+# PARSER: attributesGroup
+<attributesGroup_-_1> ::= ;
+<attributesGroup_-_1> ::= <identifier>  ':'  ;
+<attributesGroup_-_2> ::= <attributesGroup_-_3>  ;
+<attributesGroup_-_3> ::= ;
+<attributesGroup_-_4> ::= ','  <attribute>  ;
+<attributesGroup_-_3> ::= <attributesGroup_-_4>  <attributesGroup_-_3>  ;
+<attributesGroup> ::= '['  <attributesGroup_-_1>  <attribute>  <attributesGroup_-_2>  ']'  ;
+# PARSER: attribute
+<attribute> ::= <qualifiedNamespaceName>  ;
+<attribute> ::= <qualifiedNamespaceName>  '('  <attributeArgList>  ')'  ;
+<attribute> ::= <qualifiedNamespaceName>  '('  <attributeNamedArgList>  ')'  ;
+<attribute> ::= <qualifiedNamespaceName>  '('  <attributeArgList>  ','  <attributeNamedArgList>  ')'  ;
+# PARSER: attributeArgList
+<attributeArgList_-_1> ::= <attributeArgList_-_2>  ;
+<attributeArgList_-_2> ::= ;
+<attributeArgList_-_3> ::= ','  <expression>  ;
+<attributeArgList_-_2> ::= <attributeArgList_-_3>  <attributeArgList_-_2>  ;
+<attributeArgList> ::= <expression>  <attributeArgList_-_1>  ;
+# PARSER: attributeNamedArgList
+<attributeNamedArgList_-_1> ::= <attributeNamedArgList_-_2>  ;
+<attributeNamedArgList_-_2> ::= ;
+<attributeNamedArgList_-_3> ::= ','  <attributeNamedArg>  ;
+<attributeNamedArgList_-_2> ::= <attributeNamedArgList_-_3>  <attributeNamedArgList_-_2>  ;
+<attributeNamedArgList> ::= <attributeNamedArg>  <attributeNamedArgList_-_1>  ;
+# PARSER: attributeNamedArg
+<attributeNamedArg> ::= <VarName>  '=>'  <expression>  ;
+# PARSER: innerStatementList
+<innerStatementList> ::= <innerStatementList_-_1>  ;
+<innerStatementList_-_1> ::= ;
+<innerStatementList_-_1> ::= <innerStatement>  <innerStatementList_-_1>  ;
+# PARSER: innerStatement
+<innerStatement> ::= <statement>  ;
+<innerStatement> ::= <functionDeclaration>  ;
+<innerStatement> ::= <classDeclaration>  ;
+# PARSER: statement
+<statement> ::= <identifier>  ':'  ;
+<statement> ::= <blockStatement>  ;
+<statement> ::= <ifStatement>  ;
+<statement> ::= <whileStatement>  ;
+<statement> ::= <doWhileStatement>  ;
+<statement> ::= <forStatement>  ;
+<statement> ::= <switchStatement>  ;
+<statement> ::= <breakStatement>  ;
+<statement> ::= <continueStatement>  ;
+<statement> ::= <returnStatement>  ;
+<statement> ::= <yieldExpression>  ';'  ;
+<statement> ::= <globalStatement>  ;
+<statement> ::= <staticVariableStatement>  ;
+<statement> ::= <echoStatement>  ;
+<statement> ::= <expressionStatement>  ;
+<statement> ::= <unsetStatement>  ;
+<statement> ::= <foreachStatement>  ;
+<statement> ::= <tryCatchFinally>  ;
+<statement> ::= <throwStatement>  ;
+<statement> ::= <gotoStatement>  ;
+<statement> ::= <declareStatement>  ;
+<statement> ::= <emptyStatement>  ;
+<statement> ::= <inlineHtmlStatement>  ;
+# PARSER: emptyStatement
+<emptyStatement> ::= ';'  ;
+# PARSER: blockStatement
+<blockStatement> ::= <OpenCurlyBracket>  <innerStatementList>  '}'  ;
+# PARSER: ifStatement
+<ifStatement_-_1> ::= <ifStatement_-_2>  ;
+<ifStatement_-_2> ::= ;
+<ifStatement_-_2> ::= <elseIfStatement>  <ifStatement_-_2>  ;
+<ifStatement_-_3> ::= ;
+<ifStatement_-_3> ::= <elseStatement>  ;
+<ifStatement> ::= <If>  <parentheses>  <statement>  <ifStatement_-_1>  <ifStatement_-_3>  ;
+<ifStatement_-_4> ::= <ifStatement_-_5>  ;
+<ifStatement_-_5> ::= ;
+<ifStatement_-_5> ::= <elseIfColonStatement>  <ifStatement_-_5>  ;
+<ifStatement_-_6> ::= ;
+<ifStatement_-_6> ::= <elseColonStatement>  ;
+<ifStatement> ::= <If>  <parentheses>  ':'  <innerStatementList>  <ifStatement_-_4>  <ifStatement_-_6>  <EndIf>  ';'  ;
+# PARSER: elseIfStatement
+<elseIfStatement> ::= <ElseIf>  <parentheses>  <statement>  ;
+# PARSER: elseIfColonStatement
+<elseIfColonStatement> ::= <ElseIf>  <parentheses>  ':'  <innerStatementList>  ;
+# PARSER: elseStatement
+<elseStatement> ::= <Else>  <statement>  ;
+# PARSER: elseColonStatement
+<elseColonStatement> ::= <Else>  ':'  <innerStatementList>  ;
+# PARSER: whileStatement
+<whileStatement_-_1> ::= <statement>  ;
+<whileStatement_-_1> ::= ':'  <innerStatementList>  <EndWhile>  ';'  ;
+<whileStatement> ::= <While>  <parentheses>  <whileStatement_-_1>  ;
+# PARSER: doWhileStatement
+<doWhileStatement> ::= <Do>  <statement>  <While>  <parentheses>  ';'  ;
+# PARSER: forStatement
+<forStatement_-_1> ::= ;
+<forStatement_-_1> ::= <forInit>  ;
+<forStatement_-_2> ::= ;
+<forStatement_-_2> ::= <expressionList>  ;
+<forStatement_-_3> ::= ;
+<forStatement_-_3> ::= <forUpdate>  ;
+<forStatement_-_4> ::= <statement>  ;
+<forStatement_-_4> ::= ':'  <innerStatementList>  <EndFor>  ';'  ;
+<forStatement> ::= <For>  '('  <forStatement_-_1>  ';'  <forStatement_-_2>  ';'  <forStatement_-_3>  ')'  <forStatement_-_4>  ;
+# PARSER: forInit
+<forInit> ::= <expressionList>  ;
+# PARSER: forUpdate
+<forUpdate> ::= <expressionList>  ;
+# PARSER: switchStatement
+<switchStatement_-_2> ::= ;
+<switchStatement_-_2> ::= ';'  ;
+<switchStatement_-_3> ::= <switchStatement_-_4>  ;
+<switchStatement_-_4> ::= ;
+<switchStatement_-_4> ::= <switchBlock>  <switchStatement_-_4>  ;
+<switchStatement_-_1> ::= <OpenCurlyBracket>  <switchStatement_-_2>  <switchStatement_-_3>  '}'  ;
+<switchStatement_-_5> ::= ;
+<switchStatement_-_5> ::= ';'  ;
+<switchStatement_-_6> ::= <switchStatement_-_7>  ;
+<switchStatement_-_7> ::= ;
+<switchStatement_-_7> ::= <switchBlock>  <switchStatement_-_7>  ;
+<switchStatement_-_1> ::= ':'  <switchStatement_-_5>  <switchStatement_-_6>  <EndSwitch>  ';'  ;
+<switchStatement> ::= <Switch>  <parentheses>  <switchStatement_-_1>  ;
+# PARSER: switchBlock
+<switchBlock_-_1> ::= <switchBlock_-_2>  ;
+<switchBlock_-_2> ::= <switchBlock_-_3>  ;
+<switchBlock_-_2> ::= <switchBlock_-_3>  <switchBlock_-_2>  ;
+<switchBlock_-_4> ::= <Case>  <expression>  ;
+<switchBlock_-_4> ::= <Default>  ;
+<switchBlock_-_5> ::= ':'  ;
+<switchBlock_-_5> ::= ';'  ;
+<switchBlock_-_3> ::= <switchBlock_-_4>  <switchBlock_-_5>  ;
+<switchBlock> ::= <switchBlock_-_1>  <innerStatementList>  ;
+# PARSER: breakStatement
+<breakStatement_-_1> ::= ;
+<breakStatement_-_1> ::= <expression>  ;
+<breakStatement> ::= <Break>  <breakStatement_-_1>  ';'  ;
+# PARSER: continueStatement
+<continueStatement_-_1> ::= ;
+<continueStatement_-_1> ::= <expression>  ;
+<continueStatement> ::= <Continue>  <continueStatement_-_1>  ';'  ;
+# PARSER: returnStatement
+<returnStatement_-_1> ::= ;
+<returnStatement_-_1> ::= <expression>  ;
+<returnStatement> ::= <Return>  <returnStatement_-_1>  ';'  ;
+# PARSER: expressionStatement
+<expressionStatement> ::= <expression>  ';'  ;
+# PARSER: unsetStatement
+<unsetStatement> ::= <Unset>  '('  <chainList>  ')'  ';'  ;
+# PARSER: foreachStatement
+<foreachStatement_-_2> ::= ;
+<foreachStatement_-_2> ::= '&'  ;
+<foreachStatement_-_3> ::= ;
+<foreachStatement_-_4> ::= ;
+<foreachStatement_-_4> ::= '&'  ;
+<foreachStatement_-_3> ::= '=>'  <foreachStatement_-_4>  <chain>  ;
+<foreachStatement_-_1> ::= '('  <chain>  <As>  <foreachStatement_-_2>  <assignable>  <foreachStatement_-_3>  ')'  ;
+<foreachStatement_-_5> ::= ;
+<foreachStatement_-_6> ::= ;
+<foreachStatement_-_6> ::= '&'  ;
+<foreachStatement_-_5> ::= '=>'  <foreachStatement_-_6>  <chain>  ;
+<foreachStatement_-_1> ::= '('  <expression>  <As>  <assignable>  <foreachStatement_-_5>  ')'  ;
+<foreachStatement_-_1> ::= '('  <chain>  <As>  <List>  '('  <assignmentList>  ')'  ')'  ;
+<foreachStatement_-_7> ::= <statement>  ;
+<foreachStatement_-_7> ::= ':'  <innerStatementList>  <EndForeach>  ';'  ;
+<foreachStatement> ::= <Foreach>  <foreachStatement_-_1>  <foreachStatement_-_7>  ;
+# PARSER: tryCatchFinally
+<tryCatchFinally_-_2> ::= <tryCatchFinally_-_3>  ;
+<tryCatchFinally_-_3> ::= <tryCatchFinally_-_4>  ;
+<tryCatchFinally_-_3> ::= <tryCatchFinally_-_4>  <tryCatchFinally_-_3>  ;
+<tryCatchFinally_-_4> ::= <catchClause>  ;
+<tryCatchFinally_-_5> ::= ;
+<tryCatchFinally_-_5> ::= <finallyStatement>  ;
+<tryCatchFinally_-_1> ::= <tryCatchFinally_-_2>  <tryCatchFinally_-_5>  ;
+<tryCatchFinally_-_6> ::= <tryCatchFinally_-_7>  ;
+<tryCatchFinally_-_7> ::= ;
+<tryCatchFinally_-_7> ::= <catchClause>  <tryCatchFinally_-_7>  ;
+<tryCatchFinally_-_1> ::= <tryCatchFinally_-_6>  <finallyStatement>  ;
+<tryCatchFinally> ::= <Try>  <blockStatement>  <tryCatchFinally_-_1>  ;
+# PARSER: catchClause
+<catchClause_-_1> ::= <catchClause_-_2>  ;
+<catchClause_-_2> ::= ;
+<catchClause_-_3> ::= '|'  <qualifiedStaticTypeRef>  ;
+<catchClause_-_2> ::= <catchClause_-_3>  <catchClause_-_2>  ;
+<catchClause> ::= <Catch>  '('  <qualifiedStaticTypeRef>  <catchClause_-_1>  <VarName>  ')'  <blockStatement>  ;
+# PARSER: finallyStatement
+<finallyStatement> ::= <Finally>  <blockStatement>  ;
+# PARSER: throwStatement
+<throwStatement> ::= <Throw>  <expression>  ';'  ;
+# PARSER: gotoStatement
+<gotoStatement> ::= <Goto>  <identifier>  ';'  ;
+# PARSER: declareStatement
+<declareStatement_-_1> ::= <statement>  ;
+<declareStatement_-_1> ::= ':'  <innerStatementList>  <EndDeclare>  ';'  ;
+<declareStatement> ::= <Declare>  '('  <declareList>  ')'  <declareStatement_-_1>  ;
+# PARSER: inlineHtmlStatement
+<inlineHtmlStatement> ::= <inlineHtmlStatement_-_1>  ;
+<inlineHtmlStatement_-_1> ::= <inlineHtmlStatement_-_2>  ;
+<inlineHtmlStatement_-_1> ::= <inlineHtmlStatement_-_2>  <inlineHtmlStatement_-_1>  ;
+<inlineHtmlStatement_-_2> ::= <inlineHtml>  ;
+# PARSER: inlineHtml
+<inlineHtml> ::= <htmlElements>  ;
+<inlineHtml> ::= <scriptTextPart>  ;
+# PARSER: declareList
+<declareList_-_1> ::= <declareList_-_2>  ;
+<declareList_-_2> ::= ;
+<declareList_-_3> ::= ','  <identifierInititalizer>  ;
+<declareList_-_2> ::= <declareList_-_3>  <declareList_-_2>  ;
+<declareList> ::= <identifierInititalizer>  <declareList_-_1>  ;
+# PARSER: formalParameterList
+<formalParameterList_-_1> ::= ;
+<formalParameterList_-_1> ::= <formalParameter>  ;
+<formalParameterList_-_2> ::= <formalParameterList_-_3>  ;
+<formalParameterList_-_3> ::= ;
+<formalParameterList_-_4> ::= ','  <formalParameter>  ;
+<formalParameterList_-_3> ::= <formalParameterList_-_4>  <formalParameterList_-_3>  ;
+<formalParameterList> ::= <formalParameterList_-_1>  <formalParameterList_-_2>  ;
+# PARSER: formalParameter
+<formalParameter_-_1> ::= ;
+<formalParameter_-_1> ::= <QuestionMark>  ;
+<formalParameter_-_2> ::= ;
+<formalParameter_-_2> ::= <typeHint>  ;
+<formalParameter_-_3> ::= ;
+<formalParameter_-_3> ::= '&'  ;
+<formalParameter_-_4> ::= ;
+<formalParameter_-_4> ::= '...'  ;
+<formalParameter> ::= <attributes>  <formalParameter_-_1>  <formalParameter_-_2>  <formalParameter_-_3>  <formalParameter_-_4>  <variableInitializer>  ;
+# PARSER: typeHint
+<typeHint> ::= <qualifiedStaticTypeRef>  ;
+<typeHint> ::= <Callable>  ;
+<typeHint> ::= <primitiveType>  ;
+# PARSER: globalStatement
+<globalStatement_-_1> ::= <globalStatement_-_2>  ;
+<globalStatement_-_2> ::= ;
+<globalStatement_-_3> ::= ','  <globalVar>  ;
+<globalStatement_-_2> ::= <globalStatement_-_3>  <globalStatement_-_2>  ;
+<globalStatement> ::= <Global>  <globalVar>  <globalStatement_-_1>  ';'  ;
+# PARSER: globalVar
+<globalVar> ::= <VarName>  ;
+<globalVar> ::= <Dollar>  <chain>  ;
+<globalVar> ::= <Dollar>  <OpenCurlyBracket>  <expression>  '}'  ;
+# PARSER: echoStatement
+<echoStatement> ::= <Echo>  <expressionList>  ';'  ;
+# PARSER: staticVariableStatement
+<staticVariableStatement_-_1> ::= <staticVariableStatement_-_2>  ;
+<staticVariableStatement_-_2> ::= ;
+<staticVariableStatement_-_3> ::= ','  <variableInitializer>  ;
+<staticVariableStatement_-_2> ::= <staticVariableStatement_-_3>  <staticVariableStatement_-_2>  ;
+<staticVariableStatement> ::= <Static>  <variableInitializer>  <staticVariableStatement_-_1>  ';'  ;
+# PARSER: classStatement
+<classStatement_-_1> ::= ;
+<classStatement_-_1> ::= <typeHint>  ;
+<classStatement_-_2> ::= <classStatement_-_3>  ;
+<classStatement_-_3> ::= ;
+<classStatement_-_4> ::= ','  <variableInitializer>  ;
+<classStatement_-_3> ::= <classStatement_-_4>  <classStatement_-_3>  ;
+<classStatement> ::= <attributes>  <propertyModifiers>  <classStatement_-_1>  <variableInitializer>  <classStatement_-_2>  ';'  ;
+<classStatement_-_5> ::= ;
+<classStatement_-_5> ::= <memberModifiers>  ;
+<classStatement_-_6> ::= ;
+<classStatement_-_6> ::= <typeHint>  ;
+<classStatement_-_7> ::= <classStatement_-_8>  ;
+<classStatement_-_8> ::= ;
+<classStatement_-_9> ::= ','  <identifierInititalizer>  ;
+<classStatement_-_8> ::= <classStatement_-_9>  <classStatement_-_8>  ;
+<classStatement> ::= <attributes>  <classStatement_-_5>  <Const>  <classStatement_-_6>  <identifierInititalizer>  <classStatement_-_7>  ';'  ;
+<classStatement_-_10> ::= ;
+<classStatement_-_10> ::= <memberModifiers>  ;
+<classStatement_-_11> ::= ;
+<classStatement_-_11> ::= '&'  ;
+<classStatement_-_12> ::= ;
+<classStatement_-_12> ::= <typeParameterListInBrackets>  ;
+<classStatement_-_13> ::= ;
+<classStatement_-_13> ::= <baseCtorCall>  ;
+<classStatement> ::= <attributes>  <classStatement_-_10>  <Function>  <classStatement_-_11>  <identifier>  <classStatement_-_12>  '('  <formalParameterList>  ')'  <classStatement_-_13>  <methodBody>  ;
+<classStatement> ::= <Use>  <qualifiedNamespaceNameList>  <traitAdaptations>  ;
+# PARSER: traitAdaptations
+<traitAdaptations> ::= ';'  ;
+<traitAdaptations_-_1> ::= <traitAdaptations_-_2>  ;
+<traitAdaptations_-_2> ::= ;
+<traitAdaptations_-_2> ::= <traitAdaptationStatement>  <traitAdaptations_-_2>  ;
+<traitAdaptations> ::= <OpenCurlyBracket>  <traitAdaptations_-_1>  '}'  ;
+# PARSER: traitAdaptationStatement
+<traitAdaptationStatement> ::= <traitPrecedence>  ;
+<traitAdaptationStatement> ::= <traitAlias>  ;
+# PARSER: traitPrecedence
+<traitPrecedence> ::= <qualifiedNamespaceName>  '::'  <identifier>  <InsteadOf>  <qualifiedNamespaceNameList>  ';'  ;
+# PARSER: traitAlias
+<traitAlias_-_1> ::= <memberModifier>  ;
+<traitAlias_-_2> ::= ;
+<traitAlias_-_2> ::= <memberModifier>  ;
+<traitAlias_-_1> ::= <traitAlias_-_2>  <identifier>  ;
+<traitAlias> ::= <traitMethodReference>  <As>  <traitAlias_-_1>  ';'  ;
+# PARSER: traitMethodReference
+<traitMethodReference_-_1> ::= ;
+<traitMethodReference_-_1> ::= <qualifiedNamespaceName>  '::'  ;
+<traitMethodReference> ::= <traitMethodReference_-_1>  <identifier>  ;
+# PARSER: baseCtorCall
+<baseCtorCall_-_1> ::= ;
+<baseCtorCall_-_1> ::= <arguments>  ;
+<baseCtorCall> ::= ':'  <identifier>  <baseCtorCall_-_1>  ;
+# PARSER: methodBody
+<methodBody> ::= ';'  ;
+<methodBody> ::= <blockStatement>  ;
+# PARSER: propertyModifiers
+<propertyModifiers> ::= <memberModifiers>  ;
+<propertyModifiers> ::= <Var>  ;
+# PARSER: memberModifiers
+<memberModifiers> ::= <memberModifiers_-_1>  ;
+<memberModifiers_-_1> ::= <memberModifiers_-_2>  ;
+<memberModifiers_-_1> ::= <memberModifiers_-_2>  <memberModifiers_-_1>  ;
+<memberModifiers_-_2> ::= <memberModifier>  ;
+# PARSER: variableInitializer
+<variableInitializer_-_1> ::= ;
+<variableInitializer_-_1> ::= <Eq>  <constantInititalizer>  ;
+<variableInitializer> ::= <VarName>  <variableInitializer_-_1>  ;
+# PARSER: identifierInititalizer
+<identifierInititalizer> ::= <identifier>  <Eq>  <constantInititalizer>  ;
+# PARSER: globalConstantDeclaration
+<globalConstantDeclaration_-_1> ::= <globalConstantDeclaration_-_2>  ;
+<globalConstantDeclaration_-_2> ::= ;
+<globalConstantDeclaration_-_3> ::= ','  <identifierInititalizer>  ;
+<globalConstantDeclaration_-_2> ::= <globalConstantDeclaration_-_3>  <globalConstantDeclaration_-_2>  ;
+<globalConstantDeclaration> ::= <attributes>  <Const>  <identifierInititalizer>  <globalConstantDeclaration_-_1>  ';'  ;
+# PARSER: expressionList
+<expressionList_-_1> ::= <expressionList_-_2>  ;
+<expressionList_-_2> ::= ;
+<expressionList_-_3> ::= ','  <expression>  ;
+<expressionList_-_2> ::= <expressionList_-_3>  <expressionList_-_2>  ;
+<expressionList> ::= <expression>  <expressionList_-_1>  ;
+# PARSER: parentheses
+<parentheses_-_1> ::= <expression>  ;
+<parentheses_-_1> ::= <yieldExpression>  ;
+<parentheses> ::= '('  <parentheses_-_1>  ')'  ;
+# PARSER: expression
+<expression> ::= <Clone>  <expression>  ;
+<expression> ::= <newExpr>  ;
+<expression> ::= <stringConstant>  '['  <expression>  ']'  ;
+<expression> ::= '('  <castOperation>  ')'  <expression>  ;
+<expression_-_1> ::= '~'  ;
+<expression_-_1> ::= '@'  ;
+<expression> ::= <expression_-_1>  <expression>  ;
+<expression_-_2> ::= '!'  ;
+<expression_-_2> ::= '+'  ;
+<expression_-_2> ::= '-'  ;
+<expression> ::= <expression_-_2>  <expression>  ;
+<expression_-_3> ::= '++'  ;
+<expression_-_3> ::= '--'  ;
+<expression> ::= <expression_-_3>  <chain>  ;
+<expression_-_4> ::= '++'  ;
+<expression_-_4> ::= '--'  ;
+<expression> ::= <chain>  <expression_-_4>  ;
+<expression> ::= <Print>  <expression>  ;
+<expression> ::= <chain>  ;
+<expression> ::= <constant>  ;
+<expression> ::= <string>  ;
+<expression> ::= <Label>  ;
+<expression> ::= <BackQuoteString>  ;
+<expression> ::= <parentheses>  ;
+<expression> ::= <arrayCreation>  ;
+<expression> ::= <Yield>  ;
+<expression> ::= <List>  '('  <assignmentList>  ')'  <Eq>  <expression>  ;
+<expression> ::= <IsSet>  '('  <chainList>  ')'  ;
+<expression> ::= <Empty>  '('  <chain>  ')'  ;
+<expression> ::= <Eval>  '('  <expression>  ')'  ;
+<expression_-_5> ::= ;
+<expression_-_5> ::= '('  ')'  ;
+<expression_-_5> ::= <parentheses>  ;
+<expression> ::= <Exit>  <expression_-_5>  ;
+<expression_-_6> ::= <Include>  ;
+<expression_-_6> ::= <IncludeOnce>  ;
+<expression> ::= <expression_-_6>  <expression>  ;
+<expression_-_7> ::= <Require>  ;
+<expression_-_7> ::= <RequireOnce>  ;
+<expression> ::= <expression_-_7>  <expression>  ;
+<expression> ::= <lambdaFunctionExpr>  ;
+<expression> ::= <expression>  '**'  <expression>  ;
+<expression> ::= <expression>  <InstanceOf>  <typeRef>  ;
+<expression_-_8> ::= '*'  ;
+<expression_-_8> ::= <Divide>  ;
+<expression_-_8> ::= '%'  ;
+<expression> ::= <expression>  <expression_-_8>  <expression>  ;
+<expression_-_9> ::= '+'  ;
+<expression_-_9> ::= '-'  ;
+<expression_-_9> ::= '.'  ;
+<expression> ::= <expression>  <expression_-_9>  <expression>  ;
+<expression_-_10> ::= '<<'  ;
+<expression_-_10> ::= '>>'  ;
+<expression> ::= <expression>  <expression_-_10>  <expression>  ;
+<expression_-_11> ::= <Less>  ;
+<expression_-_11> ::= '<='  ;
+<expression_-_11> ::= <Greater>  ;
+<expression_-_11> ::= '>='  ;
+<expression> ::= <expression>  <expression_-_11>  <expression>  ;
+<expression_-_12> ::= '==='  ;
+<expression_-_12> ::= '!=='  ;
+<expression_-_12> ::= '=='  ;
+<expression_-_12> ::= <IsNotEq>  ;
+<expression> ::= <expression>  <expression_-_12>  <expression>  ;
+<expression> ::= <expression>  '&'  <expression>  ;
+<expression> ::= <expression>  '^'  <expression>  ;
+<expression> ::= <expression>  '|'  <expression>  ;
+<expression> ::= <expression>  '&&'  <expression>  ;
+<expression> ::= <expression>  '||'  <expression>  ;
+<expression_-_13> ::= ;
+<expression_-_13> ::= <expression>  ;
+<expression> ::= <expression>  <QuestionMark>  <expression_-_13>  ':'  <expression>  ;
+<expression> ::= <expression>  '??'  <expression>  ;
+<expression> ::= <expression>  '<=>'  <expression>  ;
+<expression> ::= <assignable>  <assignmentOperator>  <expression>  ;
+<expression_-_14> ::= <chain>  ;
+<expression_-_14> ::= <newExpr>  ;
+<expression> ::= <assignable>  <Eq>  '&'  <expression_-_14>  ;
+<expression> ::= <expression>  <LogicalAnd>  <expression>  ;
+<expression> ::= <expression>  <LogicalXor>  <expression>  ;
+<expression> ::= <expression>  <LogicalOr>  <expression>  ;
+# PARSER: assignable
+<assignable> ::= <chain>  ;
+<assignable> ::= <arrayCreation>  ;
+# PARSER: arrayCreation
+<arrayCreation_-_2> ::= ;
+<arrayCreation_-_2> ::= <arrayItemList>  ;
+<arrayCreation_-_1> ::= <Array>  '('  <arrayCreation_-_2>  ')'  ;
+<arrayCreation_-_3> ::= ;
+<arrayCreation_-_3> ::= <arrayItemList>  ;
+<arrayCreation_-_1> ::= '['  <arrayCreation_-_3>  ']'  ;
+<arrayCreation_-_4> ::= ;
+<arrayCreation_-_4> ::= '['  <expression>  ']'  ;
+<arrayCreation> ::= <arrayCreation_-_1>  <arrayCreation_-_4>  ;
+# PARSER: lambdaFunctionExpr
+<lambdaFunctionExpr_-_1> ::= ;
+<lambdaFunctionExpr_-_1> ::= <Static>  ;
+<lambdaFunctionExpr_-_2> ::= ;
+<lambdaFunctionExpr_-_2> ::= '&'  ;
+<lambdaFunctionExpr_-_3> ::= ;
+<lambdaFunctionExpr_-_3> ::= <lambdaFunctionUseVars>  ;
+<lambdaFunctionExpr_-_4> ::= ;
+<lambdaFunctionExpr_-_4> ::= ':'  <typeHint>  ;
+<lambdaFunctionExpr> ::= <lambdaFunctionExpr_-_1>  <Function>  <lambdaFunctionExpr_-_2>  '('  <formalParameterList>  ')'  <lambdaFunctionExpr_-_3>  <lambdaFunctionExpr_-_4>  <blockStatement>  ;
+<lambdaFunctionExpr> ::= <LambdaFn>  '('  <formalParameterList>  ')'  '=>'  <expression>  ;
+# PARSER: newExpr
+<newExpr_-_1> ::= ;
+<newExpr_-_1> ::= <arguments>  ;
+<newExpr> ::= <New>  <typeRef>  <newExpr_-_1>  ;
+# PARSER: assignmentOperator
+<assignmentOperator> ::= <Eq>  ;
+<assignmentOperator> ::= '+='  ;
+<assignmentOperator> ::= '-='  ;
+<assignmentOperator> ::= '*='  ;
+<assignmentOperator> ::= '**='  ;
+<assignmentOperator> ::= '/='  ;
+<assignmentOperator> ::= '.='  ;
+<assignmentOperator> ::= '%='  ;
+<assignmentOperator> ::= '&='  ;
+<assignmentOperator> ::= '|='  ;
+<assignmentOperator> ::= '^='  ;
+<assignmentOperator> ::= '<<='  ;
+<assignmentOperator> ::= '>>='  ;
+<assignmentOperator> ::= '??='  ;
+# PARSER: yieldExpression
+<yieldExpression_-_2> ::= ;
+<yieldExpression_-_2> ::= '=>'  <expression>  ;
+<yieldExpression_-_1> ::= <expression>  <yieldExpression_-_2>  ;
+<yieldExpression_-_1> ::= <From>  <expression>  ;
+<yieldExpression> ::= <Yield>  <yieldExpression_-_1>  ;
+# PARSER: arrayItemList
+<arrayItemList_-_1> ::= <arrayItemList_-_2>  ;
+<arrayItemList_-_2> ::= ;
+<arrayItemList_-_3> ::= ','  <arrayItem>  ;
+<arrayItemList_-_2> ::= <arrayItemList_-_3>  <arrayItemList_-_2>  ;
+<arrayItemList_-_4> ::= ;
+<arrayItemList_-_4> ::= ','  ;
+<arrayItemList> ::= <arrayItem>  <arrayItemList_-_1>  <arrayItemList_-_4>  ;
+# PARSER: arrayItem
+<arrayItem_-_1> ::= ;
+<arrayItem_-_1> ::= '=>'  <expression>  ;
+<arrayItem> ::= <expression>  <arrayItem_-_1>  ;
+<arrayItem_-_2> ::= ;
+<arrayItem_-_2> ::= <expression>  '=>'  ;
+<arrayItem> ::= <arrayItem_-_2>  '&'  <chain>  ;
+# PARSER: lambdaFunctionUseVars
+<lambdaFunctionUseVars_-_1> ::= <lambdaFunctionUseVars_-_2>  ;
+<lambdaFunctionUseVars_-_2> ::= ;
+<lambdaFunctionUseVars_-_3> ::= ','  <lambdaFunctionUseVar>  ;
+<lambdaFunctionUseVars_-_2> ::= <lambdaFunctionUseVars_-_3>  <lambdaFunctionUseVars_-_2>  ;
+<lambdaFunctionUseVars> ::= <Use>  '('  <lambdaFunctionUseVar>  <lambdaFunctionUseVars_-_1>  ')'  ;
+# PARSER: lambdaFunctionUseVar
+<lambdaFunctionUseVar_-_1> ::= ;
+<lambdaFunctionUseVar_-_1> ::= '&'  ;
+<lambdaFunctionUseVar> ::= <lambdaFunctionUseVar_-_1>  <VarName>  ;
+# PARSER: qualifiedStaticTypeRef
+<qualifiedStaticTypeRef_-_1> ::= ;
+<qualifiedStaticTypeRef_-_1> ::= <genericDynamicArgs>  ;
+<qualifiedStaticTypeRef> ::= <qualifiedNamespaceName>  <qualifiedStaticTypeRef_-_1>  ;
+<qualifiedStaticTypeRef> ::= <Static>  ;
+# PARSER: typeRef
+<typeRef_-_1> ::= <qualifiedNamespaceName>  ;
+<typeRef_-_1> ::= <indirectTypeRef>  ;
+<typeRef_-_2> ::= ;
+<typeRef_-_2> ::= <genericDynamicArgs>  ;
+<typeRef> ::= <typeRef_-_1>  <typeRef_-_2>  ;
+<typeRef> ::= <primitiveType>  ;
+<typeRef> ::= <Static>  ;
+<typeRef> ::= <anoymousClass>  ;
+# PARSER: anoymousClass
+<anoymousClass_-_1> ::= ;
+<anoymousClass_-_1> ::= <Private>  ;
+<anoymousClass_-_2> ::= ;
+<anoymousClass_-_2> ::= <modifier>  ;
+<anoymousClass_-_3> ::= ;
+<anoymousClass_-_3> ::= <Partial>  ;
+<anoymousClass_-_5> ::= ;
+<anoymousClass_-_5> ::= <typeParameterListInBrackets>  ;
+<anoymousClass_-_6> ::= ;
+<anoymousClass_-_6> ::= <Extends>  <qualifiedStaticTypeRef>  ;
+<anoymousClass_-_7> ::= ;
+<anoymousClass_-_7> ::= <Implements>  <interfaceList>  ;
+<anoymousClass_-_4> ::= <classEntryType>  <anoymousClass_-_5>  <anoymousClass_-_6>  <anoymousClass_-_7>  ;
+<anoymousClass_-_8> ::= ;
+<anoymousClass_-_8> ::= <typeParameterListInBrackets>  ;
+<anoymousClass_-_9> ::= ;
+<anoymousClass_-_9> ::= <Extends>  <interfaceList>  ;
+<anoymousClass_-_4> ::= <Interface>  <identifier>  <anoymousClass_-_8>  <anoymousClass_-_9>  ;
+<anoymousClass_-_10> ::= <anoymousClass_-_11>  ;
+<anoymousClass_-_11> ::= ;
+<anoymousClass_-_11> ::= <classStatement>  <anoymousClass_-_11>  ;
+<anoymousClass> ::= <attributes>  <anoymousClass_-_1>  <anoymousClass_-_2>  <anoymousClass_-_3>  <anoymousClass_-_4>  <OpenCurlyBracket>  <anoymousClass_-_10>  '}'  ;
+# PARSER: indirectTypeRef
+<indirectTypeRef_-_1> ::= <indirectTypeRef_-_2>  ;
+<indirectTypeRef_-_2> ::= ;
+<indirectTypeRef_-_3> ::= '->'  <keyedFieldName>  ;
+<indirectTypeRef_-_2> ::= <indirectTypeRef_-_3>  <indirectTypeRef_-_2>  ;
+<indirectTypeRef> ::= <chainBase>  <indirectTypeRef_-_1>  ;
+# PARSER: qualifiedNamespaceName
+<qualifiedNamespaceName_-_1> ::= ;
+<qualifiedNamespaceName_-_1> ::= <Namespace>  ;
+<qualifiedNamespaceName_-_2> ::= ;
+<qualifiedNamespaceName_-_2> ::= '\'  ;
+<qualifiedNamespaceName> ::= <qualifiedNamespaceName_-_1>  <qualifiedNamespaceName_-_2>  <namespaceNameList>  ;
+# PARSER: namespaceNameList
+<namespaceNameList> ::= <identifier>  ;
+<namespaceNameList_-_1> ::= <namespaceNameList_-_2>  ;
+<namespaceNameList_-_2> ::= ;
+<namespaceNameList_-_3> ::= '\'  <identifier>  ;
+<namespaceNameList_-_2> ::= <namespaceNameList_-_3>  <namespaceNameList_-_2>  ;
+<namespaceNameList_-_4> ::= ;
+<namespaceNameList_-_4> ::= '\'  <namespaceNameTail>  ;
+<namespaceNameList> ::= <identifier>  <namespaceNameList_-_1>  <namespaceNameList_-_4>  ;
+# PARSER: namespaceNameTail
+<namespaceNameTail_-_1> ::= ;
+<namespaceNameTail_-_1> ::= <As>  <identifier>  ;
+<namespaceNameTail> ::= <identifier>  <namespaceNameTail_-_1>  ;
+<namespaceNameTail_-_2> ::= <namespaceNameTail_-_3>  ;
+<namespaceNameTail_-_3> ::= ;
+<namespaceNameTail_-_4> ::= ','  <namespaceNameTail>  ;
+<namespaceNameTail_-_3> ::= <namespaceNameTail_-_4>  <namespaceNameTail_-_3>  ;
+<namespaceNameTail_-_5> ::= ;
+<namespaceNameTail_-_5> ::= ','  ;
+<namespaceNameTail> ::= <OpenCurlyBracket>  <namespaceNameTail>  <namespaceNameTail_-_2>  <namespaceNameTail_-_5>  '}'  ;
+# PARSER: qualifiedNamespaceNameList
+<qualifiedNamespaceNameList_-_1> ::= <qualifiedNamespaceNameList_-_2>  ;
+<qualifiedNamespaceNameList_-_2> ::= ;
+<qualifiedNamespaceNameList_-_3> ::= ','  <qualifiedNamespaceName>  ;
+<qualifiedNamespaceNameList_-_2> ::= <qualifiedNamespaceNameList_-_3>  <qualifiedNamespaceNameList_-_2>  ;
+<qualifiedNamespaceNameList> ::= <qualifiedNamespaceName>  <qualifiedNamespaceNameList_-_1>  ;
+# PARSER: arguments
+<arguments_-_1> ::= ;
+<arguments_-_2> ::= <arguments_-_3>  ;
+<arguments_-_3> ::= ;
+<arguments_-_4> ::= ','  <actualArgument>  ;
+<arguments_-_3> ::= <arguments_-_4>  <arguments_-_3>  ;
+<arguments_-_1> ::= <actualArgument>  <arguments_-_2>  ;
+<arguments_-_1> ::= <yieldExpression>  ;
+<arguments_-_5> ::= ;
+<arguments_-_5> ::= ','  ;
+<arguments> ::= '('  <arguments_-_1>  <arguments_-_5>  ')'  ;
+# PARSER: actualArgument
+<actualArgument_-_1> ::= ;
+<actualArgument_-_1> ::= '...'  ;
+<actualArgument> ::= <actualArgument_-_1>  <expression>  ;
+<actualArgument> ::= '&'  <chain>  ;
+# PARSER: constantInititalizer
+<constantInititalizer> ::= <constant>  ;
+<constantInititalizer> ::= <string>  ;
+<constantInititalizer_-_1> ::= ;
+<constantInititalizer_-_2> ::= ;
+<constantInititalizer_-_2> ::= ','  ;
+<constantInititalizer_-_1> ::= <constantArrayItemList>  <constantInititalizer_-_2>  ;
+<constantInititalizer> ::= <Array>  '('  <constantInititalizer_-_1>  ')'  ;
+<constantInititalizer_-_3> ::= ;
+<constantInititalizer_-_4> ::= ;
+<constantInititalizer_-_4> ::= ','  ;
+<constantInititalizer_-_3> ::= <constantArrayItemList>  <constantInititalizer_-_4>  ;
+<constantInititalizer> ::= '['  <constantInititalizer_-_3>  ']'  ;
+<constantInititalizer_-_5> ::= '+'  ;
+<constantInititalizer_-_5> ::= '-'  ;
+<constantInititalizer> ::= <constantInititalizer_-_5>  <constantInititalizer>  ;
+# PARSER: constantArrayItemList
+<constantArrayItemList_-_1> ::= <constantArrayItemList_-_2>  ;
+<constantArrayItemList_-_2> ::= ;
+<constantArrayItemList_-_3> ::= ','  <constantArrayItem>  ;
+<constantArrayItemList_-_2> ::= <constantArrayItemList_-_3>  <constantArrayItemList_-_2>  ;
+<constantArrayItemList> ::= <constantArrayItem>  <constantArrayItemList_-_1>  ;
+# PARSER: constantArrayItem
+<constantArrayItem_-_1> ::= ;
+<constantArrayItem_-_1> ::= '=>'  <constantInititalizer>  ;
+<constantArrayItem> ::= <constantInititalizer>  <constantArrayItem_-_1>  ;
+# PARSER: constant
+<constant> ::= <Null>  ;
+<constant> ::= <literalConstant>  ;
+<constant> ::= <magicConstant>  ;
+<constant> ::= <classConstant>  ;
+<constant> ::= <qualifiedNamespaceName>  ;
+# PARSER: literalConstant
+<literalConstant> ::= <Real>  ;
+<literalConstant> ::= <BooleanConstant>  ;
+<literalConstant> ::= <numericConstant>  ;
+<literalConstant> ::= <stringConstant>  ;
+# PARSER: numericConstant
+<numericConstant> ::= <Octal>  ;
+<numericConstant> ::= <Decimal>  ;
+<numericConstant> ::= <Hex>  ;
+<numericConstant> ::= <Binary>  ;
+# PARSER: classConstant
+<classConstant_-_1> ::= <Class>  ;
+<classConstant_-_1> ::= <Parent_>  ;
+<classConstant_-_2> ::= <identifier>  ;
+<classConstant_-_2> ::= <Constructor>  ;
+<classConstant_-_2> ::= <Get>  ;
+<classConstant_-_2> ::= <Set>  ;
+<classConstant> ::= <classConstant_-_1>  '::'  <classConstant_-_2>  ;
+<classConstant_-_3> ::= <qualifiedStaticTypeRef>  ;
+<classConstant_-_3> ::= <keyedVariable>  ;
+<classConstant_-_3> ::= <string>  ;
+<classConstant_-_4> ::= <identifier>  ;
+<classConstant_-_4> ::= <keyedVariable>  ;
+<classConstant> ::= <classConstant_-_3>  '::'  <classConstant_-_4>  ;
+# PARSER: stringConstant
+<stringConstant> ::= <Label>  ;
+# PARSER: string
+<string_-_1> ::= <string_-_2>  ;
+<string_-_2> ::= <string_-_3>  ;
+<string_-_2> ::= <string_-_3>  <string_-_2>  ;
+<string_-_3> ::= <HereDocText>  ;
+<string> ::= <StartHereDoc>  <string_-_1>  ;
+<string_-_4> ::= <string_-_5>  ;
+<string_-_5> ::= <string_-_6>  ;
+<string_-_5> ::= <string_-_6>  <string_-_5>  ;
+<string_-_6> ::= <HereDocText>  ;
+<string> ::= <StartNowDoc>  <string_-_4>  ;
+<string> ::= <SingleQuoteString>  ;
+<string_-_7> ::= <string_-_8>  ;
+<string_-_8> ::= ;
+<string_-_8> ::= <interpolatedStringPart>  <string_-_8>  ;
+<string> ::= <DoubleQuote>  <string_-_7>  <DoubleQuote>  ;
+# PARSER: interpolatedStringPart
+<interpolatedStringPart> ::= <StringPart>  ;
+<interpolatedStringPart> ::= <UnicodeEscape>  ;
+<interpolatedStringPart> ::= <chain>  ;
+# PARSER: chainList
+<chainList_-_1> ::= <chainList_-_2>  ;
+<chainList_-_2> ::= ;
+<chainList_-_3> ::= ','  <chain>  ;
+<chainList_-_2> ::= <chainList_-_3>  <chainList_-_2>  ;
+<chainList> ::= <chain>  <chainList_-_1>  ;
+# PARSER: chain
+<chain_-_1> ::= <chain_-_2>  ;
+<chain_-_2> ::= ;
+<chain_-_2> ::= <memberAccess>  <chain_-_2>  ;
+<chain> ::= <chainOrigin>  <chain_-_1>  ;
+# PARSER: chainOrigin
+<chainOrigin> ::= <chainBase>  ;
+<chainOrigin> ::= <functionCall>  ;
+<chainOrigin> ::= '('  <newExpr>  ')'  ;
+# PARSER: memberAccess
+<memberAccess_-_1> ::= ;
+<memberAccess_-_1> ::= <actualArguments>  ;
+<memberAccess> ::= '->'  <keyedFieldName>  <memberAccess_-_1>  ;
+# PARSER: functionCall
+<functionCall> ::= <functionCallName>  <actualArguments>  ;
+# PARSER: functionCallName
+<functionCallName> ::= <qualifiedNamespaceName>  ;
+<functionCallName> ::= <classConstant>  ;
+<functionCallName> ::= <chainBase>  ;
+<functionCallName> ::= <parentheses>  ;
+# PARSER: actualArguments
+<actualArguments_-_1> ::= ;
+<actualArguments_-_1> ::= <genericDynamicArgs>  ;
+<actualArguments_-_2> ::= <actualArguments_-_3>  ;
+<actualArguments_-_3> ::= ;
+<actualArguments_-_3> ::= <squareCurlyExpression>  <actualArguments_-_3>  ;
+<actualArguments> ::= <actualArguments_-_1>  <arguments>  <actualArguments_-_2>  ;
+# PARSER: chainBase
+<chainBase_-_1> ::= ;
+<chainBase_-_1> ::= '::'  <keyedVariable>  ;
+<chainBase> ::= <keyedVariable>  <chainBase_-_1>  ;
+<chainBase> ::= <qualifiedStaticTypeRef>  '::'  <keyedVariable>  ;
+# PARSER: keyedFieldName
+<keyedFieldName> ::= <keyedSimpleFieldName>  ;
+<keyedFieldName> ::= <keyedVariable>  ;
+# PARSER: keyedSimpleFieldName
+<keyedSimpleFieldName_-_1> ::= <identifier>  ;
+<keyedSimpleFieldName_-_1> ::= <OpenCurlyBracket>  <expression>  '}'  ;
+<keyedSimpleFieldName_-_2> ::= <keyedSimpleFieldName_-_3>  ;
+<keyedSimpleFieldName_-_3> ::= ;
+<keyedSimpleFieldName_-_3> ::= <squareCurlyExpression>  <keyedSimpleFieldName_-_3>  ;
+<keyedSimpleFieldName> ::= <keyedSimpleFieldName_-_1>  <keyedSimpleFieldName_-_2>  ;
+# PARSER: keyedVariable
+<keyedVariable_-_1> ::= <keyedVariable_-_2>  ;
+<keyedVariable_-_2> ::= ;
+<keyedVariable_-_2> ::= <Dollar>  <keyedVariable_-_2>  ;
+<keyedVariable_-_3> ::= <VarName>  ;
+<keyedVariable_-_3> ::= <Dollar>  <OpenCurlyBracket>  <expression>  '}'  ;
+<keyedVariable_-_4> ::= <keyedVariable_-_5>  ;
+<keyedVariable_-_5> ::= ;
+<keyedVariable_-_5> ::= <squareCurlyExpression>  <keyedVariable_-_5>  ;
+<keyedVariable> ::= <keyedVariable_-_1>  <keyedVariable_-_3>  <keyedVariable_-_4>  ;
+# PARSER: squareCurlyExpression
+<squareCurlyExpression_-_1> ::= ;
+<squareCurlyExpression_-_1> ::= <expression>  ;
+<squareCurlyExpression> ::= '['  <squareCurlyExpression_-_1>  ']'  ;
+<squareCurlyExpression> ::= <OpenCurlyBracket>  <expression>  '}'  ;
+# PARSER: assignmentList
+<assignmentList_-_1> ::= ;
+<assignmentList_-_1> ::= <assignmentListElement>  ;
+<assignmentList_-_2> ::= <assignmentList_-_3>  ;
+<assignmentList_-_3> ::= ;
+<assignmentList_-_5> ::= ;
+<assignmentList_-_5> ::= <assignmentListElement>  ;
+<assignmentList_-_4> ::= ','  <assignmentList_-_5>  ;
+<assignmentList_-_3> ::= <assignmentList_-_4>  <assignmentList_-_3>  ;
+<assignmentList> ::= <assignmentList_-_1>  <assignmentList_-_2>  ;
+# PARSER: assignmentListElement
+<assignmentListElement> ::= <chain>  ;
+<assignmentListElement> ::= <List>  '('  <assignmentList>  ')'  ;
+<assignmentListElement> ::= <arrayItem>  ;
+# PARSER: modifier
+<modifier> ::= <Abstract>  ;
+<modifier> ::= <Final>  ;
+# PARSER: identifier
+<identifier> ::= <Label>  ;
+<identifier> ::= <Abstract>  ;
+<identifier> ::= <Array>  ;
+<identifier> ::= <As>  ;
+<identifier> ::= <BinaryCast>  ;
+<identifier> ::= <BoolType>  ;
+<identifier> ::= <BooleanConstant>  ;
+<identifier> ::= <Break>  ;
+<identifier> ::= <Callable>  ;
+<identifier> ::= <Case>  ;
+<identifier> ::= <Catch>  ;
+<identifier> ::= <Class>  ;
+<identifier> ::= <Clone>  ;
+<identifier> ::= <Const>  ;
+<identifier> ::= <Continue>  ;
+<identifier> ::= <Declare>  ;
+<identifier> ::= <Default>  ;
+<identifier> ::= <Do>  ;
+<identifier> ::= <DoubleCast>  ;
+<identifier> ::= <DoubleType>  ;
+<identifier> ::= <Echo>  ;
+<identifier> ::= <Else>  ;
+<identifier> ::= <ElseIf>  ;
+<identifier> ::= <Empty>  ;
+<identifier> ::= <EndDeclare>  ;
+<identifier> ::= <EndFor>  ;
+<identifier> ::= <EndForeach>  ;
+<identifier> ::= <EndIf>  ;
+<identifier> ::= <EndSwitch>  ;
+<identifier> ::= <EndWhile>  ;
+<identifier> ::= <Eval>  ;
+<identifier> ::= <Exit>  ;
+<identifier> ::= <Extends>  ;
+<identifier> ::= <Final>  ;
+<identifier> ::= <Finally>  ;
+<identifier> ::= <FloatCast>  ;
+<identifier> ::= <For>  ;
+<identifier> ::= <Foreach>  ;
+<identifier> ::= <Function>  ;
+<identifier> ::= <Global>  ;
+<identifier> ::= <Goto>  ;
+<identifier> ::= <If>  ;
+<identifier> ::= <Implements>  ;
+<identifier> ::= <Import>  ;
+<identifier> ::= <Include>  ;
+<identifier> ::= <IncludeOnce>  ;
+<identifier> ::= <InstanceOf>  ;
+<identifier> ::= <InsteadOf>  ;
+<identifier> ::= <Int16Cast>  ;
+<identifier> ::= <Int64Type>  ;
+<identifier> ::= <Int8Cast>  ;
+<identifier> ::= <Interface>  ;
+<identifier> ::= <IntType>  ;
+<identifier> ::= <IsSet>  ;
+<identifier> ::= <List>  ;
+<identifier> ::= <LogicalAnd>  ;
+<identifier> ::= <LogicalOr>  ;
+<identifier> ::= <LogicalXor>  ;
+<identifier> ::= <Namespace>  ;
+<identifier> ::= <New>  ;
+<identifier> ::= <Null>  ;
+<identifier> ::= <ObjectType>  ;
+<identifier> ::= <Parent_>  ;
+<identifier> ::= <Partial>  ;
+<identifier> ::= <Print>  ;
+<identifier> ::= <Private>  ;
+<identifier> ::= <Protected>  ;
+<identifier> ::= <Public>  ;
+<identifier> ::= <Require>  ;
+<identifier> ::= <RequireOnce>  ;
+<identifier> ::= <Resource>  ;
+<identifier> ::= <Return>  ;
+<identifier> ::= <Static>  ;
+<identifier> ::= <StringType>  ;
+<identifier> ::= <Switch>  ;
+<identifier> ::= <Throw>  ;
+<identifier> ::= <Trait>  ;
+<identifier> ::= <Try>  ;
+<identifier> ::= <Typeof>  ;
+<identifier> ::= <UintCast>  ;
+<identifier> ::= <UnicodeCast>  ;
+<identifier> ::= <Unset>  ;
+<identifier> ::= <Use>  ;
+<identifier> ::= <Var>  ;
+<identifier> ::= <While>  ;
+<identifier> ::= <Yield>  ;
+<identifier> ::= <From>  ;
+<identifier> ::= <Get>  ;
+<identifier> ::= <Set>  ;
+<identifier> ::= <Call>  ;
+<identifier> ::= <CallStatic>  ;
+<identifier> ::= <Constructor>  ;
+<identifier> ::= <Destruct>  ;
+<identifier> ::= <Wakeup>  ;
+<identifier> ::= <Sleep>  ;
+<identifier> ::= <Autoload>  ;
+<identifier> ::= <IsSet__>  ;
+<identifier> ::= <Unset__>  ;
+<identifier> ::= <ToString__>  ;
+<identifier> ::= <Invoke>  ;
+<identifier> ::= <SetState>  ;
+<identifier> ::= <Clone__>  ;
+<identifier> ::= <DebugInfo>  ;
+<identifier> ::= <Namespace__>  ;
+<identifier> ::= <Class__>  ;
+<identifier> ::= <Traic__>  ;
+<identifier> ::= <Function__>  ;
+<identifier> ::= <Method__>  ;
+<identifier> ::= <Line__>  ;
+<identifier> ::= <File__>  ;
+<identifier> ::= <Dir__>  ;
+# PARSER: memberModifier
+<memberModifier> ::= <Public>  ;
+<memberModifier> ::= <Protected>  ;
+<memberModifier> ::= <Private>  ;
+<memberModifier> ::= <Static>  ;
+<memberModifier> ::= <Abstract>  ;
+<memberModifier> ::= <Final>  ;
+# PARSER: magicConstant
+<magicConstant> ::= <Namespace__>  ;
+<magicConstant> ::= <Class__>  ;
+<magicConstant> ::= <Traic__>  ;
+<magicConstant> ::= <Function__>  ;
+<magicConstant> ::= <Method__>  ;
+<magicConstant> ::= <Line__>  ;
+<magicConstant> ::= <File__>  ;
+<magicConstant> ::= <Dir__>  ;
+# PARSER: magicMethod
+<magicMethod> ::= <Get>  ;
+<magicMethod> ::= <Set>  ;
+<magicMethod> ::= <Call>  ;
+<magicMethod> ::= <CallStatic>  ;
+<magicMethod> ::= <Constructor>  ;
+<magicMethod> ::= <Destruct>  ;
+<magicMethod> ::= <Wakeup>  ;
+<magicMethod> ::= <Sleep>  ;
+<magicMethod> ::= <Autoload>  ;
+<magicMethod> ::= <IsSet__>  ;
+<magicMethod> ::= <Unset__>  ;
+<magicMethod> ::= <ToString__>  ;
+<magicMethod> ::= <Invoke>  ;
+<magicMethod> ::= <SetState>  ;
+<magicMethod> ::= <Clone__>  ;
+<magicMethod> ::= <DebugInfo>  ;
+# PARSER: primitiveType
+<primitiveType> ::= <BoolType>  ;
+<primitiveType> ::= <IntType>  ;
+<primitiveType> ::= <Int64Type>  ;
+<primitiveType> ::= <DoubleType>  ;
+<primitiveType> ::= <StringType>  ;
+<primitiveType> ::= <Resource>  ;
+<primitiveType> ::= <ObjectType>  ;
+<primitiveType> ::= <Array>  ;
+# PARSER: castOperation
+<castOperation> ::= <BoolType>  ;
+<castOperation> ::= <Int8Cast>  ;
+<castOperation> ::= <Int16Cast>  ;
+<castOperation> ::= <IntType>  ;
+<castOperation> ::= <Int64Type>  ;
+<castOperation> ::= <UintCast>  ;
+<castOperation> ::= <DoubleCast>  ;
+<castOperation> ::= <DoubleType>  ;
+<castOperation> ::= <FloatCast>  ;
+<castOperation> ::= <StringType>  ;
+<castOperation> ::= <BinaryCast>  ;
+<castOperation> ::= <UnicodeCast>  ;
+<castOperation> ::= <Array>  ;
+<castOperation> ::= <ObjectType>  ;
+<castOperation> ::= <Resource>  ;
+<castOperation> ::= <Unset>  ;
+# Grammar LEXER= lexer
+# Grammar PARSER= None
+# Grammar GRAMMAR= grammar
+# Grammar name:  ('token', 'PhpLexer')
+# LEXER: SeaWhitespace
+# BEGIN LEXER FOR  SeaWhitespace +
+<SeaWhitespace> ::= <SeaWhitespace_-_1> ' ' ;
+<SeaWhitespace_-_1> ::= <SeaWhitespace_-_2> ' ' ;
+<SeaWhitespace_-_1> ::= <SeaWhitespace_-_2> <SeaWhitespace_-_1> ' ' ;
+# BEGIN LEXER FOR  SeaWhitespace char_set
+<SeaWhitespace_-_2> ::= ' ' ;
+<SeaWhitespace_-_2> ::=  9 ;
+<SeaWhitespace_-_2> ::=  13 ;
+<SeaWhitespace_-_2> ::=  10 ;
+# END
+# END
+# LEXER: HtmlText
+# BEGIN LEXER FOR  HtmlText +
+<HtmlText> ::= <HtmlText_-_1> ' ' ;
+<HtmlText_-_1> ::= <HtmlText_-_2> ' ' ;
+<HtmlText_-_1> ::= <HtmlText_-_2> <HtmlText_-_1> ' ' ;
+# BEGIN LEXER FOR  HtmlText not
+<HtmlText_-_2> ::= ' '  ;
+<HtmlText_-_2> ::= '!'  ;
+<HtmlText_-_2> ::= '"'  ;
+<HtmlText_-_2> ::= '$'  ;
+<HtmlText_-_2> ::= '%'  ;
+<HtmlText_-_2> ::= '&'  ;
+<HtmlText_-_2> ::=  39   ;
+<HtmlText_-_2> ::= '('  ;
+<HtmlText_-_2> ::= ')'  ;
+<HtmlText_-_2> ::= '*'  ;
+<HtmlText_-_2> ::= '+'  ;
+<HtmlText_-_2> ::= ','  ;
+<HtmlText_-_2> ::= '-'  ;
+<HtmlText_-_2> ::= '.'  ;
+<HtmlText_-_2> ::= '/'  ;
+<HtmlText_-_2> ::= '0'  ;
+<HtmlText_-_2> ::= '1'  ;
+<HtmlText_-_2> ::= '2'  ;
+<HtmlText_-_2> ::= '3'  ;
+<HtmlText_-_2> ::= '4'  ;
+<HtmlText_-_2> ::= '5'  ;
+<HtmlText_-_2> ::= '6'  ;
+<HtmlText_-_2> ::= '7'  ;
+<HtmlText_-_2> ::= '8'  ;
+<HtmlText_-_2> ::= '9'  ;
+<HtmlText_-_2> ::= ':'  ;
+<HtmlText_-_2> ::= ';'  ;
+<HtmlText_-_2> ::= '='  ;
+<HtmlText_-_2> ::= '>'  ;
+<HtmlText_-_2> ::= '?'  ;
+<HtmlText_-_2> ::= '@'  ;
+<HtmlText_-_2> ::= 'A'  ;
+<HtmlText_-_2> ::= 'B'  ;
+<HtmlText_-_2> ::= 'C'  ;
+<HtmlText_-_2> ::= 'D'  ;
+<HtmlText_-_2> ::= 'E'  ;
+<HtmlText_-_2> ::= 'F'  ;
+<HtmlText_-_2> ::= 'G'  ;
+<HtmlText_-_2> ::= 'H'  ;
+<HtmlText_-_2> ::= 'I'  ;
+<HtmlText_-_2> ::= 'J'  ;
+<HtmlText_-_2> ::= 'K'  ;
+<HtmlText_-_2> ::= 'L'  ;
+<HtmlText_-_2> ::= 'M'  ;
+<HtmlText_-_2> ::= 'N'  ;
+<HtmlText_-_2> ::= 'O'  ;
+<HtmlText_-_2> ::= 'P'  ;
+<HtmlText_-_2> ::= 'Q'  ;
+<HtmlText_-_2> ::= 'R'  ;
+<HtmlText_-_2> ::= 'S'  ;
+<HtmlText_-_2> ::= 'T'  ;
+<HtmlText_-_2> ::= 'U'  ;
+<HtmlText_-_2> ::= 'V'  ;
+<HtmlText_-_2> ::= 'W'  ;
+<HtmlText_-_2> ::= 'X'  ;
+<HtmlText_-_2> ::= 'Y'  ;
+<HtmlText_-_2> ::= 'Z'  ;
+<HtmlText_-_2> ::= '['  ;
+<HtmlText_-_2> ::= '\'  ;
+<HtmlText_-_2> ::= ']'  ;
+<HtmlText_-_2> ::= '^'  ;
+<HtmlText_-_2> ::= '_'  ;
+<HtmlText_-_2> ::= '`'  ;
+<HtmlText_-_2> ::= 'a'  ;
+<HtmlText_-_2> ::= 'b'  ;
+<HtmlText_-_2> ::= 'c'  ;
+<HtmlText_-_2> ::= 'd'  ;
+<HtmlText_-_2> ::= 'e'  ;
+<HtmlText_-_2> ::= 'f'  ;
+<HtmlText_-_2> ::= 'g'  ;
+<HtmlText_-_2> ::= 'h'  ;
+<HtmlText_-_2> ::= 'i'  ;
+<HtmlText_-_2> ::= 'j'  ;
+<HtmlText_-_2> ::= 'k'  ;
+<HtmlText_-_2> ::= 'l'  ;
+<HtmlText_-_2> ::= 'm'  ;
+<HtmlText_-_2> ::= 'n'  ;
+<HtmlText_-_2> ::= 'o'  ;
+<HtmlText_-_2> ::= 'p'  ;
+<HtmlText_-_2> ::= 'q'  ;
+<HtmlText_-_2> ::= 'r'  ;
+<HtmlText_-_2> ::= 's'  ;
+<HtmlText_-_2> ::= 't'  ;
+<HtmlText_-_2> ::= 'u'  ;
+<HtmlText_-_2> ::= 'v'  ;
+<HtmlText_-_2> ::= 'w'  ;
+<HtmlText_-_2> ::= 'x'  ;
+<HtmlText_-_2> ::= 'y'  ;
+<HtmlText_-_2> ::= 'z'  ;
+<HtmlText_-_2> ::= '{'  ;
+<HtmlText_-_2> ::= '|'  ;
+<HtmlText_-_2> ::= '}'  ;
+<HtmlText_-_2> ::= '~'  ;
+# END
+# END
+# LEXER: XmlStart
+# BEGIN LEXER FOR  XmlStart and
+<XmlStart> ::= '<' '?' 'xml' ' ' ;
+# END
+# LEXER: PHPStartEcho
+# BEGIN LEXER FOR  PHPStartEcho token
+<PHPStartEcho> ::= <PhpStartEchoFragment> ' ' ;
+# END
+# LEXER: PHPStart
+# BEGIN LEXER FOR  PHPStart token
+<PHPStart> ::= <PhpStartFragment> ' ' ;
+# END
+# LEXER: HtmlScriptOpen
+# BEGIN LEXER FOR  HtmlScriptOpen and
+# BEGIN LEXER FOR  HtmlScriptOpen eps
+<HtmlScriptOpen_-_1> ::= ;
+# END
+<HtmlScriptOpen> ::= '<' 'script' <HtmlScriptOpen_-_1> ' ' ;
+# END
+# LEXER: HtmlStyleOpen
+# BEGIN LEXER FOR  HtmlStyleOpen and
+# BEGIN LEXER FOR  HtmlStyleOpen eps
+<HtmlStyleOpen_-_1> ::= ;
+# END
+<HtmlStyleOpen> ::= '<' 'style' <HtmlStyleOpen_-_1> ' ' ;
+# END
+# LEXER: HtmlComment
+# BEGIN LEXER FOR  HtmlComment and
+# BEGIN LEXER FOR  HtmlComment ?
+<HtmlComment_-_1> ::= ;
+# BEGIN LEXER FOR  HtmlComment .
+<HtmlComment_-_1> ::= ' '  ;
+<HtmlComment_-_1> ::= '!'  ;
+<HtmlComment_-_1> ::= '"'  ;
+<HtmlComment_-_1> ::= '#'  ;
+<HtmlComment_-_1> ::= '$'  ;
+<HtmlComment_-_1> ::= '%'  ;
+<HtmlComment_-_1> ::= '&'  ;
+<HtmlComment_-_1> ::=  39   ;
+<HtmlComment_-_1> ::= '('  ;
+<HtmlComment_-_1> ::= ')'  ;
+<HtmlComment_-_1> ::= '*'  ;
+<HtmlComment_-_1> ::= '+'  ;
+<HtmlComment_-_1> ::= ','  ;
+<HtmlComment_-_1> ::= '-'  ;
+<HtmlComment_-_1> ::= '.'  ;
+<HtmlComment_-_1> ::= '/'  ;
+<HtmlComment_-_1> ::= '0'  ;
+<HtmlComment_-_1> ::= '1'  ;
+<HtmlComment_-_1> ::= '2'  ;
+<HtmlComment_-_1> ::= '3'  ;
+<HtmlComment_-_1> ::= '4'  ;
+<HtmlComment_-_1> ::= '5'  ;
+<HtmlComment_-_1> ::= '6'  ;
+<HtmlComment_-_1> ::= '7'  ;
+<HtmlComment_-_1> ::= '8'  ;
+<HtmlComment_-_1> ::= '9'  ;
+<HtmlComment_-_1> ::= ':'  ;
+<HtmlComment_-_1> ::= ';'  ;
+<HtmlComment_-_1> ::= '<'  ;
+<HtmlComment_-_1> ::= '='  ;
+<HtmlComment_-_1> ::= '>'  ;
+<HtmlComment_-_1> ::= '?'  ;
+<HtmlComment_-_1> ::= '@'  ;
+<HtmlComment_-_1> ::= 'A'  ;
+<HtmlComment_-_1> ::= 'B'  ;
+<HtmlComment_-_1> ::= 'C'  ;
+<HtmlComment_-_1> ::= 'D'  ;
+<HtmlComment_-_1> ::= 'E'  ;
+<HtmlComment_-_1> ::= 'F'  ;
+<HtmlComment_-_1> ::= 'G'  ;
+<HtmlComment_-_1> ::= 'H'  ;
+<HtmlComment_-_1> ::= 'I'  ;
+<HtmlComment_-_1> ::= 'J'  ;
+<HtmlComment_-_1> ::= 'K'  ;
+<HtmlComment_-_1> ::= 'L'  ;
+<HtmlComment_-_1> ::= 'M'  ;
+<HtmlComment_-_1> ::= 'N'  ;
+<HtmlComment_-_1> ::= 'O'  ;
+<HtmlComment_-_1> ::= 'P'  ;
+<HtmlComment_-_1> ::= 'Q'  ;
+<HtmlComment_-_1> ::= 'R'  ;
+<HtmlComment_-_1> ::= 'S'  ;
+<HtmlComment_-_1> ::= 'T'  ;
+<HtmlComment_-_1> ::= 'U'  ;
+<HtmlComment_-_1> ::= 'V'  ;
+<HtmlComment_-_1> ::= 'W'  ;
+<HtmlComment_-_1> ::= 'X'  ;
+<HtmlComment_-_1> ::= 'Y'  ;
+<HtmlComment_-_1> ::= 'Z'  ;
+<HtmlComment_-_1> ::= '['  ;
+<HtmlComment_-_1> ::= '\'  ;
+<HtmlComment_-_1> ::= ']'  ;
+<HtmlComment_-_1> ::= '^'  ;
+<HtmlComment_-_1> ::= '_'  ;
+<HtmlComment_-_1> ::= '`'  ;
+<HtmlComment_-_1> ::= 'a'  ;
+<HtmlComment_-_1> ::= 'b'  ;
+<HtmlComment_-_1> ::= 'c'  ;
+<HtmlComment_-_1> ::= 'd'  ;
+<HtmlComment_-_1> ::= 'e'  ;
+<HtmlComment_-_1> ::= 'f'  ;
+<HtmlComment_-_1> ::= 'g'  ;
+<HtmlComment_-_1> ::= 'h'  ;
+<HtmlComment_-_1> ::= 'i'  ;
+<HtmlComment_-_1> ::= 'j'  ;
+<HtmlComment_-_1> ::= 'k'  ;
+<HtmlComment_-_1> ::= 'l'  ;
+<HtmlComment_-_1> ::= 'm'  ;
+<HtmlComment_-_1> ::= 'n'  ;
+<HtmlComment_-_1> ::= 'o'  ;
+<HtmlComment_-_1> ::= 'p'  ;
+<HtmlComment_-_1> ::= 'q'  ;
+<HtmlComment_-_1> ::= 'r'  ;
+<HtmlComment_-_1> ::= 's'  ;
+<HtmlComment_-_1> ::= 't'  ;
+<HtmlComment_-_1> ::= 'u'  ;
+<HtmlComment_-_1> ::= 'v'  ;
+<HtmlComment_-_1> ::= 'w'  ;
+<HtmlComment_-_1> ::= 'x'  ;
+<HtmlComment_-_1> ::= 'y'  ;
+<HtmlComment_-_1> ::= 'z'  ;
+<HtmlComment_-_1> ::= '{'  ;
+<HtmlComment_-_1> ::= '|'  ;
+<HtmlComment_-_1> ::= '}'  ;
+<HtmlComment_-_1> ::= '~'  ;
+# END
+# END
+<HtmlComment> ::= '<' '!' '--' <HtmlComment_-_1> '-->' ' ' ;
+# END
+# LEXER: HtmlDtd
+# BEGIN LEXER FOR  HtmlDtd and
+# BEGIN LEXER FOR  HtmlDtd ?
+<HtmlDtd_-_1> ::= ;
+# BEGIN LEXER FOR  HtmlDtd .
+<HtmlDtd_-_1> ::= ' '  ;
+<HtmlDtd_-_1> ::= '!'  ;
+<HtmlDtd_-_1> ::= '"'  ;
+<HtmlDtd_-_1> ::= '#'  ;
+<HtmlDtd_-_1> ::= '$'  ;
+<HtmlDtd_-_1> ::= '%'  ;
+<HtmlDtd_-_1> ::= '&'  ;
+<HtmlDtd_-_1> ::=  39   ;
+<HtmlDtd_-_1> ::= '('  ;
+<HtmlDtd_-_1> ::= ')'  ;
+<HtmlDtd_-_1> ::= '*'  ;
+<HtmlDtd_-_1> ::= '+'  ;
+<HtmlDtd_-_1> ::= ','  ;
+<HtmlDtd_-_1> ::= '-'  ;
+<HtmlDtd_-_1> ::= '.'  ;
+<HtmlDtd_-_1> ::= '/'  ;
+<HtmlDtd_-_1> ::= '0'  ;
+<HtmlDtd_-_1> ::= '1'  ;
+<HtmlDtd_-_1> ::= '2'  ;
+<HtmlDtd_-_1> ::= '3'  ;
+<HtmlDtd_-_1> ::= '4'  ;
+<HtmlDtd_-_1> ::= '5'  ;
+<HtmlDtd_-_1> ::= '6'  ;
+<HtmlDtd_-_1> ::= '7'  ;
+<HtmlDtd_-_1> ::= '8'  ;
+<HtmlDtd_-_1> ::= '9'  ;
+<HtmlDtd_-_1> ::= ':'  ;
+<HtmlDtd_-_1> ::= ';'  ;
+<HtmlDtd_-_1> ::= '<'  ;
+<HtmlDtd_-_1> ::= '='  ;
+<HtmlDtd_-_1> ::= '>'  ;
+<HtmlDtd_-_1> ::= '?'  ;
+<HtmlDtd_-_1> ::= '@'  ;
+<HtmlDtd_-_1> ::= 'A'  ;
+<HtmlDtd_-_1> ::= 'B'  ;
+<HtmlDtd_-_1> ::= 'C'  ;
+<HtmlDtd_-_1> ::= 'D'  ;
+<HtmlDtd_-_1> ::= 'E'  ;
+<HtmlDtd_-_1> ::= 'F'  ;
+<HtmlDtd_-_1> ::= 'G'  ;
+<HtmlDtd_-_1> ::= 'H'  ;
+<HtmlDtd_-_1> ::= 'I'  ;
+<HtmlDtd_-_1> ::= 'J'  ;
+<HtmlDtd_-_1> ::= 'K'  ;
+<HtmlDtd_-_1> ::= 'L'  ;
+<HtmlDtd_-_1> ::= 'M'  ;
+<HtmlDtd_-_1> ::= 'N'  ;
+<HtmlDtd_-_1> ::= 'O'  ;
+<HtmlDtd_-_1> ::= 'P'  ;
+<HtmlDtd_-_1> ::= 'Q'  ;
+<HtmlDtd_-_1> ::= 'R'  ;
+<HtmlDtd_-_1> ::= 'S'  ;
+<HtmlDtd_-_1> ::= 'T'  ;
+<HtmlDtd_-_1> ::= 'U'  ;
+<HtmlDtd_-_1> ::= 'V'  ;
+<HtmlDtd_-_1> ::= 'W'  ;
+<HtmlDtd_-_1> ::= 'X'  ;
+<HtmlDtd_-_1> ::= 'Y'  ;
+<HtmlDtd_-_1> ::= 'Z'  ;
+<HtmlDtd_-_1> ::= '['  ;
+<HtmlDtd_-_1> ::= '\'  ;
+<HtmlDtd_-_1> ::= ']'  ;
+<HtmlDtd_-_1> ::= '^'  ;
+<HtmlDtd_-_1> ::= '_'  ;
+<HtmlDtd_-_1> ::= '`'  ;
+<HtmlDtd_-_1> ::= 'a'  ;
+<HtmlDtd_-_1> ::= 'b'  ;
+<HtmlDtd_-_1> ::= 'c'  ;
+<HtmlDtd_-_1> ::= 'd'  ;
+<HtmlDtd_-_1> ::= 'e'  ;
+<HtmlDtd_-_1> ::= 'f'  ;
+<HtmlDtd_-_1> ::= 'g'  ;
+<HtmlDtd_-_1> ::= 'h'  ;
+<HtmlDtd_-_1> ::= 'i'  ;
+<HtmlDtd_-_1> ::= 'j'  ;
+<HtmlDtd_-_1> ::= 'k'  ;
+<HtmlDtd_-_1> ::= 'l'  ;
+<HtmlDtd_-_1> ::= 'm'  ;
+<HtmlDtd_-_1> ::= 'n'  ;
+<HtmlDtd_-_1> ::= 'o'  ;
+<HtmlDtd_-_1> ::= 'p'  ;
+<HtmlDtd_-_1> ::= 'q'  ;
+<HtmlDtd_-_1> ::= 'r'  ;
+<HtmlDtd_-_1> ::= 's'  ;
+<HtmlDtd_-_1> ::= 't'  ;
+<HtmlDtd_-_1> ::= 'u'  ;
+<HtmlDtd_-_1> ::= 'v'  ;
+<HtmlDtd_-_1> ::= 'w'  ;
+<HtmlDtd_-_1> ::= 'x'  ;
+<HtmlDtd_-_1> ::= 'y'  ;
+<HtmlDtd_-_1> ::= 'z'  ;
+<HtmlDtd_-_1> ::= '{'  ;
+<HtmlDtd_-_1> ::= '|'  ;
+<HtmlDtd_-_1> ::= '}'  ;
+<HtmlDtd_-_1> ::= '~'  ;
+# END
+# END
+<HtmlDtd> ::= '<' '!' <HtmlDtd_-_1> '>' ' ' ;
+# END
+# LEXER: HtmlOpen
+# BEGIN LEXER FOR  HtmlOpen string
+<HtmlOpen> ::= '<' ' ' ;
+# END
+# LEXER: Shebang
+# BEGIN LEXER FOR  Shebang and
+# BEGIN LEXER FOR  Shebang eps
+<Shebang_-_1> ::= ;
+# END
+# BEGIN LEXER FOR  Shebang *
+<Shebang_-_2> ::= <Shebang_-_3> ;
+<Shebang_-_3> ::= ;
+# BEGIN LEXER FOR  Shebang and
+# BEGIN LEXER FOR  Shebang not
+<Shebang_-_4> ::= ' '  ;
+<Shebang_-_4> ::= '!'  ;
+<Shebang_-_4> ::= '"'  ;
+<Shebang_-_4> ::= '#'  ;
+<Shebang_-_4> ::= '$'  ;
+<Shebang_-_4> ::= '%'  ;
+<Shebang_-_4> ::= '&'  ;
+<Shebang_-_4> ::=  39   ;
+<Shebang_-_4> ::= '('  ;
+<Shebang_-_4> ::= ')'  ;
+<Shebang_-_4> ::= '*'  ;
+<Shebang_-_4> ::= '+'  ;
+<Shebang_-_4> ::= ','  ;
+<Shebang_-_4> ::= '-'  ;
+<Shebang_-_4> ::= '.'  ;
+<Shebang_-_4> ::= '/'  ;
+<Shebang_-_4> ::= '0'  ;
+<Shebang_-_4> ::= '1'  ;
+<Shebang_-_4> ::= '2'  ;
+<Shebang_-_4> ::= '3'  ;
+<Shebang_-_4> ::= '4'  ;
+<Shebang_-_4> ::= '5'  ;
+<Shebang_-_4> ::= '6'  ;
+<Shebang_-_4> ::= '7'  ;
+<Shebang_-_4> ::= '8'  ;
+<Shebang_-_4> ::= '9'  ;
+<Shebang_-_4> ::= ':'  ;
+<Shebang_-_4> ::= ';'  ;
+<Shebang_-_4> ::= '<'  ;
+<Shebang_-_4> ::= '='  ;
+<Shebang_-_4> ::= '>'  ;
+<Shebang_-_4> ::= '?'  ;
+<Shebang_-_4> ::= '@'  ;
+<Shebang_-_4> ::= 'A'  ;
+<Shebang_-_4> ::= 'B'  ;
+<Shebang_-_4> ::= 'C'  ;
+<Shebang_-_4> ::= 'D'  ;
+<Shebang_-_4> ::= 'E'  ;
+<Shebang_-_4> ::= 'F'  ;
+<Shebang_-_4> ::= 'G'  ;
+<Shebang_-_4> ::= 'H'  ;
+<Shebang_-_4> ::= 'I'  ;
+<Shebang_-_4> ::= 'J'  ;
+<Shebang_-_4> ::= 'K'  ;
+<Shebang_-_4> ::= 'L'  ;
+<Shebang_-_4> ::= 'M'  ;
+<Shebang_-_4> ::= 'N'  ;
+<Shebang_-_4> ::= 'O'  ;
+<Shebang_-_4> ::= 'P'  ;
+<Shebang_-_4> ::= 'Q'  ;
+<Shebang_-_4> ::= 'R'  ;
+<Shebang_-_4> ::= 'S'  ;
+<Shebang_-_4> ::= 'T'  ;
+<Shebang_-_4> ::= 'U'  ;
+<Shebang_-_4> ::= 'V'  ;
+<Shebang_-_4> ::= 'W'  ;
+<Shebang_-_4> ::= 'X'  ;
+<Shebang_-_4> ::= 'Y'  ;
+<Shebang_-_4> ::= 'Z'  ;
+<Shebang_-_4> ::= '['  ;
+<Shebang_-_4> ::= '\'  ;
+<Shebang_-_4> ::= ']'  ;
+<Shebang_-_4> ::= '^'  ;
+<Shebang_-_4> ::= '_'  ;
+<Shebang_-_4> ::= '`'  ;
+<Shebang_-_4> ::= 'a'  ;
+<Shebang_-_4> ::= 'b'  ;
+<Shebang_-_4> ::= 'c'  ;
+<Shebang_-_4> ::= 'd'  ;
+<Shebang_-_4> ::= 'e'  ;
+<Shebang_-_4> ::= 'f'  ;
+<Shebang_-_4> ::= 'g'  ;
+<Shebang_-_4> ::= 'h'  ;
+<Shebang_-_4> ::= 'i'  ;
+<Shebang_-_4> ::= 'j'  ;
+<Shebang_-_4> ::= 'k'  ;
+<Shebang_-_4> ::= 'l'  ;
+<Shebang_-_4> ::= 'm'  ;
+<Shebang_-_4> ::= 'o'  ;
+<Shebang_-_4> ::= 'p'  ;
+<Shebang_-_4> ::= 'q'  ;
+<Shebang_-_4> ::= 's'  ;
+<Shebang_-_4> ::= 't'  ;
+<Shebang_-_4> ::= 'u'  ;
+<Shebang_-_4> ::= 'v'  ;
+<Shebang_-_4> ::= 'w'  ;
+<Shebang_-_4> ::= 'x'  ;
+<Shebang_-_4> ::= 'y'  ;
+<Shebang_-_4> ::= 'z'  ;
+<Shebang_-_4> ::= '{'  ;
+<Shebang_-_4> ::= '|'  ;
+<Shebang_-_4> ::= '}'  ;
+<Shebang_-_4> ::= '~'  ;
+# END
+<Shebang_-_3> ::= <Shebang_-_4> <Shebang_-_3> ;
+# END
+# END
+<Shebang> ::= '#' <Shebang_-_1> '!' <Shebang_-_2> ' ' ;
+# END
+# LEXER: NumberSign
+# BEGIN LEXER FOR  NumberSign and
+# BEGIN LEXER FOR  NumberSign *
+<NumberSign_-_1> ::= <NumberSign_-_2> ;
+<NumberSign_-_2> ::= ;
+# BEGIN LEXER FOR  NumberSign and
+# BEGIN LEXER FOR  NumberSign not
+<NumberSign_-_3> ::= ' '  ;
+<NumberSign_-_3> ::= '!'  ;
+<NumberSign_-_3> ::= '"'  ;
+<NumberSign_-_3> ::= '#'  ;
+<NumberSign_-_3> ::= '$'  ;
+<NumberSign_-_3> ::= '%'  ;
+<NumberSign_-_3> ::= '&'  ;
+<NumberSign_-_3> ::=  39   ;
+<NumberSign_-_3> ::= '('  ;
+<NumberSign_-_3> ::= ')'  ;
+<NumberSign_-_3> ::= '*'  ;
+<NumberSign_-_3> ::= '+'  ;
+<NumberSign_-_3> ::= ','  ;
+<NumberSign_-_3> ::= '-'  ;
+<NumberSign_-_3> ::= '.'  ;
+<NumberSign_-_3> ::= '/'  ;
+<NumberSign_-_3> ::= '0'  ;
+<NumberSign_-_3> ::= '1'  ;
+<NumberSign_-_3> ::= '2'  ;
+<NumberSign_-_3> ::= '3'  ;
+<NumberSign_-_3> ::= '4'  ;
+<NumberSign_-_3> ::= '5'  ;
+<NumberSign_-_3> ::= '6'  ;
+<NumberSign_-_3> ::= '7'  ;
+<NumberSign_-_3> ::= '8'  ;
+<NumberSign_-_3> ::= '9'  ;
+<NumberSign_-_3> ::= ':'  ;
+<NumberSign_-_3> ::= ';'  ;
+<NumberSign_-_3> ::= '='  ;
+<NumberSign_-_3> ::= '>'  ;
+<NumberSign_-_3> ::= '?'  ;
+<NumberSign_-_3> ::= '@'  ;
+<NumberSign_-_3> ::= 'A'  ;
+<NumberSign_-_3> ::= 'B'  ;
+<NumberSign_-_3> ::= 'C'  ;
+<NumberSign_-_3> ::= 'D'  ;
+<NumberSign_-_3> ::= 'E'  ;
+<NumberSign_-_3> ::= 'F'  ;
+<NumberSign_-_3> ::= 'G'  ;
+<NumberSign_-_3> ::= 'H'  ;
+<NumberSign_-_3> ::= 'I'  ;
+<NumberSign_-_3> ::= 'J'  ;
+<NumberSign_-_3> ::= 'K'  ;
+<NumberSign_-_3> ::= 'L'  ;
+<NumberSign_-_3> ::= 'M'  ;
+<NumberSign_-_3> ::= 'N'  ;
+<NumberSign_-_3> ::= 'O'  ;
+<NumberSign_-_3> ::= 'P'  ;
+<NumberSign_-_3> ::= 'Q'  ;
+<NumberSign_-_3> ::= 'R'  ;
+<NumberSign_-_3> ::= 'S'  ;
+<NumberSign_-_3> ::= 'T'  ;
+<NumberSign_-_3> ::= 'U'  ;
+<NumberSign_-_3> ::= 'V'  ;
+<NumberSign_-_3> ::= 'W'  ;
+<NumberSign_-_3> ::= 'X'  ;
+<NumberSign_-_3> ::= 'Y'  ;
+<NumberSign_-_3> ::= 'Z'  ;
+<NumberSign_-_3> ::= '['  ;
+<NumberSign_-_3> ::= '\'  ;
+<NumberSign_-_3> ::= ']'  ;
+<NumberSign_-_3> ::= '^'  ;
+<NumberSign_-_3> ::= '_'  ;
+<NumberSign_-_3> ::= '`'  ;
+<NumberSign_-_3> ::= 'a'  ;
+<NumberSign_-_3> ::= 'b'  ;
+<NumberSign_-_3> ::= 'c'  ;
+<NumberSign_-_3> ::= 'd'  ;
+<NumberSign_-_3> ::= 'e'  ;
+<NumberSign_-_3> ::= 'f'  ;
+<NumberSign_-_3> ::= 'g'  ;
+<NumberSign_-_3> ::= 'h'  ;
+<NumberSign_-_3> ::= 'i'  ;
+<NumberSign_-_3> ::= 'j'  ;
+<NumberSign_-_3> ::= 'k'  ;
+<NumberSign_-_3> ::= 'l'  ;
+<NumberSign_-_3> ::= 'm'  ;
+<NumberSign_-_3> ::= 'n'  ;
+<NumberSign_-_3> ::= 'o'  ;
+<NumberSign_-_3> ::= 'p'  ;
+<NumberSign_-_3> ::= 'q'  ;
+<NumberSign_-_3> ::= 'r'  ;
+<NumberSign_-_3> ::= 's'  ;
+<NumberSign_-_3> ::= 't'  ;
+<NumberSign_-_3> ::= 'u'  ;
+<NumberSign_-_3> ::= 'v'  ;
+<NumberSign_-_3> ::= 'w'  ;
+<NumberSign_-_3> ::= 'x'  ;
+<NumberSign_-_3> ::= 'y'  ;
+<NumberSign_-_3> ::= 'z'  ;
+<NumberSign_-_3> ::= '{'  ;
+<NumberSign_-_3> ::= '|'  ;
+<NumberSign_-_3> ::= '}'  ;
+<NumberSign_-_3> ::= '~'  ;
+# END
+<NumberSign_-_2> ::= <NumberSign_-_3> <NumberSign_-_2> ;
+# END
+# END
+<NumberSign> ::= '#' <NumberSign_-_1> ' ' ;
+# END
+# LEXER: Error
+# BEGIN LEXER FOR  Error .
+<Error> ::= ' '  ' ' ;
+<Error> ::= '!'  ' ' ;
+<Error> ::= '"'  ' ' ;
+<Error> ::= '#'  ' ' ;
+<Error> ::= '$'  ' ' ;
+<Error> ::= '%'  ' ' ;
+<Error> ::= '&'  ' ' ;
+<Error> ::=  39   ' ' ;
+<Error> ::= '('  ' ' ;
+<Error> ::= ')'  ' ' ;
+<Error> ::= '*'  ' ' ;
+<Error> ::= '+'  ' ' ;
+<Error> ::= ','  ' ' ;
+<Error> ::= '-'  ' ' ;
+<Error> ::= '.'  ' ' ;
+<Error> ::= '/'  ' ' ;
+<Error> ::= '0'  ' ' ;
+<Error> ::= '1'  ' ' ;
+<Error> ::= '2'  ' ' ;
+<Error> ::= '3'  ' ' ;
+<Error> ::= '4'  ' ' ;
+<Error> ::= '5'  ' ' ;
+<Error> ::= '6'  ' ' ;
+<Error> ::= '7'  ' ' ;
+<Error> ::= '8'  ' ' ;
+<Error> ::= '9'  ' ' ;
+<Error> ::= ':'  ' ' ;
+<Error> ::= ';'  ' ' ;
+<Error> ::= '<'  ' ' ;
+<Error> ::= '='  ' ' ;
+<Error> ::= '>'  ' ' ;
+<Error> ::= '?'  ' ' ;
+<Error> ::= '@'  ' ' ;
+<Error> ::= 'A'  ' ' ;
+<Error> ::= 'B'  ' ' ;
+<Error> ::= 'C'  ' ' ;
+<Error> ::= 'D'  ' ' ;
+<Error> ::= 'E'  ' ' ;
+<Error> ::= 'F'  ' ' ;
+<Error> ::= 'G'  ' ' ;
+<Error> ::= 'H'  ' ' ;
+<Error> ::= 'I'  ' ' ;
+<Error> ::= 'J'  ' ' ;
+<Error> ::= 'K'  ' ' ;
+<Error> ::= 'L'  ' ' ;
+<Error> ::= 'M'  ' ' ;
+<Error> ::= 'N'  ' ' ;
+<Error> ::= 'O'  ' ' ;
+<Error> ::= 'P'  ' ' ;
+<Error> ::= 'Q'  ' ' ;
+<Error> ::= 'R'  ' ' ;
+<Error> ::= 'S'  ' ' ;
+<Error> ::= 'T'  ' ' ;
+<Error> ::= 'U'  ' ' ;
+<Error> ::= 'V'  ' ' ;
+<Error> ::= 'W'  ' ' ;
+<Error> ::= 'X'  ' ' ;
+<Error> ::= 'Y'  ' ' ;
+<Error> ::= 'Z'  ' ' ;
+<Error> ::= '['  ' ' ;
+<Error> ::= '\'  ' ' ;
+<Error> ::= ']'  ' ' ;
+<Error> ::= '^'  ' ' ;
+<Error> ::= '_'  ' ' ;
+<Error> ::= '`'  ' ' ;
+<Error> ::= 'a'  ' ' ;
+<Error> ::= 'b'  ' ' ;
+<Error> ::= 'c'  ' ' ;
+<Error> ::= 'd'  ' ' ;
+<Error> ::= 'e'  ' ' ;
+<Error> ::= 'f'  ' ' ;
+<Error> ::= 'g'  ' ' ;
+<Error> ::= 'h'  ' ' ;
+<Error> ::= 'i'  ' ' ;
+<Error> ::= 'j'  ' ' ;
+<Error> ::= 'k'  ' ' ;
+<Error> ::= 'l'  ' ' ;
+<Error> ::= 'm'  ' ' ;
+<Error> ::= 'n'  ' ' ;
+<Error> ::= 'o'  ' ' ;
+<Error> ::= 'p'  ' ' ;
+<Error> ::= 'q'  ' ' ;
+<Error> ::= 'r'  ' ' ;
+<Error> ::= 's'  ' ' ;
+<Error> ::= 't'  ' ' ;
+<Error> ::= 'u'  ' ' ;
+<Error> ::= 'v'  ' ' ;
+<Error> ::= 'w'  ' ' ;
+<Error> ::= 'x'  ' ' ;
+<Error> ::= 'y'  ' ' ;
+<Error> ::= 'z'  ' ' ;
+<Error> ::= '{'  ' ' ;
+<Error> ::= '|'  ' ' ;
+<Error> ::= '}'  ' ' ;
+<Error> ::= '~'  ' ' ;
+# END
+# LEXER: XmlText
+# BEGIN LEXER FOR  XmlText +
+<XmlText> ::= <XmlText_-_1> ' ' ;
+<XmlText_-_1> ::= <XmlText_-_2> ' ' ;
+<XmlText_-_1> ::= <XmlText_-_2> <XmlText_-_1> ' ' ;
+# BEGIN LEXER FOR  XmlText not
+<XmlText_-_2> ::= ' '  ;
+<XmlText_-_2> ::= '!'  ;
+<XmlText_-_2> ::= '"'  ;
+<XmlText_-_2> ::= '#'  ;
+<XmlText_-_2> ::= '$'  ;
+<XmlText_-_2> ::= '%'  ;
+<XmlText_-_2> ::= '&'  ;
+<XmlText_-_2> ::=  39   ;
+<XmlText_-_2> ::= '('  ;
+<XmlText_-_2> ::= ')'  ;
+<XmlText_-_2> ::= '*'  ;
+<XmlText_-_2> ::= '+'  ;
+<XmlText_-_2> ::= ','  ;
+<XmlText_-_2> ::= '-'  ;
+<XmlText_-_2> ::= '.'  ;
+<XmlText_-_2> ::= '/'  ;
+<XmlText_-_2> ::= '0'  ;
+<XmlText_-_2> ::= '1'  ;
+<XmlText_-_2> ::= '2'  ;
+<XmlText_-_2> ::= '3'  ;
+<XmlText_-_2> ::= '4'  ;
+<XmlText_-_2> ::= '5'  ;
+<XmlText_-_2> ::= '6'  ;
+<XmlText_-_2> ::= '7'  ;
+<XmlText_-_2> ::= '8'  ;
+<XmlText_-_2> ::= '9'  ;
+<XmlText_-_2> ::= ':'  ;
+<XmlText_-_2> ::= ';'  ;
+<XmlText_-_2> ::= '<'  ;
+<XmlText_-_2> ::= '='  ;
+<XmlText_-_2> ::= '>'  ;
+<XmlText_-_2> ::= '@'  ;
+<XmlText_-_2> ::= 'A'  ;
+<XmlText_-_2> ::= 'B'  ;
+<XmlText_-_2> ::= 'C'  ;
+<XmlText_-_2> ::= 'D'  ;
+<XmlText_-_2> ::= 'E'  ;
+<XmlText_-_2> ::= 'F'  ;
+<XmlText_-_2> ::= 'G'  ;
+<XmlText_-_2> ::= 'H'  ;
+<XmlText_-_2> ::= 'I'  ;
+<XmlText_-_2> ::= 'J'  ;
+<XmlText_-_2> ::= 'K'  ;
+<XmlText_-_2> ::= 'L'  ;
+<XmlText_-_2> ::= 'M'  ;
+<XmlText_-_2> ::= 'N'  ;
+<XmlText_-_2> ::= 'O'  ;
+<XmlText_-_2> ::= 'P'  ;
+<XmlText_-_2> ::= 'Q'  ;
+<XmlText_-_2> ::= 'R'  ;
+<XmlText_-_2> ::= 'S'  ;
+<XmlText_-_2> ::= 'T'  ;
+<XmlText_-_2> ::= 'U'  ;
+<XmlText_-_2> ::= 'V'  ;
+<XmlText_-_2> ::= 'W'  ;
+<XmlText_-_2> ::= 'X'  ;
+<XmlText_-_2> ::= 'Y'  ;
+<XmlText_-_2> ::= 'Z'  ;
+<XmlText_-_2> ::= '['  ;
+<XmlText_-_2> ::= '\'  ;
+<XmlText_-_2> ::= ']'  ;
+<XmlText_-_2> ::= '^'  ;
+<XmlText_-_2> ::= '_'  ;
+<XmlText_-_2> ::= '`'  ;
+<XmlText_-_2> ::= 'a'  ;
+<XmlText_-_2> ::= 'b'  ;
+<XmlText_-_2> ::= 'c'  ;
+<XmlText_-_2> ::= 'd'  ;
+<XmlText_-_2> ::= 'e'  ;
+<XmlText_-_2> ::= 'f'  ;
+<XmlText_-_2> ::= 'g'  ;
+<XmlText_-_2> ::= 'h'  ;
+<XmlText_-_2> ::= 'i'  ;
+<XmlText_-_2> ::= 'j'  ;
+<XmlText_-_2> ::= 'k'  ;
+<XmlText_-_2> ::= 'l'  ;
+<XmlText_-_2> ::= 'm'  ;
+<XmlText_-_2> ::= 'n'  ;
+<XmlText_-_2> ::= 'o'  ;
+<XmlText_-_2> ::= 'p'  ;
+<XmlText_-_2> ::= 'q'  ;
+<XmlText_-_2> ::= 'r'  ;
+<XmlText_-_2> ::= 's'  ;
+<XmlText_-_2> ::= 't'  ;
+<XmlText_-_2> ::= 'u'  ;
+<XmlText_-_2> ::= 'v'  ;
+<XmlText_-_2> ::= 'w'  ;
+<XmlText_-_2> ::= 'x'  ;
+<XmlText_-_2> ::= 'y'  ;
+<XmlText_-_2> ::= 'z'  ;
+<XmlText_-_2> ::= '{'  ;
+<XmlText_-_2> ::= '|'  ;
+<XmlText_-_2> ::= '}'  ;
+<XmlText_-_2> ::= '~'  ;
+# END
+# END
+# LEXER: XmlClose
+# BEGIN LEXER FOR  XmlClose and
+<XmlClose> ::= '?' '>' ' ' ;
+# END
+# LEXER: XmlText2
+# BEGIN LEXER FOR  XmlText2 string
+<XmlText2> ::= '?' ' ' ;
+# END
+# LEXER: PHPStartEchoInside
+# BEGIN LEXER FOR  PHPStartEchoInside token
+<PHPStartEchoInside> ::= <PhpStartEchoFragment> ' ' ;
+# END
+# LEXER: PHPStartInside
+# BEGIN LEXER FOR  PHPStartInside token
+<PHPStartInside> ::= <PhpStartFragment> ' ' ;
+# END
+# LEXER: HtmlClose
+# BEGIN LEXER FOR  HtmlClose and
+# BEGIN LEXER FOR  HtmlClose eps
+<HtmlClose_-_1> ::= ;
+# END
+<HtmlClose> ::= '>' <HtmlClose_-_1> ' ' ;
+# END
+# LEXER: HtmlSlashClose
+# BEGIN LEXER FOR  HtmlSlashClose string
+<HtmlSlashClose> ::= '/>' ' ' ;
+# END
+# LEXER: HtmlSlash
+# BEGIN LEXER FOR  HtmlSlash string
+<HtmlSlash> ::= '/' ' ' ;
+# END
+# LEXER: HtmlEquals
+# BEGIN LEXER FOR  HtmlEquals string
+<HtmlEquals> ::= '=' ' ' ;
+# END
+# LEXER: HtmlStartQuoteString
+# BEGIN LEXER FOR  HtmlStartQuoteString and
+# BEGIN LEXER FOR  HtmlStartQuoteString ?
+<HtmlStartQuoteString_-_1> ::= ;
+# BEGIN LEXER FOR  HtmlStartQuoteString string
+<HtmlStartQuoteString_-_1> ::= '\' ;
+# END
+# END
+<HtmlStartQuoteString> ::= <HtmlStartQuoteString_-_1>  39  ' ' ;
+# END
+# LEXER: HtmlStartDoubleQuoteString
+# BEGIN LEXER FOR  HtmlStartDoubleQuoteString and
+# BEGIN LEXER FOR  HtmlStartDoubleQuoteString ?
+<HtmlStartDoubleQuoteString_-_1> ::= ;
+# BEGIN LEXER FOR  HtmlStartDoubleQuoteString string
+<HtmlStartDoubleQuoteString_-_1> ::= '\' ;
+# END
+# END
+<HtmlStartDoubleQuoteString> ::= <HtmlStartDoubleQuoteString_-_1> '"' ' ' ;
+# END
+# LEXER: HtmlHex
+# BEGIN LEXER FOR  HtmlHex and
+# BEGIN LEXER FOR  HtmlHex +
+<HtmlHex_-_1> ::= <HtmlHex_-_2> ;
+<HtmlHex_-_2> ::= <HtmlHex_-_3> ;
+<HtmlHex_-_2> ::= <HtmlHex_-_3> <HtmlHex_-_2> ;
+# BEGIN LEXER FOR  HtmlHex token
+<HtmlHex_-_3> ::= <HexDigit> ;
+# END
+# END
+<HtmlHex> ::= '#' <HtmlHex_-_1> ' ' ;
+# END
+# LEXER: HtmlDecimal
+# BEGIN LEXER FOR  HtmlDecimal +
+<HtmlDecimal> ::= <HtmlDecimal_-_1> ' ' ;
+<HtmlDecimal_-_1> ::= <HtmlDecimal_-_2> ' ' ;
+<HtmlDecimal_-_1> ::= <HtmlDecimal_-_2> <HtmlDecimal_-_1> ' ' ;
+# BEGIN LEXER FOR  HtmlDecimal token
+<HtmlDecimal_-_2> ::= <Digit> ;
+# END
+# END
+# LEXER: HtmlSpace
+# BEGIN LEXER FOR  HtmlSpace +
+<HtmlSpace> ::= <HtmlSpace_-_1> ' ' ;
+<HtmlSpace_-_1> ::= <HtmlSpace_-_2> ' ' ;
+<HtmlSpace_-_1> ::= <HtmlSpace_-_2> <HtmlSpace_-_1> ' ' ;
+# BEGIN LEXER FOR  HtmlSpace char_set
+<HtmlSpace_-_2> ::= ' ' ;
+<HtmlSpace_-_2> ::=  9 ;
+<HtmlSpace_-_2> ::=  13 ;
+<HtmlSpace_-_2> ::=  10 ;
+# END
+# END
+# LEXER: HtmlName
+# BEGIN LEXER FOR  HtmlName and
+# BEGIN LEXER FOR  HtmlName *
+<HtmlName_-_1> ::= <HtmlName_-_2> ;
+<HtmlName_-_2> ::= ;
+# BEGIN LEXER FOR  HtmlName and
+<HtmlName_-_2> ::= <NameChar> <HtmlName_-_2> ;
+# END
+# END
+<HtmlName> ::= <NameStartChar> <HtmlName_-_1> ' ' ;
+# END
+# LEXER: ErrorInside
+# BEGIN LEXER FOR  ErrorInside .
+<ErrorInside> ::= ' '  ' ' ;
+<ErrorInside> ::= '!'  ' ' ;
+<ErrorInside> ::= '"'  ' ' ;
+<ErrorInside> ::= '#'  ' ' ;
+<ErrorInside> ::= '$'  ' ' ;
+<ErrorInside> ::= '%'  ' ' ;
+<ErrorInside> ::= '&'  ' ' ;
+<ErrorInside> ::=  39   ' ' ;
+<ErrorInside> ::= '('  ' ' ;
+<ErrorInside> ::= ')'  ' ' ;
+<ErrorInside> ::= '*'  ' ' ;
+<ErrorInside> ::= '+'  ' ' ;
+<ErrorInside> ::= ','  ' ' ;
+<ErrorInside> ::= '-'  ' ' ;
+<ErrorInside> ::= '.'  ' ' ;
+<ErrorInside> ::= '/'  ' ' ;
+<ErrorInside> ::= '0'  ' ' ;
+<ErrorInside> ::= '1'  ' ' ;
+<ErrorInside> ::= '2'  ' ' ;
+<ErrorInside> ::= '3'  ' ' ;
+<ErrorInside> ::= '4'  ' ' ;
+<ErrorInside> ::= '5'  ' ' ;
+<ErrorInside> ::= '6'  ' ' ;
+<ErrorInside> ::= '7'  ' ' ;
+<ErrorInside> ::= '8'  ' ' ;
+<ErrorInside> ::= '9'  ' ' ;
+<ErrorInside> ::= ':'  ' ' ;
+<ErrorInside> ::= ';'  ' ' ;
+<ErrorInside> ::= '<'  ' ' ;
+<ErrorInside> ::= '='  ' ' ;
+<ErrorInside> ::= '>'  ' ' ;
+<ErrorInside> ::= '?'  ' ' ;
+<ErrorInside> ::= '@'  ' ' ;
+<ErrorInside> ::= 'A'  ' ' ;
+<ErrorInside> ::= 'B'  ' ' ;
+<ErrorInside> ::= 'C'  ' ' ;
+<ErrorInside> ::= 'D'  ' ' ;
+<ErrorInside> ::= 'E'  ' ' ;
+<ErrorInside> ::= 'F'  ' ' ;
+<ErrorInside> ::= 'G'  ' ' ;
+<ErrorInside> ::= 'H'  ' ' ;
+<ErrorInside> ::= 'I'  ' ' ;
+<ErrorInside> ::= 'J'  ' ' ;
+<ErrorInside> ::= 'K'  ' ' ;
+<ErrorInside> ::= 'L'  ' ' ;
+<ErrorInside> ::= 'M'  ' ' ;
+<ErrorInside> ::= 'N'  ' ' ;
+<ErrorInside> ::= 'O'  ' ' ;
+<ErrorInside> ::= 'P'  ' ' ;
+<ErrorInside> ::= 'Q'  ' ' ;
+<ErrorInside> ::= 'R'  ' ' ;
+<ErrorInside> ::= 'S'  ' ' ;
+<ErrorInside> ::= 'T'  ' ' ;
+<ErrorInside> ::= 'U'  ' ' ;
+<ErrorInside> ::= 'V'  ' ' ;
+<ErrorInside> ::= 'W'  ' ' ;
+<ErrorInside> ::= 'X'  ' ' ;
+<ErrorInside> ::= 'Y'  ' ' ;
+<ErrorInside> ::= 'Z'  ' ' ;
+<ErrorInside> ::= '['  ' ' ;
+<ErrorInside> ::= '\'  ' ' ;
+<ErrorInside> ::= ']'  ' ' ;
+<ErrorInside> ::= '^'  ' ' ;
+<ErrorInside> ::= '_'  ' ' ;
+<ErrorInside> ::= '`'  ' ' ;
+<ErrorInside> ::= 'a'  ' ' ;
+<ErrorInside> ::= 'b'  ' ' ;
+<ErrorInside> ::= 'c'  ' ' ;
+<ErrorInside> ::= 'd'  ' ' ;
+<ErrorInside> ::= 'e'  ' ' ;
+<ErrorInside> ::= 'f'  ' ' ;
+<ErrorInside> ::= 'g'  ' ' ;
+<ErrorInside> ::= 'h'  ' ' ;
+<ErrorInside> ::= 'i'  ' ' ;
+<ErrorInside> ::= 'j'  ' ' ;
+<ErrorInside> ::= 'k'  ' ' ;
+<ErrorInside> ::= 'l'  ' ' ;
+<ErrorInside> ::= 'm'  ' ' ;
+<ErrorInside> ::= 'n'  ' ' ;
+<ErrorInside> ::= 'o'  ' ' ;
+<ErrorInside> ::= 'p'  ' ' ;
+<ErrorInside> ::= 'q'  ' ' ;
+<ErrorInside> ::= 'r'  ' ' ;
+<ErrorInside> ::= 's'  ' ' ;
+<ErrorInside> ::= 't'  ' ' ;
+<ErrorInside> ::= 'u'  ' ' ;
+<ErrorInside> ::= 'v'  ' ' ;
+<ErrorInside> ::= 'w'  ' ' ;
+<ErrorInside> ::= 'x'  ' ' ;
+<ErrorInside> ::= 'y'  ' ' ;
+<ErrorInside> ::= 'z'  ' ' ;
+<ErrorInside> ::= '{'  ' ' ;
+<ErrorInside> ::= '|'  ' ' ;
+<ErrorInside> ::= '}'  ' ' ;
+<ErrorInside> ::= '~'  ' ' ;
+# END
+# LEXER: PHPStartEchoInsideQuoteString
+# BEGIN LEXER FOR  PHPStartEchoInsideQuoteString token
+<PHPStartEchoInsideQuoteString> ::= <PhpStartEchoFragment> ' ' ;
+# END
+# LEXER: PHPStartInsideQuoteString
+# BEGIN LEXER FOR  PHPStartInsideQuoteString token
+<PHPStartInsideQuoteString> ::= <PhpStartFragment> ' ' ;
+# END
+# LEXER: HtmlEndQuoteString
+# BEGIN LEXER FOR  HtmlEndQuoteString and
+# BEGIN LEXER FOR  HtmlEndQuoteString ?
+<HtmlEndQuoteString_-_1> ::= ;
+# BEGIN LEXER FOR  HtmlEndQuoteString string
+<HtmlEndQuoteString_-_1> ::=  39  ;
+# END
+# END
+<HtmlEndQuoteString> ::=  39  <HtmlEndQuoteString_-_1> ' ' ;
+# END
+# LEXER: HtmlQuoteString
+# BEGIN LEXER FOR  HtmlQuoteString +
+<HtmlQuoteString> ::= <HtmlQuoteString_-_1> ' ' ;
+<HtmlQuoteString_-_1> ::= <HtmlQuoteString_-_2> ' ' ;
+<HtmlQuoteString_-_1> ::= <HtmlQuoteString_-_2> <HtmlQuoteString_-_1> ' ' ;
+# BEGIN LEXER FOR  HtmlQuoteString not
+<HtmlQuoteString_-_2> ::= ' '  ;
+<HtmlQuoteString_-_2> ::= '!'  ;
+<HtmlQuoteString_-_2> ::= '"'  ;
+<HtmlQuoteString_-_2> ::= '#'  ;
+<HtmlQuoteString_-_2> ::= '$'  ;
+<HtmlQuoteString_-_2> ::= '%'  ;
+<HtmlQuoteString_-_2> ::= '&'  ;
+<HtmlQuoteString_-_2> ::= '('  ;
+<HtmlQuoteString_-_2> ::= ')'  ;
+<HtmlQuoteString_-_2> ::= '*'  ;
+<HtmlQuoteString_-_2> ::= '+'  ;
+<HtmlQuoteString_-_2> ::= ','  ;
+<HtmlQuoteString_-_2> ::= '-'  ;
+<HtmlQuoteString_-_2> ::= '.'  ;
+<HtmlQuoteString_-_2> ::= '/'  ;
+<HtmlQuoteString_-_2> ::= '0'  ;
+<HtmlQuoteString_-_2> ::= '1'  ;
+<HtmlQuoteString_-_2> ::= '2'  ;
+<HtmlQuoteString_-_2> ::= '3'  ;
+<HtmlQuoteString_-_2> ::= '4'  ;
+<HtmlQuoteString_-_2> ::= '5'  ;
+<HtmlQuoteString_-_2> ::= '6'  ;
+<HtmlQuoteString_-_2> ::= '7'  ;
+<HtmlQuoteString_-_2> ::= '8'  ;
+<HtmlQuoteString_-_2> ::= '9'  ;
+<HtmlQuoteString_-_2> ::= ':'  ;
+<HtmlQuoteString_-_2> ::= ';'  ;
+<HtmlQuoteString_-_2> ::= '='  ;
+<HtmlQuoteString_-_2> ::= '>'  ;
+<HtmlQuoteString_-_2> ::= '?'  ;
+<HtmlQuoteString_-_2> ::= '@'  ;
+<HtmlQuoteString_-_2> ::= 'A'  ;
+<HtmlQuoteString_-_2> ::= 'B'  ;
+<HtmlQuoteString_-_2> ::= 'C'  ;
+<HtmlQuoteString_-_2> ::= 'D'  ;
+<HtmlQuoteString_-_2> ::= 'E'  ;
+<HtmlQuoteString_-_2> ::= 'F'  ;
+<HtmlQuoteString_-_2> ::= 'G'  ;
+<HtmlQuoteString_-_2> ::= 'H'  ;
+<HtmlQuoteString_-_2> ::= 'I'  ;
+<HtmlQuoteString_-_2> ::= 'J'  ;
+<HtmlQuoteString_-_2> ::= 'K'  ;
+<HtmlQuoteString_-_2> ::= 'L'  ;
+<HtmlQuoteString_-_2> ::= 'M'  ;
+<HtmlQuoteString_-_2> ::= 'N'  ;
+<HtmlQuoteString_-_2> ::= 'O'  ;
+<HtmlQuoteString_-_2> ::= 'P'  ;
+<HtmlQuoteString_-_2> ::= 'Q'  ;
+<HtmlQuoteString_-_2> ::= 'R'  ;
+<HtmlQuoteString_-_2> ::= 'S'  ;
+<HtmlQuoteString_-_2> ::= 'T'  ;
+<HtmlQuoteString_-_2> ::= 'U'  ;
+<HtmlQuoteString_-_2> ::= 'V'  ;
+<HtmlQuoteString_-_2> ::= 'W'  ;
+<HtmlQuoteString_-_2> ::= 'X'  ;
+<HtmlQuoteString_-_2> ::= 'Y'  ;
+<HtmlQuoteString_-_2> ::= 'Z'  ;
+<HtmlQuoteString_-_2> ::= '['  ;
+<HtmlQuoteString_-_2> ::= '\'  ;
+<HtmlQuoteString_-_2> ::= ']'  ;
+<HtmlQuoteString_-_2> ::= '^'  ;
+<HtmlQuoteString_-_2> ::= '_'  ;
+<HtmlQuoteString_-_2> ::= '`'  ;
+<HtmlQuoteString_-_2> ::= 'a'  ;
+<HtmlQuoteString_-_2> ::= 'b'  ;
+<HtmlQuoteString_-_2> ::= 'c'  ;
+<HtmlQuoteString_-_2> ::= 'd'  ;
+<HtmlQuoteString_-_2> ::= 'e'  ;
+<HtmlQuoteString_-_2> ::= 'f'  ;
+<HtmlQuoteString_-_2> ::= 'g'  ;
+<HtmlQuoteString_-_2> ::= 'h'  ;
+<HtmlQuoteString_-_2> ::= 'i'  ;
+<HtmlQuoteString_-_2> ::= 'j'  ;
+<HtmlQuoteString_-_2> ::= 'k'  ;
+<HtmlQuoteString_-_2> ::= 'l'  ;
+<HtmlQuoteString_-_2> ::= 'm'  ;
+<HtmlQuoteString_-_2> ::= 'n'  ;
+<HtmlQuoteString_-_2> ::= 'o'  ;
+<HtmlQuoteString_-_2> ::= 'p'  ;
+<HtmlQuoteString_-_2> ::= 'q'  ;
+<HtmlQuoteString_-_2> ::= 'r'  ;
+<HtmlQuoteString_-_2> ::= 's'  ;
+<HtmlQuoteString_-_2> ::= 't'  ;
+<HtmlQuoteString_-_2> ::= 'u'  ;
+<HtmlQuoteString_-_2> ::= 'v'  ;
+<HtmlQuoteString_-_2> ::= 'w'  ;
+<HtmlQuoteString_-_2> ::= 'x'  ;
+<HtmlQuoteString_-_2> ::= 'y'  ;
+<HtmlQuoteString_-_2> ::= 'z'  ;
+<HtmlQuoteString_-_2> ::= '{'  ;
+<HtmlQuoteString_-_2> ::= '|'  ;
+<HtmlQuoteString_-_2> ::= '}'  ;
+<HtmlQuoteString_-_2> ::= '~'  ;
+# END
+# END
+# LEXER: ErrorHtmlQuote
+# BEGIN LEXER FOR  ErrorHtmlQuote .
+<ErrorHtmlQuote> ::= ' '  ' ' ;
+<ErrorHtmlQuote> ::= '!'  ' ' ;
+<ErrorHtmlQuote> ::= '"'  ' ' ;
+<ErrorHtmlQuote> ::= '#'  ' ' ;
+<ErrorHtmlQuote> ::= '$'  ' ' ;
+<ErrorHtmlQuote> ::= '%'  ' ' ;
+<ErrorHtmlQuote> ::= '&'  ' ' ;
+<ErrorHtmlQuote> ::=  39   ' ' ;
+<ErrorHtmlQuote> ::= '('  ' ' ;
+<ErrorHtmlQuote> ::= ')'  ' ' ;
+<ErrorHtmlQuote> ::= '*'  ' ' ;
+<ErrorHtmlQuote> ::= '+'  ' ' ;
+<ErrorHtmlQuote> ::= ','  ' ' ;
+<ErrorHtmlQuote> ::= '-'  ' ' ;
+<ErrorHtmlQuote> ::= '.'  ' ' ;
+<ErrorHtmlQuote> ::= '/'  ' ' ;
+<ErrorHtmlQuote> ::= '0'  ' ' ;
+<ErrorHtmlQuote> ::= '1'  ' ' ;
+<ErrorHtmlQuote> ::= '2'  ' ' ;
+<ErrorHtmlQuote> ::= '3'  ' ' ;
+<ErrorHtmlQuote> ::= '4'  ' ' ;
+<ErrorHtmlQuote> ::= '5'  ' ' ;
+<ErrorHtmlQuote> ::= '6'  ' ' ;
+<ErrorHtmlQuote> ::= '7'  ' ' ;
+<ErrorHtmlQuote> ::= '8'  ' ' ;
+<ErrorHtmlQuote> ::= '9'  ' ' ;
+<ErrorHtmlQuote> ::= ':'  ' ' ;
+<ErrorHtmlQuote> ::= ';'  ' ' ;
+<ErrorHtmlQuote> ::= '<'  ' ' ;
+<ErrorHtmlQuote> ::= '='  ' ' ;
+<ErrorHtmlQuote> ::= '>'  ' ' ;
+<ErrorHtmlQuote> ::= '?'  ' ' ;
+<ErrorHtmlQuote> ::= '@'  ' ' ;
+<ErrorHtmlQuote> ::= 'A'  ' ' ;
+<ErrorHtmlQuote> ::= 'B'  ' ' ;
+<ErrorHtmlQuote> ::= 'C'  ' ' ;
+<ErrorHtmlQuote> ::= 'D'  ' ' ;
+<ErrorHtmlQuote> ::= 'E'  ' ' ;
+<ErrorHtmlQuote> ::= 'F'  ' ' ;
+<ErrorHtmlQuote> ::= 'G'  ' ' ;
+<ErrorHtmlQuote> ::= 'H'  ' ' ;
+<ErrorHtmlQuote> ::= 'I'  ' ' ;
+<ErrorHtmlQuote> ::= 'J'  ' ' ;
+<ErrorHtmlQuote> ::= 'K'  ' ' ;
+<ErrorHtmlQuote> ::= 'L'  ' ' ;
+<ErrorHtmlQuote> ::= 'M'  ' ' ;
+<ErrorHtmlQuote> ::= 'N'  ' ' ;
+<ErrorHtmlQuote> ::= 'O'  ' ' ;
+<ErrorHtmlQuote> ::= 'P'  ' ' ;
+<ErrorHtmlQuote> ::= 'Q'  ' ' ;
+<ErrorHtmlQuote> ::= 'R'  ' ' ;
+<ErrorHtmlQuote> ::= 'S'  ' ' ;
+<ErrorHtmlQuote> ::= 'T'  ' ' ;
+<ErrorHtmlQuote> ::= 'U'  ' ' ;
+<ErrorHtmlQuote> ::= 'V'  ' ' ;
+<ErrorHtmlQuote> ::= 'W'  ' ' ;
+<ErrorHtmlQuote> ::= 'X'  ' ' ;
+<ErrorHtmlQuote> ::= 'Y'  ' ' ;
+<ErrorHtmlQuote> ::= 'Z'  ' ' ;
+<ErrorHtmlQuote> ::= '['  ' ' ;
+<ErrorHtmlQuote> ::= '\'  ' ' ;
+<ErrorHtmlQuote> ::= ']'  ' ' ;
+<ErrorHtmlQuote> ::= '^'  ' ' ;
+<ErrorHtmlQuote> ::= '_'  ' ' ;
+<ErrorHtmlQuote> ::= '`'  ' ' ;
+<ErrorHtmlQuote> ::= 'a'  ' ' ;
+<ErrorHtmlQuote> ::= 'b'  ' ' ;
+<ErrorHtmlQuote> ::= 'c'  ' ' ;
+<ErrorHtmlQuote> ::= 'd'  ' ' ;
+<ErrorHtmlQuote> ::= 'e'  ' ' ;
+<ErrorHtmlQuote> ::= 'f'  ' ' ;
+<ErrorHtmlQuote> ::= 'g'  ' ' ;
+<ErrorHtmlQuote> ::= 'h'  ' ' ;
+<ErrorHtmlQuote> ::= 'i'  ' ' ;
+<ErrorHtmlQuote> ::= 'j'  ' ' ;
+<ErrorHtmlQuote> ::= 'k'  ' ' ;
+<ErrorHtmlQuote> ::= 'l'  ' ' ;
+<ErrorHtmlQuote> ::= 'm'  ' ' ;
+<ErrorHtmlQuote> ::= 'n'  ' ' ;
+<ErrorHtmlQuote> ::= 'o'  ' ' ;
+<ErrorHtmlQuote> ::= 'p'  ' ' ;
+<ErrorHtmlQuote> ::= 'q'  ' ' ;
+<ErrorHtmlQuote> ::= 'r'  ' ' ;
+<ErrorHtmlQuote> ::= 's'  ' ' ;
+<ErrorHtmlQuote> ::= 't'  ' ' ;
+<ErrorHtmlQuote> ::= 'u'  ' ' ;
+<ErrorHtmlQuote> ::= 'v'  ' ' ;
+<ErrorHtmlQuote> ::= 'w'  ' ' ;
+<ErrorHtmlQuote> ::= 'x'  ' ' ;
+<ErrorHtmlQuote> ::= 'y'  ' ' ;
+<ErrorHtmlQuote> ::= 'z'  ' ' ;
+<ErrorHtmlQuote> ::= '{'  ' ' ;
+<ErrorHtmlQuote> ::= '|'  ' ' ;
+<ErrorHtmlQuote> ::= '}'  ' ' ;
+<ErrorHtmlQuote> ::= '~'  ' ' ;
+# END
+# LEXER: PHPStartEchoDoubleQuoteString
+# BEGIN LEXER FOR  PHPStartEchoDoubleQuoteString token
+<PHPStartEchoDoubleQuoteString> ::= <PhpStartEchoFragment> ' ' ;
+# END
+# LEXER: PHPStartDoubleQuoteString
+# BEGIN LEXER FOR  PHPStartDoubleQuoteString token
+<PHPStartDoubleQuoteString> ::= <PhpStartFragment> ' ' ;
+# END
+# LEXER: HtmlEndDoubleQuoteString
+# BEGIN LEXER FOR  HtmlEndDoubleQuoteString and
+# BEGIN LEXER FOR  HtmlEndDoubleQuoteString ?
+<HtmlEndDoubleQuoteString_-_1> ::= ;
+# BEGIN LEXER FOR  HtmlEndDoubleQuoteString string
+<HtmlEndDoubleQuoteString_-_1> ::= '"' ;
+# END
+# END
+<HtmlEndDoubleQuoteString> ::= '"' <HtmlEndDoubleQuoteString_-_1> ' ' ;
+# END
+# LEXER: HtmlDoubleQuoteString
+# BEGIN LEXER FOR  HtmlDoubleQuoteString +
+<HtmlDoubleQuoteString> ::= <HtmlDoubleQuoteString_-_1> ' ' ;
+<HtmlDoubleQuoteString_-_1> ::= <HtmlDoubleQuoteString_-_2> ' ' ;
+<HtmlDoubleQuoteString_-_1> ::= <HtmlDoubleQuoteString_-_2> <HtmlDoubleQuoteString_-_1> ' ' ;
+# BEGIN LEXER FOR  HtmlDoubleQuoteString not
+<HtmlDoubleQuoteString_-_2> ::= ' '  ;
+<HtmlDoubleQuoteString_-_2> ::= '!'  ;
+<HtmlDoubleQuoteString_-_2> ::= '#'  ;
+<HtmlDoubleQuoteString_-_2> ::= '$'  ;
+<HtmlDoubleQuoteString_-_2> ::= '%'  ;
+<HtmlDoubleQuoteString_-_2> ::= '&'  ;
+<HtmlDoubleQuoteString_-_2> ::=  39   ;
+<HtmlDoubleQuoteString_-_2> ::= '('  ;
+<HtmlDoubleQuoteString_-_2> ::= ')'  ;
+<HtmlDoubleQuoteString_-_2> ::= '*'  ;
+<HtmlDoubleQuoteString_-_2> ::= '+'  ;
+<HtmlDoubleQuoteString_-_2> ::= ','  ;
+<HtmlDoubleQuoteString_-_2> ::= '-'  ;
+<HtmlDoubleQuoteString_-_2> ::= '.'  ;
+<HtmlDoubleQuoteString_-_2> ::= '/'  ;
+<HtmlDoubleQuoteString_-_2> ::= '0'  ;
+<HtmlDoubleQuoteString_-_2> ::= '1'  ;
+<HtmlDoubleQuoteString_-_2> ::= '2'  ;
+<HtmlDoubleQuoteString_-_2> ::= '3'  ;
+<HtmlDoubleQuoteString_-_2> ::= '4'  ;
+<HtmlDoubleQuoteString_-_2> ::= '5'  ;
+<HtmlDoubleQuoteString_-_2> ::= '6'  ;
+<HtmlDoubleQuoteString_-_2> ::= '7'  ;
+<HtmlDoubleQuoteString_-_2> ::= '8'  ;
+<HtmlDoubleQuoteString_-_2> ::= '9'  ;
+<HtmlDoubleQuoteString_-_2> ::= ':'  ;
+<HtmlDoubleQuoteString_-_2> ::= ';'  ;
+<HtmlDoubleQuoteString_-_2> ::= '='  ;
+<HtmlDoubleQuoteString_-_2> ::= '>'  ;
+<HtmlDoubleQuoteString_-_2> ::= '?'  ;
+<HtmlDoubleQuoteString_-_2> ::= '@'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'A'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'B'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'C'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'D'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'E'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'F'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'G'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'H'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'I'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'J'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'K'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'L'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'M'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'N'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'O'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'P'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'Q'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'R'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'S'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'T'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'U'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'V'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'W'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'X'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'Y'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'Z'  ;
+<HtmlDoubleQuoteString_-_2> ::= '['  ;
+<HtmlDoubleQuoteString_-_2> ::= '\'  ;
+<HtmlDoubleQuoteString_-_2> ::= ']'  ;
+<HtmlDoubleQuoteString_-_2> ::= '^'  ;
+<HtmlDoubleQuoteString_-_2> ::= '_'  ;
+<HtmlDoubleQuoteString_-_2> ::= '`'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'a'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'b'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'c'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'd'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'e'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'f'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'g'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'h'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'i'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'j'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'k'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'l'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'm'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'n'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'o'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'p'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'q'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'r'  ;
+<HtmlDoubleQuoteString_-_2> ::= 's'  ;
+<HtmlDoubleQuoteString_-_2> ::= 't'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'u'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'v'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'w'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'x'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'y'  ;
+<HtmlDoubleQuoteString_-_2> ::= 'z'  ;
+<HtmlDoubleQuoteString_-_2> ::= '{'  ;
+<HtmlDoubleQuoteString_-_2> ::= '|'  ;
+<HtmlDoubleQuoteString_-_2> ::= '}'  ;
+<HtmlDoubleQuoteString_-_2> ::= '~'  ;
+# END
+# END
+# LEXER: ErrorHtmlDoubleQuote
+# BEGIN LEXER FOR  ErrorHtmlDoubleQuote .
+<ErrorHtmlDoubleQuote> ::= ' '  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '!'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '"'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '#'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '$'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '%'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '&'  ' ' ;
+<ErrorHtmlDoubleQuote> ::=  39   ' ' ;
+<ErrorHtmlDoubleQuote> ::= '('  ' ' ;
+<ErrorHtmlDoubleQuote> ::= ')'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '*'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '+'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= ','  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '-'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '.'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '/'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '0'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '1'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '2'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '3'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '4'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '5'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '6'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '7'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '8'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '9'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= ':'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= ';'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '<'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '='  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '>'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '?'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '@'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'A'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'B'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'C'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'D'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'E'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'F'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'G'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'H'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'I'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'J'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'K'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'L'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'M'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'N'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'O'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'P'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'Q'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'R'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'S'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'T'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'U'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'V'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'W'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'X'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'Y'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'Z'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '['  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '\'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= ']'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '^'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '_'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '`'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'a'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'b'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'c'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'd'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'e'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'f'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'g'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'h'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'i'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'j'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'k'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'l'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'm'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'n'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'o'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'p'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'q'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'r'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 's'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 't'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'u'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'v'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'w'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'x'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'y'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= 'z'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '{'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '|'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '}'  ' ' ;
+<ErrorHtmlDoubleQuote> ::= '~'  ' ' ;
+# END
+# LEXER: ScriptText
+# BEGIN LEXER FOR  ScriptText +
+<ScriptText> ::= <ScriptText_-_1> ' ' ;
+<ScriptText_-_1> ::= <ScriptText_-_2> ' ' ;
+<ScriptText_-_1> ::= <ScriptText_-_2> <ScriptText_-_1> ' ' ;
+# BEGIN LEXER FOR  ScriptText not
+<ScriptText_-_2> ::= ' '  ;
+<ScriptText_-_2> ::= '!'  ;
+<ScriptText_-_2> ::= '"'  ;
+<ScriptText_-_2> ::= '#'  ;
+<ScriptText_-_2> ::= '$'  ;
+<ScriptText_-_2> ::= '%'  ;
+<ScriptText_-_2> ::= '&'  ;
+<ScriptText_-_2> ::=  39   ;
+<ScriptText_-_2> ::= '('  ;
+<ScriptText_-_2> ::= ')'  ;
+<ScriptText_-_2> ::= '*'  ;
+<ScriptText_-_2> ::= '+'  ;
+<ScriptText_-_2> ::= ','  ;
+<ScriptText_-_2> ::= '-'  ;
+<ScriptText_-_2> ::= '.'  ;
+<ScriptText_-_2> ::= '/'  ;
+<ScriptText_-_2> ::= '0'  ;
+<ScriptText_-_2> ::= '1'  ;
+<ScriptText_-_2> ::= '2'  ;
+<ScriptText_-_2> ::= '3'  ;
+<ScriptText_-_2> ::= '4'  ;
+<ScriptText_-_2> ::= '5'  ;
+<ScriptText_-_2> ::= '6'  ;
+<ScriptText_-_2> ::= '7'  ;
+<ScriptText_-_2> ::= '8'  ;
+<ScriptText_-_2> ::= '9'  ;
+<ScriptText_-_2> ::= ':'  ;
+<ScriptText_-_2> ::= ';'  ;
+<ScriptText_-_2> ::= '='  ;
+<ScriptText_-_2> ::= '>'  ;
+<ScriptText_-_2> ::= '?'  ;
+<ScriptText_-_2> ::= '@'  ;
+<ScriptText_-_2> ::= 'A'  ;
+<ScriptText_-_2> ::= 'B'  ;
+<ScriptText_-_2> ::= 'C'  ;
+<ScriptText_-_2> ::= 'D'  ;
+<ScriptText_-_2> ::= 'E'  ;
+<ScriptText_-_2> ::= 'F'  ;
+<ScriptText_-_2> ::= 'G'  ;
+<ScriptText_-_2> ::= 'H'  ;
+<ScriptText_-_2> ::= 'I'  ;
+<ScriptText_-_2> ::= 'J'  ;
+<ScriptText_-_2> ::= 'K'  ;
+<ScriptText_-_2> ::= 'L'  ;
+<ScriptText_-_2> ::= 'M'  ;
+<ScriptText_-_2> ::= 'N'  ;
+<ScriptText_-_2> ::= 'O'  ;
+<ScriptText_-_2> ::= 'P'  ;
+<ScriptText_-_2> ::= 'Q'  ;
+<ScriptText_-_2> ::= 'R'  ;
+<ScriptText_-_2> ::= 'S'  ;
+<ScriptText_-_2> ::= 'T'  ;
+<ScriptText_-_2> ::= 'U'  ;
+<ScriptText_-_2> ::= 'V'  ;
+<ScriptText_-_2> ::= 'W'  ;
+<ScriptText_-_2> ::= 'X'  ;
+<ScriptText_-_2> ::= 'Y'  ;
+<ScriptText_-_2> ::= 'Z'  ;
+<ScriptText_-_2> ::= '['  ;
+<ScriptText_-_2> ::= '\'  ;
+<ScriptText_-_2> ::= ']'  ;
+<ScriptText_-_2> ::= '^'  ;
+<ScriptText_-_2> ::= '_'  ;
+<ScriptText_-_2> ::= '`'  ;
+<ScriptText_-_2> ::= 'a'  ;
+<ScriptText_-_2> ::= 'b'  ;
+<ScriptText_-_2> ::= 'c'  ;
+<ScriptText_-_2> ::= 'd'  ;
+<ScriptText_-_2> ::= 'e'  ;
+<ScriptText_-_2> ::= 'f'  ;
+<ScriptText_-_2> ::= 'g'  ;
+<ScriptText_-_2> ::= 'h'  ;
+<ScriptText_-_2> ::= 'i'  ;
+<ScriptText_-_2> ::= 'j'  ;
+<ScriptText_-_2> ::= 'k'  ;
+<ScriptText_-_2> ::= 'l'  ;
+<ScriptText_-_2> ::= 'm'  ;
+<ScriptText_-_2> ::= 'n'  ;
+<ScriptText_-_2> ::= 'o'  ;
+<ScriptText_-_2> ::= 'p'  ;
+<ScriptText_-_2> ::= 'q'  ;
+<ScriptText_-_2> ::= 'r'  ;
+<ScriptText_-_2> ::= 's'  ;
+<ScriptText_-_2> ::= 't'  ;
+<ScriptText_-_2> ::= 'u'  ;
+<ScriptText_-_2> ::= 'v'  ;
+<ScriptText_-_2> ::= 'w'  ;
+<ScriptText_-_2> ::= 'x'  ;
+<ScriptText_-_2> ::= 'y'  ;
+<ScriptText_-_2> ::= 'z'  ;
+<ScriptText_-_2> ::= '{'  ;
+<ScriptText_-_2> ::= '|'  ;
+<ScriptText_-_2> ::= '}'  ;
+<ScriptText_-_2> ::= '~'  ;
+# END
+# END
+# LEXER: ScriptClose
+# BEGIN LEXER FOR  ScriptClose and
+# BEGIN LEXER FOR  ScriptClose ?
+<ScriptClose_-_1> ::= ;
+# BEGIN LEXER FOR  ScriptClose string
+<ScriptClose_-_1> ::= 'script' ;
+# END
+# END
+<ScriptClose> ::= '<' '/' <ScriptClose_-_1> '>' ' ' ;
+# END
+# LEXER: PHPStartInsideScriptEcho
+# BEGIN LEXER FOR  PHPStartInsideScriptEcho token
+<PHPStartInsideScriptEcho> ::= <PhpStartEchoFragment> ' ' ;
+# END
+# LEXER: PHPStartInsideScript
+# BEGIN LEXER FOR  PHPStartInsideScript token
+<PHPStartInsideScript> ::= <PhpStartFragment> ' ' ;
+# END
+# LEXER: ScriptText2
+# BEGIN LEXER FOR  ScriptText2 string
+<ScriptText2> ::= '<' ' ' ;
+# END
+# LEXER: StyleBody
+# BEGIN LEXER FOR  StyleBody and
+# BEGIN LEXER FOR  StyleBody ?
+<StyleBody_-_1> ::= ;
+# BEGIN LEXER FOR  StyleBody .
+<StyleBody_-_1> ::= ' '  ;
+<StyleBody_-_1> ::= '!'  ;
+<StyleBody_-_1> ::= '"'  ;
+<StyleBody_-_1> ::= '#'  ;
+<StyleBody_-_1> ::= '$'  ;
+<StyleBody_-_1> ::= '%'  ;
+<StyleBody_-_1> ::= '&'  ;
+<StyleBody_-_1> ::=  39   ;
+<StyleBody_-_1> ::= '('  ;
+<StyleBody_-_1> ::= ')'  ;
+<StyleBody_-_1> ::= '*'  ;
+<StyleBody_-_1> ::= '+'  ;
+<StyleBody_-_1> ::= ','  ;
+<StyleBody_-_1> ::= '-'  ;
+<StyleBody_-_1> ::= '.'  ;
+<StyleBody_-_1> ::= '/'  ;
+<StyleBody_-_1> ::= '0'  ;
+<StyleBody_-_1> ::= '1'  ;
+<StyleBody_-_1> ::= '2'  ;
+<StyleBody_-_1> ::= '3'  ;
+<StyleBody_-_1> ::= '4'  ;
+<StyleBody_-_1> ::= '5'  ;
+<StyleBody_-_1> ::= '6'  ;
+<StyleBody_-_1> ::= '7'  ;
+<StyleBody_-_1> ::= '8'  ;
+<StyleBody_-_1> ::= '9'  ;
+<StyleBody_-_1> ::= ':'  ;
+<StyleBody_-_1> ::= ';'  ;
+<StyleBody_-_1> ::= '<'  ;
+<StyleBody_-_1> ::= '='  ;
+<StyleBody_-_1> ::= '>'  ;
+<StyleBody_-_1> ::= '?'  ;
+<StyleBody_-_1> ::= '@'  ;
+<StyleBody_-_1> ::= 'A'  ;
+<StyleBody_-_1> ::= 'B'  ;
+<StyleBody_-_1> ::= 'C'  ;
+<StyleBody_-_1> ::= 'D'  ;
+<StyleBody_-_1> ::= 'E'  ;
+<StyleBody_-_1> ::= 'F'  ;
+<StyleBody_-_1> ::= 'G'  ;
+<StyleBody_-_1> ::= 'H'  ;
+<StyleBody_-_1> ::= 'I'  ;
+<StyleBody_-_1> ::= 'J'  ;
+<StyleBody_-_1> ::= 'K'  ;
+<StyleBody_-_1> ::= 'L'  ;
+<StyleBody_-_1> ::= 'M'  ;
+<StyleBody_-_1> ::= 'N'  ;
+<StyleBody_-_1> ::= 'O'  ;
+<StyleBody_-_1> ::= 'P'  ;
+<StyleBody_-_1> ::= 'Q'  ;
+<StyleBody_-_1> ::= 'R'  ;
+<StyleBody_-_1> ::= 'S'  ;
+<StyleBody_-_1> ::= 'T'  ;
+<StyleBody_-_1> ::= 'U'  ;
+<StyleBody_-_1> ::= 'V'  ;
+<StyleBody_-_1> ::= 'W'  ;
+<StyleBody_-_1> ::= 'X'  ;
+<StyleBody_-_1> ::= 'Y'  ;
+<StyleBody_-_1> ::= 'Z'  ;
+<StyleBody_-_1> ::= '['  ;
+<StyleBody_-_1> ::= '\'  ;
+<StyleBody_-_1> ::= ']'  ;
+<StyleBody_-_1> ::= '^'  ;
+<StyleBody_-_1> ::= '_'  ;
+<StyleBody_-_1> ::= '`'  ;
+<StyleBody_-_1> ::= 'a'  ;
+<StyleBody_-_1> ::= 'b'  ;
+<StyleBody_-_1> ::= 'c'  ;
+<StyleBody_-_1> ::= 'd'  ;
+<StyleBody_-_1> ::= 'e'  ;
+<StyleBody_-_1> ::= 'f'  ;
+<StyleBody_-_1> ::= 'g'  ;
+<StyleBody_-_1> ::= 'h'  ;
+<StyleBody_-_1> ::= 'i'  ;
+<StyleBody_-_1> ::= 'j'  ;
+<StyleBody_-_1> ::= 'k'  ;
+<StyleBody_-_1> ::= 'l'  ;
+<StyleBody_-_1> ::= 'm'  ;
+<StyleBody_-_1> ::= 'n'  ;
+<StyleBody_-_1> ::= 'o'  ;
+<StyleBody_-_1> ::= 'p'  ;
+<StyleBody_-_1> ::= 'q'  ;
+<StyleBody_-_1> ::= 'r'  ;
+<StyleBody_-_1> ::= 's'  ;
+<StyleBody_-_1> ::= 't'  ;
+<StyleBody_-_1> ::= 'u'  ;
+<StyleBody_-_1> ::= 'v'  ;
+<StyleBody_-_1> ::= 'w'  ;
+<StyleBody_-_1> ::= 'x'  ;
+<StyleBody_-_1> ::= 'y'  ;
+<StyleBody_-_1> ::= 'z'  ;
+<StyleBody_-_1> ::= '{'  ;
+<StyleBody_-_1> ::= '|'  ;
+<StyleBody_-_1> ::= '}'  ;
+<StyleBody_-_1> ::= '~'  ;
+# END
+# END
+# BEGIN LEXER FOR  StyleBody ?
+<StyleBody_-_2> ::= ;
+# BEGIN LEXER FOR  StyleBody string
+<StyleBody_-_2> ::= 'style' ;
+# END
+# END
+<StyleBody> ::= <StyleBody_-_1> '</' <StyleBody_-_2> '>' ' ' ;
+# END
+# LEXER: PHPEnd
+# BEGIN LEXER FOR  PHPEnd or
+# BEGIN LEXER FOR  PHPEnd and
+# BEGIN LEXER FOR  PHPEnd or
+# BEGIN LEXER FOR  PHPEnd string
+<PHPEnd_-_1> ::= '?' ;
+# END
+# BEGIN LEXER FOR  PHPEnd and
+# BEGIN LEXER FOR  PHPEnd eps
+<PHPEnd_-_2> ::= ;
+# END
+<PHPEnd_-_1> ::= '%' <PHPEnd_-_2> ;
+# END
+# END
+<PHPEnd> ::= <PHPEnd_-_1> '>' ' ' ;
+# END
+# BEGIN LEXER FOR  PHPEnd and
+# BEGIN LEXER FOR  PHPEnd eps
+<PHPEnd_-_3> ::= ;
+# END
+<PHPEnd> ::= '</script>' <PHPEnd_-_3> ' ' ;
+# END
+# END
+# LEXER: Whitespace
+# BEGIN LEXER FOR  Whitespace +
+<Whitespace> ::= <Whitespace_-_1> ' ' ;
+<Whitespace_-_1> ::= <Whitespace_-_2> ' ' ;
+<Whitespace_-_1> ::= <Whitespace_-_2> <Whitespace_-_1> ' ' ;
+# BEGIN LEXER FOR  Whitespace char_set
+<Whitespace_-_2> ::= ' ' ;
+<Whitespace_-_2> ::=  9 ;
+<Whitespace_-_2> ::=  13 ;
+<Whitespace_-_2> ::=  10 ;
+# END
+# END
+# LEXER: MultiLineComment
+# BEGIN LEXER FOR  MultiLineComment and
+# BEGIN LEXER FOR  MultiLineComment ?
+<MultiLineComment_-_1> ::= ;
+# BEGIN LEXER FOR  MultiLineComment .
+<MultiLineComment_-_1> ::= ' '  ;
+<MultiLineComment_-_1> ::= '!'  ;
+<MultiLineComment_-_1> ::= '"'  ;
+<MultiLineComment_-_1> ::= '#'  ;
+<MultiLineComment_-_1> ::= '$'  ;
+<MultiLineComment_-_1> ::= '%'  ;
+<MultiLineComment_-_1> ::= '&'  ;
+<MultiLineComment_-_1> ::=  39   ;
+<MultiLineComment_-_1> ::= '('  ;
+<MultiLineComment_-_1> ::= ')'  ;
+<MultiLineComment_-_1> ::= '*'  ;
+<MultiLineComment_-_1> ::= '+'  ;
+<MultiLineComment_-_1> ::= ','  ;
+<MultiLineComment_-_1> ::= '-'  ;
+<MultiLineComment_-_1> ::= '.'  ;
+<MultiLineComment_-_1> ::= '/'  ;
+<MultiLineComment_-_1> ::= '0'  ;
+<MultiLineComment_-_1> ::= '1'  ;
+<MultiLineComment_-_1> ::= '2'  ;
+<MultiLineComment_-_1> ::= '3'  ;
+<MultiLineComment_-_1> ::= '4'  ;
+<MultiLineComment_-_1> ::= '5'  ;
+<MultiLineComment_-_1> ::= '6'  ;
+<MultiLineComment_-_1> ::= '7'  ;
+<MultiLineComment_-_1> ::= '8'  ;
+<MultiLineComment_-_1> ::= '9'  ;
+<MultiLineComment_-_1> ::= ':'  ;
+<MultiLineComment_-_1> ::= ';'  ;
+<MultiLineComment_-_1> ::= '<'  ;
+<MultiLineComment_-_1> ::= '='  ;
+<MultiLineComment_-_1> ::= '>'  ;
+<MultiLineComment_-_1> ::= '?'  ;
+<MultiLineComment_-_1> ::= '@'  ;
+<MultiLineComment_-_1> ::= 'A'  ;
+<MultiLineComment_-_1> ::= 'B'  ;
+<MultiLineComment_-_1> ::= 'C'  ;
+<MultiLineComment_-_1> ::= 'D'  ;
+<MultiLineComment_-_1> ::= 'E'  ;
+<MultiLineComment_-_1> ::= 'F'  ;
+<MultiLineComment_-_1> ::= 'G'  ;
+<MultiLineComment_-_1> ::= 'H'  ;
+<MultiLineComment_-_1> ::= 'I'  ;
+<MultiLineComment_-_1> ::= 'J'  ;
+<MultiLineComment_-_1> ::= 'K'  ;
+<MultiLineComment_-_1> ::= 'L'  ;
+<MultiLineComment_-_1> ::= 'M'  ;
+<MultiLineComment_-_1> ::= 'N'  ;
+<MultiLineComment_-_1> ::= 'O'  ;
+<MultiLineComment_-_1> ::= 'P'  ;
+<MultiLineComment_-_1> ::= 'Q'  ;
+<MultiLineComment_-_1> ::= 'R'  ;
+<MultiLineComment_-_1> ::= 'S'  ;
+<MultiLineComment_-_1> ::= 'T'  ;
+<MultiLineComment_-_1> ::= 'U'  ;
+<MultiLineComment_-_1> ::= 'V'  ;
+<MultiLineComment_-_1> ::= 'W'  ;
+<MultiLineComment_-_1> ::= 'X'  ;
+<MultiLineComment_-_1> ::= 'Y'  ;
+<MultiLineComment_-_1> ::= 'Z'  ;
+<MultiLineComment_-_1> ::= '['  ;
+<MultiLineComment_-_1> ::= '\'  ;
+<MultiLineComment_-_1> ::= ']'  ;
+<MultiLineComment_-_1> ::= '^'  ;
+<MultiLineComment_-_1> ::= '_'  ;
+<MultiLineComment_-_1> ::= '`'  ;
+<MultiLineComment_-_1> ::= 'a'  ;
+<MultiLineComment_-_1> ::= 'b'  ;
+<MultiLineComment_-_1> ::= 'c'  ;
+<MultiLineComment_-_1> ::= 'd'  ;
+<MultiLineComment_-_1> ::= 'e'  ;
+<MultiLineComment_-_1> ::= 'f'  ;
+<MultiLineComment_-_1> ::= 'g'  ;
+<MultiLineComment_-_1> ::= 'h'  ;
+<MultiLineComment_-_1> ::= 'i'  ;
+<MultiLineComment_-_1> ::= 'j'  ;
+<MultiLineComment_-_1> ::= 'k'  ;
+<MultiLineComment_-_1> ::= 'l'  ;
+<MultiLineComment_-_1> ::= 'm'  ;
+<MultiLineComment_-_1> ::= 'n'  ;
+<MultiLineComment_-_1> ::= 'o'  ;
+<MultiLineComment_-_1> ::= 'p'  ;
+<MultiLineComment_-_1> ::= 'q'  ;
+<MultiLineComment_-_1> ::= 'r'  ;
+<MultiLineComment_-_1> ::= 's'  ;
+<MultiLineComment_-_1> ::= 't'  ;
+<MultiLineComment_-_1> ::= 'u'  ;
+<MultiLineComment_-_1> ::= 'v'  ;
+<MultiLineComment_-_1> ::= 'w'  ;
+<MultiLineComment_-_1> ::= 'x'  ;
+<MultiLineComment_-_1> ::= 'y'  ;
+<MultiLineComment_-_1> ::= 'z'  ;
+<MultiLineComment_-_1> ::= '{'  ;
+<MultiLineComment_-_1> ::= '|'  ;
+<MultiLineComment_-_1> ::= '}'  ;
+<MultiLineComment_-_1> ::= '~'  ;
+# END
+# END
+<MultiLineComment> ::= '/*' <MultiLineComment_-_1> '*/' ' ' ;
+# END
+# LEXER: SingleLineComment
+# BEGIN LEXER FOR  SingleLineComment string
+<SingleLineComment> ::= '//' ' ' ;
+# END
+# LEXER: ShellStyleComment
+# BEGIN LEXER FOR  ShellStyleComment string
+<ShellStyleComment> ::= '#' ' ' ;
+# END
+# LEXER: Abstract
+# BEGIN LEXER FOR  Abstract string
+<Abstract> ::= 'abstract' ' ' ;
+# END
+# LEXER: Array
+# BEGIN LEXER FOR  Array string
+<Array> ::= 'array' ' ' ;
+# END
+# LEXER: As
+# BEGIN LEXER FOR  As string
+<As> ::= 'as' ' ' ;
+# END
+# LEXER: BinaryCast
+# BEGIN LEXER FOR  BinaryCast string
+<BinaryCast> ::= 'binary' ' ' ;
+# END
+# LEXER: BoolType
+# BEGIN LEXER FOR  BoolType and
+# BEGIN LEXER FOR  BoolType ?
+<BoolType_-_1> ::= ;
+# BEGIN LEXER FOR  BoolType string
+<BoolType_-_1> ::= 'ean' ;
+# END
+# END
+<BoolType> ::= 'bool' <BoolType_-_1> ' ' ;
+# END
+# LEXER: BooleanConstant
+# BEGIN LEXER FOR  BooleanConstant or
+# BEGIN LEXER FOR  BooleanConstant string
+<BooleanConstant> ::= 'true' ' ' ;
+# END
+# BEGIN LEXER FOR  BooleanConstant string
+<BooleanConstant> ::= 'false' ' ' ;
+# END
+# END
+# LEXER: Break
+# BEGIN LEXER FOR  Break string
+<Break> ::= 'break' ' ' ;
+# END
+# LEXER: Callable
+# BEGIN LEXER FOR  Callable string
+<Callable> ::= 'callable' ' ' ;
+# END
+# LEXER: Case
+# BEGIN LEXER FOR  Case string
+<Case> ::= 'case' ' ' ;
+# END
+# LEXER: Catch
+# BEGIN LEXER FOR  Catch string
+<Catch> ::= 'catch' ' ' ;
+# END
+# LEXER: Class
+# BEGIN LEXER FOR  Class string
+<Class> ::= 'class' ' ' ;
+# END
+# LEXER: Clone
+# BEGIN LEXER FOR  Clone string
+<Clone> ::= 'clone' ' ' ;
+# END
+# LEXER: Const
+# BEGIN LEXER FOR  Const string
+<Const> ::= 'const' ' ' ;
+# END
+# LEXER: Continue
+# BEGIN LEXER FOR  Continue string
+<Continue> ::= 'continue' ' ' ;
+# END
+# LEXER: Declare
+# BEGIN LEXER FOR  Declare string
+<Declare> ::= 'declare' ' ' ;
+# END
+# LEXER: Default
+# BEGIN LEXER FOR  Default string
+<Default> ::= 'default' ' ' ;
+# END
+# LEXER: Do
+# BEGIN LEXER FOR  Do string
+<Do> ::= 'do' ' ' ;
+# END
+# LEXER: DoubleCast
+# BEGIN LEXER FOR  DoubleCast string
+<DoubleCast> ::= 'real' ' ' ;
+# END
+# LEXER: DoubleType
+# BEGIN LEXER FOR  DoubleType string
+<DoubleType> ::= 'double' ' ' ;
+# END
+# LEXER: Echo
+# BEGIN LEXER FOR  Echo string
+<Echo> ::= 'echo' ' ' ;
+# END
+# LEXER: Else
+# BEGIN LEXER FOR  Else string
+<Else> ::= 'else' ' ' ;
+# END
+# LEXER: ElseIf
+# BEGIN LEXER FOR  ElseIf string
+<ElseIf> ::= 'elseif' ' ' ;
+# END
+# LEXER: Empty
+# BEGIN LEXER FOR  Empty string
+<Empty> ::= 'empty' ' ' ;
+# END
+# LEXER: EndDeclare
+# BEGIN LEXER FOR  EndDeclare string
+<EndDeclare> ::= 'enddeclare' ' ' ;
+# END
+# LEXER: EndFor
+# BEGIN LEXER FOR  EndFor string
+<EndFor> ::= 'endfor' ' ' ;
+# END
+# LEXER: EndForeach
+# BEGIN LEXER FOR  EndForeach string
+<EndForeach> ::= 'endforeach' ' ' ;
+# END
+# LEXER: EndIf
+# BEGIN LEXER FOR  EndIf string
+<EndIf> ::= 'endif' ' ' ;
+# END
+# LEXER: EndSwitch
+# BEGIN LEXER FOR  EndSwitch string
+<EndSwitch> ::= 'endswitch' ' ' ;
+# END
+# LEXER: EndWhile
+# BEGIN LEXER FOR  EndWhile string
+<EndWhile> ::= 'endwhile' ' ' ;
+# END
+# LEXER: Eval
+# BEGIN LEXER FOR  Eval string
+<Eval> ::= 'eval' ' ' ;
+# END
+# LEXER: Exit
+# BEGIN LEXER FOR  Exit string
+<Exit> ::= 'die' ' ' ;
+# END
+# LEXER: Extends
+# BEGIN LEXER FOR  Extends string
+<Extends> ::= 'extends' ' ' ;
+# END
+# LEXER: Final
+# BEGIN LEXER FOR  Final string
+<Final> ::= 'final' ' ' ;
+# END
+# LEXER: Finally
+# BEGIN LEXER FOR  Finally string
+<Finally> ::= 'finally' ' ' ;
+# END
+# LEXER: FloatCast
+# BEGIN LEXER FOR  FloatCast string
+<FloatCast> ::= 'float' ' ' ;
+# END
+# LEXER: For
+# BEGIN LEXER FOR  For string
+<For> ::= 'for' ' ' ;
+# END
+# LEXER: Foreach
+# BEGIN LEXER FOR  Foreach string
+<Foreach> ::= 'foreach' ' ' ;
+# END
+# LEXER: Function
+# BEGIN LEXER FOR  Function string
+<Function> ::= 'function' ' ' ;
+# END
+# LEXER: Global
+# BEGIN LEXER FOR  Global string
+<Global> ::= 'global' ' ' ;
+# END
+# LEXER: Goto
+# BEGIN LEXER FOR  Goto string
+<Goto> ::= 'goto' ' ' ;
+# END
+# LEXER: If
+# BEGIN LEXER FOR  If string
+<If> ::= 'if' ' ' ;
+# END
+# LEXER: Implements
+# BEGIN LEXER FOR  Implements string
+<Implements> ::= 'implements' ' ' ;
+# END
+# LEXER: Import
+# BEGIN LEXER FOR  Import string
+<Import> ::= 'import' ' ' ;
+# END
+# LEXER: Include
+# BEGIN LEXER FOR  Include string
+<Include> ::= 'include' ' ' ;
+# END
+# LEXER: IncludeOnce
+# BEGIN LEXER FOR  IncludeOnce string
+<IncludeOnce> ::= 'include_once' ' ' ;
+# END
+# LEXER: InstanceOf
+# BEGIN LEXER FOR  InstanceOf string
+<InstanceOf> ::= 'instanceof' ' ' ;
+# END
+# LEXER: InsteadOf
+# BEGIN LEXER FOR  InsteadOf string
+<InsteadOf> ::= 'insteadof' ' ' ;
+# END
+# LEXER: Int8Cast
+# BEGIN LEXER FOR  Int8Cast string
+<Int8Cast> ::= 'int8' ' ' ;
+# END
+# LEXER: Int16Cast
+# BEGIN LEXER FOR  Int16Cast string
+<Int16Cast> ::= 'int16' ' ' ;
+# END
+# LEXER: Int64Type
+# BEGIN LEXER FOR  Int64Type string
+<Int64Type> ::= 'int64' ' ' ;
+# END
+# LEXER: IntType
+# BEGIN LEXER FOR  IntType and
+# BEGIN LEXER FOR  IntType ?
+<IntType_-_1> ::= ;
+# BEGIN LEXER FOR  IntType string
+<IntType_-_1> ::= 'eger' ;
+# END
+# END
+<IntType> ::= 'int' <IntType_-_1> ' ' ;
+# END
+# LEXER: Interface
+# BEGIN LEXER FOR  Interface string
+<Interface> ::= 'interface' ' ' ;
+# END
+# LEXER: IsSet
+# BEGIN LEXER FOR  IsSet string
+<IsSet> ::= 'isset' ' ' ;
+# END
+# LEXER: List
+# BEGIN LEXER FOR  List string
+<List> ::= 'list' ' ' ;
+# END
+# LEXER: LogicalAnd
+# BEGIN LEXER FOR  LogicalAnd string
+<LogicalAnd> ::= 'and' ' ' ;
+# END
+# LEXER: LogicalOr
+# BEGIN LEXER FOR  LogicalOr string
+<LogicalOr> ::= 'or' ' ' ;
+# END
+# LEXER: LogicalXor
+# BEGIN LEXER FOR  LogicalXor string
+<LogicalXor> ::= 'xor' ' ' ;
+# END
+# LEXER: Namespace
+# BEGIN LEXER FOR  Namespace string
+<Namespace> ::= 'namespace' ' ' ;
+# END
+# LEXER: New
+# BEGIN LEXER FOR  New string
+<New> ::= 'new' ' ' ;
+# END
+# LEXER: Null
+# BEGIN LEXER FOR  Null string
+<Null> ::= 'null' ' ' ;
+# END
+# LEXER: ObjectType
+# BEGIN LEXER FOR  ObjectType string
+<ObjectType> ::= 'object' ' ' ;
+# END
+# LEXER: Parent_
+# BEGIN LEXER FOR  Parent_ string
+<Parent_> ::= 'parent' ' ' ;
+# END
+# LEXER: Partial
+# BEGIN LEXER FOR  Partial string
+<Partial> ::= 'partial' ' ' ;
+# END
+# LEXER: Print
+# BEGIN LEXER FOR  Print string
+<Print> ::= 'print' ' ' ;
+# END
+# LEXER: Private
+# BEGIN LEXER FOR  Private string
+<Private> ::= 'private' ' ' ;
+# END
+# LEXER: Protected
+# BEGIN LEXER FOR  Protected string
+<Protected> ::= 'protected' ' ' ;
+# END
+# LEXER: Public
+# BEGIN LEXER FOR  Public string
+<Public> ::= 'public' ' ' ;
+# END
+# LEXER: Require
+# BEGIN LEXER FOR  Require string
+<Require> ::= 'require' ' ' ;
+# END
+# LEXER: RequireOnce
+# BEGIN LEXER FOR  RequireOnce string
+<RequireOnce> ::= 'require_once' ' ' ;
+# END
+# LEXER: Resource
+# BEGIN LEXER FOR  Resource string
+<Resource> ::= 'resource' ' ' ;
+# END
+# LEXER: Return
+# BEGIN LEXER FOR  Return string
+<Return> ::= 'return' ' ' ;
+# END
+# LEXER: Static
+# BEGIN LEXER FOR  Static string
+<Static> ::= 'static' ' ' ;
+# END
+# LEXER: StringType
+# BEGIN LEXER FOR  StringType string
+<StringType> ::= 'string' ' ' ;
+# END
+# LEXER: Switch
+# BEGIN LEXER FOR  Switch string
+<Switch> ::= 'switch' ' ' ;
+# END
+# LEXER: Throw
+# BEGIN LEXER FOR  Throw string
+<Throw> ::= 'throw' ' ' ;
+# END
+# LEXER: Trait
+# BEGIN LEXER FOR  Trait string
+<Trait> ::= 'trait' ' ' ;
+# END
+# LEXER: Try
+# BEGIN LEXER FOR  Try string
+<Try> ::= 'try' ' ' ;
+# END
+# LEXER: Typeof
+# BEGIN LEXER FOR  Typeof string
+<Typeof> ::= 'clrtypeof' ' ' ;
+# END
+# LEXER: UintCast
+# BEGIN LEXER FOR  UintCast and
+# BEGIN LEXER FOR  UintCast ?
+<UintCast_-_1> ::= ;
+# BEGIN LEXER FOR  UintCast or
+# BEGIN LEXER FOR  UintCast string
+<UintCast_-_1> ::= '8' ;
+# END
+# BEGIN LEXER FOR  UintCast string
+<UintCast_-_1> ::= '16' ;
+# END
+# BEGIN LEXER FOR  UintCast string
+<UintCast_-_1> ::= '64' ;
+# END
+# END
+# END
+<UintCast> ::= 'uint' <UintCast_-_1> ' ' ;
+# END
+# LEXER: UnicodeCast
+# BEGIN LEXER FOR  UnicodeCast string
+<UnicodeCast> ::= 'unicode' ' ' ;
+# END
+# LEXER: Unset
+# BEGIN LEXER FOR  Unset string
+<Unset> ::= 'unset' ' ' ;
+# END
+# LEXER: Use
+# BEGIN LEXER FOR  Use string
+<Use> ::= 'use' ' ' ;
+# END
+# LEXER: Var
+# BEGIN LEXER FOR  Var string
+<Var> ::= 'var' ' ' ;
+# END
+# LEXER: While
+# BEGIN LEXER FOR  While string
+<While> ::= 'while' ' ' ;
+# END
+# LEXER: Yield
+# BEGIN LEXER FOR  Yield string
+<Yield> ::= 'yield' ' ' ;
+# END
+# LEXER: From
+# BEGIN LEXER FOR  From string
+<From> ::= 'from' ' ' ;
+# END
+# LEXER: LambdaFn
+# BEGIN LEXER FOR  LambdaFn string
+<LambdaFn> ::= 'fn' ' ' ;
+# END
+# LEXER: Get
+# BEGIN LEXER FOR  Get string
+<Get> ::= '__get' ' ' ;
+# END
+# LEXER: Set
+# BEGIN LEXER FOR  Set string
+<Set> ::= '__set' ' ' ;
+# END
+# LEXER: Call
+# BEGIN LEXER FOR  Call string
+<Call> ::= '__call' ' ' ;
+# END
+# LEXER: CallStatic
+# BEGIN LEXER FOR  CallStatic string
+<CallStatic> ::= '__callstatic' ' ' ;
+# END
+# LEXER: Constructor
+# BEGIN LEXER FOR  Constructor string
+<Constructor> ::= '__construct' ' ' ;
+# END
+# LEXER: Destruct
+# BEGIN LEXER FOR  Destruct string
+<Destruct> ::= '__destruct' ' ' ;
+# END
+# LEXER: Wakeup
+# BEGIN LEXER FOR  Wakeup string
+<Wakeup> ::= '__wakeup' ' ' ;
+# END
+# LEXER: Sleep
+# BEGIN LEXER FOR  Sleep string
+<Sleep> ::= '__sleep' ' ' ;
+# END
+# LEXER: Autoload
+# BEGIN LEXER FOR  Autoload string
+<Autoload> ::= '__autoload' ' ' ;
+# END
+# LEXER: IsSet__
+# BEGIN LEXER FOR  IsSet__ string
+<IsSet__> ::= '__isset' ' ' ;
+# END
+# LEXER: Unset__
+# BEGIN LEXER FOR  Unset__ string
+<Unset__> ::= '__unset' ' ' ;
+# END
+# LEXER: ToString__
+# BEGIN LEXER FOR  ToString__ string
+<ToString__> ::= '__tostring' ' ' ;
+# END
+# LEXER: Invoke
+# BEGIN LEXER FOR  Invoke string
+<Invoke> ::= '__invoke' ' ' ;
+# END
+# LEXER: SetState
+# BEGIN LEXER FOR  SetState string
+<SetState> ::= '__set_state' ' ' ;
+# END
+# LEXER: Clone__
+# BEGIN LEXER FOR  Clone__ string
+<Clone__> ::= '__clone' ' ' ;
+# END
+# LEXER: DebugInfo
+# BEGIN LEXER FOR  DebugInfo string
+<DebugInfo> ::= '__debuginfo' ' ' ;
+# END
+# LEXER: Namespace__
+# BEGIN LEXER FOR  Namespace__ string
+<Namespace__> ::= '__namespace__' ' ' ;
+# END
+# LEXER: Class__
+# BEGIN LEXER FOR  Class__ string
+<Class__> ::= '__class__' ' ' ;
+# END
+# LEXER: Traic__
+# BEGIN LEXER FOR  Traic__ string
+<Traic__> ::= '__trait__' ' ' ;
+# END
+# LEXER: Function__
+# BEGIN LEXER FOR  Function__ string
+<Function__> ::= '__function__' ' ' ;
+# END
+# LEXER: Method__
+# BEGIN LEXER FOR  Method__ string
+<Method__> ::= '__method__' ' ' ;
+# END
+# LEXER: Line__
+# BEGIN LEXER FOR  Line__ string
+<Line__> ::= '__line__' ' ' ;
+# END
+# LEXER: File__
+# BEGIN LEXER FOR  File__ string
+<File__> ::= '__file__' ' ' ;
+# END
+# LEXER: Dir__
+# BEGIN LEXER FOR  Dir__ string
+<Dir__> ::= '__dir__' ' ' ;
+# END
+# LEXER: Spaceship
+# BEGIN LEXER FOR  Spaceship string
+<Spaceship> ::= '<=>' ' ' ;
+# END
+# LEXER: Lgeneric
+# BEGIN LEXER FOR  Lgeneric string
+<Lgeneric> ::= '<:' ' ' ;
+# END
+# LEXER: Rgeneric
+# BEGIN LEXER FOR  Rgeneric string
+<Rgeneric> ::= ':>' ' ' ;
+# END
+# LEXER: DoubleArrow
+# BEGIN LEXER FOR  DoubleArrow string
+<DoubleArrow> ::= '=>' ' ' ;
+# END
+# LEXER: Inc
+# BEGIN LEXER FOR  Inc string
+<Inc> ::= '++' ' ' ;
+# END
+# LEXER: Dec
+# BEGIN LEXER FOR  Dec string
+<Dec> ::= '--' ' ' ;
+# END
+# LEXER: IsIdentical
+# BEGIN LEXER FOR  IsIdentical string
+<IsIdentical> ::= '===' ' ' ;
+# END
+# LEXER: IsNoidentical
+# BEGIN LEXER FOR  IsNoidentical string
+<IsNoidentical> ::= '!==' ' ' ;
+# END
+# LEXER: IsEqual
+# BEGIN LEXER FOR  IsEqual string
+<IsEqual> ::= '==' ' ' ;
+# END
+# LEXER: IsNotEq
+# BEGIN LEXER FOR  IsNotEq or
+# BEGIN LEXER FOR  IsNotEq string
+<IsNotEq> ::= '<>' ' ' ;
+# END
+# BEGIN LEXER FOR  IsNotEq string
+<IsNotEq> ::= '!=' ' ' ;
+# END
+# END
+# LEXER: IsSmallerOrEqual
+# BEGIN LEXER FOR  IsSmallerOrEqual string
+<IsSmallerOrEqual> ::= '<=' ' ' ;
+# END
+# LEXER: IsGreaterOrEqual
+# BEGIN LEXER FOR  IsGreaterOrEqual string
+<IsGreaterOrEqual> ::= '>=' ' ' ;
+# END
+# LEXER: PlusEqual
+# BEGIN LEXER FOR  PlusEqual string
+<PlusEqual> ::= '+=' ' ' ;
+# END
+# LEXER: MinusEqual
+# BEGIN LEXER FOR  MinusEqual string
+<MinusEqual> ::= '-=' ' ' ;
+# END
+# LEXER: MulEqual
+# BEGIN LEXER FOR  MulEqual string
+<MulEqual> ::= '*=' ' ' ;
+# END
+# LEXER: Pow
+# BEGIN LEXER FOR  Pow string
+<Pow> ::= '**' ' ' ;
+# END
+# LEXER: PowEqual
+# BEGIN LEXER FOR  PowEqual string
+<PowEqual> ::= '**=' ' ' ;
+# END
+# LEXER: DivEqual
+# BEGIN LEXER FOR  DivEqual string
+<DivEqual> ::= '/=' ' ' ;
+# END
+# LEXER: Concaequal
+# BEGIN LEXER FOR  Concaequal string
+<Concaequal> ::= '.=' ' ' ;
+# END
+# LEXER: ModEqual
+# BEGIN LEXER FOR  ModEqual string
+<ModEqual> ::= '%=' ' ' ;
+# END
+# LEXER: ShiftLeftEqual
+# BEGIN LEXER FOR  ShiftLeftEqual string
+<ShiftLeftEqual> ::= '<<=' ' ' ;
+# END
+# LEXER: ShiftRightEqual
+# BEGIN LEXER FOR  ShiftRightEqual string
+<ShiftRightEqual> ::= '>>=' ' ' ;
+# END
+# LEXER: AndEqual
+# BEGIN LEXER FOR  AndEqual string
+<AndEqual> ::= '&=' ' ' ;
+# END
+# LEXER: OrEqual
+# BEGIN LEXER FOR  OrEqual string
+<OrEqual> ::= '|=' ' ' ;
+# END
+# LEXER: XorEqual
+# BEGIN LEXER FOR  XorEqual string
+<XorEqual> ::= '^=' ' ' ;
+# END
+# LEXER: BooleanOr
+# BEGIN LEXER FOR  BooleanOr string
+<BooleanOr> ::= '||' ' ' ;
+# END
+# LEXER: BooleanAnd
+# BEGIN LEXER FOR  BooleanAnd string
+<BooleanAnd> ::= '&&' ' ' ;
+# END
+# LEXER: NullCoalescing
+# BEGIN LEXER FOR  NullCoalescing string
+<NullCoalescing> ::= '??' ' ' ;
+# END
+# LEXER: NullCoalescingEqual
+# BEGIN LEXER FOR  NullCoalescingEqual string
+<NullCoalescingEqual> ::= '??=' ' ' ;
+# END
+# LEXER: ShiftLeft
+# BEGIN LEXER FOR  ShiftLeft string
+<ShiftLeft> ::= '<<' ' ' ;
+# END
+# LEXER: ShiftRight
+# BEGIN LEXER FOR  ShiftRight string
+<ShiftRight> ::= '>>' ' ' ;
+# END
+# LEXER: DoubleColon
+# BEGIN LEXER FOR  DoubleColon string
+<DoubleColon> ::= '::' ' ' ;
+# END
+# LEXER: ObjectOperator
+# BEGIN LEXER FOR  ObjectOperator string
+<ObjectOperator> ::= '->' ' ' ;
+# END
+# LEXER: NamespaceSeparator
+# BEGIN LEXER FOR  NamespaceSeparator string
+<NamespaceSeparator> ::= '\' ' ' ;
+# END
+# LEXER: Ellipsis
+# BEGIN LEXER FOR  Ellipsis string
+<Ellipsis> ::= '...' ' ' ;
+# END
+# LEXER: Less
+# BEGIN LEXER FOR  Less string
+<Less> ::= '<' ' ' ;
+# END
+# LEXER: Greater
+# BEGIN LEXER FOR  Greater string
+<Greater> ::= '>' ' ' ;
+# END
+# LEXER: Ampersand
+# BEGIN LEXER FOR  Ampersand string
+<Ampersand> ::= '&' ' ' ;
+# END
+# LEXER: Pipe
+# BEGIN LEXER FOR  Pipe string
+<Pipe> ::= '|' ' ' ;
+# END
+# LEXER: Bang
+# BEGIN LEXER FOR  Bang string
+<Bang> ::= '!' ' ' ;
+# END
+# LEXER: Caret
+# BEGIN LEXER FOR  Caret string
+<Caret> ::= '^' ' ' ;
+# END
+# LEXER: Plus
+# BEGIN LEXER FOR  Plus string
+<Plus> ::= '+' ' ' ;
+# END
+# LEXER: Minus
+# BEGIN LEXER FOR  Minus string
+<Minus> ::= '-' ' ' ;
+# END
+# LEXER: Asterisk
+# BEGIN LEXER FOR  Asterisk string
+<Asterisk> ::= '*' ' ' ;
+# END
+# LEXER: Percent
+# BEGIN LEXER FOR  Percent string
+<Percent> ::= '%' ' ' ;
+# END
+# LEXER: Divide
+# BEGIN LEXER FOR  Divide string
+<Divide> ::= '/' ' ' ;
+# END
+# LEXER: Tilde
+# BEGIN LEXER FOR  Tilde string
+<Tilde> ::= '~' ' ' ;
+# END
+# LEXER: SuppressWarnings
+# BEGIN LEXER FOR  SuppressWarnings string
+<SuppressWarnings> ::= '@' ' ' ;
+# END
+# LEXER: Dollar
+# BEGIN LEXER FOR  Dollar string
+<Dollar> ::= '$' ' ' ;
+# END
+# LEXER: Dot
+# BEGIN LEXER FOR  Dot string
+<Dot> ::= '.' ' ' ;
+# END
+# LEXER: QuestionMark
+# BEGIN LEXER FOR  QuestionMark string
+<QuestionMark> ::= '?' ' ' ;
+# END
+# LEXER: OpenRoundBracket
+# BEGIN LEXER FOR  OpenRoundBracket string
+<OpenRoundBracket> ::= '(' ' ' ;
+# END
+# LEXER: CloseRoundBracket
+# BEGIN LEXER FOR  CloseRoundBracket string
+<CloseRoundBracket> ::= ')' ' ' ;
+# END
+# LEXER: OpenSquareBracket
+# BEGIN LEXER FOR  OpenSquareBracket string
+<OpenSquareBracket> ::= '[' ' ' ;
+# END
+# LEXER: CloseSquareBracket
+# BEGIN LEXER FOR  CloseSquareBracket string
+<CloseSquareBracket> ::= ']' ' ' ;
+# END
+# LEXER: OpenCurlyBracket
+# BEGIN LEXER FOR  OpenCurlyBracket string
+<OpenCurlyBracket> ::= '{' ' ' ;
+# END
+# LEXER: CloseCurlyBracket
+# BEGIN LEXER FOR  CloseCurlyBracket and
+# BEGIN LEXER FOR  CloseCurlyBracket eps
+<CloseCurlyBracket_-_1> ::= ;
+# END
+<CloseCurlyBracket> ::= '}' <CloseCurlyBracket_-_1> ' ' ;
+# END
+# LEXER: Comma
+# BEGIN LEXER FOR  Comma string
+<Comma> ::= ',' ' ' ;
+# END
+# LEXER: Colon
+# BEGIN LEXER FOR  Colon string
+<Colon> ::= ':' ' ' ;
+# END
+# LEXER: SemiColon
+# BEGIN LEXER FOR  SemiColon string
+<SemiColon> ::= ';' ' ' ;
+# END
+# LEXER: Eq
+# BEGIN LEXER FOR  Eq string
+<Eq> ::= '=' ' ' ;
+# END
+# LEXER: Quote
+# BEGIN LEXER FOR  Quote string
+<Quote> ::=  39  ' ' ;
+# END
+# LEXER: BackQuote
+# BEGIN LEXER FOR  BackQuote string
+<BackQuote> ::= '`' ' ' ;
+# END
+# LEXER: VarName
+# BEGIN LEXER FOR  VarName and
+# BEGIN LEXER FOR  VarName char_set
+<VarName_-_1> ::= 'a' ;
+<VarName_-_1> ::= 'b' ;
+<VarName_-_1> ::= 'c' ;
+<VarName_-_1> ::= 'd' ;
+<VarName_-_1> ::= 'e' ;
+<VarName_-_1> ::= 'f' ;
+<VarName_-_1> ::= 'g' ;
+<VarName_-_1> ::= 'h' ;
+<VarName_-_1> ::= 'i' ;
+<VarName_-_1> ::= 'j' ;
+<VarName_-_1> ::= 'k' ;
+<VarName_-_1> ::= 'l' ;
+<VarName_-_1> ::= 'm' ;
+<VarName_-_1> ::= 'n' ;
+<VarName_-_1> ::= 'o' ;
+<VarName_-_1> ::= 'p' ;
+<VarName_-_1> ::= 'q' ;
+<VarName_-_1> ::= 'r' ;
+<VarName_-_1> ::= 's' ;
+<VarName_-_1> ::= 't' ;
+<VarName_-_1> ::= 'u' ;
+<VarName_-_1> ::= 'v' ;
+<VarName_-_1> ::= 'w' ;
+<VarName_-_1> ::= 'x' ;
+<VarName_-_1> ::= 'y' ;
+<VarName_-_1> ::= 'z' ;
+<VarName_-_1> ::= 'A' ;
+<VarName_-_1> ::= 'B' ;
+<VarName_-_1> ::= 'C' ;
+<VarName_-_1> ::= 'D' ;
+<VarName_-_1> ::= 'E' ;
+<VarName_-_1> ::= 'F' ;
+<VarName_-_1> ::= 'G' ;
+<VarName_-_1> ::= 'H' ;
+<VarName_-_1> ::= 'I' ;
+<VarName_-_1> ::= 'J' ;
+<VarName_-_1> ::= 'K' ;
+<VarName_-_1> ::= 'L' ;
+<VarName_-_1> ::= 'M' ;
+<VarName_-_1> ::= 'N' ;
+<VarName_-_1> ::= 'O' ;
+<VarName_-_1> ::= 'P' ;
+<VarName_-_1> ::= 'Q' ;
+<VarName_-_1> ::= 'R' ;
+<VarName_-_1> ::= 'S' ;
+<VarName_-_1> ::= 'T' ;
+<VarName_-_1> ::= 'U' ;
+<VarName_-_1> ::= 'V' ;
+<VarName_-_1> ::= 'W' ;
+<VarName_-_1> ::= 'X' ;
+<VarName_-_1> ::= 'Y' ;
+<VarName_-_1> ::= 'Z' ;
+<VarName_-_1> ::= '_' ;
+# END
+# BEGIN LEXER FOR  VarName *
+<VarName_-_2> ::= <VarName_-_3> ;
+<VarName_-_3> ::= ;
+# BEGIN LEXER FOR  VarName and
+# BEGIN LEXER FOR  VarName char_set
+<VarName_-_4> ::= 'a' ;
+<VarName_-_4> ::= 'b' ;
+<VarName_-_4> ::= 'c' ;
+<VarName_-_4> ::= 'd' ;
+<VarName_-_4> ::= 'e' ;
+<VarName_-_4> ::= 'f' ;
+<VarName_-_4> ::= 'g' ;
+<VarName_-_4> ::= 'h' ;
+<VarName_-_4> ::= 'i' ;
+<VarName_-_4> ::= 'j' ;
+<VarName_-_4> ::= 'k' ;
+<VarName_-_4> ::= 'l' ;
+<VarName_-_4> ::= 'm' ;
+<VarName_-_4> ::= 'n' ;
+<VarName_-_4> ::= 'o' ;
+<VarName_-_4> ::= 'p' ;
+<VarName_-_4> ::= 'q' ;
+<VarName_-_4> ::= 'r' ;
+<VarName_-_4> ::= 's' ;
+<VarName_-_4> ::= 't' ;
+<VarName_-_4> ::= 'u' ;
+<VarName_-_4> ::= 'v' ;
+<VarName_-_4> ::= 'w' ;
+<VarName_-_4> ::= 'x' ;
+<VarName_-_4> ::= 'y' ;
+<VarName_-_4> ::= 'z' ;
+<VarName_-_4> ::= 'A' ;
+<VarName_-_4> ::= 'B' ;
+<VarName_-_4> ::= 'C' ;
+<VarName_-_4> ::= 'D' ;
+<VarName_-_4> ::= 'E' ;
+<VarName_-_4> ::= 'F' ;
+<VarName_-_4> ::= 'G' ;
+<VarName_-_4> ::= 'H' ;
+<VarName_-_4> ::= 'I' ;
+<VarName_-_4> ::= 'J' ;
+<VarName_-_4> ::= 'K' ;
+<VarName_-_4> ::= 'L' ;
+<VarName_-_4> ::= 'M' ;
+<VarName_-_4> ::= 'N' ;
+<VarName_-_4> ::= 'O' ;
+<VarName_-_4> ::= 'P' ;
+<VarName_-_4> ::= 'Q' ;
+<VarName_-_4> ::= 'R' ;
+<VarName_-_4> ::= 'S' ;
+<VarName_-_4> ::= 'T' ;
+<VarName_-_4> ::= 'U' ;
+<VarName_-_4> ::= 'V' ;
+<VarName_-_4> ::= 'W' ;
+<VarName_-_4> ::= 'X' ;
+<VarName_-_4> ::= 'Y' ;
+<VarName_-_4> ::= 'Z' ;
+<VarName_-_4> ::= '_' ;
+<VarName_-_4> ::= '0' ;
+<VarName_-_4> ::= '1' ;
+<VarName_-_4> ::= '2' ;
+<VarName_-_4> ::= '3' ;
+<VarName_-_4> ::= '4' ;
+<VarName_-_4> ::= '5' ;
+<VarName_-_4> ::= '6' ;
+<VarName_-_4> ::= '7' ;
+<VarName_-_4> ::= '8' ;
+<VarName_-_4> ::= '9' ;
+# END
+<VarName_-_3> ::= <VarName_-_4> <VarName_-_3> ;
+# END
+# END
+<VarName> ::= '$' <VarName_-_1> <VarName_-_2> ' ' ;
+# END
+# LEXER: Label
+# BEGIN LEXER FOR  Label and
+# BEGIN LEXER FOR  Label char_set
+<Label_-_1> ::= 'a' ;
+<Label_-_1> ::= 'b' ;
+<Label_-_1> ::= 'c' ;
+<Label_-_1> ::= 'd' ;
+<Label_-_1> ::= 'e' ;
+<Label_-_1> ::= 'f' ;
+<Label_-_1> ::= 'g' ;
+<Label_-_1> ::= 'h' ;
+<Label_-_1> ::= 'i' ;
+<Label_-_1> ::= 'j' ;
+<Label_-_1> ::= 'k' ;
+<Label_-_1> ::= 'l' ;
+<Label_-_1> ::= 'm' ;
+<Label_-_1> ::= 'n' ;
+<Label_-_1> ::= 'o' ;
+<Label_-_1> ::= 'p' ;
+<Label_-_1> ::= 'q' ;
+<Label_-_1> ::= 'r' ;
+<Label_-_1> ::= 's' ;
+<Label_-_1> ::= 't' ;
+<Label_-_1> ::= 'u' ;
+<Label_-_1> ::= 'v' ;
+<Label_-_1> ::= 'w' ;
+<Label_-_1> ::= 'x' ;
+<Label_-_1> ::= 'y' ;
+<Label_-_1> ::= 'z' ;
+<Label_-_1> ::= 'A' ;
+<Label_-_1> ::= 'B' ;
+<Label_-_1> ::= 'C' ;
+<Label_-_1> ::= 'D' ;
+<Label_-_1> ::= 'E' ;
+<Label_-_1> ::= 'F' ;
+<Label_-_1> ::= 'G' ;
+<Label_-_1> ::= 'H' ;
+<Label_-_1> ::= 'I' ;
+<Label_-_1> ::= 'J' ;
+<Label_-_1> ::= 'K' ;
+<Label_-_1> ::= 'L' ;
+<Label_-_1> ::= 'M' ;
+<Label_-_1> ::= 'N' ;
+<Label_-_1> ::= 'O' ;
+<Label_-_1> ::= 'P' ;
+<Label_-_1> ::= 'Q' ;
+<Label_-_1> ::= 'R' ;
+<Label_-_1> ::= 'S' ;
+<Label_-_1> ::= 'T' ;
+<Label_-_1> ::= 'U' ;
+<Label_-_1> ::= 'V' ;
+<Label_-_1> ::= 'W' ;
+<Label_-_1> ::= 'X' ;
+<Label_-_1> ::= 'Y' ;
+<Label_-_1> ::= 'Z' ;
+<Label_-_1> ::= '_' ;
+# END
+# BEGIN LEXER FOR  Label *
+<Label_-_2> ::= <Label_-_3> ;
+<Label_-_3> ::= ;
+# BEGIN LEXER FOR  Label and
+# BEGIN LEXER FOR  Label char_set
+<Label_-_4> ::= 'a' ;
+<Label_-_4> ::= 'b' ;
+<Label_-_4> ::= 'c' ;
+<Label_-_4> ::= 'd' ;
+<Label_-_4> ::= 'e' ;
+<Label_-_4> ::= 'f' ;
+<Label_-_4> ::= 'g' ;
+<Label_-_4> ::= 'h' ;
+<Label_-_4> ::= 'i' ;
+<Label_-_4> ::= 'j' ;
+<Label_-_4> ::= 'k' ;
+<Label_-_4> ::= 'l' ;
+<Label_-_4> ::= 'm' ;
+<Label_-_4> ::= 'n' ;
+<Label_-_4> ::= 'o' ;
+<Label_-_4> ::= 'p' ;
+<Label_-_4> ::= 'q' ;
+<Label_-_4> ::= 'r' ;
+<Label_-_4> ::= 's' ;
+<Label_-_4> ::= 't' ;
+<Label_-_4> ::= 'u' ;
+<Label_-_4> ::= 'v' ;
+<Label_-_4> ::= 'w' ;
+<Label_-_4> ::= 'x' ;
+<Label_-_4> ::= 'y' ;
+<Label_-_4> ::= 'z' ;
+<Label_-_4> ::= 'A' ;
+<Label_-_4> ::= 'B' ;
+<Label_-_4> ::= 'C' ;
+<Label_-_4> ::= 'D' ;
+<Label_-_4> ::= 'E' ;
+<Label_-_4> ::= 'F' ;
+<Label_-_4> ::= 'G' ;
+<Label_-_4> ::= 'H' ;
+<Label_-_4> ::= 'I' ;
+<Label_-_4> ::= 'J' ;
+<Label_-_4> ::= 'K' ;
+<Label_-_4> ::= 'L' ;
+<Label_-_4> ::= 'M' ;
+<Label_-_4> ::= 'N' ;
+<Label_-_4> ::= 'O' ;
+<Label_-_4> ::= 'P' ;
+<Label_-_4> ::= 'Q' ;
+<Label_-_4> ::= 'R' ;
+<Label_-_4> ::= 'S' ;
+<Label_-_4> ::= 'T' ;
+<Label_-_4> ::= 'U' ;
+<Label_-_4> ::= 'V' ;
+<Label_-_4> ::= 'W' ;
+<Label_-_4> ::= 'X' ;
+<Label_-_4> ::= 'Y' ;
+<Label_-_4> ::= 'Z' ;
+<Label_-_4> ::= '_' ;
+<Label_-_4> ::= '0' ;
+<Label_-_4> ::= '1' ;
+<Label_-_4> ::= '2' ;
+<Label_-_4> ::= '3' ;
+<Label_-_4> ::= '4' ;
+<Label_-_4> ::= '5' ;
+<Label_-_4> ::= '6' ;
+<Label_-_4> ::= '7' ;
+<Label_-_4> ::= '8' ;
+<Label_-_4> ::= '9' ;
+# END
+<Label_-_3> ::= <Label_-_4> <Label_-_3> ;
+# END
+# END
+<Label> ::= <Label_-_1> <Label_-_2> ' ' ;
+# END
+# LEXER: Octal
+# BEGIN LEXER FOR  Octal and
+# BEGIN LEXER FOR  Octal +
+<Octal_-_1> ::= <Octal_-_2> ;
+<Octal_-_2> ::= <Octal_-_3> ;
+<Octal_-_2> ::= <Octal_-_3> <Octal_-_2> ;
+# BEGIN LEXER FOR  Octal char_set
+<Octal_-_3> ::= '0' ;
+<Octal_-_3> ::= '1' ;
+<Octal_-_3> ::= '2' ;
+<Octal_-_3> ::= '3' ;
+<Octal_-_3> ::= '4' ;
+<Octal_-_3> ::= '5' ;
+<Octal_-_3> ::= '6' ;
+<Octal_-_3> ::= '7' ;
+# END
+# END
+<Octal> ::= '0' <Octal_-_1> ' ' ;
+# END
+# LEXER: Decimal
+# BEGIN LEXER FOR  Decimal +
+<Decimal> ::= <Decimal_-_1> ' ' ;
+<Decimal_-_1> ::= <Decimal_-_2> ' ' ;
+<Decimal_-_1> ::= <Decimal_-_2> <Decimal_-_1> ' ' ;
+# BEGIN LEXER FOR  Decimal token
+<Decimal_-_2> ::= <Digit> ;
+# END
+# END
+# LEXER: Real
+# BEGIN LEXER FOR  Real or
+# BEGIN LEXER FOR  Real and
+# BEGIN LEXER FOR  Real or
+# BEGIN LEXER FOR  Real and
+# BEGIN LEXER FOR  Real +
+<Real_-_2> ::= <Real_-_3> ;
+<Real_-_3> ::= <Real_-_4> ;
+<Real_-_3> ::= <Real_-_4> <Real_-_3> ;
+# BEGIN LEXER FOR  Real token
+<Real_-_4> ::= <Digit> ;
+# END
+# END
+# BEGIN LEXER FOR  Real *
+<Real_-_5> ::= <Real_-_6> ;
+<Real_-_6> ::= ;
+# BEGIN LEXER FOR  Real and
+<Real_-_6> ::= <Digit> <Real_-_6> ;
+# END
+# END
+<Real_-_1> ::= <Real_-_2> '.' <Real_-_5> ;
+# END
+# BEGIN LEXER FOR  Real and
+# BEGIN LEXER FOR  Real +
+<Real_-_7> ::= <Real_-_8> ;
+<Real_-_8> ::= <Real_-_9> ;
+<Real_-_8> ::= <Real_-_9> <Real_-_8> ;
+# BEGIN LEXER FOR  Real token
+<Real_-_9> ::= <Digit> ;
+# END
+# END
+<Real_-_1> ::= '.' <Real_-_7> ;
+# END
+# END
+# BEGIN LEXER FOR  Real ?
+<Real_-_10> ::= ;
+# BEGIN LEXER FOR  Real token
+<Real_-_10> ::= <ExponentPart> ;
+# END
+# END
+<Real> ::= <Real_-_1> <Real_-_10> ' ' ;
+# END
+# BEGIN LEXER FOR  Real and
+# BEGIN LEXER FOR  Real +
+<Real_-_11> ::= <Real_-_12> ;
+<Real_-_12> ::= <Real_-_13> ;
+<Real_-_12> ::= <Real_-_13> <Real_-_12> ;
+# BEGIN LEXER FOR  Real token
+<Real_-_13> ::= <Digit> ;
+# END
+# END
+<Real> ::= <Real_-_11> <ExponentPart> ' ' ;
+# END
+# END
+# LEXER: Hex
+# BEGIN LEXER FOR  Hex and
+# BEGIN LEXER FOR  Hex +
+<Hex_-_1> ::= <Hex_-_2> ;
+<Hex_-_2> ::= <Hex_-_3> ;
+<Hex_-_2> ::= <Hex_-_3> <Hex_-_2> ;
+# BEGIN LEXER FOR  Hex token
+<Hex_-_3> ::= <HexDigit> ;
+# END
+# END
+<Hex> ::= '0x' <Hex_-_1> ' ' ;
+# END
+# LEXER: Binary
+# BEGIN LEXER FOR  Binary and
+# BEGIN LEXER FOR  Binary +
+<Binary_-_1> ::= <Binary_-_2> ;
+<Binary_-_2> ::= <Binary_-_3> ;
+<Binary_-_2> ::= <Binary_-_3> <Binary_-_2> ;
+# BEGIN LEXER FOR  Binary char_set
+<Binary_-_3> ::= '0' ;
+<Binary_-_3> ::= '1' ;
+<Binary_-_3> ::= '_' ;
+# END
+# END
+<Binary> ::= '0b' <Binary_-_1> ' ' ;
+# END
+# LEXER: BackQuoteString
+# BEGIN LEXER FOR  BackQuoteString and
+# BEGIN LEXER FOR  BackQuoteString *
+<BackQuoteString_-_1> ::= <BackQuoteString_-_2> ;
+<BackQuoteString_-_2> ::= ;
+# BEGIN LEXER FOR  BackQuoteString and
+# BEGIN LEXER FOR  BackQuoteString not
+<BackQuoteString_-_3> ::= ' ' ;
+<BackQuoteString_-_3> ::= '!' ;
+<BackQuoteString_-_3> ::= '"' ;
+<BackQuoteString_-_3> ::= '#' ;
+<BackQuoteString_-_3> ::= '$' ;
+<BackQuoteString_-_3> ::= '%' ;
+<BackQuoteString_-_3> ::= '&' ;
+<BackQuoteString_-_3> ::=  39  ;
+<BackQuoteString_-_3> ::= '(' ;
+<BackQuoteString_-_3> ::= ')' ;
+<BackQuoteString_-_3> ::= '*' ;
+<BackQuoteString_-_3> ::= '+' ;
+<BackQuoteString_-_3> ::= ',' ;
+<BackQuoteString_-_3> ::= '-' ;
+<BackQuoteString_-_3> ::= '.' ;
+<BackQuoteString_-_3> ::= '/' ;
+<BackQuoteString_-_3> ::= '0' ;
+<BackQuoteString_-_3> ::= '1' ;
+<BackQuoteString_-_3> ::= '2' ;
+<BackQuoteString_-_3> ::= '3' ;
+<BackQuoteString_-_3> ::= '4' ;
+<BackQuoteString_-_3> ::= '5' ;
+<BackQuoteString_-_3> ::= '6' ;
+<BackQuoteString_-_3> ::= '7' ;
+<BackQuoteString_-_3> ::= '8' ;
+<BackQuoteString_-_3> ::= '9' ;
+<BackQuoteString_-_3> ::= ':' ;
+<BackQuoteString_-_3> ::= ';' ;
+<BackQuoteString_-_3> ::= '<' ;
+<BackQuoteString_-_3> ::= '=' ;
+<BackQuoteString_-_3> ::= '>' ;
+<BackQuoteString_-_3> ::= '?' ;
+<BackQuoteString_-_3> ::= '@' ;
+<BackQuoteString_-_3> ::= 'A' ;
+<BackQuoteString_-_3> ::= 'B' ;
+<BackQuoteString_-_3> ::= 'C' ;
+<BackQuoteString_-_3> ::= 'D' ;
+<BackQuoteString_-_3> ::= 'E' ;
+<BackQuoteString_-_3> ::= 'F' ;
+<BackQuoteString_-_3> ::= 'G' ;
+<BackQuoteString_-_3> ::= 'H' ;
+<BackQuoteString_-_3> ::= 'I' ;
+<BackQuoteString_-_3> ::= 'J' ;
+<BackQuoteString_-_3> ::= 'K' ;
+<BackQuoteString_-_3> ::= 'L' ;
+<BackQuoteString_-_3> ::= 'M' ;
+<BackQuoteString_-_3> ::= 'N' ;
+<BackQuoteString_-_3> ::= 'O' ;
+<BackQuoteString_-_3> ::= 'P' ;
+<BackQuoteString_-_3> ::= 'Q' ;
+<BackQuoteString_-_3> ::= 'R' ;
+<BackQuoteString_-_3> ::= 'S' ;
+<BackQuoteString_-_3> ::= 'T' ;
+<BackQuoteString_-_3> ::= 'U' ;
+<BackQuoteString_-_3> ::= 'V' ;
+<BackQuoteString_-_3> ::= 'W' ;
+<BackQuoteString_-_3> ::= 'X' ;
+<BackQuoteString_-_3> ::= 'Y' ;
+<BackQuoteString_-_3> ::= 'Z' ;
+<BackQuoteString_-_3> ::= '[' ;
+<BackQuoteString_-_3> ::= '\' ;
+<BackQuoteString_-_3> ::= ']' ;
+<BackQuoteString_-_3> ::= '^' ;
+<BackQuoteString_-_3> ::= '_' ;
+<BackQuoteString_-_3> ::= 'a' ;
+<BackQuoteString_-_3> ::= 'b' ;
+<BackQuoteString_-_3> ::= 'c' ;
+<BackQuoteString_-_3> ::= 'd' ;
+<BackQuoteString_-_3> ::= 'e' ;
+<BackQuoteString_-_3> ::= 'f' ;
+<BackQuoteString_-_3> ::= 'g' ;
+<BackQuoteString_-_3> ::= 'h' ;
+<BackQuoteString_-_3> ::= 'i' ;
+<BackQuoteString_-_3> ::= 'j' ;
+<BackQuoteString_-_3> ::= 'k' ;
+<BackQuoteString_-_3> ::= 'l' ;
+<BackQuoteString_-_3> ::= 'm' ;
+<BackQuoteString_-_3> ::= 'n' ;
+<BackQuoteString_-_3> ::= 'o' ;
+<BackQuoteString_-_3> ::= 'p' ;
+<BackQuoteString_-_3> ::= 'q' ;
+<BackQuoteString_-_3> ::= 'r' ;
+<BackQuoteString_-_3> ::= 's' ;
+<BackQuoteString_-_3> ::= 't' ;
+<BackQuoteString_-_3> ::= 'u' ;
+<BackQuoteString_-_3> ::= 'v' ;
+<BackQuoteString_-_3> ::= 'w' ;
+<BackQuoteString_-_3> ::= 'x' ;
+<BackQuoteString_-_3> ::= 'y' ;
+<BackQuoteString_-_3> ::= 'z' ;
+<BackQuoteString_-_3> ::= '{' ;
+<BackQuoteString_-_3> ::= '|' ;
+<BackQuoteString_-_3> ::= '}' ;
+<BackQuoteString_-_3> ::= '~' ;
+# END
+<BackQuoteString_-_2> ::= <BackQuoteString_-_3> <BackQuoteString_-_2> ;
+# END
+# END
+<BackQuoteString> ::= '`' <BackQuoteString_-_1> '`' ' ' ;
+# END
+# LEXER: SingleQuoteString
+# BEGIN LEXER FOR  SingleQuoteString and
+# BEGIN LEXER FOR  SingleQuoteString *
+<SingleQuoteString_-_1> ::= <SingleQuoteString_-_2> ;
+<SingleQuoteString_-_2> ::= ;
+# BEGIN LEXER FOR  SingleQuoteString and
+# BEGIN LEXER FOR  SingleQuoteString or
+# BEGIN LEXER FOR  SingleQuoteString not
+# BEGIN LEXER FOR  SingleQuoteString and
+# BEGIN LEXER FOR  SingleQuoteString not
+<SingleQuoteString_-_4> ::= ' ' ;
+<SingleQuoteString_-_4> ::= '!' ;
+<SingleQuoteString_-_4> ::= '"' ;
+<SingleQuoteString_-_4> ::= '#' ;
+<SingleQuoteString_-_4> ::= '$' ;
+<SingleQuoteString_-_4> ::= '%' ;
+<SingleQuoteString_-_4> ::= '&' ;
+<SingleQuoteString_-_4> ::= '(' ;
+<SingleQuoteString_-_4> ::= ')' ;
+<SingleQuoteString_-_4> ::= '*' ;
+<SingleQuoteString_-_4> ::= '+' ;
+<SingleQuoteString_-_4> ::= ',' ;
+<SingleQuoteString_-_4> ::= '-' ;
+<SingleQuoteString_-_4> ::= '.' ;
+<SingleQuoteString_-_4> ::= '/' ;
+<SingleQuoteString_-_4> ::= '0' ;
+<SingleQuoteString_-_4> ::= '1' ;
+<SingleQuoteString_-_4> ::= '2' ;
+<SingleQuoteString_-_4> ::= '3' ;
+<SingleQuoteString_-_4> ::= '4' ;
+<SingleQuoteString_-_4> ::= '5' ;
+<SingleQuoteString_-_4> ::= '6' ;
+<SingleQuoteString_-_4> ::= '7' ;
+<SingleQuoteString_-_4> ::= '8' ;
+<SingleQuoteString_-_4> ::= '9' ;
+<SingleQuoteString_-_4> ::= ':' ;
+<SingleQuoteString_-_4> ::= ';' ;
+<SingleQuoteString_-_4> ::= '<' ;
+<SingleQuoteString_-_4> ::= '=' ;
+<SingleQuoteString_-_4> ::= '>' ;
+<SingleQuoteString_-_4> ::= '?' ;
+<SingleQuoteString_-_4> ::= '@' ;
+<SingleQuoteString_-_4> ::= 'A' ;
+<SingleQuoteString_-_4> ::= 'B' ;
+<SingleQuoteString_-_4> ::= 'C' ;
+<SingleQuoteString_-_4> ::= 'D' ;
+<SingleQuoteString_-_4> ::= 'E' ;
+<SingleQuoteString_-_4> ::= 'F' ;
+<SingleQuoteString_-_4> ::= 'G' ;
+<SingleQuoteString_-_4> ::= 'H' ;
+<SingleQuoteString_-_4> ::= 'I' ;
+<SingleQuoteString_-_4> ::= 'J' ;
+<SingleQuoteString_-_4> ::= 'K' ;
+<SingleQuoteString_-_4> ::= 'L' ;
+<SingleQuoteString_-_4> ::= 'M' ;
+<SingleQuoteString_-_4> ::= 'N' ;
+<SingleQuoteString_-_4> ::= 'O' ;
+<SingleQuoteString_-_4> ::= 'P' ;
+<SingleQuoteString_-_4> ::= 'Q' ;
+<SingleQuoteString_-_4> ::= 'R' ;
+<SingleQuoteString_-_4> ::= 'S' ;
+<SingleQuoteString_-_4> ::= 'T' ;
+<SingleQuoteString_-_4> ::= 'U' ;
+<SingleQuoteString_-_4> ::= 'V' ;
+<SingleQuoteString_-_4> ::= 'W' ;
+<SingleQuoteString_-_4> ::= 'X' ;
+<SingleQuoteString_-_4> ::= 'Y' ;
+<SingleQuoteString_-_4> ::= 'Z' ;
+<SingleQuoteString_-_4> ::= '[' ;
+<SingleQuoteString_-_4> ::= '\' ;
+<SingleQuoteString_-_4> ::= ']' ;
+<SingleQuoteString_-_4> ::= '^' ;
+<SingleQuoteString_-_4> ::= '_' ;
+<SingleQuoteString_-_4> ::= '`' ;
+<SingleQuoteString_-_4> ::= 'a' ;
+<SingleQuoteString_-_4> ::= 'b' ;
+<SingleQuoteString_-_4> ::= 'c' ;
+<SingleQuoteString_-_4> ::= 'd' ;
+<SingleQuoteString_-_4> ::= 'e' ;
+<SingleQuoteString_-_4> ::= 'f' ;
+<SingleQuoteString_-_4> ::= 'g' ;
+<SingleQuoteString_-_4> ::= 'h' ;
+<SingleQuoteString_-_4> ::= 'i' ;
+<SingleQuoteString_-_4> ::= 'j' ;
+<SingleQuoteString_-_4> ::= 'k' ;
+<SingleQuoteString_-_4> ::= 'l' ;
+<SingleQuoteString_-_4> ::= 'm' ;
+<SingleQuoteString_-_4> ::= 'n' ;
+<SingleQuoteString_-_4> ::= 'o' ;
+<SingleQuoteString_-_4> ::= 'p' ;
+<SingleQuoteString_-_4> ::= 'q' ;
+<SingleQuoteString_-_4> ::= 'r' ;
+<SingleQuoteString_-_4> ::= 's' ;
+<SingleQuoteString_-_4> ::= 't' ;
+<SingleQuoteString_-_4> ::= 'u' ;
+<SingleQuoteString_-_4> ::= 'v' ;
+<SingleQuoteString_-_4> ::= 'w' ;
+<SingleQuoteString_-_4> ::= 'x' ;
+<SingleQuoteString_-_4> ::= 'y' ;
+<SingleQuoteString_-_4> ::= 'z' ;
+<SingleQuoteString_-_4> ::= '{' ;
+<SingleQuoteString_-_4> ::= '|' ;
+<SingleQuoteString_-_4> ::= '}' ;
+<SingleQuoteString_-_4> ::= '~' ;
+# END
+# BEGIN LEXER FOR  SingleQuoteString not
+<SingleQuoteString_-_5> ::= ' ' ;
+<SingleQuoteString_-_5> ::= '!' ;
+<SingleQuoteString_-_5> ::= '"' ;
+<SingleQuoteString_-_5> ::= '#' ;
+<SingleQuoteString_-_5> ::= '$' ;
+<SingleQuoteString_-_5> ::= '%' ;
+<SingleQuoteString_-_5> ::= '&' ;
+<SingleQuoteString_-_5> ::=  39  ;
+<SingleQuoteString_-_5> ::= '(' ;
+<SingleQuoteString_-_5> ::= ')' ;
+<SingleQuoteString_-_5> ::= '*' ;
+<SingleQuoteString_-_5> ::= '+' ;
+<SingleQuoteString_-_5> ::= ',' ;
+<SingleQuoteString_-_5> ::= '-' ;
+<SingleQuoteString_-_5> ::= '.' ;
+<SingleQuoteString_-_5> ::= '/' ;
+<SingleQuoteString_-_5> ::= '0' ;
+<SingleQuoteString_-_5> ::= '1' ;
+<SingleQuoteString_-_5> ::= '2' ;
+<SingleQuoteString_-_5> ::= '3' ;
+<SingleQuoteString_-_5> ::= '4' ;
+<SingleQuoteString_-_5> ::= '5' ;
+<SingleQuoteString_-_5> ::= '6' ;
+<SingleQuoteString_-_5> ::= '7' ;
+<SingleQuoteString_-_5> ::= '8' ;
+<SingleQuoteString_-_5> ::= '9' ;
+<SingleQuoteString_-_5> ::= ':' ;
+<SingleQuoteString_-_5> ::= ';' ;
+<SingleQuoteString_-_5> ::= '<' ;
+<SingleQuoteString_-_5> ::= '=' ;
+<SingleQuoteString_-_5> ::= '>' ;
+<SingleQuoteString_-_5> ::= '?' ;
+<SingleQuoteString_-_5> ::= '@' ;
+<SingleQuoteString_-_5> ::= 'A' ;
+<SingleQuoteString_-_5> ::= 'B' ;
+<SingleQuoteString_-_5> ::= 'C' ;
+<SingleQuoteString_-_5> ::= 'D' ;
+<SingleQuoteString_-_5> ::= 'E' ;
+<SingleQuoteString_-_5> ::= 'F' ;
+<SingleQuoteString_-_5> ::= 'G' ;
+<SingleQuoteString_-_5> ::= 'H' ;
+<SingleQuoteString_-_5> ::= 'I' ;
+<SingleQuoteString_-_5> ::= 'J' ;
+<SingleQuoteString_-_5> ::= 'K' ;
+<SingleQuoteString_-_5> ::= 'L' ;
+<SingleQuoteString_-_5> ::= 'M' ;
+<SingleQuoteString_-_5> ::= 'N' ;
+<SingleQuoteString_-_5> ::= 'O' ;
+<SingleQuoteString_-_5> ::= 'P' ;
+<SingleQuoteString_-_5> ::= 'Q' ;
+<SingleQuoteString_-_5> ::= 'R' ;
+<SingleQuoteString_-_5> ::= 'S' ;
+<SingleQuoteString_-_5> ::= 'T' ;
+<SingleQuoteString_-_5> ::= 'U' ;
+<SingleQuoteString_-_5> ::= 'V' ;
+<SingleQuoteString_-_5> ::= 'W' ;
+<SingleQuoteString_-_5> ::= 'X' ;
+<SingleQuoteString_-_5> ::= 'Y' ;
+<SingleQuoteString_-_5> ::= 'Z' ;
+<SingleQuoteString_-_5> ::= '[' ;
+<SingleQuoteString_-_5> ::= ']' ;
+<SingleQuoteString_-_5> ::= '^' ;
+<SingleQuoteString_-_5> ::= '_' ;
+<SingleQuoteString_-_5> ::= '`' ;
+<SingleQuoteString_-_5> ::= 'a' ;
+<SingleQuoteString_-_5> ::= 'b' ;
+<SingleQuoteString_-_5> ::= 'c' ;
+<SingleQuoteString_-_5> ::= 'd' ;
+<SingleQuoteString_-_5> ::= 'e' ;
+<SingleQuoteString_-_5> ::= 'f' ;
+<SingleQuoteString_-_5> ::= 'g' ;
+<SingleQuoteString_-_5> ::= 'h' ;
+<SingleQuoteString_-_5> ::= 'i' ;
+<SingleQuoteString_-_5> ::= 'j' ;
+<SingleQuoteString_-_5> ::= 'k' ;
+<SingleQuoteString_-_5> ::= 'l' ;
+<SingleQuoteString_-_5> ::= 'm' ;
+<SingleQuoteString_-_5> ::= 'n' ;
+<SingleQuoteString_-_5> ::= 'o' ;
+<SingleQuoteString_-_5> ::= 'p' ;
+<SingleQuoteString_-_5> ::= 'q' ;
+<SingleQuoteString_-_5> ::= 'r' ;
+<SingleQuoteString_-_5> ::= 's' ;
+<SingleQuoteString_-_5> ::= 't' ;
+<SingleQuoteString_-_5> ::= 'u' ;
+<SingleQuoteString_-_5> ::= 'v' ;
+<SingleQuoteString_-_5> ::= 'w' ;
+<SingleQuoteString_-_5> ::= 'x' ;
+<SingleQuoteString_-_5> ::= 'y' ;
+<SingleQuoteString_-_5> ::= 'z' ;
+<SingleQuoteString_-_5> ::= '{' ;
+<SingleQuoteString_-_5> ::= '|' ;
+<SingleQuoteString_-_5> ::= '}' ;
+<SingleQuoteString_-_5> ::= '~' ;
+# END
+<SingleQuoteString_-_3> ::= <SingleQuoteString_-_4> <SingleQuoteString_-_5> ;
+# END
+# END
+# BEGIN LEXER FOR  SingleQuoteString and
+# BEGIN LEXER FOR  SingleQuoteString .
+<SingleQuoteString_-_6> ::= ' '  ;
+<SingleQuoteString_-_6> ::= '!'  ;
+<SingleQuoteString_-_6> ::= '"'  ;
+<SingleQuoteString_-_6> ::= '#'  ;
+<SingleQuoteString_-_6> ::= '$'  ;
+<SingleQuoteString_-_6> ::= '%'  ;
+<SingleQuoteString_-_6> ::= '&'  ;
+<SingleQuoteString_-_6> ::=  39   ;
+<SingleQuoteString_-_6> ::= '('  ;
+<SingleQuoteString_-_6> ::= ')'  ;
+<SingleQuoteString_-_6> ::= '*'  ;
+<SingleQuoteString_-_6> ::= '+'  ;
+<SingleQuoteString_-_6> ::= ','  ;
+<SingleQuoteString_-_6> ::= '-'  ;
+<SingleQuoteString_-_6> ::= '.'  ;
+<SingleQuoteString_-_6> ::= '/'  ;
+<SingleQuoteString_-_6> ::= '0'  ;
+<SingleQuoteString_-_6> ::= '1'  ;
+<SingleQuoteString_-_6> ::= '2'  ;
+<SingleQuoteString_-_6> ::= '3'  ;
+<SingleQuoteString_-_6> ::= '4'  ;
+<SingleQuoteString_-_6> ::= '5'  ;
+<SingleQuoteString_-_6> ::= '6'  ;
+<SingleQuoteString_-_6> ::= '7'  ;
+<SingleQuoteString_-_6> ::= '8'  ;
+<SingleQuoteString_-_6> ::= '9'  ;
+<SingleQuoteString_-_6> ::= ':'  ;
+<SingleQuoteString_-_6> ::= ';'  ;
+<SingleQuoteString_-_6> ::= '<'  ;
+<SingleQuoteString_-_6> ::= '='  ;
+<SingleQuoteString_-_6> ::= '>'  ;
+<SingleQuoteString_-_6> ::= '?'  ;
+<SingleQuoteString_-_6> ::= '@'  ;
+<SingleQuoteString_-_6> ::= 'A'  ;
+<SingleQuoteString_-_6> ::= 'B'  ;
+<SingleQuoteString_-_6> ::= 'C'  ;
+<SingleQuoteString_-_6> ::= 'D'  ;
+<SingleQuoteString_-_6> ::= 'E'  ;
+<SingleQuoteString_-_6> ::= 'F'  ;
+<SingleQuoteString_-_6> ::= 'G'  ;
+<SingleQuoteString_-_6> ::= 'H'  ;
+<SingleQuoteString_-_6> ::= 'I'  ;
+<SingleQuoteString_-_6> ::= 'J'  ;
+<SingleQuoteString_-_6> ::= 'K'  ;
+<SingleQuoteString_-_6> ::= 'L'  ;
+<SingleQuoteString_-_6> ::= 'M'  ;
+<SingleQuoteString_-_6> ::= 'N'  ;
+<SingleQuoteString_-_6> ::= 'O'  ;
+<SingleQuoteString_-_6> ::= 'P'  ;
+<SingleQuoteString_-_6> ::= 'Q'  ;
+<SingleQuoteString_-_6> ::= 'R'  ;
+<SingleQuoteString_-_6> ::= 'S'  ;
+<SingleQuoteString_-_6> ::= 'T'  ;
+<SingleQuoteString_-_6> ::= 'U'  ;
+<SingleQuoteString_-_6> ::= 'V'  ;
+<SingleQuoteString_-_6> ::= 'W'  ;
+<SingleQuoteString_-_6> ::= 'X'  ;
+<SingleQuoteString_-_6> ::= 'Y'  ;
+<SingleQuoteString_-_6> ::= 'Z'  ;
+<SingleQuoteString_-_6> ::= '['  ;
+<SingleQuoteString_-_6> ::= '\'  ;
+<SingleQuoteString_-_6> ::= ']'  ;
+<SingleQuoteString_-_6> ::= '^'  ;
+<SingleQuoteString_-_6> ::= '_'  ;
+<SingleQuoteString_-_6> ::= '`'  ;
+<SingleQuoteString_-_6> ::= 'a'  ;
+<SingleQuoteString_-_6> ::= 'b'  ;
+<SingleQuoteString_-_6> ::= 'c'  ;
+<SingleQuoteString_-_6> ::= 'd'  ;
+<SingleQuoteString_-_6> ::= 'e'  ;
+<SingleQuoteString_-_6> ::= 'f'  ;
+<SingleQuoteString_-_6> ::= 'g'  ;
+<SingleQuoteString_-_6> ::= 'h'  ;
+<SingleQuoteString_-_6> ::= 'i'  ;
+<SingleQuoteString_-_6> ::= 'j'  ;
+<SingleQuoteString_-_6> ::= 'k'  ;
+<SingleQuoteString_-_6> ::= 'l'  ;
+<SingleQuoteString_-_6> ::= 'm'  ;
+<SingleQuoteString_-_6> ::= 'n'  ;
+<SingleQuoteString_-_6> ::= 'o'  ;
+<SingleQuoteString_-_6> ::= 'p'  ;
+<SingleQuoteString_-_6> ::= 'q'  ;
+<SingleQuoteString_-_6> ::= 'r'  ;
+<SingleQuoteString_-_6> ::= 's'  ;
+<SingleQuoteString_-_6> ::= 't'  ;
+<SingleQuoteString_-_6> ::= 'u'  ;
+<SingleQuoteString_-_6> ::= 'v'  ;
+<SingleQuoteString_-_6> ::= 'w'  ;
+<SingleQuoteString_-_6> ::= 'x'  ;
+<SingleQuoteString_-_6> ::= 'y'  ;
+<SingleQuoteString_-_6> ::= 'z'  ;
+<SingleQuoteString_-_6> ::= '{'  ;
+<SingleQuoteString_-_6> ::= '|'  ;
+<SingleQuoteString_-_6> ::= '}'  ;
+<SingleQuoteString_-_6> ::= '~'  ;
+# END
+<SingleQuoteString_-_3> ::= '\' <SingleQuoteString_-_6> ;
+# END
+# END
+<SingleQuoteString_-_2> ::= <SingleQuoteString_-_3> <SingleQuoteString_-_2> ;
+# END
+# END
+<SingleQuoteString> ::=  39  <SingleQuoteString_-_1>  39  ' ' ;
+# END
+# LEXER: DoubleQuote
+# BEGIN LEXER FOR  DoubleQuote string
+<DoubleQuote> ::= '"' ' ' ;
+# END
+# LEXER: StartNowDoc
+# BEGIN LEXER FOR  StartNowDoc and
+# BEGIN LEXER FOR  StartNowDoc *
+<StartNowDoc_-_1> ::= <StartNowDoc_-_2> ;
+<StartNowDoc_-_2> ::= ;
+# BEGIN LEXER FOR  StartNowDoc and
+# BEGIN LEXER FOR  StartNowDoc char_set
+<StartNowDoc_-_3> ::= ' ' ;
+<StartNowDoc_-_3> ::=  9 ;
+# END
+<StartNowDoc_-_2> ::= <StartNowDoc_-_3> <StartNowDoc_-_2> ;
+# END
+# END
+# BEGIN LEXER FOR  StartNowDoc char_set
+<StartNowDoc_-_4> ::= 'a' ;
+<StartNowDoc_-_4> ::= 'b' ;
+<StartNowDoc_-_4> ::= 'c' ;
+<StartNowDoc_-_4> ::= 'd' ;
+<StartNowDoc_-_4> ::= 'e' ;
+<StartNowDoc_-_4> ::= 'f' ;
+<StartNowDoc_-_4> ::= 'g' ;
+<StartNowDoc_-_4> ::= 'h' ;
+<StartNowDoc_-_4> ::= 'i' ;
+<StartNowDoc_-_4> ::= 'j' ;
+<StartNowDoc_-_4> ::= 'k' ;
+<StartNowDoc_-_4> ::= 'l' ;
+<StartNowDoc_-_4> ::= 'm' ;
+<StartNowDoc_-_4> ::= 'n' ;
+<StartNowDoc_-_4> ::= 'o' ;
+<StartNowDoc_-_4> ::= 'p' ;
+<StartNowDoc_-_4> ::= 'q' ;
+<StartNowDoc_-_4> ::= 'r' ;
+<StartNowDoc_-_4> ::= 's' ;
+<StartNowDoc_-_4> ::= 't' ;
+<StartNowDoc_-_4> ::= 'u' ;
+<StartNowDoc_-_4> ::= 'v' ;
+<StartNowDoc_-_4> ::= 'w' ;
+<StartNowDoc_-_4> ::= 'x' ;
+<StartNowDoc_-_4> ::= 'y' ;
+<StartNowDoc_-_4> ::= 'z' ;
+<StartNowDoc_-_4> ::= 'A' ;
+<StartNowDoc_-_4> ::= 'B' ;
+<StartNowDoc_-_4> ::= 'C' ;
+<StartNowDoc_-_4> ::= 'D' ;
+<StartNowDoc_-_4> ::= 'E' ;
+<StartNowDoc_-_4> ::= 'F' ;
+<StartNowDoc_-_4> ::= 'G' ;
+<StartNowDoc_-_4> ::= 'H' ;
+<StartNowDoc_-_4> ::= 'I' ;
+<StartNowDoc_-_4> ::= 'J' ;
+<StartNowDoc_-_4> ::= 'K' ;
+<StartNowDoc_-_4> ::= 'L' ;
+<StartNowDoc_-_4> ::= 'M' ;
+<StartNowDoc_-_4> ::= 'N' ;
+<StartNowDoc_-_4> ::= 'O' ;
+<StartNowDoc_-_4> ::= 'P' ;
+<StartNowDoc_-_4> ::= 'Q' ;
+<StartNowDoc_-_4> ::= 'R' ;
+<StartNowDoc_-_4> ::= 'S' ;
+<StartNowDoc_-_4> ::= 'T' ;
+<StartNowDoc_-_4> ::= 'U' ;
+<StartNowDoc_-_4> ::= 'V' ;
+<StartNowDoc_-_4> ::= 'W' ;
+<StartNowDoc_-_4> ::= 'X' ;
+<StartNowDoc_-_4> ::= 'Y' ;
+<StartNowDoc_-_4> ::= 'Z' ;
+<StartNowDoc_-_4> ::= '_' ;
+# END
+# BEGIN LEXER FOR  StartNowDoc *
+<StartNowDoc_-_5> ::= <StartNowDoc_-_6> ;
+<StartNowDoc_-_6> ::= ;
+# BEGIN LEXER FOR  StartNowDoc and
+# BEGIN LEXER FOR  StartNowDoc char_set
+<StartNowDoc_-_7> ::= 'a' ;
+<StartNowDoc_-_7> ::= 'b' ;
+<StartNowDoc_-_7> ::= 'c' ;
+<StartNowDoc_-_7> ::= 'd' ;
+<StartNowDoc_-_7> ::= 'e' ;
+<StartNowDoc_-_7> ::= 'f' ;
+<StartNowDoc_-_7> ::= 'g' ;
+<StartNowDoc_-_7> ::= 'h' ;
+<StartNowDoc_-_7> ::= 'i' ;
+<StartNowDoc_-_7> ::= 'j' ;
+<StartNowDoc_-_7> ::= 'k' ;
+<StartNowDoc_-_7> ::= 'l' ;
+<StartNowDoc_-_7> ::= 'm' ;
+<StartNowDoc_-_7> ::= 'n' ;
+<StartNowDoc_-_7> ::= 'o' ;
+<StartNowDoc_-_7> ::= 'p' ;
+<StartNowDoc_-_7> ::= 'q' ;
+<StartNowDoc_-_7> ::= 'r' ;
+<StartNowDoc_-_7> ::= 's' ;
+<StartNowDoc_-_7> ::= 't' ;
+<StartNowDoc_-_7> ::= 'u' ;
+<StartNowDoc_-_7> ::= 'v' ;
+<StartNowDoc_-_7> ::= 'w' ;
+<StartNowDoc_-_7> ::= 'x' ;
+<StartNowDoc_-_7> ::= 'y' ;
+<StartNowDoc_-_7> ::= 'z' ;
+<StartNowDoc_-_7> ::= 'A' ;
+<StartNowDoc_-_7> ::= 'B' ;
+<StartNowDoc_-_7> ::= 'C' ;
+<StartNowDoc_-_7> ::= 'D' ;
+<StartNowDoc_-_7> ::= 'E' ;
+<StartNowDoc_-_7> ::= 'F' ;
+<StartNowDoc_-_7> ::= 'G' ;
+<StartNowDoc_-_7> ::= 'H' ;
+<StartNowDoc_-_7> ::= 'I' ;
+<StartNowDoc_-_7> ::= 'J' ;
+<StartNowDoc_-_7> ::= 'K' ;
+<StartNowDoc_-_7> ::= 'L' ;
+<StartNowDoc_-_7> ::= 'M' ;
+<StartNowDoc_-_7> ::= 'N' ;
+<StartNowDoc_-_7> ::= 'O' ;
+<StartNowDoc_-_7> ::= 'P' ;
+<StartNowDoc_-_7> ::= 'Q' ;
+<StartNowDoc_-_7> ::= 'R' ;
+<StartNowDoc_-_7> ::= 'S' ;
+<StartNowDoc_-_7> ::= 'T' ;
+<StartNowDoc_-_7> ::= 'U' ;
+<StartNowDoc_-_7> ::= 'V' ;
+<StartNowDoc_-_7> ::= 'W' ;
+<StartNowDoc_-_7> ::= 'X' ;
+<StartNowDoc_-_7> ::= 'Y' ;
+<StartNowDoc_-_7> ::= 'Z' ;
+<StartNowDoc_-_7> ::= '_' ;
+<StartNowDoc_-_7> ::= '0' ;
+<StartNowDoc_-_7> ::= '1' ;
+<StartNowDoc_-_7> ::= '2' ;
+<StartNowDoc_-_7> ::= '3' ;
+<StartNowDoc_-_7> ::= '4' ;
+<StartNowDoc_-_7> ::= '5' ;
+<StartNowDoc_-_7> ::= '6' ;
+<StartNowDoc_-_7> ::= '7' ;
+<StartNowDoc_-_7> ::= '8' ;
+<StartNowDoc_-_7> ::= '9' ;
+# END
+<StartNowDoc_-_6> ::= <StartNowDoc_-_7> <StartNowDoc_-_6> ;
+# END
+# END
+# BEGIN LEXER FOR  StartNowDoc eps
+<StartNowDoc_-_8> ::= ;
+# END
+<StartNowDoc> ::= '<<<' <StartNowDoc_-_1>  39  <StartNowDoc_-_4> <StartNowDoc_-_5>  39  <StartNowDoc_-_8> ' ' ;
+# END
+# LEXER: StartHereDoc
+# BEGIN LEXER FOR  StartHereDoc and
+# BEGIN LEXER FOR  StartHereDoc *
+<StartHereDoc_-_1> ::= <StartHereDoc_-_2> ;
+<StartHereDoc_-_2> ::= ;
+# BEGIN LEXER FOR  StartHereDoc and
+# BEGIN LEXER FOR  StartHereDoc char_set
+<StartHereDoc_-_3> ::= ' ' ;
+<StartHereDoc_-_3> ::=  9 ;
+# END
+<StartHereDoc_-_2> ::= <StartHereDoc_-_3> <StartHereDoc_-_2> ;
+# END
+# END
+# BEGIN LEXER FOR  StartHereDoc char_set
+<StartHereDoc_-_4> ::= 'a' ;
+<StartHereDoc_-_4> ::= 'b' ;
+<StartHereDoc_-_4> ::= 'c' ;
+<StartHereDoc_-_4> ::= 'd' ;
+<StartHereDoc_-_4> ::= 'e' ;
+<StartHereDoc_-_4> ::= 'f' ;
+<StartHereDoc_-_4> ::= 'g' ;
+<StartHereDoc_-_4> ::= 'h' ;
+<StartHereDoc_-_4> ::= 'i' ;
+<StartHereDoc_-_4> ::= 'j' ;
+<StartHereDoc_-_4> ::= 'k' ;
+<StartHereDoc_-_4> ::= 'l' ;
+<StartHereDoc_-_4> ::= 'm' ;
+<StartHereDoc_-_4> ::= 'n' ;
+<StartHereDoc_-_4> ::= 'o' ;
+<StartHereDoc_-_4> ::= 'p' ;
+<StartHereDoc_-_4> ::= 'q' ;
+<StartHereDoc_-_4> ::= 'r' ;
+<StartHereDoc_-_4> ::= 's' ;
+<StartHereDoc_-_4> ::= 't' ;
+<StartHereDoc_-_4> ::= 'u' ;
+<StartHereDoc_-_4> ::= 'v' ;
+<StartHereDoc_-_4> ::= 'w' ;
+<StartHereDoc_-_4> ::= 'x' ;
+<StartHereDoc_-_4> ::= 'y' ;
+<StartHereDoc_-_4> ::= 'z' ;
+<StartHereDoc_-_4> ::= 'A' ;
+<StartHereDoc_-_4> ::= 'B' ;
+<StartHereDoc_-_4> ::= 'C' ;
+<StartHereDoc_-_4> ::= 'D' ;
+<StartHereDoc_-_4> ::= 'E' ;
+<StartHereDoc_-_4> ::= 'F' ;
+<StartHereDoc_-_4> ::= 'G' ;
+<StartHereDoc_-_4> ::= 'H' ;
+<StartHereDoc_-_4> ::= 'I' ;
+<StartHereDoc_-_4> ::= 'J' ;
+<StartHereDoc_-_4> ::= 'K' ;
+<StartHereDoc_-_4> ::= 'L' ;
+<StartHereDoc_-_4> ::= 'M' ;
+<StartHereDoc_-_4> ::= 'N' ;
+<StartHereDoc_-_4> ::= 'O' ;
+<StartHereDoc_-_4> ::= 'P' ;
+<StartHereDoc_-_4> ::= 'Q' ;
+<StartHereDoc_-_4> ::= 'R' ;
+<StartHereDoc_-_4> ::= 'S' ;
+<StartHereDoc_-_4> ::= 'T' ;
+<StartHereDoc_-_4> ::= 'U' ;
+<StartHereDoc_-_4> ::= 'V' ;
+<StartHereDoc_-_4> ::= 'W' ;
+<StartHereDoc_-_4> ::= 'X' ;
+<StartHereDoc_-_4> ::= 'Y' ;
+<StartHereDoc_-_4> ::= 'Z' ;
+<StartHereDoc_-_4> ::= '_' ;
+# END
+# BEGIN LEXER FOR  StartHereDoc *
+<StartHereDoc_-_5> ::= <StartHereDoc_-_6> ;
+<StartHereDoc_-_6> ::= ;
+# BEGIN LEXER FOR  StartHereDoc and
+# BEGIN LEXER FOR  StartHereDoc char_set
+<StartHereDoc_-_7> ::= 'a' ;
+<StartHereDoc_-_7> ::= 'b' ;
+<StartHereDoc_-_7> ::= 'c' ;
+<StartHereDoc_-_7> ::= 'd' ;
+<StartHereDoc_-_7> ::= 'e' ;
+<StartHereDoc_-_7> ::= 'f' ;
+<StartHereDoc_-_7> ::= 'g' ;
+<StartHereDoc_-_7> ::= 'h' ;
+<StartHereDoc_-_7> ::= 'i' ;
+<StartHereDoc_-_7> ::= 'j' ;
+<StartHereDoc_-_7> ::= 'k' ;
+<StartHereDoc_-_7> ::= 'l' ;
+<StartHereDoc_-_7> ::= 'm' ;
+<StartHereDoc_-_7> ::= 'n' ;
+<StartHereDoc_-_7> ::= 'o' ;
+<StartHereDoc_-_7> ::= 'p' ;
+<StartHereDoc_-_7> ::= 'q' ;
+<StartHereDoc_-_7> ::= 'r' ;
+<StartHereDoc_-_7> ::= 's' ;
+<StartHereDoc_-_7> ::= 't' ;
+<StartHereDoc_-_7> ::= 'u' ;
+<StartHereDoc_-_7> ::= 'v' ;
+<StartHereDoc_-_7> ::= 'w' ;
+<StartHereDoc_-_7> ::= 'x' ;
+<StartHereDoc_-_7> ::= 'y' ;
+<StartHereDoc_-_7> ::= 'z' ;
+<StartHereDoc_-_7> ::= 'A' ;
+<StartHereDoc_-_7> ::= 'B' ;
+<StartHereDoc_-_7> ::= 'C' ;
+<StartHereDoc_-_7> ::= 'D' ;
+<StartHereDoc_-_7> ::= 'E' ;
+<StartHereDoc_-_7> ::= 'F' ;
+<StartHereDoc_-_7> ::= 'G' ;
+<StartHereDoc_-_7> ::= 'H' ;
+<StartHereDoc_-_7> ::= 'I' ;
+<StartHereDoc_-_7> ::= 'J' ;
+<StartHereDoc_-_7> ::= 'K' ;
+<StartHereDoc_-_7> ::= 'L' ;
+<StartHereDoc_-_7> ::= 'M' ;
+<StartHereDoc_-_7> ::= 'N' ;
+<StartHereDoc_-_7> ::= 'O' ;
+<StartHereDoc_-_7> ::= 'P' ;
+<StartHereDoc_-_7> ::= 'Q' ;
+<StartHereDoc_-_7> ::= 'R' ;
+<StartHereDoc_-_7> ::= 'S' ;
+<StartHereDoc_-_7> ::= 'T' ;
+<StartHereDoc_-_7> ::= 'U' ;
+<StartHereDoc_-_7> ::= 'V' ;
+<StartHereDoc_-_7> ::= 'W' ;
+<StartHereDoc_-_7> ::= 'X' ;
+<StartHereDoc_-_7> ::= 'Y' ;
+<StartHereDoc_-_7> ::= 'Z' ;
+<StartHereDoc_-_7> ::= '_' ;
+<StartHereDoc_-_7> ::= '0' ;
+<StartHereDoc_-_7> ::= '1' ;
+<StartHereDoc_-_7> ::= '2' ;
+<StartHereDoc_-_7> ::= '3' ;
+<StartHereDoc_-_7> ::= '4' ;
+<StartHereDoc_-_7> ::= '5' ;
+<StartHereDoc_-_7> ::= '6' ;
+<StartHereDoc_-_7> ::= '7' ;
+<StartHereDoc_-_7> ::= '8' ;
+<StartHereDoc_-_7> ::= '9' ;
+# END
+<StartHereDoc_-_6> ::= <StartHereDoc_-_7> <StartHereDoc_-_6> ;
+# END
+# END
+# BEGIN LEXER FOR  StartHereDoc eps
+<StartHereDoc_-_8> ::= ;
+# END
+<StartHereDoc> ::= '<<<' <StartHereDoc_-_1> <StartHereDoc_-_4> <StartHereDoc_-_5> <StartHereDoc_-_8> ' ' ;
+# END
+# LEXER: ErrorPhp
+# BEGIN LEXER FOR  ErrorPhp .
+<ErrorPhp> ::= ' '  ' ' ;
+<ErrorPhp> ::= '!'  ' ' ;
+<ErrorPhp> ::= '"'  ' ' ;
+<ErrorPhp> ::= '#'  ' ' ;
+<ErrorPhp> ::= '$'  ' ' ;
+<ErrorPhp> ::= '%'  ' ' ;
+<ErrorPhp> ::= '&'  ' ' ;
+<ErrorPhp> ::=  39   ' ' ;
+<ErrorPhp> ::= '('  ' ' ;
+<ErrorPhp> ::= ')'  ' ' ;
+<ErrorPhp> ::= '*'  ' ' ;
+<ErrorPhp> ::= '+'  ' ' ;
+<ErrorPhp> ::= ','  ' ' ;
+<ErrorPhp> ::= '-'  ' ' ;
+<ErrorPhp> ::= '.'  ' ' ;
+<ErrorPhp> ::= '/'  ' ' ;
+<ErrorPhp> ::= '0'  ' ' ;
+<ErrorPhp> ::= '1'  ' ' ;
+<ErrorPhp> ::= '2'  ' ' ;
+<ErrorPhp> ::= '3'  ' ' ;
+<ErrorPhp> ::= '4'  ' ' ;
+<ErrorPhp> ::= '5'  ' ' ;
+<ErrorPhp> ::= '6'  ' ' ;
+<ErrorPhp> ::= '7'  ' ' ;
+<ErrorPhp> ::= '8'  ' ' ;
+<ErrorPhp> ::= '9'  ' ' ;
+<ErrorPhp> ::= ':'  ' ' ;
+<ErrorPhp> ::= ';'  ' ' ;
+<ErrorPhp> ::= '<'  ' ' ;
+<ErrorPhp> ::= '='  ' ' ;
+<ErrorPhp> ::= '>'  ' ' ;
+<ErrorPhp> ::= '?'  ' ' ;
+<ErrorPhp> ::= '@'  ' ' ;
+<ErrorPhp> ::= 'A'  ' ' ;
+<ErrorPhp> ::= 'B'  ' ' ;
+<ErrorPhp> ::= 'C'  ' ' ;
+<ErrorPhp> ::= 'D'  ' ' ;
+<ErrorPhp> ::= 'E'  ' ' ;
+<ErrorPhp> ::= 'F'  ' ' ;
+<ErrorPhp> ::= 'G'  ' ' ;
+<ErrorPhp> ::= 'H'  ' ' ;
+<ErrorPhp> ::= 'I'  ' ' ;
+<ErrorPhp> ::= 'J'  ' ' ;
+<ErrorPhp> ::= 'K'  ' ' ;
+<ErrorPhp> ::= 'L'  ' ' ;
+<ErrorPhp> ::= 'M'  ' ' ;
+<ErrorPhp> ::= 'N'  ' ' ;
+<ErrorPhp> ::= 'O'  ' ' ;
+<ErrorPhp> ::= 'P'  ' ' ;
+<ErrorPhp> ::= 'Q'  ' ' ;
+<ErrorPhp> ::= 'R'  ' ' ;
+<ErrorPhp> ::= 'S'  ' ' ;
+<ErrorPhp> ::= 'T'  ' ' ;
+<ErrorPhp> ::= 'U'  ' ' ;
+<ErrorPhp> ::= 'V'  ' ' ;
+<ErrorPhp> ::= 'W'  ' ' ;
+<ErrorPhp> ::= 'X'  ' ' ;
+<ErrorPhp> ::= 'Y'  ' ' ;
+<ErrorPhp> ::= 'Z'  ' ' ;
+<ErrorPhp> ::= '['  ' ' ;
+<ErrorPhp> ::= '\'  ' ' ;
+<ErrorPhp> ::= ']'  ' ' ;
+<ErrorPhp> ::= '^'  ' ' ;
+<ErrorPhp> ::= '_'  ' ' ;
+<ErrorPhp> ::= '`'  ' ' ;
+<ErrorPhp> ::= 'a'  ' ' ;
+<ErrorPhp> ::= 'b'  ' ' ;
+<ErrorPhp> ::= 'c'  ' ' ;
+<ErrorPhp> ::= 'd'  ' ' ;
+<ErrorPhp> ::= 'e'  ' ' ;
+<ErrorPhp> ::= 'f'  ' ' ;
+<ErrorPhp> ::= 'g'  ' ' ;
+<ErrorPhp> ::= 'h'  ' ' ;
+<ErrorPhp> ::= 'i'  ' ' ;
+<ErrorPhp> ::= 'j'  ' ' ;
+<ErrorPhp> ::= 'k'  ' ' ;
+<ErrorPhp> ::= 'l'  ' ' ;
+<ErrorPhp> ::= 'm'  ' ' ;
+<ErrorPhp> ::= 'n'  ' ' ;
+<ErrorPhp> ::= 'o'  ' ' ;
+<ErrorPhp> ::= 'p'  ' ' ;
+<ErrorPhp> ::= 'q'  ' ' ;
+<ErrorPhp> ::= 'r'  ' ' ;
+<ErrorPhp> ::= 's'  ' ' ;
+<ErrorPhp> ::= 't'  ' ' ;
+<ErrorPhp> ::= 'u'  ' ' ;
+<ErrorPhp> ::= 'v'  ' ' ;
+<ErrorPhp> ::= 'w'  ' ' ;
+<ErrorPhp> ::= 'x'  ' ' ;
+<ErrorPhp> ::= 'y'  ' ' ;
+<ErrorPhp> ::= 'z'  ' ' ;
+<ErrorPhp> ::= '{'  ' ' ;
+<ErrorPhp> ::= '|'  ' ' ;
+<ErrorPhp> ::= '}'  ' ' ;
+<ErrorPhp> ::= '~'  ' ' ;
+# END
+# LEXER: VarNameInInterpolation
+# BEGIN LEXER FOR  VarNameInInterpolation and
+# BEGIN LEXER FOR  VarNameInInterpolation char_set
+<VarNameInInterpolation_-_1> ::= 'a' ;
+<VarNameInInterpolation_-_1> ::= 'b' ;
+<VarNameInInterpolation_-_1> ::= 'c' ;
+<VarNameInInterpolation_-_1> ::= 'd' ;
+<VarNameInInterpolation_-_1> ::= 'e' ;
+<VarNameInInterpolation_-_1> ::= 'f' ;
+<VarNameInInterpolation_-_1> ::= 'g' ;
+<VarNameInInterpolation_-_1> ::= 'h' ;
+<VarNameInInterpolation_-_1> ::= 'i' ;
+<VarNameInInterpolation_-_1> ::= 'j' ;
+<VarNameInInterpolation_-_1> ::= 'k' ;
+<VarNameInInterpolation_-_1> ::= 'l' ;
+<VarNameInInterpolation_-_1> ::= 'm' ;
+<VarNameInInterpolation_-_1> ::= 'n' ;
+<VarNameInInterpolation_-_1> ::= 'o' ;
+<VarNameInInterpolation_-_1> ::= 'p' ;
+<VarNameInInterpolation_-_1> ::= 'q' ;
+<VarNameInInterpolation_-_1> ::= 'r' ;
+<VarNameInInterpolation_-_1> ::= 's' ;
+<VarNameInInterpolation_-_1> ::= 't' ;
+<VarNameInInterpolation_-_1> ::= 'u' ;
+<VarNameInInterpolation_-_1> ::= 'v' ;
+<VarNameInInterpolation_-_1> ::= 'w' ;
+<VarNameInInterpolation_-_1> ::= 'x' ;
+<VarNameInInterpolation_-_1> ::= 'y' ;
+<VarNameInInterpolation_-_1> ::= 'z' ;
+<VarNameInInterpolation_-_1> ::= 'A' ;
+<VarNameInInterpolation_-_1> ::= 'B' ;
+<VarNameInInterpolation_-_1> ::= 'C' ;
+<VarNameInInterpolation_-_1> ::= 'D' ;
+<VarNameInInterpolation_-_1> ::= 'E' ;
+<VarNameInInterpolation_-_1> ::= 'F' ;
+<VarNameInInterpolation_-_1> ::= 'G' ;
+<VarNameInInterpolation_-_1> ::= 'H' ;
+<VarNameInInterpolation_-_1> ::= 'I' ;
+<VarNameInInterpolation_-_1> ::= 'J' ;
+<VarNameInInterpolation_-_1> ::= 'K' ;
+<VarNameInInterpolation_-_1> ::= 'L' ;
+<VarNameInInterpolation_-_1> ::= 'M' ;
+<VarNameInInterpolation_-_1> ::= 'N' ;
+<VarNameInInterpolation_-_1> ::= 'O' ;
+<VarNameInInterpolation_-_1> ::= 'P' ;
+<VarNameInInterpolation_-_1> ::= 'Q' ;
+<VarNameInInterpolation_-_1> ::= 'R' ;
+<VarNameInInterpolation_-_1> ::= 'S' ;
+<VarNameInInterpolation_-_1> ::= 'T' ;
+<VarNameInInterpolation_-_1> ::= 'U' ;
+<VarNameInInterpolation_-_1> ::= 'V' ;
+<VarNameInInterpolation_-_1> ::= 'W' ;
+<VarNameInInterpolation_-_1> ::= 'X' ;
+<VarNameInInterpolation_-_1> ::= 'Y' ;
+<VarNameInInterpolation_-_1> ::= 'Z' ;
+<VarNameInInterpolation_-_1> ::= '_' ;
+# END
+# BEGIN LEXER FOR  VarNameInInterpolation *
+<VarNameInInterpolation_-_2> ::= <VarNameInInterpolation_-_3> ;
+<VarNameInInterpolation_-_3> ::= ;
+# BEGIN LEXER FOR  VarNameInInterpolation and
+# BEGIN LEXER FOR  VarNameInInterpolation char_set
+<VarNameInInterpolation_-_4> ::= 'a' ;
+<VarNameInInterpolation_-_4> ::= 'b' ;
+<VarNameInInterpolation_-_4> ::= 'c' ;
+<VarNameInInterpolation_-_4> ::= 'd' ;
+<VarNameInInterpolation_-_4> ::= 'e' ;
+<VarNameInInterpolation_-_4> ::= 'f' ;
+<VarNameInInterpolation_-_4> ::= 'g' ;
+<VarNameInInterpolation_-_4> ::= 'h' ;
+<VarNameInInterpolation_-_4> ::= 'i' ;
+<VarNameInInterpolation_-_4> ::= 'j' ;
+<VarNameInInterpolation_-_4> ::= 'k' ;
+<VarNameInInterpolation_-_4> ::= 'l' ;
+<VarNameInInterpolation_-_4> ::= 'm' ;
+<VarNameInInterpolation_-_4> ::= 'n' ;
+<VarNameInInterpolation_-_4> ::= 'o' ;
+<VarNameInInterpolation_-_4> ::= 'p' ;
+<VarNameInInterpolation_-_4> ::= 'q' ;
+<VarNameInInterpolation_-_4> ::= 'r' ;
+<VarNameInInterpolation_-_4> ::= 's' ;
+<VarNameInInterpolation_-_4> ::= 't' ;
+<VarNameInInterpolation_-_4> ::= 'u' ;
+<VarNameInInterpolation_-_4> ::= 'v' ;
+<VarNameInInterpolation_-_4> ::= 'w' ;
+<VarNameInInterpolation_-_4> ::= 'x' ;
+<VarNameInInterpolation_-_4> ::= 'y' ;
+<VarNameInInterpolation_-_4> ::= 'z' ;
+<VarNameInInterpolation_-_4> ::= 'A' ;
+<VarNameInInterpolation_-_4> ::= 'B' ;
+<VarNameInInterpolation_-_4> ::= 'C' ;
+<VarNameInInterpolation_-_4> ::= 'D' ;
+<VarNameInInterpolation_-_4> ::= 'E' ;
+<VarNameInInterpolation_-_4> ::= 'F' ;
+<VarNameInInterpolation_-_4> ::= 'G' ;
+<VarNameInInterpolation_-_4> ::= 'H' ;
+<VarNameInInterpolation_-_4> ::= 'I' ;
+<VarNameInInterpolation_-_4> ::= 'J' ;
+<VarNameInInterpolation_-_4> ::= 'K' ;
+<VarNameInInterpolation_-_4> ::= 'L' ;
+<VarNameInInterpolation_-_4> ::= 'M' ;
+<VarNameInInterpolation_-_4> ::= 'N' ;
+<VarNameInInterpolation_-_4> ::= 'O' ;
+<VarNameInInterpolation_-_4> ::= 'P' ;
+<VarNameInInterpolation_-_4> ::= 'Q' ;
+<VarNameInInterpolation_-_4> ::= 'R' ;
+<VarNameInInterpolation_-_4> ::= 'S' ;
+<VarNameInInterpolation_-_4> ::= 'T' ;
+<VarNameInInterpolation_-_4> ::= 'U' ;
+<VarNameInInterpolation_-_4> ::= 'V' ;
+<VarNameInInterpolation_-_4> ::= 'W' ;
+<VarNameInInterpolation_-_4> ::= 'X' ;
+<VarNameInInterpolation_-_4> ::= 'Y' ;
+<VarNameInInterpolation_-_4> ::= 'Z' ;
+<VarNameInInterpolation_-_4> ::= '_' ;
+<VarNameInInterpolation_-_4> ::= '0' ;
+<VarNameInInterpolation_-_4> ::= '1' ;
+<VarNameInInterpolation_-_4> ::= '2' ;
+<VarNameInInterpolation_-_4> ::= '3' ;
+<VarNameInInterpolation_-_4> ::= '4' ;
+<VarNameInInterpolation_-_4> ::= '5' ;
+<VarNameInInterpolation_-_4> ::= '6' ;
+<VarNameInInterpolation_-_4> ::= '7' ;
+<VarNameInInterpolation_-_4> ::= '8' ;
+<VarNameInInterpolation_-_4> ::= '9' ;
+# END
+<VarNameInInterpolation_-_3> ::= <VarNameInInterpolation_-_4> <VarNameInInterpolation_-_3> ;
+# END
+# END
+<VarNameInInterpolation> ::= '$' <VarNameInInterpolation_-_1> <VarNameInInterpolation_-_2> ' ' ;
+# END
+# LEXER: DollarString
+# BEGIN LEXER FOR  DollarString string
+<DollarString> ::= '$' ' ' ;
+# END
+# LEXER: CurlyDollar
+# BEGIN LEXER FOR  CurlyDollar and
+# BEGIN LEXER FOR  CurlyDollar eps
+<CurlyDollar_-_1> ::= ;
+# END
+# BEGIN LEXER FOR  CurlyDollar eps
+<CurlyDollar_-_2> ::= ;
+# END
+<CurlyDollar> ::= '{' <CurlyDollar_-_1> <CurlyDollar_-_2> ' ' ;
+# END
+# LEXER: CurlyString
+# BEGIN LEXER FOR  CurlyString string
+<CurlyString> ::= '{' ' ' ;
+# END
+# LEXER: EscapedChar
+# BEGIN LEXER FOR  EscapedChar and
+# BEGIN LEXER FOR  EscapedChar .
+<EscapedChar_-_1> ::= ' '  ;
+<EscapedChar_-_1> ::= '!'  ;
+<EscapedChar_-_1> ::= '"'  ;
+<EscapedChar_-_1> ::= '#'  ;
+<EscapedChar_-_1> ::= '$'  ;
+<EscapedChar_-_1> ::= '%'  ;
+<EscapedChar_-_1> ::= '&'  ;
+<EscapedChar_-_1> ::=  39   ;
+<EscapedChar_-_1> ::= '('  ;
+<EscapedChar_-_1> ::= ')'  ;
+<EscapedChar_-_1> ::= '*'  ;
+<EscapedChar_-_1> ::= '+'  ;
+<EscapedChar_-_1> ::= ','  ;
+<EscapedChar_-_1> ::= '-'  ;
+<EscapedChar_-_1> ::= '.'  ;
+<EscapedChar_-_1> ::= '/'  ;
+<EscapedChar_-_1> ::= '0'  ;
+<EscapedChar_-_1> ::= '1'  ;
+<EscapedChar_-_1> ::= '2'  ;
+<EscapedChar_-_1> ::= '3'  ;
+<EscapedChar_-_1> ::= '4'  ;
+<EscapedChar_-_1> ::= '5'  ;
+<EscapedChar_-_1> ::= '6'  ;
+<EscapedChar_-_1> ::= '7'  ;
+<EscapedChar_-_1> ::= '8'  ;
+<EscapedChar_-_1> ::= '9'  ;
+<EscapedChar_-_1> ::= ':'  ;
+<EscapedChar_-_1> ::= ';'  ;
+<EscapedChar_-_1> ::= '<'  ;
+<EscapedChar_-_1> ::= '='  ;
+<EscapedChar_-_1> ::= '>'  ;
+<EscapedChar_-_1> ::= '?'  ;
+<EscapedChar_-_1> ::= '@'  ;
+<EscapedChar_-_1> ::= 'A'  ;
+<EscapedChar_-_1> ::= 'B'  ;
+<EscapedChar_-_1> ::= 'C'  ;
+<EscapedChar_-_1> ::= 'D'  ;
+<EscapedChar_-_1> ::= 'E'  ;
+<EscapedChar_-_1> ::= 'F'  ;
+<EscapedChar_-_1> ::= 'G'  ;
+<EscapedChar_-_1> ::= 'H'  ;
+<EscapedChar_-_1> ::= 'I'  ;
+<EscapedChar_-_1> ::= 'J'  ;
+<EscapedChar_-_1> ::= 'K'  ;
+<EscapedChar_-_1> ::= 'L'  ;
+<EscapedChar_-_1> ::= 'M'  ;
+<EscapedChar_-_1> ::= 'N'  ;
+<EscapedChar_-_1> ::= 'O'  ;
+<EscapedChar_-_1> ::= 'P'  ;
+<EscapedChar_-_1> ::= 'Q'  ;
+<EscapedChar_-_1> ::= 'R'  ;
+<EscapedChar_-_1> ::= 'S'  ;
+<EscapedChar_-_1> ::= 'T'  ;
+<EscapedChar_-_1> ::= 'U'  ;
+<EscapedChar_-_1> ::= 'V'  ;
+<EscapedChar_-_1> ::= 'W'  ;
+<EscapedChar_-_1> ::= 'X'  ;
+<EscapedChar_-_1> ::= 'Y'  ;
+<EscapedChar_-_1> ::= 'Z'  ;
+<EscapedChar_-_1> ::= '['  ;
+<EscapedChar_-_1> ::= '\'  ;
+<EscapedChar_-_1> ::= ']'  ;
+<EscapedChar_-_1> ::= '^'  ;
+<EscapedChar_-_1> ::= '_'  ;
+<EscapedChar_-_1> ::= '`'  ;
+<EscapedChar_-_1> ::= 'a'  ;
+<EscapedChar_-_1> ::= 'b'  ;
+<EscapedChar_-_1> ::= 'c'  ;
+<EscapedChar_-_1> ::= 'd'  ;
+<EscapedChar_-_1> ::= 'e'  ;
+<EscapedChar_-_1> ::= 'f'  ;
+<EscapedChar_-_1> ::= 'g'  ;
+<EscapedChar_-_1> ::= 'h'  ;
+<EscapedChar_-_1> ::= 'i'  ;
+<EscapedChar_-_1> ::= 'j'  ;
+<EscapedChar_-_1> ::= 'k'  ;
+<EscapedChar_-_1> ::= 'l'  ;
+<EscapedChar_-_1> ::= 'm'  ;
+<EscapedChar_-_1> ::= 'n'  ;
+<EscapedChar_-_1> ::= 'o'  ;
+<EscapedChar_-_1> ::= 'p'  ;
+<EscapedChar_-_1> ::= 'q'  ;
+<EscapedChar_-_1> ::= 'r'  ;
+<EscapedChar_-_1> ::= 's'  ;
+<EscapedChar_-_1> ::= 't'  ;
+<EscapedChar_-_1> ::= 'u'  ;
+<EscapedChar_-_1> ::= 'v'  ;
+<EscapedChar_-_1> ::= 'w'  ;
+<EscapedChar_-_1> ::= 'x'  ;
+<EscapedChar_-_1> ::= 'y'  ;
+<EscapedChar_-_1> ::= 'z'  ;
+<EscapedChar_-_1> ::= '{'  ;
+<EscapedChar_-_1> ::= '|'  ;
+<EscapedChar_-_1> ::= '}'  ;
+<EscapedChar_-_1> ::= '~'  ;
+# END
+<EscapedChar> ::= '\' <EscapedChar_-_1> ' ' ;
+# END
+# LEXER: DoubleQuoteInInterpolation
+# BEGIN LEXER FOR  DoubleQuoteInInterpolation string
+<DoubleQuoteInInterpolation> ::= '"' ' ' ;
+# END
+# LEXER: UnicodeEscape
+# BEGIN LEXER FOR  UnicodeEscape and
+# BEGIN LEXER FOR  UnicodeEscape char_set
+<UnicodeEscape_-_1> ::= 'a' ;
+<UnicodeEscape_-_1> ::= 'b' ;
+<UnicodeEscape_-_1> ::= 'c' ;
+<UnicodeEscape_-_1> ::= 'd' ;
+<UnicodeEscape_-_1> ::= 'e' ;
+<UnicodeEscape_-_1> ::= 'f' ;
+<UnicodeEscape_-_1> ::= 'g' ;
+<UnicodeEscape_-_1> ::= 'h' ;
+<UnicodeEscape_-_1> ::= 'i' ;
+<UnicodeEscape_-_1> ::= 'j' ;
+<UnicodeEscape_-_1> ::= 'k' ;
+<UnicodeEscape_-_1> ::= 'l' ;
+<UnicodeEscape_-_1> ::= 'm' ;
+<UnicodeEscape_-_1> ::= 'n' ;
+<UnicodeEscape_-_1> ::= 'o' ;
+<UnicodeEscape_-_1> ::= 'p' ;
+<UnicodeEscape_-_1> ::= 'q' ;
+<UnicodeEscape_-_1> ::= 'r' ;
+<UnicodeEscape_-_1> ::= 's' ;
+<UnicodeEscape_-_1> ::= 't' ;
+<UnicodeEscape_-_1> ::= 'u' ;
+<UnicodeEscape_-_1> ::= 'v' ;
+<UnicodeEscape_-_1> ::= 'w' ;
+<UnicodeEscape_-_1> ::= 'x' ;
+<UnicodeEscape_-_1> ::= 'y' ;
+<UnicodeEscape_-_1> ::= 'z' ;
+<UnicodeEscape_-_1> ::= 'A' ;
+<UnicodeEscape_-_1> ::= 'B' ;
+<UnicodeEscape_-_1> ::= 'C' ;
+<UnicodeEscape_-_1> ::= 'D' ;
+<UnicodeEscape_-_1> ::= 'E' ;
+<UnicodeEscape_-_1> ::= 'F' ;
+<UnicodeEscape_-_1> ::= 'G' ;
+<UnicodeEscape_-_1> ::= 'H' ;
+<UnicodeEscape_-_1> ::= 'I' ;
+<UnicodeEscape_-_1> ::= 'J' ;
+<UnicodeEscape_-_1> ::= 'K' ;
+<UnicodeEscape_-_1> ::= 'L' ;
+<UnicodeEscape_-_1> ::= 'M' ;
+<UnicodeEscape_-_1> ::= 'N' ;
+<UnicodeEscape_-_1> ::= 'O' ;
+<UnicodeEscape_-_1> ::= 'P' ;
+<UnicodeEscape_-_1> ::= 'Q' ;
+<UnicodeEscape_-_1> ::= 'R' ;
+<UnicodeEscape_-_1> ::= 'S' ;
+<UnicodeEscape_-_1> ::= 'T' ;
+<UnicodeEscape_-_1> ::= 'U' ;
+<UnicodeEscape_-_1> ::= 'V' ;
+<UnicodeEscape_-_1> ::= 'W' ;
+<UnicodeEscape_-_1> ::= 'X' ;
+<UnicodeEscape_-_1> ::= 'Y' ;
+<UnicodeEscape_-_1> ::= 'Z' ;
+<UnicodeEscape_-_1> ::= '0' ;
+<UnicodeEscape_-_1> ::= '1' ;
+<UnicodeEscape_-_1> ::= '2' ;
+<UnicodeEscape_-_1> ::= '3' ;
+<UnicodeEscape_-_1> ::= '4' ;
+<UnicodeEscape_-_1> ::= '5' ;
+<UnicodeEscape_-_1> ::= '6' ;
+<UnicodeEscape_-_1> ::= '7' ;
+<UnicodeEscape_-_1> ::= '8' ;
+<UnicodeEscape_-_1> ::= '9' ;
+# END
+# BEGIN LEXER FOR  UnicodeEscape +
+<UnicodeEscape_-_2> ::= <UnicodeEscape_-_3> ;
+<UnicodeEscape_-_3> ::= <UnicodeEscape_-_4> ;
+<UnicodeEscape_-_3> ::= <UnicodeEscape_-_4> <UnicodeEscape_-_3> ;
+# BEGIN LEXER FOR  UnicodeEscape char_set
+<UnicodeEscape_-_4> ::= 'a' ;
+<UnicodeEscape_-_4> ::= 'b' ;
+<UnicodeEscape_-_4> ::= 'c' ;
+<UnicodeEscape_-_4> ::= 'd' ;
+<UnicodeEscape_-_4> ::= 'e' ;
+<UnicodeEscape_-_4> ::= 'f' ;
+<UnicodeEscape_-_4> ::= 'g' ;
+<UnicodeEscape_-_4> ::= 'h' ;
+<UnicodeEscape_-_4> ::= 'i' ;
+<UnicodeEscape_-_4> ::= 'j' ;
+<UnicodeEscape_-_4> ::= 'k' ;
+<UnicodeEscape_-_4> ::= 'l' ;
+<UnicodeEscape_-_4> ::= 'm' ;
+<UnicodeEscape_-_4> ::= 'n' ;
+<UnicodeEscape_-_4> ::= 'o' ;
+<UnicodeEscape_-_4> ::= 'p' ;
+<UnicodeEscape_-_4> ::= 'q' ;
+<UnicodeEscape_-_4> ::= 'r' ;
+<UnicodeEscape_-_4> ::= 's' ;
+<UnicodeEscape_-_4> ::= 't' ;
+<UnicodeEscape_-_4> ::= 'u' ;
+<UnicodeEscape_-_4> ::= 'v' ;
+<UnicodeEscape_-_4> ::= 'w' ;
+<UnicodeEscape_-_4> ::= 'x' ;
+<UnicodeEscape_-_4> ::= 'y' ;
+<UnicodeEscape_-_4> ::= 'z' ;
+<UnicodeEscape_-_4> ::= 'A' ;
+<UnicodeEscape_-_4> ::= 'B' ;
+<UnicodeEscape_-_4> ::= 'C' ;
+<UnicodeEscape_-_4> ::= 'D' ;
+<UnicodeEscape_-_4> ::= 'E' ;
+<UnicodeEscape_-_4> ::= 'F' ;
+<UnicodeEscape_-_4> ::= 'G' ;
+<UnicodeEscape_-_4> ::= 'H' ;
+<UnicodeEscape_-_4> ::= 'I' ;
+<UnicodeEscape_-_4> ::= 'J' ;
+<UnicodeEscape_-_4> ::= 'K' ;
+<UnicodeEscape_-_4> ::= 'L' ;
+<UnicodeEscape_-_4> ::= 'M' ;
+<UnicodeEscape_-_4> ::= 'N' ;
+<UnicodeEscape_-_4> ::= 'O' ;
+<UnicodeEscape_-_4> ::= 'P' ;
+<UnicodeEscape_-_4> ::= 'Q' ;
+<UnicodeEscape_-_4> ::= 'R' ;
+<UnicodeEscape_-_4> ::= 'S' ;
+<UnicodeEscape_-_4> ::= 'T' ;
+<UnicodeEscape_-_4> ::= 'U' ;
+<UnicodeEscape_-_4> ::= 'V' ;
+<UnicodeEscape_-_4> ::= 'W' ;
+<UnicodeEscape_-_4> ::= 'X' ;
+<UnicodeEscape_-_4> ::= 'Y' ;
+<UnicodeEscape_-_4> ::= 'Z' ;
+<UnicodeEscape_-_4> ::= '0' ;
+<UnicodeEscape_-_4> ::= '1' ;
+<UnicodeEscape_-_4> ::= '2' ;
+<UnicodeEscape_-_4> ::= '3' ;
+<UnicodeEscape_-_4> ::= '4' ;
+<UnicodeEscape_-_4> ::= '5' ;
+<UnicodeEscape_-_4> ::= '6' ;
+<UnicodeEscape_-_4> ::= '7' ;
+<UnicodeEscape_-_4> ::= '8' ;
+<UnicodeEscape_-_4> ::= '9' ;
+# END
+# END
+<UnicodeEscape> ::= '\u{' <UnicodeEscape_-_1> <UnicodeEscape_-_2> '}' ' ' ;
+# END
+# LEXER: StringPart
+# BEGIN LEXER FOR  StringPart +
+<StringPart> ::= <StringPart_-_1> ' ' ;
+<StringPart_-_1> ::= <StringPart_-_2> ' ' ;
+<StringPart_-_1> ::= <StringPart_-_2> <StringPart_-_1> ' ' ;
+# BEGIN LEXER FOR  StringPart not
+<StringPart_-_2> ::= ' '  ;
+<StringPart_-_2> ::= '!'  ;
+<StringPart_-_2> ::= '#'  ;
+<StringPart_-_2> ::= '%'  ;
+<StringPart_-_2> ::= '&'  ;
+<StringPart_-_2> ::=  39   ;
+<StringPart_-_2> ::= '('  ;
+<StringPart_-_2> ::= ')'  ;
+<StringPart_-_2> ::= '*'  ;
+<StringPart_-_2> ::= '+'  ;
+<StringPart_-_2> ::= ','  ;
+<StringPart_-_2> ::= '-'  ;
+<StringPart_-_2> ::= '.'  ;
+<StringPart_-_2> ::= '/'  ;
+<StringPart_-_2> ::= '0'  ;
+<StringPart_-_2> ::= '1'  ;
+<StringPart_-_2> ::= '2'  ;
+<StringPart_-_2> ::= '3'  ;
+<StringPart_-_2> ::= '4'  ;
+<StringPart_-_2> ::= '5'  ;
+<StringPart_-_2> ::= '6'  ;
+<StringPart_-_2> ::= '7'  ;
+<StringPart_-_2> ::= '8'  ;
+<StringPart_-_2> ::= '9'  ;
+<StringPart_-_2> ::= ':'  ;
+<StringPart_-_2> ::= ';'  ;
+<StringPart_-_2> ::= '<'  ;
+<StringPart_-_2> ::= '='  ;
+<StringPart_-_2> ::= '>'  ;
+<StringPart_-_2> ::= '?'  ;
+<StringPart_-_2> ::= '@'  ;
+<StringPart_-_2> ::= 'A'  ;
+<StringPart_-_2> ::= 'B'  ;
+<StringPart_-_2> ::= 'C'  ;
+<StringPart_-_2> ::= 'D'  ;
+<StringPart_-_2> ::= 'E'  ;
+<StringPart_-_2> ::= 'F'  ;
+<StringPart_-_2> ::= 'G'  ;
+<StringPart_-_2> ::= 'H'  ;
+<StringPart_-_2> ::= 'I'  ;
+<StringPart_-_2> ::= 'J'  ;
+<StringPart_-_2> ::= 'K'  ;
+<StringPart_-_2> ::= 'L'  ;
+<StringPart_-_2> ::= 'M'  ;
+<StringPart_-_2> ::= 'N'  ;
+<StringPart_-_2> ::= 'O'  ;
+<StringPart_-_2> ::= 'P'  ;
+<StringPart_-_2> ::= 'Q'  ;
+<StringPart_-_2> ::= 'R'  ;
+<StringPart_-_2> ::= 'S'  ;
+<StringPart_-_2> ::= 'T'  ;
+<StringPart_-_2> ::= 'U'  ;
+<StringPart_-_2> ::= 'V'  ;
+<StringPart_-_2> ::= 'W'  ;
+<StringPart_-_2> ::= 'X'  ;
+<StringPart_-_2> ::= 'Y'  ;
+<StringPart_-_2> ::= 'Z'  ;
+<StringPart_-_2> ::= '['  ;
+<StringPart_-_2> ::= ']'  ;
+<StringPart_-_2> ::= '^'  ;
+<StringPart_-_2> ::= '_'  ;
+<StringPart_-_2> ::= '`'  ;
+<StringPart_-_2> ::= 'a'  ;
+<StringPart_-_2> ::= 'b'  ;
+<StringPart_-_2> ::= 'c'  ;
+<StringPart_-_2> ::= 'd'  ;
+<StringPart_-_2> ::= 'e'  ;
+<StringPart_-_2> ::= 'f'  ;
+<StringPart_-_2> ::= 'g'  ;
+<StringPart_-_2> ::= 'h'  ;
+<StringPart_-_2> ::= 'i'  ;
+<StringPart_-_2> ::= 'j'  ;
+<StringPart_-_2> ::= 'k'  ;
+<StringPart_-_2> ::= 'l'  ;
+<StringPart_-_2> ::= 'm'  ;
+<StringPart_-_2> ::= 'n'  ;
+<StringPart_-_2> ::= 'o'  ;
+<StringPart_-_2> ::= 'p'  ;
+<StringPart_-_2> ::= 'q'  ;
+<StringPart_-_2> ::= 'r'  ;
+<StringPart_-_2> ::= 's'  ;
+<StringPart_-_2> ::= 't'  ;
+<StringPart_-_2> ::= 'u'  ;
+<StringPart_-_2> ::= 'v'  ;
+<StringPart_-_2> ::= 'w'  ;
+<StringPart_-_2> ::= 'x'  ;
+<StringPart_-_2> ::= 'y'  ;
+<StringPart_-_2> ::= 'z'  ;
+<StringPart_-_2> ::= '|'  ;
+<StringPart_-_2> ::= '}'  ;
+<StringPart_-_2> ::= '~'  ;
+# END
+# END
+# LEXER: Comment
+# BEGIN LEXER FOR  Comment +
+<Comment> ::= <Comment_-_1> ' ' ;
+<Comment_-_1> ::= <Comment_-_2> ' ' ;
+<Comment_-_1> ::= <Comment_-_2> <Comment_-_1> ' ' ;
+# BEGIN LEXER FOR  Comment not
+<Comment_-_2> ::= ' '  ;
+<Comment_-_2> ::= '!'  ;
+<Comment_-_2> ::= '"'  ;
+<Comment_-_2> ::= '#'  ;
+<Comment_-_2> ::= '$'  ;
+<Comment_-_2> ::= '%'  ;
+<Comment_-_2> ::= '&'  ;
+<Comment_-_2> ::=  39   ;
+<Comment_-_2> ::= '('  ;
+<Comment_-_2> ::= ')'  ;
+<Comment_-_2> ::= '*'  ;
+<Comment_-_2> ::= '+'  ;
+<Comment_-_2> ::= ','  ;
+<Comment_-_2> ::= '-'  ;
+<Comment_-_2> ::= '.'  ;
+<Comment_-_2> ::= '/'  ;
+<Comment_-_2> ::= '0'  ;
+<Comment_-_2> ::= '1'  ;
+<Comment_-_2> ::= '2'  ;
+<Comment_-_2> ::= '3'  ;
+<Comment_-_2> ::= '4'  ;
+<Comment_-_2> ::= '5'  ;
+<Comment_-_2> ::= '6'  ;
+<Comment_-_2> ::= '7'  ;
+<Comment_-_2> ::= '8'  ;
+<Comment_-_2> ::= '9'  ;
+<Comment_-_2> ::= ':'  ;
+<Comment_-_2> ::= ';'  ;
+<Comment_-_2> ::= '<'  ;
+<Comment_-_2> ::= '='  ;
+<Comment_-_2> ::= '>'  ;
+<Comment_-_2> ::= '@'  ;
+<Comment_-_2> ::= 'A'  ;
+<Comment_-_2> ::= 'B'  ;
+<Comment_-_2> ::= 'C'  ;
+<Comment_-_2> ::= 'D'  ;
+<Comment_-_2> ::= 'E'  ;
+<Comment_-_2> ::= 'F'  ;
+<Comment_-_2> ::= 'G'  ;
+<Comment_-_2> ::= 'H'  ;
+<Comment_-_2> ::= 'I'  ;
+<Comment_-_2> ::= 'J'  ;
+<Comment_-_2> ::= 'K'  ;
+<Comment_-_2> ::= 'L'  ;
+<Comment_-_2> ::= 'M'  ;
+<Comment_-_2> ::= 'N'  ;
+<Comment_-_2> ::= 'O'  ;
+<Comment_-_2> ::= 'P'  ;
+<Comment_-_2> ::= 'Q'  ;
+<Comment_-_2> ::= 'R'  ;
+<Comment_-_2> ::= 'S'  ;
+<Comment_-_2> ::= 'T'  ;
+<Comment_-_2> ::= 'U'  ;
+<Comment_-_2> ::= 'V'  ;
+<Comment_-_2> ::= 'W'  ;
+<Comment_-_2> ::= 'X'  ;
+<Comment_-_2> ::= 'Y'  ;
+<Comment_-_2> ::= 'Z'  ;
+<Comment_-_2> ::= '['  ;
+<Comment_-_2> ::= '\'  ;
+<Comment_-_2> ::= ']'  ;
+<Comment_-_2> ::= '^'  ;
+<Comment_-_2> ::= '_'  ;
+<Comment_-_2> ::= '`'  ;
+<Comment_-_2> ::= 'a'  ;
+<Comment_-_2> ::= 'b'  ;
+<Comment_-_2> ::= 'c'  ;
+<Comment_-_2> ::= 'd'  ;
+<Comment_-_2> ::= 'e'  ;
+<Comment_-_2> ::= 'f'  ;
+<Comment_-_2> ::= 'g'  ;
+<Comment_-_2> ::= 'h'  ;
+<Comment_-_2> ::= 'i'  ;
+<Comment_-_2> ::= 'j'  ;
+<Comment_-_2> ::= 'k'  ;
+<Comment_-_2> ::= 'l'  ;
+<Comment_-_2> ::= 'm'  ;
+<Comment_-_2> ::= 'o'  ;
+<Comment_-_2> ::= 'p'  ;
+<Comment_-_2> ::= 'q'  ;
+<Comment_-_2> ::= 's'  ;
+<Comment_-_2> ::= 't'  ;
+<Comment_-_2> ::= 'u'  ;
+<Comment_-_2> ::= 'v'  ;
+<Comment_-_2> ::= 'w'  ;
+<Comment_-_2> ::= 'x'  ;
+<Comment_-_2> ::= 'y'  ;
+<Comment_-_2> ::= 'z'  ;
+<Comment_-_2> ::= '{'  ;
+<Comment_-_2> ::= '|'  ;
+<Comment_-_2> ::= '}'  ;
+<Comment_-_2> ::= '~'  ;
+# END
+# END
+# LEXER: PHPEndSingleLineComment
+# BEGIN LEXER FOR  PHPEndSingleLineComment and
+<PHPEndSingleLineComment> ::= '?' '>' ' ' ;
+# END
+# LEXER: CommentQuestionMark
+# BEGIN LEXER FOR  CommentQuestionMark string
+<CommentQuestionMark> ::= '?' ' ' ;
+# END
+# LEXER: CommentEnd
+# BEGIN LEXER FOR  CommentEnd char_set
+<CommentEnd> ::=  13 ' ' ;
+<CommentEnd> ::=  10 ' ' ;
+# END
+# LEXER: HereDocText
+# BEGIN LEXER FOR  HereDocText and
+# BEGIN LEXER FOR  HereDocText ?
+<HereDocText_-_1> ::= ;
+# BEGIN LEXER FOR  HereDocText not
+<HereDocText_-_1> ::= ' '  ;
+<HereDocText_-_1> ::= '!'  ;
+<HereDocText_-_1> ::= '"'  ;
+<HereDocText_-_1> ::= '#'  ;
+<HereDocText_-_1> ::= '$'  ;
+<HereDocText_-_1> ::= '%'  ;
+<HereDocText_-_1> ::= '&'  ;
+<HereDocText_-_1> ::=  39   ;
+<HereDocText_-_1> ::= '('  ;
+<HereDocText_-_1> ::= ')'  ;
+<HereDocText_-_1> ::= '*'  ;
+<HereDocText_-_1> ::= '+'  ;
+<HereDocText_-_1> ::= ','  ;
+<HereDocText_-_1> ::= '-'  ;
+<HereDocText_-_1> ::= '.'  ;
+<HereDocText_-_1> ::= '/'  ;
+<HereDocText_-_1> ::= '0'  ;
+<HereDocText_-_1> ::= '1'  ;
+<HereDocText_-_1> ::= '2'  ;
+<HereDocText_-_1> ::= '3'  ;
+<HereDocText_-_1> ::= '4'  ;
+<HereDocText_-_1> ::= '5'  ;
+<HereDocText_-_1> ::= '6'  ;
+<HereDocText_-_1> ::= '7'  ;
+<HereDocText_-_1> ::= '8'  ;
+<HereDocText_-_1> ::= '9'  ;
+<HereDocText_-_1> ::= ':'  ;
+<HereDocText_-_1> ::= ';'  ;
+<HereDocText_-_1> ::= '<'  ;
+<HereDocText_-_1> ::= '='  ;
+<HereDocText_-_1> ::= '>'  ;
+<HereDocText_-_1> ::= '?'  ;
+<HereDocText_-_1> ::= '@'  ;
+<HereDocText_-_1> ::= 'A'  ;
+<HereDocText_-_1> ::= 'B'  ;
+<HereDocText_-_1> ::= 'C'  ;
+<HereDocText_-_1> ::= 'D'  ;
+<HereDocText_-_1> ::= 'E'  ;
+<HereDocText_-_1> ::= 'F'  ;
+<HereDocText_-_1> ::= 'G'  ;
+<HereDocText_-_1> ::= 'H'  ;
+<HereDocText_-_1> ::= 'I'  ;
+<HereDocText_-_1> ::= 'J'  ;
+<HereDocText_-_1> ::= 'K'  ;
+<HereDocText_-_1> ::= 'L'  ;
+<HereDocText_-_1> ::= 'M'  ;
+<HereDocText_-_1> ::= 'N'  ;
+<HereDocText_-_1> ::= 'O'  ;
+<HereDocText_-_1> ::= 'P'  ;
+<HereDocText_-_1> ::= 'Q'  ;
+<HereDocText_-_1> ::= 'R'  ;
+<HereDocText_-_1> ::= 'S'  ;
+<HereDocText_-_1> ::= 'T'  ;
+<HereDocText_-_1> ::= 'U'  ;
+<HereDocText_-_1> ::= 'V'  ;
+<HereDocText_-_1> ::= 'W'  ;
+<HereDocText_-_1> ::= 'X'  ;
+<HereDocText_-_1> ::= 'Y'  ;
+<HereDocText_-_1> ::= 'Z'  ;
+<HereDocText_-_1> ::= '['  ;
+<HereDocText_-_1> ::= '\'  ;
+<HereDocText_-_1> ::= ']'  ;
+<HereDocText_-_1> ::= '^'  ;
+<HereDocText_-_1> ::= '_'  ;
+<HereDocText_-_1> ::= '`'  ;
+<HereDocText_-_1> ::= 'a'  ;
+<HereDocText_-_1> ::= 'b'  ;
+<HereDocText_-_1> ::= 'c'  ;
+<HereDocText_-_1> ::= 'd'  ;
+<HereDocText_-_1> ::= 'e'  ;
+<HereDocText_-_1> ::= 'f'  ;
+<HereDocText_-_1> ::= 'g'  ;
+<HereDocText_-_1> ::= 'h'  ;
+<HereDocText_-_1> ::= 'i'  ;
+<HereDocText_-_1> ::= 'j'  ;
+<HereDocText_-_1> ::= 'k'  ;
+<HereDocText_-_1> ::= 'l'  ;
+<HereDocText_-_1> ::= 'm'  ;
+<HereDocText_-_1> ::= 'o'  ;
+<HereDocText_-_1> ::= 'p'  ;
+<HereDocText_-_1> ::= 'q'  ;
+<HereDocText_-_1> ::= 's'  ;
+<HereDocText_-_1> ::= 't'  ;
+<HereDocText_-_1> ::= 'u'  ;
+<HereDocText_-_1> ::= 'v'  ;
+<HereDocText_-_1> ::= 'w'  ;
+<HereDocText_-_1> ::= 'x'  ;
+<HereDocText_-_1> ::= 'y'  ;
+<HereDocText_-_1> ::= 'z'  ;
+<HereDocText_-_1> ::= '{'  ;
+<HereDocText_-_1> ::= '|'  ;
+<HereDocText_-_1> ::= '}'  ;
+<HereDocText_-_1> ::= '~'  ;
+# END
+# END
+# BEGIN LEXER FOR  HereDocText or
+# BEGIN LEXER FOR  HereDocText and
+# BEGIN LEXER FOR  HereDocText ?
+<HereDocText_-_3> ::= ;
+# BEGIN LEXER FOR  HereDocText string
+<HereDocText_-_3> ::=  13 ;
+# END
+# END
+<HereDocText_-_2> ::= <HereDocText_-_3>  10 ;
+# END
+# BEGIN LEXER FOR  HereDocText string
+<HereDocText_-_2> ::=  13 ;
+# END
+# END
+<HereDocText> ::= <HereDocText_-_1> <HereDocText_-_2> ' ' ;
+# END
+# LEXER: PhpStartEchoFragment
+# BEGIN LEXER FOR  PhpStartEchoFragment and
+# BEGIN LEXER FOR  PhpStartEchoFragment and
+<PhpStartEchoFragment_-_1> ::= '?' '=' '%' '=' ;
+# END
+<PhpStartEchoFragment> ::= '<' <PhpStartEchoFragment_-_1> ;
+# END
+# LEXER: PhpStartFragment
+# BEGIN LEXER FOR  PhpStartFragment and
+# BEGIN LEXER FOR  PhpStartFragment and
+# BEGIN LEXER FOR  PhpStartFragment ?
+<PhpStartFragment_-_2> ::= ;
+# BEGIN LEXER FOR  PhpStartFragment string
+<PhpStartFragment_-_2> ::= 'php' ;
+# END
+# END
+<PhpStartFragment_-_1> ::= '?' <PhpStartFragment_-_2> '%' ;
+# END
+<PhpStartFragment> ::= '<' <PhpStartFragment_-_1> ;
+# END
+# LEXER: NameChar
+# BEGIN LEXER FOR  NameChar or
+# BEGIN LEXER FOR  NameChar token
+<NameChar> ::= <NameStartChar> ;
+# END
+# BEGIN LEXER FOR  NameChar string
+<NameChar> ::= '-' ;
+# END
+# BEGIN LEXER FOR  NameChar string
+<NameChar> ::= '_' ;
+# END
+# BEGIN LEXER FOR  NameChar string
+<NameChar> ::= '.' ;
+# END
+# BEGIN LEXER FOR  NameChar token
+<NameChar> ::= <Digit> ;
+# END
+# BEGIN LEXER FOR  NameChar string
+<NameChar> ::=  183 ;
+# END
+# END
+# LEXER: NameStartChar
+# BEGIN LEXER FOR  NameStartChar char_set
+<NameStartChar> ::= ':' ;
+<NameStartChar> ::= 'a' ;
+<NameStartChar> ::= 'b' ;
+<NameStartChar> ::= 'c' ;
+<NameStartChar> ::= 'd' ;
+<NameStartChar> ::= 'e' ;
+<NameStartChar> ::= 'f' ;
+<NameStartChar> ::= 'g' ;
+<NameStartChar> ::= 'h' ;
+<NameStartChar> ::= 'i' ;
+<NameStartChar> ::= 'j' ;
+<NameStartChar> ::= 'k' ;
+<NameStartChar> ::= 'l' ;
+<NameStartChar> ::= 'm' ;
+<NameStartChar> ::= 'n' ;
+<NameStartChar> ::= 'o' ;
+<NameStartChar> ::= 'p' ;
+<NameStartChar> ::= 'q' ;
+<NameStartChar> ::= 'r' ;
+<NameStartChar> ::= 's' ;
+<NameStartChar> ::= 't' ;
+<NameStartChar> ::= 'u' ;
+<NameStartChar> ::= 'v' ;
+<NameStartChar> ::= 'w' ;
+<NameStartChar> ::= 'x' ;
+<NameStartChar> ::= 'y' ;
+<NameStartChar> ::= 'z' ;
+<NameStartChar> ::= 'A' ;
+<NameStartChar> ::= 'B' ;
+<NameStartChar> ::= 'C' ;
+<NameStartChar> ::= 'D' ;
+<NameStartChar> ::= 'E' ;
+<NameStartChar> ::= 'F' ;
+<NameStartChar> ::= 'G' ;
+<NameStartChar> ::= 'H' ;
+<NameStartChar> ::= 'I' ;
+<NameStartChar> ::= 'J' ;
+<NameStartChar> ::= 'K' ;
+<NameStartChar> ::= 'L' ;
+<NameStartChar> ::= 'M' ;
+<NameStartChar> ::= 'N' ;
+<NameStartChar> ::= 'O' ;
+<NameStartChar> ::= 'P' ;
+<NameStartChar> ::= 'Q' ;
+<NameStartChar> ::= 'R' ;
+<NameStartChar> ::= 'S' ;
+<NameStartChar> ::= 'T' ;
+<NameStartChar> ::= 'U' ;
+<NameStartChar> ::= 'V' ;
+<NameStartChar> ::= 'W' ;
+<NameStartChar> ::= 'X' ;
+<NameStartChar> ::= 'Y' ;
+<NameStartChar> ::= 'Z' ;
+# END
+# LEXER: ExponentPart
+# BEGIN LEXER FOR  ExponentPart and
+# BEGIN LEXER FOR  ExponentPart ?
+<ExponentPart_-_1> ::= ;
+# BEGIN LEXER FOR  ExponentPart char_set
+<ExponentPart_-_1> ::= '+' ;
+<ExponentPart_-_1> ::= '-' ;
+# END
+# END
+# BEGIN LEXER FOR  ExponentPart +
+<ExponentPart_-_2> ::= <ExponentPart_-_3> ;
+<ExponentPart_-_3> ::= <ExponentPart_-_4> ;
+<ExponentPart_-_3> ::= <ExponentPart_-_4> <ExponentPart_-_3> ;
+# BEGIN LEXER FOR  ExponentPart token
+<ExponentPart_-_4> ::= <Digit> ;
+# END
+# END
+<ExponentPart> ::= 'e' <ExponentPart_-_1> <ExponentPart_-_2> ;
+# END
+# LEXER: Digit
+# BEGIN LEXER FOR  Digit char_set
+<Digit> ::= '0' ;
+<Digit> ::= '1' ;
+<Digit> ::= '2' ;
+<Digit> ::= '3' ;
+<Digit> ::= '4' ;
+<Digit> ::= '5' ;
+<Digit> ::= '6' ;
+<Digit> ::= '7' ;
+<Digit> ::= '8' ;
+<Digit> ::= '9' ;
+<Digit> ::= '_' ;
+# END
+# LEXER: HexDigit
+# BEGIN LEXER FOR  HexDigit char_set
+<HexDigit> ::= 'a' ;
+<HexDigit> ::= 'b' ;
+<HexDigit> ::= 'c' ;
+<HexDigit> ::= 'd' ;
+<HexDigit> ::= 'e' ;
+<HexDigit> ::= 'f' ;
+<HexDigit> ::= 'A' ;
+<HexDigit> ::= 'B' ;
+<HexDigit> ::= 'C' ;
+<HexDigit> ::= 'D' ;
+<HexDigit> ::= 'E' ;
+<HexDigit> ::= 'F' ;
+<HexDigit> ::= '0' ;
+<HexDigit> ::= '1' ;
+<HexDigit> ::= '2' ;
+<HexDigit> ::= '3' ;
+<HexDigit> ::= '4' ;
+<HexDigit> ::= '5' ;
+<HexDigit> ::= '6' ;
+<HexDigit> ::= '7' ;
+<HexDigit> ::= '8' ;
+<HexDigit> ::= '9' ;
+<HexDigit> ::= '_' ;
+# END
