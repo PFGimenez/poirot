@@ -1,0 +1,1005 @@
+# Grammar LEXER= None
+# Grammar PARSER= parser
+# Grammar GRAMMAR= grammar
+# Grammar name:  ('token', 'XMLParser')
+<document> ;
+# PARSER: document
+<document_-_1> ::= ;
+<document_-_1> ::= <prolog>  ;
+<document_-_2> ::= <document_-_3>  ;
+<document_-_3> ::= ;
+<document_-_3> ::= <misc>  <document_-_3>  ;
+<document_-_4> ::= <document_-_5>  ;
+<document_-_5> ::= ;
+<document_-_5> ::= <misc>  <document_-_5>  ;
+<document> ::= <document_-_1>  <document_-_2>  <element>  <document_-_4>  ;
+# PARSER: prolog
+<prolog_-_1> ::= <prolog_-_2>  ;
+<prolog_-_2> ::= ;
+<prolog_-_2> ::= <attribute>  <prolog_-_2>  ;
+<prolog> ::= <XMLDeclOpen>  <prolog_-_1>  <SPECIAL_CLOSE>  ;
+# PARSER: content
+<content_-_1> ::= ;
+<content_-_1> ::= <chardata>  ;
+<content_-_2> ::= <content_-_3>  ;
+<content_-_3> ::= ;
+<content_-_5> ::= <element>  ;
+<content_-_5> ::= <reference>  ;
+<content_-_5> ::= <CDATA>  ;
+<content_-_5> ::= <PI>  ;
+<content_-_5> ::= <COMMENT>  ;
+<content_-_6> ::= ;
+<content_-_6> ::= <chardata>  ;
+<content_-_4> ::= <content_-_5>  <content_-_6>  ;
+<content_-_3> ::= <content_-_4>  <content_-_3>  ;
+<content> ::= <content_-_1>  <content_-_2>  ;
+# PARSER: element
+<element_-_1> ::= <element_-_2>  ;
+<element_-_2> ::= ;
+<element_-_2> ::= <attribute>  <element_-_2>  ;
+<element> ::= '<'  <Name>  <element_-_1>  '>'  <content>  '<'  '/'  <Name>  '>'  ;
+<element_-_3> ::= <element_-_4>  ;
+<element_-_4> ::= ;
+<element_-_4> ::= <attribute>  <element_-_4>  ;
+<element> ::= '<'  <Name>  <element_-_3>  '/>'  ;
+# PARSER: reference
+<reference> ::= <EntityRef>  ;
+<reference> ::= <CharRef>  ;
+# PARSER: attribute
+<attribute> ::= <Name>  '='  <STRING>  ;
+# PARSER: chardata
+<chardata> ::= <TEXT>  ;
+<chardata> ::= <SEA_WS>  ;
+# PARSER: misc
+<misc> ::= <COMMENT>  ;
+<misc> ::= <PI>  ;
+<misc> ::= <SEA_WS>  ;
+# Grammar LEXER= lexer
+# Grammar PARSER= None
+# Grammar GRAMMAR= grammar
+# Grammar name:  ('token', 'XMLLexer')
+# LEXER: COMMENT
+# BEGIN LEXER FOR  COMMENT and
+# BEGIN LEXER FOR  COMMENT ?
+<COMMENT_-_1> ::= ;
+# BEGIN LEXER FOR  COMMENT .
+<COMMENT_-_1> ::= ' '  ;
+<COMMENT_-_1> ::= '!'  ;
+<COMMENT_-_1> ::= '"'  ;
+<COMMENT_-_1> ::= '#'  ;
+<COMMENT_-_1> ::= '$'  ;
+<COMMENT_-_1> ::= '%'  ;
+<COMMENT_-_1> ::= '&'  ;
+<COMMENT_-_1> ::=  39   ;
+<COMMENT_-_1> ::= '('  ;
+<COMMENT_-_1> ::= ')'  ;
+<COMMENT_-_1> ::= '*'  ;
+<COMMENT_-_1> ::= '+'  ;
+<COMMENT_-_1> ::= ','  ;
+<COMMENT_-_1> ::= '-'  ;
+<COMMENT_-_1> ::= '.'  ;
+<COMMENT_-_1> ::= '/'  ;
+<COMMENT_-_1> ::= '0'  ;
+<COMMENT_-_1> ::= '1'  ;
+<COMMENT_-_1> ::= '2'  ;
+<COMMENT_-_1> ::= '3'  ;
+<COMMENT_-_1> ::= '4'  ;
+<COMMENT_-_1> ::= '5'  ;
+<COMMENT_-_1> ::= '6'  ;
+<COMMENT_-_1> ::= '7'  ;
+<COMMENT_-_1> ::= '8'  ;
+<COMMENT_-_1> ::= '9'  ;
+<COMMENT_-_1> ::= ':'  ;
+<COMMENT_-_1> ::= ';'  ;
+<COMMENT_-_1> ::= '<'  ;
+<COMMENT_-_1> ::= '='  ;
+<COMMENT_-_1> ::= '>'  ;
+<COMMENT_-_1> ::= '?'  ;
+<COMMENT_-_1> ::= '@'  ;
+<COMMENT_-_1> ::= 'A'  ;
+<COMMENT_-_1> ::= 'B'  ;
+<COMMENT_-_1> ::= 'C'  ;
+<COMMENT_-_1> ::= 'D'  ;
+<COMMENT_-_1> ::= 'E'  ;
+<COMMENT_-_1> ::= 'F'  ;
+<COMMENT_-_1> ::= 'G'  ;
+<COMMENT_-_1> ::= 'H'  ;
+<COMMENT_-_1> ::= 'I'  ;
+<COMMENT_-_1> ::= 'J'  ;
+<COMMENT_-_1> ::= 'K'  ;
+<COMMENT_-_1> ::= 'L'  ;
+<COMMENT_-_1> ::= 'M'  ;
+<COMMENT_-_1> ::= 'N'  ;
+<COMMENT_-_1> ::= 'O'  ;
+<COMMENT_-_1> ::= 'P'  ;
+<COMMENT_-_1> ::= 'Q'  ;
+<COMMENT_-_1> ::= 'R'  ;
+<COMMENT_-_1> ::= 'S'  ;
+<COMMENT_-_1> ::= 'T'  ;
+<COMMENT_-_1> ::= 'U'  ;
+<COMMENT_-_1> ::= 'V'  ;
+<COMMENT_-_1> ::= 'W'  ;
+<COMMENT_-_1> ::= 'X'  ;
+<COMMENT_-_1> ::= 'Y'  ;
+<COMMENT_-_1> ::= 'Z'  ;
+<COMMENT_-_1> ::= '['  ;
+<COMMENT_-_1> ::= '\'  ;
+<COMMENT_-_1> ::= ']'  ;
+<COMMENT_-_1> ::= '^'  ;
+<COMMENT_-_1> ::= '_'  ;
+<COMMENT_-_1> ::= '`'  ;
+<COMMENT_-_1> ::= 'a'  ;
+<COMMENT_-_1> ::= 'b'  ;
+<COMMENT_-_1> ::= 'c'  ;
+<COMMENT_-_1> ::= 'd'  ;
+<COMMENT_-_1> ::= 'e'  ;
+<COMMENT_-_1> ::= 'f'  ;
+<COMMENT_-_1> ::= 'g'  ;
+<COMMENT_-_1> ::= 'h'  ;
+<COMMENT_-_1> ::= 'i'  ;
+<COMMENT_-_1> ::= 'j'  ;
+<COMMENT_-_1> ::= 'k'  ;
+<COMMENT_-_1> ::= 'l'  ;
+<COMMENT_-_1> ::= 'm'  ;
+<COMMENT_-_1> ::= 'n'  ;
+<COMMENT_-_1> ::= 'o'  ;
+<COMMENT_-_1> ::= 'p'  ;
+<COMMENT_-_1> ::= 'q'  ;
+<COMMENT_-_1> ::= 'r'  ;
+<COMMENT_-_1> ::= 's'  ;
+<COMMENT_-_1> ::= 't'  ;
+<COMMENT_-_1> ::= 'u'  ;
+<COMMENT_-_1> ::= 'v'  ;
+<COMMENT_-_1> ::= 'w'  ;
+<COMMENT_-_1> ::= 'x'  ;
+<COMMENT_-_1> ::= 'y'  ;
+<COMMENT_-_1> ::= 'z'  ;
+<COMMENT_-_1> ::= '{'  ;
+<COMMENT_-_1> ::= '|'  ;
+<COMMENT_-_1> ::= '}'  ;
+<COMMENT_-_1> ::= '~'  ;
+# END
+# END
+<COMMENT> ::= '<!--' <COMMENT_-_1> '-->' ' ' ;
+# END
+# LEXER: CDATA
+# BEGIN LEXER FOR  CDATA and
+# BEGIN LEXER FOR  CDATA ?
+<CDATA_-_1> ::= ;
+# BEGIN LEXER FOR  CDATA .
+<CDATA_-_1> ::= ' '  ;
+<CDATA_-_1> ::= '!'  ;
+<CDATA_-_1> ::= '"'  ;
+<CDATA_-_1> ::= '#'  ;
+<CDATA_-_1> ::= '$'  ;
+<CDATA_-_1> ::= '%'  ;
+<CDATA_-_1> ::= '&'  ;
+<CDATA_-_1> ::=  39   ;
+<CDATA_-_1> ::= '('  ;
+<CDATA_-_1> ::= ')'  ;
+<CDATA_-_1> ::= '*'  ;
+<CDATA_-_1> ::= '+'  ;
+<CDATA_-_1> ::= ','  ;
+<CDATA_-_1> ::= '-'  ;
+<CDATA_-_1> ::= '.'  ;
+<CDATA_-_1> ::= '/'  ;
+<CDATA_-_1> ::= '0'  ;
+<CDATA_-_1> ::= '1'  ;
+<CDATA_-_1> ::= '2'  ;
+<CDATA_-_1> ::= '3'  ;
+<CDATA_-_1> ::= '4'  ;
+<CDATA_-_1> ::= '5'  ;
+<CDATA_-_1> ::= '6'  ;
+<CDATA_-_1> ::= '7'  ;
+<CDATA_-_1> ::= '8'  ;
+<CDATA_-_1> ::= '9'  ;
+<CDATA_-_1> ::= ':'  ;
+<CDATA_-_1> ::= ';'  ;
+<CDATA_-_1> ::= '<'  ;
+<CDATA_-_1> ::= '='  ;
+<CDATA_-_1> ::= '>'  ;
+<CDATA_-_1> ::= '?'  ;
+<CDATA_-_1> ::= '@'  ;
+<CDATA_-_1> ::= 'A'  ;
+<CDATA_-_1> ::= 'B'  ;
+<CDATA_-_1> ::= 'C'  ;
+<CDATA_-_1> ::= 'D'  ;
+<CDATA_-_1> ::= 'E'  ;
+<CDATA_-_1> ::= 'F'  ;
+<CDATA_-_1> ::= 'G'  ;
+<CDATA_-_1> ::= 'H'  ;
+<CDATA_-_1> ::= 'I'  ;
+<CDATA_-_1> ::= 'J'  ;
+<CDATA_-_1> ::= 'K'  ;
+<CDATA_-_1> ::= 'L'  ;
+<CDATA_-_1> ::= 'M'  ;
+<CDATA_-_1> ::= 'N'  ;
+<CDATA_-_1> ::= 'O'  ;
+<CDATA_-_1> ::= 'P'  ;
+<CDATA_-_1> ::= 'Q'  ;
+<CDATA_-_1> ::= 'R'  ;
+<CDATA_-_1> ::= 'S'  ;
+<CDATA_-_1> ::= 'T'  ;
+<CDATA_-_1> ::= 'U'  ;
+<CDATA_-_1> ::= 'V'  ;
+<CDATA_-_1> ::= 'W'  ;
+<CDATA_-_1> ::= 'X'  ;
+<CDATA_-_1> ::= 'Y'  ;
+<CDATA_-_1> ::= 'Z'  ;
+<CDATA_-_1> ::= '['  ;
+<CDATA_-_1> ::= '\'  ;
+<CDATA_-_1> ::= ']'  ;
+<CDATA_-_1> ::= '^'  ;
+<CDATA_-_1> ::= '_'  ;
+<CDATA_-_1> ::= '`'  ;
+<CDATA_-_1> ::= 'a'  ;
+<CDATA_-_1> ::= 'b'  ;
+<CDATA_-_1> ::= 'c'  ;
+<CDATA_-_1> ::= 'd'  ;
+<CDATA_-_1> ::= 'e'  ;
+<CDATA_-_1> ::= 'f'  ;
+<CDATA_-_1> ::= 'g'  ;
+<CDATA_-_1> ::= 'h'  ;
+<CDATA_-_1> ::= 'i'  ;
+<CDATA_-_1> ::= 'j'  ;
+<CDATA_-_1> ::= 'k'  ;
+<CDATA_-_1> ::= 'l'  ;
+<CDATA_-_1> ::= 'm'  ;
+<CDATA_-_1> ::= 'n'  ;
+<CDATA_-_1> ::= 'o'  ;
+<CDATA_-_1> ::= 'p'  ;
+<CDATA_-_1> ::= 'q'  ;
+<CDATA_-_1> ::= 'r'  ;
+<CDATA_-_1> ::= 's'  ;
+<CDATA_-_1> ::= 't'  ;
+<CDATA_-_1> ::= 'u'  ;
+<CDATA_-_1> ::= 'v'  ;
+<CDATA_-_1> ::= 'w'  ;
+<CDATA_-_1> ::= 'x'  ;
+<CDATA_-_1> ::= 'y'  ;
+<CDATA_-_1> ::= 'z'  ;
+<CDATA_-_1> ::= '{'  ;
+<CDATA_-_1> ::= '|'  ;
+<CDATA_-_1> ::= '}'  ;
+<CDATA_-_1> ::= '~'  ;
+# END
+# END
+<CDATA> ::= '<![CDATA[' <CDATA_-_1> ']]>' ' ' ;
+# END
+# LEXER: DTD
+# BEGIN LEXER FOR  DTD and
+# BEGIN LEXER FOR  DTD ?
+<DTD_-_1> ::= ;
+# BEGIN LEXER FOR  DTD .
+<DTD_-_1> ::= ' '  ;
+<DTD_-_1> ::= '!'  ;
+<DTD_-_1> ::= '"'  ;
+<DTD_-_1> ::= '#'  ;
+<DTD_-_1> ::= '$'  ;
+<DTD_-_1> ::= '%'  ;
+<DTD_-_1> ::= '&'  ;
+<DTD_-_1> ::=  39   ;
+<DTD_-_1> ::= '('  ;
+<DTD_-_1> ::= ')'  ;
+<DTD_-_1> ::= '*'  ;
+<DTD_-_1> ::= '+'  ;
+<DTD_-_1> ::= ','  ;
+<DTD_-_1> ::= '-'  ;
+<DTD_-_1> ::= '.'  ;
+<DTD_-_1> ::= '/'  ;
+<DTD_-_1> ::= '0'  ;
+<DTD_-_1> ::= '1'  ;
+<DTD_-_1> ::= '2'  ;
+<DTD_-_1> ::= '3'  ;
+<DTD_-_1> ::= '4'  ;
+<DTD_-_1> ::= '5'  ;
+<DTD_-_1> ::= '6'  ;
+<DTD_-_1> ::= '7'  ;
+<DTD_-_1> ::= '8'  ;
+<DTD_-_1> ::= '9'  ;
+<DTD_-_1> ::= ':'  ;
+<DTD_-_1> ::= ';'  ;
+<DTD_-_1> ::= '<'  ;
+<DTD_-_1> ::= '='  ;
+<DTD_-_1> ::= '>'  ;
+<DTD_-_1> ::= '?'  ;
+<DTD_-_1> ::= '@'  ;
+<DTD_-_1> ::= 'A'  ;
+<DTD_-_1> ::= 'B'  ;
+<DTD_-_1> ::= 'C'  ;
+<DTD_-_1> ::= 'D'  ;
+<DTD_-_1> ::= 'E'  ;
+<DTD_-_1> ::= 'F'  ;
+<DTD_-_1> ::= 'G'  ;
+<DTD_-_1> ::= 'H'  ;
+<DTD_-_1> ::= 'I'  ;
+<DTD_-_1> ::= 'J'  ;
+<DTD_-_1> ::= 'K'  ;
+<DTD_-_1> ::= 'L'  ;
+<DTD_-_1> ::= 'M'  ;
+<DTD_-_1> ::= 'N'  ;
+<DTD_-_1> ::= 'O'  ;
+<DTD_-_1> ::= 'P'  ;
+<DTD_-_1> ::= 'Q'  ;
+<DTD_-_1> ::= 'R'  ;
+<DTD_-_1> ::= 'S'  ;
+<DTD_-_1> ::= 'T'  ;
+<DTD_-_1> ::= 'U'  ;
+<DTD_-_1> ::= 'V'  ;
+<DTD_-_1> ::= 'W'  ;
+<DTD_-_1> ::= 'X'  ;
+<DTD_-_1> ::= 'Y'  ;
+<DTD_-_1> ::= 'Z'  ;
+<DTD_-_1> ::= '['  ;
+<DTD_-_1> ::= '\'  ;
+<DTD_-_1> ::= ']'  ;
+<DTD_-_1> ::= '^'  ;
+<DTD_-_1> ::= '_'  ;
+<DTD_-_1> ::= '`'  ;
+<DTD_-_1> ::= 'a'  ;
+<DTD_-_1> ::= 'b'  ;
+<DTD_-_1> ::= 'c'  ;
+<DTD_-_1> ::= 'd'  ;
+<DTD_-_1> ::= 'e'  ;
+<DTD_-_1> ::= 'f'  ;
+<DTD_-_1> ::= 'g'  ;
+<DTD_-_1> ::= 'h'  ;
+<DTD_-_1> ::= 'i'  ;
+<DTD_-_1> ::= 'j'  ;
+<DTD_-_1> ::= 'k'  ;
+<DTD_-_1> ::= 'l'  ;
+<DTD_-_1> ::= 'm'  ;
+<DTD_-_1> ::= 'n'  ;
+<DTD_-_1> ::= 'o'  ;
+<DTD_-_1> ::= 'p'  ;
+<DTD_-_1> ::= 'q'  ;
+<DTD_-_1> ::= 'r'  ;
+<DTD_-_1> ::= 's'  ;
+<DTD_-_1> ::= 't'  ;
+<DTD_-_1> ::= 'u'  ;
+<DTD_-_1> ::= 'v'  ;
+<DTD_-_1> ::= 'w'  ;
+<DTD_-_1> ::= 'x'  ;
+<DTD_-_1> ::= 'y'  ;
+<DTD_-_1> ::= 'z'  ;
+<DTD_-_1> ::= '{'  ;
+<DTD_-_1> ::= '|'  ;
+<DTD_-_1> ::= '}'  ;
+<DTD_-_1> ::= '~'  ;
+# END
+# END
+<DTD> ::= '<!' <DTD_-_1> '>' ' ' ;
+# END
+# LEXER: EntityRef
+# BEGIN LEXER FOR  EntityRef and
+<EntityRef> ::= '&' <Name> ';' ' ' ;
+# END
+# LEXER: CharRef
+# BEGIN LEXER FOR  CharRef or
+# BEGIN LEXER FOR  CharRef and
+# BEGIN LEXER FOR  CharRef +
+<CharRef_-_1> ::= <CharRef_-_2> ;
+<CharRef_-_2> ::= <CharRef_-_3> ;
+<CharRef_-_2> ::= <CharRef_-_3> <CharRef_-_2> ;
+# BEGIN LEXER FOR  CharRef token
+<CharRef_-_3> ::= <DIGIT> ;
+# END
+# END
+<CharRef> ::= '&#' <CharRef_-_1> ';' ' ' ;
+# END
+# BEGIN LEXER FOR  CharRef and
+# BEGIN LEXER FOR  CharRef +
+<CharRef_-_4> ::= <CharRef_-_5> ;
+<CharRef_-_5> ::= <CharRef_-_6> ;
+<CharRef_-_5> ::= <CharRef_-_6> <CharRef_-_5> ;
+# BEGIN LEXER FOR  CharRef token
+<CharRef_-_6> ::= <HEXDIGIT> ;
+# END
+# END
+<CharRef> ::= '&#x' <CharRef_-_4> ';' ' ' ;
+# END
+# END
+# LEXER: SEA_WS
+# BEGIN LEXER FOR  SEA_WS +
+<SEA_WS> ::= <SEA_WS_-_1> ' ' ;
+<SEA_WS_-_1> ::= <SEA_WS_-_2> ' ' ;
+<SEA_WS_-_1> ::= <SEA_WS_-_2> <SEA_WS_-_1> ' ' ;
+# BEGIN LEXER FOR  SEA_WS or
+# BEGIN LEXER FOR  SEA_WS string
+<SEA_WS_-_2> ::= ' ' ;
+# END
+# BEGIN LEXER FOR  SEA_WS string
+<SEA_WS_-_2> ::=  9 ;
+# END
+# BEGIN LEXER FOR  SEA_WS and
+# BEGIN LEXER FOR  SEA_WS ?
+<SEA_WS_-_3> ::= ;
+# BEGIN LEXER FOR  SEA_WS string
+<SEA_WS_-_3> ::=  13 ;
+# END
+# END
+<SEA_WS_-_2> ::= <SEA_WS_-_3>  10 ;
+# END
+# END
+# END
+# LEXER: OPEN
+# BEGIN LEXER FOR  OPEN string
+<OPEN> ::= '<' ' ' ;
+# END
+# LEXER: XMLDeclOpen
+# BEGIN LEXER FOR  XMLDeclOpen and
+<XMLDeclOpen> ::= '<?xml' <S> ' ' ;
+# END
+# LEXER: SPECIAL_OPEN
+# BEGIN LEXER FOR  SPECIAL_OPEN and
+<SPECIAL_OPEN> ::= '<?' <Name> ' ' ;
+# END
+# LEXER: TEXT
+# BEGIN LEXER FOR  TEXT +
+<TEXT> ::= <TEXT_-_1> ' ' ;
+<TEXT_-_1> ::= <TEXT_-_2> ' ' ;
+<TEXT_-_1> ::= <TEXT_-_2> <TEXT_-_1> ' ' ;
+# BEGIN LEXER FOR  TEXT not
+<TEXT_-_2> ::= ' '  ;
+<TEXT_-_2> ::= '!'  ;
+<TEXT_-_2> ::= '"'  ;
+<TEXT_-_2> ::= '#'  ;
+<TEXT_-_2> ::= '$'  ;
+<TEXT_-_2> ::= '%'  ;
+<TEXT_-_2> ::=  39   ;
+<TEXT_-_2> ::= '('  ;
+<TEXT_-_2> ::= ')'  ;
+<TEXT_-_2> ::= '*'  ;
+<TEXT_-_2> ::= '+'  ;
+<TEXT_-_2> ::= ','  ;
+<TEXT_-_2> ::= '-'  ;
+<TEXT_-_2> ::= '.'  ;
+<TEXT_-_2> ::= '/'  ;
+<TEXT_-_2> ::= '0'  ;
+<TEXT_-_2> ::= '1'  ;
+<TEXT_-_2> ::= '2'  ;
+<TEXT_-_2> ::= '3'  ;
+<TEXT_-_2> ::= '4'  ;
+<TEXT_-_2> ::= '5'  ;
+<TEXT_-_2> ::= '6'  ;
+<TEXT_-_2> ::= '7'  ;
+<TEXT_-_2> ::= '8'  ;
+<TEXT_-_2> ::= '9'  ;
+<TEXT_-_2> ::= ':'  ;
+<TEXT_-_2> ::= ';'  ;
+<TEXT_-_2> ::= '='  ;
+<TEXT_-_2> ::= '>'  ;
+<TEXT_-_2> ::= '?'  ;
+<TEXT_-_2> ::= '@'  ;
+<TEXT_-_2> ::= 'A'  ;
+<TEXT_-_2> ::= 'B'  ;
+<TEXT_-_2> ::= 'C'  ;
+<TEXT_-_2> ::= 'D'  ;
+<TEXT_-_2> ::= 'E'  ;
+<TEXT_-_2> ::= 'F'  ;
+<TEXT_-_2> ::= 'G'  ;
+<TEXT_-_2> ::= 'H'  ;
+<TEXT_-_2> ::= 'I'  ;
+<TEXT_-_2> ::= 'J'  ;
+<TEXT_-_2> ::= 'K'  ;
+<TEXT_-_2> ::= 'L'  ;
+<TEXT_-_2> ::= 'M'  ;
+<TEXT_-_2> ::= 'N'  ;
+<TEXT_-_2> ::= 'O'  ;
+<TEXT_-_2> ::= 'P'  ;
+<TEXT_-_2> ::= 'Q'  ;
+<TEXT_-_2> ::= 'R'  ;
+<TEXT_-_2> ::= 'S'  ;
+<TEXT_-_2> ::= 'T'  ;
+<TEXT_-_2> ::= 'U'  ;
+<TEXT_-_2> ::= 'V'  ;
+<TEXT_-_2> ::= 'W'  ;
+<TEXT_-_2> ::= 'X'  ;
+<TEXT_-_2> ::= 'Y'  ;
+<TEXT_-_2> ::= 'Z'  ;
+<TEXT_-_2> ::= '['  ;
+<TEXT_-_2> ::= '\'  ;
+<TEXT_-_2> ::= ']'  ;
+<TEXT_-_2> ::= '^'  ;
+<TEXT_-_2> ::= '_'  ;
+<TEXT_-_2> ::= '`'  ;
+<TEXT_-_2> ::= 'a'  ;
+<TEXT_-_2> ::= 'b'  ;
+<TEXT_-_2> ::= 'c'  ;
+<TEXT_-_2> ::= 'd'  ;
+<TEXT_-_2> ::= 'e'  ;
+<TEXT_-_2> ::= 'f'  ;
+<TEXT_-_2> ::= 'g'  ;
+<TEXT_-_2> ::= 'h'  ;
+<TEXT_-_2> ::= 'i'  ;
+<TEXT_-_2> ::= 'j'  ;
+<TEXT_-_2> ::= 'k'  ;
+<TEXT_-_2> ::= 'l'  ;
+<TEXT_-_2> ::= 'm'  ;
+<TEXT_-_2> ::= 'n'  ;
+<TEXT_-_2> ::= 'o'  ;
+<TEXT_-_2> ::= 'p'  ;
+<TEXT_-_2> ::= 'q'  ;
+<TEXT_-_2> ::= 'r'  ;
+<TEXT_-_2> ::= 's'  ;
+<TEXT_-_2> ::= 't'  ;
+<TEXT_-_2> ::= 'u'  ;
+<TEXT_-_2> ::= 'v'  ;
+<TEXT_-_2> ::= 'w'  ;
+<TEXT_-_2> ::= 'x'  ;
+<TEXT_-_2> ::= 'y'  ;
+<TEXT_-_2> ::= 'z'  ;
+<TEXT_-_2> ::= '{'  ;
+<TEXT_-_2> ::= '|'  ;
+<TEXT_-_2> ::= '}'  ;
+<TEXT_-_2> ::= '~'  ;
+# END
+# END
+# LEXER: CLOSE
+# BEGIN LEXER FOR  CLOSE string
+<CLOSE> ::= '>' ' ' ;
+# END
+# LEXER: SPECIAL_CLOSE
+# BEGIN LEXER FOR  SPECIAL_CLOSE string
+<SPECIAL_CLOSE> ::= '?>' ' ' ;
+# END
+# LEXER: SLASH_CLOSE
+# BEGIN LEXER FOR  SLASH_CLOSE string
+<SLASH_CLOSE> ::= '/>' ' ' ;
+# END
+# LEXER: SLASH
+# BEGIN LEXER FOR  SLASH string
+<SLASH> ::= '/' ' ' ;
+# END
+# LEXER: EQUALS
+# BEGIN LEXER FOR  EQUALS string
+<EQUALS> ::= '=' ' ' ;
+# END
+# LEXER: STRING
+# BEGIN LEXER FOR  STRING or
+# BEGIN LEXER FOR  STRING and
+# BEGIN LEXER FOR  STRING *
+<STRING_-_1> ::= <STRING_-_2> ;
+<STRING_-_2> ::= ;
+# BEGIN LEXER FOR  STRING and
+# BEGIN LEXER FOR  STRING not
+<STRING_-_3> ::= ' '  ;
+<STRING_-_3> ::= '!'  ;
+<STRING_-_3> ::= '#'  ;
+<STRING_-_3> ::= '$'  ;
+<STRING_-_3> ::= '%'  ;
+<STRING_-_3> ::= '&'  ;
+<STRING_-_3> ::=  39   ;
+<STRING_-_3> ::= '('  ;
+<STRING_-_3> ::= ')'  ;
+<STRING_-_3> ::= '*'  ;
+<STRING_-_3> ::= '+'  ;
+<STRING_-_3> ::= ','  ;
+<STRING_-_3> ::= '-'  ;
+<STRING_-_3> ::= '.'  ;
+<STRING_-_3> ::= '/'  ;
+<STRING_-_3> ::= '0'  ;
+<STRING_-_3> ::= '1'  ;
+<STRING_-_3> ::= '2'  ;
+<STRING_-_3> ::= '3'  ;
+<STRING_-_3> ::= '4'  ;
+<STRING_-_3> ::= '5'  ;
+<STRING_-_3> ::= '6'  ;
+<STRING_-_3> ::= '7'  ;
+<STRING_-_3> ::= '8'  ;
+<STRING_-_3> ::= '9'  ;
+<STRING_-_3> ::= ':'  ;
+<STRING_-_3> ::= ';'  ;
+<STRING_-_3> ::= '='  ;
+<STRING_-_3> ::= '>'  ;
+<STRING_-_3> ::= '?'  ;
+<STRING_-_3> ::= '@'  ;
+<STRING_-_3> ::= 'A'  ;
+<STRING_-_3> ::= 'B'  ;
+<STRING_-_3> ::= 'C'  ;
+<STRING_-_3> ::= 'D'  ;
+<STRING_-_3> ::= 'E'  ;
+<STRING_-_3> ::= 'F'  ;
+<STRING_-_3> ::= 'G'  ;
+<STRING_-_3> ::= 'H'  ;
+<STRING_-_3> ::= 'I'  ;
+<STRING_-_3> ::= 'J'  ;
+<STRING_-_3> ::= 'K'  ;
+<STRING_-_3> ::= 'L'  ;
+<STRING_-_3> ::= 'M'  ;
+<STRING_-_3> ::= 'N'  ;
+<STRING_-_3> ::= 'O'  ;
+<STRING_-_3> ::= 'P'  ;
+<STRING_-_3> ::= 'Q'  ;
+<STRING_-_3> ::= 'R'  ;
+<STRING_-_3> ::= 'S'  ;
+<STRING_-_3> ::= 'T'  ;
+<STRING_-_3> ::= 'U'  ;
+<STRING_-_3> ::= 'V'  ;
+<STRING_-_3> ::= 'W'  ;
+<STRING_-_3> ::= 'X'  ;
+<STRING_-_3> ::= 'Y'  ;
+<STRING_-_3> ::= 'Z'  ;
+<STRING_-_3> ::= '['  ;
+<STRING_-_3> ::= '\'  ;
+<STRING_-_3> ::= ']'  ;
+<STRING_-_3> ::= '^'  ;
+<STRING_-_3> ::= '_'  ;
+<STRING_-_3> ::= '`'  ;
+<STRING_-_3> ::= 'a'  ;
+<STRING_-_3> ::= 'b'  ;
+<STRING_-_3> ::= 'c'  ;
+<STRING_-_3> ::= 'd'  ;
+<STRING_-_3> ::= 'e'  ;
+<STRING_-_3> ::= 'f'  ;
+<STRING_-_3> ::= 'g'  ;
+<STRING_-_3> ::= 'h'  ;
+<STRING_-_3> ::= 'i'  ;
+<STRING_-_3> ::= 'j'  ;
+<STRING_-_3> ::= 'k'  ;
+<STRING_-_3> ::= 'l'  ;
+<STRING_-_3> ::= 'm'  ;
+<STRING_-_3> ::= 'n'  ;
+<STRING_-_3> ::= 'o'  ;
+<STRING_-_3> ::= 'p'  ;
+<STRING_-_3> ::= 'q'  ;
+<STRING_-_3> ::= 'r'  ;
+<STRING_-_3> ::= 's'  ;
+<STRING_-_3> ::= 't'  ;
+<STRING_-_3> ::= 'u'  ;
+<STRING_-_3> ::= 'v'  ;
+<STRING_-_3> ::= 'w'  ;
+<STRING_-_3> ::= 'x'  ;
+<STRING_-_3> ::= 'y'  ;
+<STRING_-_3> ::= 'z'  ;
+<STRING_-_3> ::= '{'  ;
+<STRING_-_3> ::= '|'  ;
+<STRING_-_3> ::= '}'  ;
+<STRING_-_3> ::= '~'  ;
+# END
+<STRING_-_2> ::= <STRING_-_3> <STRING_-_2> ;
+# END
+# END
+<STRING> ::= '"' <STRING_-_1> '"' ' ' ;
+# END
+# BEGIN LEXER FOR  STRING and
+# BEGIN LEXER FOR  STRING *
+<STRING_-_4> ::= <STRING_-_5> ;
+<STRING_-_5> ::= ;
+# BEGIN LEXER FOR  STRING and
+# BEGIN LEXER FOR  STRING not
+<STRING_-_6> ::= ' '  ;
+<STRING_-_6> ::= '!'  ;
+<STRING_-_6> ::= '"'  ;
+<STRING_-_6> ::= '#'  ;
+<STRING_-_6> ::= '$'  ;
+<STRING_-_6> ::= '%'  ;
+<STRING_-_6> ::= '&'  ;
+<STRING_-_6> ::= '('  ;
+<STRING_-_6> ::= ')'  ;
+<STRING_-_6> ::= '*'  ;
+<STRING_-_6> ::= '+'  ;
+<STRING_-_6> ::= ','  ;
+<STRING_-_6> ::= '-'  ;
+<STRING_-_6> ::= '.'  ;
+<STRING_-_6> ::= '/'  ;
+<STRING_-_6> ::= '0'  ;
+<STRING_-_6> ::= '1'  ;
+<STRING_-_6> ::= '2'  ;
+<STRING_-_6> ::= '3'  ;
+<STRING_-_6> ::= '4'  ;
+<STRING_-_6> ::= '5'  ;
+<STRING_-_6> ::= '6'  ;
+<STRING_-_6> ::= '7'  ;
+<STRING_-_6> ::= '8'  ;
+<STRING_-_6> ::= '9'  ;
+<STRING_-_6> ::= ':'  ;
+<STRING_-_6> ::= ';'  ;
+<STRING_-_6> ::= '='  ;
+<STRING_-_6> ::= '>'  ;
+<STRING_-_6> ::= '?'  ;
+<STRING_-_6> ::= '@'  ;
+<STRING_-_6> ::= 'A'  ;
+<STRING_-_6> ::= 'B'  ;
+<STRING_-_6> ::= 'C'  ;
+<STRING_-_6> ::= 'D'  ;
+<STRING_-_6> ::= 'E'  ;
+<STRING_-_6> ::= 'F'  ;
+<STRING_-_6> ::= 'G'  ;
+<STRING_-_6> ::= 'H'  ;
+<STRING_-_6> ::= 'I'  ;
+<STRING_-_6> ::= 'J'  ;
+<STRING_-_6> ::= 'K'  ;
+<STRING_-_6> ::= 'L'  ;
+<STRING_-_6> ::= 'M'  ;
+<STRING_-_6> ::= 'N'  ;
+<STRING_-_6> ::= 'O'  ;
+<STRING_-_6> ::= 'P'  ;
+<STRING_-_6> ::= 'Q'  ;
+<STRING_-_6> ::= 'R'  ;
+<STRING_-_6> ::= 'S'  ;
+<STRING_-_6> ::= 'T'  ;
+<STRING_-_6> ::= 'U'  ;
+<STRING_-_6> ::= 'V'  ;
+<STRING_-_6> ::= 'W'  ;
+<STRING_-_6> ::= 'X'  ;
+<STRING_-_6> ::= 'Y'  ;
+<STRING_-_6> ::= 'Z'  ;
+<STRING_-_6> ::= '['  ;
+<STRING_-_6> ::= '\'  ;
+<STRING_-_6> ::= ']'  ;
+<STRING_-_6> ::= '^'  ;
+<STRING_-_6> ::= '_'  ;
+<STRING_-_6> ::= '`'  ;
+<STRING_-_6> ::= 'a'  ;
+<STRING_-_6> ::= 'b'  ;
+<STRING_-_6> ::= 'c'  ;
+<STRING_-_6> ::= 'd'  ;
+<STRING_-_6> ::= 'e'  ;
+<STRING_-_6> ::= 'f'  ;
+<STRING_-_6> ::= 'g'  ;
+<STRING_-_6> ::= 'h'  ;
+<STRING_-_6> ::= 'i'  ;
+<STRING_-_6> ::= 'j'  ;
+<STRING_-_6> ::= 'k'  ;
+<STRING_-_6> ::= 'l'  ;
+<STRING_-_6> ::= 'm'  ;
+<STRING_-_6> ::= 'n'  ;
+<STRING_-_6> ::= 'o'  ;
+<STRING_-_6> ::= 'p'  ;
+<STRING_-_6> ::= 'q'  ;
+<STRING_-_6> ::= 'r'  ;
+<STRING_-_6> ::= 's'  ;
+<STRING_-_6> ::= 't'  ;
+<STRING_-_6> ::= 'u'  ;
+<STRING_-_6> ::= 'v'  ;
+<STRING_-_6> ::= 'w'  ;
+<STRING_-_6> ::= 'x'  ;
+<STRING_-_6> ::= 'y'  ;
+<STRING_-_6> ::= 'z'  ;
+<STRING_-_6> ::= '{'  ;
+<STRING_-_6> ::= '|'  ;
+<STRING_-_6> ::= '}'  ;
+<STRING_-_6> ::= '~'  ;
+# END
+<STRING_-_5> ::= <STRING_-_6> <STRING_-_5> ;
+# END
+# END
+<STRING> ::=  39  <STRING_-_4>  39  ' ' ;
+# END
+# END
+# LEXER: Name
+# BEGIN LEXER FOR  Name and
+# BEGIN LEXER FOR  Name *
+<Name_-_1> ::= <Name_-_2> ;
+<Name_-_2> ::= ;
+# BEGIN LEXER FOR  Name and
+<Name_-_2> ::= <NameChar> <Name_-_2> ;
+# END
+# END
+<Name> ::= <NameStartChar> <Name_-_1> ' ' ;
+# END
+# LEXER: S
+# BEGIN LEXER FOR  S char_set
+<S> ::= ' ' ' ' ;
+<S> ::=  9 ' ' ;
+<S> ::=  13 ' ' ;
+<S> ::=  10 ' ' ;
+# END
+# LEXER: HEXDIGIT
+# BEGIN LEXER FOR  HEXDIGIT char_set
+<HEXDIGIT> ::= 'a' ;
+<HEXDIGIT> ::= 'b' ;
+<HEXDIGIT> ::= 'c' ;
+<HEXDIGIT> ::= 'd' ;
+<HEXDIGIT> ::= 'e' ;
+<HEXDIGIT> ::= 'f' ;
+<HEXDIGIT> ::= 'A' ;
+<HEXDIGIT> ::= 'B' ;
+<HEXDIGIT> ::= 'C' ;
+<HEXDIGIT> ::= 'D' ;
+<HEXDIGIT> ::= 'E' ;
+<HEXDIGIT> ::= 'F' ;
+<HEXDIGIT> ::= '0' ;
+<HEXDIGIT> ::= '1' ;
+<HEXDIGIT> ::= '2' ;
+<HEXDIGIT> ::= '3' ;
+<HEXDIGIT> ::= '4' ;
+<HEXDIGIT> ::= '5' ;
+<HEXDIGIT> ::= '6' ;
+<HEXDIGIT> ::= '7' ;
+<HEXDIGIT> ::= '8' ;
+<HEXDIGIT> ::= '9' ;
+# END
+# LEXER: DIGIT
+# BEGIN LEXER FOR  DIGIT char_set
+<DIGIT> ::= '0' ;
+<DIGIT> ::= '1' ;
+<DIGIT> ::= '2' ;
+<DIGIT> ::= '3' ;
+<DIGIT> ::= '4' ;
+<DIGIT> ::= '5' ;
+<DIGIT> ::= '6' ;
+<DIGIT> ::= '7' ;
+<DIGIT> ::= '8' ;
+<DIGIT> ::= '9' ;
+# END
+# LEXER: NameChar
+# BEGIN LEXER FOR  NameChar or
+# BEGIN LEXER FOR  NameChar token
+<NameChar> ::= <NameStartChar> ;
+# END
+# BEGIN LEXER FOR  NameChar string
+<NameChar> ::= '-' ;
+# END
+# BEGIN LEXER FOR  NameChar string
+<NameChar> ::= '_' ;
+# END
+# BEGIN LEXER FOR  NameChar string
+<NameChar> ::= '.' ;
+# END
+# BEGIN LEXER FOR  NameChar token
+<NameChar> ::= <DIGIT> ;
+# END
+# BEGIN LEXER FOR  NameChar string
+<NameChar> ::=  183 ;
+# END
+# END
+# LEXER: NameStartChar
+# BEGIN LEXER FOR  NameStartChar char_set
+<NameStartChar> ::= ':' ;
+<NameStartChar> ::= 'a' ;
+<NameStartChar> ::= 'b' ;
+<NameStartChar> ::= 'c' ;
+<NameStartChar> ::= 'd' ;
+<NameStartChar> ::= 'e' ;
+<NameStartChar> ::= 'f' ;
+<NameStartChar> ::= 'g' ;
+<NameStartChar> ::= 'h' ;
+<NameStartChar> ::= 'i' ;
+<NameStartChar> ::= 'j' ;
+<NameStartChar> ::= 'k' ;
+<NameStartChar> ::= 'l' ;
+<NameStartChar> ::= 'm' ;
+<NameStartChar> ::= 'n' ;
+<NameStartChar> ::= 'o' ;
+<NameStartChar> ::= 'p' ;
+<NameStartChar> ::= 'q' ;
+<NameStartChar> ::= 'r' ;
+<NameStartChar> ::= 's' ;
+<NameStartChar> ::= 't' ;
+<NameStartChar> ::= 'u' ;
+<NameStartChar> ::= 'v' ;
+<NameStartChar> ::= 'w' ;
+<NameStartChar> ::= 'x' ;
+<NameStartChar> ::= 'y' ;
+<NameStartChar> ::= 'z' ;
+<NameStartChar> ::= 'A' ;
+<NameStartChar> ::= 'B' ;
+<NameStartChar> ::= 'C' ;
+<NameStartChar> ::= 'D' ;
+<NameStartChar> ::= 'E' ;
+<NameStartChar> ::= 'F' ;
+<NameStartChar> ::= 'G' ;
+<NameStartChar> ::= 'H' ;
+<NameStartChar> ::= 'I' ;
+<NameStartChar> ::= 'J' ;
+<NameStartChar> ::= 'K' ;
+<NameStartChar> ::= 'L' ;
+<NameStartChar> ::= 'M' ;
+<NameStartChar> ::= 'N' ;
+<NameStartChar> ::= 'O' ;
+<NameStartChar> ::= 'P' ;
+<NameStartChar> ::= 'Q' ;
+<NameStartChar> ::= 'R' ;
+<NameStartChar> ::= 'S' ;
+<NameStartChar> ::= 'T' ;
+<NameStartChar> ::= 'U' ;
+<NameStartChar> ::= 'V' ;
+<NameStartChar> ::= 'W' ;
+<NameStartChar> ::= 'X' ;
+<NameStartChar> ::= 'Y' ;
+<NameStartChar> ::= 'Z' ;
+# END
+# LEXER: PI
+# BEGIN LEXER FOR  PI string
+<PI> ::= '?>' ' ' ;
+# END
+# LEXER: IGNORE
+# BEGIN LEXER FOR  IGNORE .
+<IGNORE> ::= ' '  ' ' ;
+<IGNORE> ::= '!'  ' ' ;
+<IGNORE> ::= '"'  ' ' ;
+<IGNORE> ::= '#'  ' ' ;
+<IGNORE> ::= '$'  ' ' ;
+<IGNORE> ::= '%'  ' ' ;
+<IGNORE> ::= '&'  ' ' ;
+<IGNORE> ::=  39   ' ' ;
+<IGNORE> ::= '('  ' ' ;
+<IGNORE> ::= ')'  ' ' ;
+<IGNORE> ::= '*'  ' ' ;
+<IGNORE> ::= '+'  ' ' ;
+<IGNORE> ::= ','  ' ' ;
+<IGNORE> ::= '-'  ' ' ;
+<IGNORE> ::= '.'  ' ' ;
+<IGNORE> ::= '/'  ' ' ;
+<IGNORE> ::= '0'  ' ' ;
+<IGNORE> ::= '1'  ' ' ;
+<IGNORE> ::= '2'  ' ' ;
+<IGNORE> ::= '3'  ' ' ;
+<IGNORE> ::= '4'  ' ' ;
+<IGNORE> ::= '5'  ' ' ;
+<IGNORE> ::= '6'  ' ' ;
+<IGNORE> ::= '7'  ' ' ;
+<IGNORE> ::= '8'  ' ' ;
+<IGNORE> ::= '9'  ' ' ;
+<IGNORE> ::= ':'  ' ' ;
+<IGNORE> ::= ';'  ' ' ;
+<IGNORE> ::= '<'  ' ' ;
+<IGNORE> ::= '='  ' ' ;
+<IGNORE> ::= '>'  ' ' ;
+<IGNORE> ::= '?'  ' ' ;
+<IGNORE> ::= '@'  ' ' ;
+<IGNORE> ::= 'A'  ' ' ;
+<IGNORE> ::= 'B'  ' ' ;
+<IGNORE> ::= 'C'  ' ' ;
+<IGNORE> ::= 'D'  ' ' ;
+<IGNORE> ::= 'E'  ' ' ;
+<IGNORE> ::= 'F'  ' ' ;
+<IGNORE> ::= 'G'  ' ' ;
+<IGNORE> ::= 'H'  ' ' ;
+<IGNORE> ::= 'I'  ' ' ;
+<IGNORE> ::= 'J'  ' ' ;
+<IGNORE> ::= 'K'  ' ' ;
+<IGNORE> ::= 'L'  ' ' ;
+<IGNORE> ::= 'M'  ' ' ;
+<IGNORE> ::= 'N'  ' ' ;
+<IGNORE> ::= 'O'  ' ' ;
+<IGNORE> ::= 'P'  ' ' ;
+<IGNORE> ::= 'Q'  ' ' ;
+<IGNORE> ::= 'R'  ' ' ;
+<IGNORE> ::= 'S'  ' ' ;
+<IGNORE> ::= 'T'  ' ' ;
+<IGNORE> ::= 'U'  ' ' ;
+<IGNORE> ::= 'V'  ' ' ;
+<IGNORE> ::= 'W'  ' ' ;
+<IGNORE> ::= 'X'  ' ' ;
+<IGNORE> ::= 'Y'  ' ' ;
+<IGNORE> ::= 'Z'  ' ' ;
+<IGNORE> ::= '['  ' ' ;
+<IGNORE> ::= '\'  ' ' ;
+<IGNORE> ::= ']'  ' ' ;
+<IGNORE> ::= '^'  ' ' ;
+<IGNORE> ::= '_'  ' ' ;
+<IGNORE> ::= '`'  ' ' ;
+<IGNORE> ::= 'a'  ' ' ;
+<IGNORE> ::= 'b'  ' ' ;
+<IGNORE> ::= 'c'  ' ' ;
+<IGNORE> ::= 'd'  ' ' ;
+<IGNORE> ::= 'e'  ' ' ;
+<IGNORE> ::= 'f'  ' ' ;
+<IGNORE> ::= 'g'  ' ' ;
+<IGNORE> ::= 'h'  ' ' ;
+<IGNORE> ::= 'i'  ' ' ;
+<IGNORE> ::= 'j'  ' ' ;
+<IGNORE> ::= 'k'  ' ' ;
+<IGNORE> ::= 'l'  ' ' ;
+<IGNORE> ::= 'm'  ' ' ;
+<IGNORE> ::= 'n'  ' ' ;
+<IGNORE> ::= 'o'  ' ' ;
+<IGNORE> ::= 'p'  ' ' ;
+<IGNORE> ::= 'q'  ' ' ;
+<IGNORE> ::= 'r'  ' ' ;
+<IGNORE> ::= 's'  ' ' ;
+<IGNORE> ::= 't'  ' ' ;
+<IGNORE> ::= 'u'  ' ' ;
+<IGNORE> ::= 'v'  ' ' ;
+<IGNORE> ::= 'w'  ' ' ;
+<IGNORE> ::= 'x'  ' ' ;
+<IGNORE> ::= 'y'  ' ' ;
+<IGNORE> ::= 'z'  ' ' ;
+<IGNORE> ::= '{'  ' ' ;
+<IGNORE> ::= '|'  ' ' ;
+<IGNORE> ::= '}'  ' ' ;
+<IGNORE> ::= '~'  ' ' ;
+# END
