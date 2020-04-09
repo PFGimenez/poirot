@@ -1,2037 +1,2873 @@
-select_stmt;
-# cat SQLite.g4 | python3 Main.py
 # Grammar LEXER= None
 # Grammar PARSER= None
 # Grammar GRAMMAR= grammar
 # Grammar name:  ('token', 'SQLite')
-parse__1 ::= parse__2 ;
-parse__2 ::= ;
-parse__2 ::= parse__3 parse__2 ;
-parse__3 ::= sql_stmt_list ;
-parse__3 ::= error ;
-parse ::= parse__1 EOF ;
-error__1 ::= ;
-error ::= UNEXPECTED_CHAR error__1 ;
-sql_stmt_list__1 ::= sql_stmt_list__2 ;
-sql_stmt_list__2 ::= ;
-sql_stmt_list__2 ::= sql_stmt_list__3 sql_stmt_list__2 ;
-sql_stmt_list__3 ::= ';' ;
-sql_stmt_list__4 ::= sql_stmt_list__5 ;
-sql_stmt_list__5 ::= ;
-sql_stmt_list__5 ::= sql_stmt_list__6 sql_stmt_list__5 ;
-sql_stmt_list__7 ::= sql_stmt_list__8 ;
-sql_stmt_list__8 ::= sql_stmt_list__9 ;
-sql_stmt_list__8 ::= sql_stmt_list__9 sql_stmt_list__8 ;
-sql_stmt_list__9 ::= ';' ;
-sql_stmt_list__6 ::= sql_stmt_list__7 sql_stmt ;
-sql_stmt_list__10 ::= sql_stmt_list__11 ;
-sql_stmt_list__11 ::= ;
-sql_stmt_list__11 ::= sql_stmt_list__12 sql_stmt_list__11 ;
-sql_stmt_list__12 ::= ';' ;
-sql_stmt_list ::= sql_stmt_list__1 sql_stmt sql_stmt_list__4 sql_stmt_list__10 ;
-sql_stmt__1 ::= ;
-sql_stmt__2 ::= ;
-sql_stmt__2 ::= K_QUERY K_PLAN ;
-sql_stmt__1 ::= K_EXPLAIN sql_stmt__2 ;
-sql_stmt__3 ::= alter_table_stmt ;
-sql_stmt__3 ::= analyze_stmt ;
-sql_stmt__3 ::= attach_stmt ;
-sql_stmt__3 ::= begin_stmt ;
-sql_stmt__3 ::= commit_stmt ;
-sql_stmt__3 ::= compound_select_stmt ;
-sql_stmt__3 ::= create_index_stmt ;
-sql_stmt__3 ::= create_table_stmt ;
-sql_stmt__3 ::= create_trigger_stmt ;
-sql_stmt__3 ::= create_view_stmt ;
-sql_stmt__3 ::= create_virtual_table_stmt ;
-sql_stmt__3 ::= delete_stmt ;
-sql_stmt__3 ::= delete_stmt_limited ;
-sql_stmt__3 ::= detach_stmt ;
-sql_stmt__3 ::= drop_index_stmt ;
-sql_stmt__3 ::= drop_table_stmt ;
-sql_stmt__3 ::= drop_trigger_stmt ;
-sql_stmt__3 ::= drop_view_stmt ;
-sql_stmt__3 ::= factored_select_stmt ;
-sql_stmt__3 ::= insert_stmt ;
-sql_stmt__3 ::= pragma_stmt ;
-sql_stmt__3 ::= reindex_stmt ;
-sql_stmt__3 ::= release_stmt ;
-sql_stmt__3 ::= rollback_stmt ;
-sql_stmt__3 ::= savepoint_stmt ;
-sql_stmt__3 ::= simple_select_stmt ;
-sql_stmt__3 ::= select_stmt ;
-sql_stmt__3 ::= update_stmt ;
-sql_stmt__3 ::= update_stmt_limited ;
-sql_stmt__3 ::= vacuum_stmt ;
-sql_stmt ::= sql_stmt__1 sql_stmt__3 ;
-alter_table_stmt__1 ::= ;
-alter_table_stmt__1 ::= database_name '.' ;
-alter_table_stmt__2 ::= K_RENAME K_TO new_table_name ;
-alter_table_stmt__3 ::= ;
-alter_table_stmt__3 ::= K_COLUMN ;
-alter_table_stmt__2 ::= K_ADD alter_table_stmt__3 column_def ;
-alter_table_stmt ::= K_ALTER K_TABLE alter_table_stmt__1 table_name alter_table_stmt__2 ;
-analyze_stmt__1 ::= ;
-analyze_stmt__1 ::= database_name ;
-analyze_stmt__1 ::= table_or_index_name ;
-analyze_stmt__1 ::= database_name '.' table_or_index_name ;
-analyze_stmt ::= K_ANALYZE analyze_stmt__1 ;
-attach_stmt__1 ::= ;
-attach_stmt__1 ::= K_DATABASE ;
-attach_stmt ::= K_ATTACH attach_stmt__1 expr K_AS database_name ;
-begin_stmt__1 ::= ;
-begin_stmt__1 ::= K_DEFERRED ;
-begin_stmt__1 ::= K_IMMEDIATE ;
-begin_stmt__1 ::= K_EXCLUSIVE ;
-begin_stmt__2 ::= ;
-begin_stmt__3 ::= ;
-begin_stmt__3 ::= transaction_name ;
-begin_stmt__2 ::= K_TRANSACTION begin_stmt__3 ;
-begin_stmt ::= K_BEGIN begin_stmt__1 begin_stmt__2 ;
-commit_stmt__1 ::= K_COMMIT ;
-commit_stmt__1 ::= K_END ;
-commit_stmt__2 ::= ;
-commit_stmt__3 ::= ;
-commit_stmt__3 ::= transaction_name ;
-commit_stmt__2 ::= K_TRANSACTION commit_stmt__3 ;
-commit_stmt ::= commit_stmt__1 commit_stmt__2 ;
-compound_select_stmt__1 ::= ;
-compound_select_stmt__2 ::= ;
-compound_select_stmt__2 ::= K_RECURSIVE ;
-compound_select_stmt__3 ::= compound_select_stmt__4 ;
-compound_select_stmt__4 ::= ;
-compound_select_stmt__4 ::= compound_select_stmt__5 compound_select_stmt__4 ;
-compound_select_stmt__5 ::= ',' common_table_expression ;
-compound_select_stmt__1 ::= K_WITH compound_select_stmt__2 common_table_expression compound_select_stmt__3 ;
-compound_select_stmt__6 ::= compound_select_stmt__7 ;
-compound_select_stmt__7 ::= compound_select_stmt__8 ;
-compound_select_stmt__7 ::= compound_select_stmt__8 compound_select_stmt__7 ;
-compound_select_stmt__10 ::= ;
-compound_select_stmt__10 ::= K_ALL ;
-compound_select_stmt__9 ::= K_UNION compound_select_stmt__10 ;
-compound_select_stmt__9 ::= K_INTERSECT ;
-compound_select_stmt__9 ::= K_EXCEPT ;
-compound_select_stmt__8 ::= compound_select_stmt__9 select_core ;
-compound_select_stmt__11 ::= ;
-compound_select_stmt__12 ::= compound_select_stmt__13 ;
-compound_select_stmt__13 ::= ;
-compound_select_stmt__13 ::= compound_select_stmt__14 compound_select_stmt__13 ;
-compound_select_stmt__14 ::= ',' ordering_term ;
-compound_select_stmt__11 ::= K_ORDER K_BY ordering_term compound_select_stmt__12 ;
-compound_select_stmt__15 ::= ;
-compound_select_stmt__16 ::= ;
-compound_select_stmt__17 ::= K_OFFSET ;
-compound_select_stmt__17 ::= ',' ;
-compound_select_stmt__16 ::= compound_select_stmt__17 expr ;
-compound_select_stmt__15 ::= K_LIMIT expr compound_select_stmt__16 ;
-compound_select_stmt ::= compound_select_stmt__1 select_core compound_select_stmt__6 compound_select_stmt__11 compound_select_stmt__15 ;
-create_index_stmt__1 ::= ;
-create_index_stmt__1 ::= K_UNIQUE ;
-create_index_stmt__2 ::= ;
-create_index_stmt__2 ::= K_IF K_NOT K_EXISTS ;
-create_index_stmt__3 ::= ;
-create_index_stmt__3 ::= database_name '.' ;
-create_index_stmt__4 ::= create_index_stmt__5 ;
-create_index_stmt__5 ::= ;
-create_index_stmt__5 ::= create_index_stmt__6 create_index_stmt__5 ;
-create_index_stmt__6 ::= ',' indexed_column ;
-create_index_stmt__7 ::= ;
-create_index_stmt__7 ::= K_WHERE expr ;
-create_index_stmt ::= K_CREATE create_index_stmt__1 K_INDEX create_index_stmt__2 create_index_stmt__3 index_name K_ON table_name '(' indexed_column create_index_stmt__4 ')' create_index_stmt__7 ;
-create_table_stmt__1 ::= ;
-create_table_stmt__1 ::= K_TEMP ;
-create_table_stmt__1 ::= K_TEMPORARY ;
-create_table_stmt__2 ::= ;
-create_table_stmt__2 ::= K_IF K_NOT K_EXISTS ;
-create_table_stmt__3 ::= ;
-create_table_stmt__3 ::= database_name '.' ;
-create_table_stmt__5 ::= create_table_stmt__6 ;
-create_table_stmt__6 ::= ;
-create_table_stmt__6 ::= create_table_stmt__7 create_table_stmt__6 ;
-create_table_stmt__7 ::= ',' column_def ;
-create_table_stmt__8 ::= create_table_stmt__9 ;
-create_table_stmt__9 ::= ;
-create_table_stmt__9 ::= create_table_stmt__10 create_table_stmt__9 ;
-create_table_stmt__10 ::= ',' table_constraint ;
-create_table_stmt__11 ::= ;
-create_table_stmt__11 ::= K_WITHOUT IDENTIFIER ;
-create_table_stmt__4 ::= '(' column_def create_table_stmt__5 create_table_stmt__8 ')' create_table_stmt__11 ;
-create_table_stmt__4 ::= K_AS select_stmt ;
-create_table_stmt ::= K_CREATE create_table_stmt__1 K_TABLE create_table_stmt__2 create_table_stmt__3 table_name create_table_stmt__4 ;
-create_trigger_stmt__1 ::= ;
-create_trigger_stmt__1 ::= K_TEMP ;
-create_trigger_stmt__1 ::= K_TEMPORARY ;
-create_trigger_stmt__2 ::= ;
-create_trigger_stmt__2 ::= K_IF K_NOT K_EXISTS ;
-create_trigger_stmt__3 ::= ;
-create_trigger_stmt__3 ::= database_name '.' ;
-create_trigger_stmt__4 ::= ;
-create_trigger_stmt__4 ::= K_BEFORE ;
-create_trigger_stmt__4 ::= K_AFTER ;
-create_trigger_stmt__4 ::= K_INSTEAD K_OF ;
-create_trigger_stmt__5 ::= K_DELETE ;
-create_trigger_stmt__5 ::= K_INSERT ;
-create_trigger_stmt__6 ::= ;
-create_trigger_stmt__7 ::= create_trigger_stmt__8 ;
-create_trigger_stmt__8 ::= ;
-create_trigger_stmt__8 ::= create_trigger_stmt__9 create_trigger_stmt__8 ;
-create_trigger_stmt__9 ::= ',' column_name ;
-create_trigger_stmt__6 ::= K_OF column_name create_trigger_stmt__7 ;
-create_trigger_stmt__5 ::= K_UPDATE create_trigger_stmt__6 ;
-create_trigger_stmt__10 ::= ;
-create_trigger_stmt__10 ::= database_name '.' ;
-create_trigger_stmt__11 ::= ;
-create_trigger_stmt__11 ::= K_FOR K_EACH K_ROW ;
-create_trigger_stmt__12 ::= ;
-create_trigger_stmt__12 ::= K_WHEN expr ;
-create_trigger_stmt__13 ::= create_trigger_stmt__14 ;
-create_trigger_stmt__14 ::= create_trigger_stmt__15 ;
-create_trigger_stmt__14 ::= create_trigger_stmt__15 create_trigger_stmt__14 ;
-create_trigger_stmt__16 ::= update_stmt ;
-create_trigger_stmt__16 ::= insert_stmt ;
-create_trigger_stmt__16 ::= delete_stmt ;
-create_trigger_stmt__16 ::= select_stmt ;
-create_trigger_stmt__15 ::= create_trigger_stmt__16 ';' ;
-create_trigger_stmt ::= K_CREATE create_trigger_stmt__1 K_TRIGGER create_trigger_stmt__2 create_trigger_stmt__3 trigger_name create_trigger_stmt__4 create_trigger_stmt__5 K_ON create_trigger_stmt__10 table_name create_trigger_stmt__11 create_trigger_stmt__12 K_BEGIN create_trigger_stmt__13 K_END ;
-create_view_stmt__1 ::= ;
-create_view_stmt__1 ::= K_TEMP ;
-create_view_stmt__1 ::= K_TEMPORARY ;
-create_view_stmt__2 ::= ;
-create_view_stmt__2 ::= K_IF K_NOT K_EXISTS ;
-create_view_stmt__3 ::= ;
-create_view_stmt__3 ::= database_name '.' ;
-create_view_stmt ::= K_CREATE create_view_stmt__1 K_VIEW create_view_stmt__2 create_view_stmt__3 view_name K_AS select_stmt ;
-create_virtual_table_stmt__1 ::= ;
-create_virtual_table_stmt__1 ::= K_IF K_NOT K_EXISTS ;
-create_virtual_table_stmt__2 ::= ;
-create_virtual_table_stmt__2 ::= database_name '.' ;
-create_virtual_table_stmt__3 ::= ;
-create_virtual_table_stmt__4 ::= create_virtual_table_stmt__5 ;
-create_virtual_table_stmt__5 ::= ;
-create_virtual_table_stmt__5 ::= create_virtual_table_stmt__6 create_virtual_table_stmt__5 ;
-create_virtual_table_stmt__6 ::= ',' module_argument ;
-create_virtual_table_stmt__3 ::= '(' module_argument create_virtual_table_stmt__4 ')' ;
-create_virtual_table_stmt ::= K_CREATE K_VIRTUAL K_TABLE create_virtual_table_stmt__1 create_virtual_table_stmt__2 table_name K_USING module_name create_virtual_table_stmt__3 ;
-delete_stmt__1 ::= ;
-delete_stmt__1 ::= with_clause ;
-delete_stmt__2 ::= ;
-delete_stmt__2 ::= K_WHERE expr ;
-delete_stmt ::= delete_stmt__1 K_DELETE K_FROM qualified_table_name delete_stmt__2 ;
-delete_stmt_limited__1 ::= ;
-delete_stmt_limited__1 ::= with_clause ;
-delete_stmt_limited__2 ::= ;
-delete_stmt_limited__2 ::= K_WHERE expr ;
-delete_stmt_limited__3 ::= ;
-delete_stmt_limited__4 ::= ;
-delete_stmt_limited__5 ::= delete_stmt_limited__6 ;
-delete_stmt_limited__6 ::= ;
-delete_stmt_limited__6 ::= delete_stmt_limited__7 delete_stmt_limited__6 ;
-delete_stmt_limited__7 ::= ',' ordering_term ;
-delete_stmt_limited__4 ::= K_ORDER K_BY ordering_term delete_stmt_limited__5 ;
-delete_stmt_limited__8 ::= ;
-delete_stmt_limited__9 ::= K_OFFSET ;
-delete_stmt_limited__9 ::= ',' ;
-delete_stmt_limited__8 ::= delete_stmt_limited__9 expr ;
-delete_stmt_limited__3 ::= delete_stmt_limited__4 K_LIMIT expr delete_stmt_limited__8 ;
-delete_stmt_limited ::= delete_stmt_limited__1 K_DELETE K_FROM qualified_table_name delete_stmt_limited__2 delete_stmt_limited__3 ;
-detach_stmt__1 ::= ;
-detach_stmt__1 ::= K_DATABASE ;
-detach_stmt ::= K_DETACH detach_stmt__1 database_name ;
-drop_index_stmt__1 ::= ;
-drop_index_stmt__1 ::= K_IF K_EXISTS ;
-drop_index_stmt__2 ::= ;
-drop_index_stmt__2 ::= database_name '.' ;
-drop_index_stmt ::= K_DROP K_INDEX drop_index_stmt__1 drop_index_stmt__2 index_name ;
-drop_table_stmt__1 ::= ;
-drop_table_stmt__1 ::= K_IF K_EXISTS ;
-drop_table_stmt__2 ::= ;
-drop_table_stmt__2 ::= database_name '.' ;
-drop_table_stmt ::= K_DROP K_TABLE drop_table_stmt__1 drop_table_stmt__2 table_name ;
-drop_trigger_stmt__1 ::= ;
-drop_trigger_stmt__1 ::= K_IF K_EXISTS ;
-drop_trigger_stmt__2 ::= ;
-drop_trigger_stmt__2 ::= database_name '.' ;
-drop_trigger_stmt ::= K_DROP K_TRIGGER drop_trigger_stmt__1 drop_trigger_stmt__2 trigger_name ;
-drop_view_stmt__1 ::= ;
-drop_view_stmt__1 ::= K_IF K_EXISTS ;
-drop_view_stmt__2 ::= ;
-drop_view_stmt__2 ::= database_name '.' ;
-drop_view_stmt ::= K_DROP K_VIEW drop_view_stmt__1 drop_view_stmt__2 view_name ;
-factored_select_stmt__1 ::= ;
-factored_select_stmt__2 ::= ;
-factored_select_stmt__2 ::= K_RECURSIVE ;
-factored_select_stmt__3 ::= factored_select_stmt__4 ;
-factored_select_stmt__4 ::= ;
-factored_select_stmt__4 ::= factored_select_stmt__5 factored_select_stmt__4 ;
-factored_select_stmt__5 ::= ',' common_table_expression ;
-factored_select_stmt__1 ::= K_WITH factored_select_stmt__2 common_table_expression factored_select_stmt__3 ;
-factored_select_stmt__6 ::= factored_select_stmt__7 ;
-factored_select_stmt__7 ::= ;
-factored_select_stmt__7 ::= factored_select_stmt__8 factored_select_stmt__7 ;
-factored_select_stmt__8 ::= compound_operator select_core ;
-factored_select_stmt__9 ::= ;
-factored_select_stmt__10 ::= factored_select_stmt__11 ;
-factored_select_stmt__11 ::= ;
-factored_select_stmt__11 ::= factored_select_stmt__12 factored_select_stmt__11 ;
-factored_select_stmt__12 ::= ',' ordering_term ;
-factored_select_stmt__9 ::= K_ORDER K_BY ordering_term factored_select_stmt__10 ;
-factored_select_stmt__13 ::= ;
-factored_select_stmt__14 ::= ;
-factored_select_stmt__15 ::= K_OFFSET ;
-factored_select_stmt__15 ::= ',' ;
-factored_select_stmt__14 ::= factored_select_stmt__15 expr ;
-factored_select_stmt__13 ::= K_LIMIT expr factored_select_stmt__14 ;
-factored_select_stmt ::= factored_select_stmt__1 select_core factored_select_stmt__6 factored_select_stmt__9 factored_select_stmt__13 ;
-insert_stmt__1 ::= ;
-insert_stmt__1 ::= with_clause ;
-insert_stmt__2 ::= K_INSERT ;
-insert_stmt__2 ::= K_REPLACE ;
-insert_stmt__2 ::= K_INSERT K_OR K_REPLACE ;
-insert_stmt__2 ::= K_INSERT K_OR K_ROLLBACK ;
-insert_stmt__2 ::= K_INSERT K_OR K_ABORT ;
-insert_stmt__2 ::= K_INSERT K_OR K_FAIL ;
-insert_stmt__2 ::= K_INSERT K_OR K_IGNORE ;
-insert_stmt__3 ::= ;
-insert_stmt__3 ::= database_name '.' ;
-insert_stmt__4 ::= ;
-insert_stmt__5 ::= insert_stmt__6 ;
-insert_stmt__6 ::= ;
-insert_stmt__6 ::= insert_stmt__7 insert_stmt__6 ;
-insert_stmt__7 ::= ',' column_name ;
-insert_stmt__4 ::= '(' column_name insert_stmt__5 ')' ;
-insert_stmt__9 ::= insert_stmt__10 ;
-insert_stmt__10 ::= ;
-insert_stmt__10 ::= insert_stmt__11 insert_stmt__10 ;
-insert_stmt__11 ::= ',' expr ;
-insert_stmt__12 ::= insert_stmt__13 ;
-insert_stmt__13 ::= ;
-insert_stmt__13 ::= insert_stmt__14 insert_stmt__13 ;
-insert_stmt__15 ::= insert_stmt__16 ;
-insert_stmt__16 ::= ;
-insert_stmt__16 ::= insert_stmt__17 insert_stmt__16 ;
-insert_stmt__17 ::= ',' expr ;
-insert_stmt__14 ::= ',' '(' expr insert_stmt__15 ')' ;
-insert_stmt__8 ::= K_VALUES '(' expr insert_stmt__9 ')' insert_stmt__12 ;
-insert_stmt__8 ::= select_stmt ;
-insert_stmt__8 ::= K_DEFAULT K_VALUES ;
-insert_stmt ::= insert_stmt__1 insert_stmt__2 K_INTO insert_stmt__3 table_name insert_stmt__4 insert_stmt__8 ;
-pragma_stmt__1 ::= ;
-pragma_stmt__1 ::= database_name '.' ;
-pragma_stmt__2 ::= ;
-pragma_stmt__2 ::= '=' pragma_value ;
-pragma_stmt__2 ::= '(' pragma_value ')' ;
-pragma_stmt ::= K_PRAGMA pragma_stmt__1 pragma_name pragma_stmt__2 ;
-reindex_stmt__1 ::= ;
-reindex_stmt__1 ::= collation_name ;
-reindex_stmt__2 ::= ;
-reindex_stmt__2 ::= database_name '.' ;
-reindex_stmt__3 ::= table_name ;
-reindex_stmt__3 ::= index_name ;
-reindex_stmt__1 ::= reindex_stmt__2 reindex_stmt__3 ;
-reindex_stmt ::= K_REINDEX reindex_stmt__1 ;
-release_stmt__1 ::= ;
-release_stmt__1 ::= K_SAVEPOINT ;
-release_stmt ::= K_RELEASE release_stmt__1 savepoint_name ;
-rollback_stmt__1 ::= ;
-rollback_stmt__2 ::= ;
-rollback_stmt__2 ::= transaction_name ;
-rollback_stmt__1 ::= K_TRANSACTION rollback_stmt__2 ;
-rollback_stmt__3 ::= ;
-rollback_stmt__4 ::= ;
-rollback_stmt__4 ::= K_SAVEPOINT ;
-rollback_stmt__3 ::= K_TO rollback_stmt__4 savepoint_name ;
-rollback_stmt ::= K_ROLLBACK rollback_stmt__1 rollback_stmt__3 ;
-savepoint_stmt ::= K_SAVEPOINT savepoint_name ;
-simple_select_stmt__1 ::= ;
-simple_select_stmt__2 ::= ;
-simple_select_stmt__2 ::= K_RECURSIVE ;
-simple_select_stmt__3 ::= simple_select_stmt__4 ;
-simple_select_stmt__4 ::= ;
-simple_select_stmt__4 ::= simple_select_stmt__5 simple_select_stmt__4 ;
-simple_select_stmt__5 ::= ',' common_table_expression ;
-simple_select_stmt__1 ::= K_WITH simple_select_stmt__2 common_table_expression simple_select_stmt__3 ;
-simple_select_stmt__6 ::= ;
-simple_select_stmt__7 ::= simple_select_stmt__8 ;
-simple_select_stmt__8 ::= ;
-simple_select_stmt__8 ::= simple_select_stmt__9 simple_select_stmt__8 ;
-simple_select_stmt__9 ::= ',' ordering_term ;
-simple_select_stmt__6 ::= K_ORDER K_BY ordering_term simple_select_stmt__7 ;
-simple_select_stmt__10 ::= ;
-simple_select_stmt__11 ::= ;
-simple_select_stmt__12 ::= K_OFFSET ;
-simple_select_stmt__12 ::= ',' ;
-simple_select_stmt__11 ::= simple_select_stmt__12 expr ;
-simple_select_stmt__10 ::= K_LIMIT expr simple_select_stmt__11 ;
-simple_select_stmt ::= simple_select_stmt__1 select_core simple_select_stmt__6 simple_select_stmt__10 ;
-select_stmt__1 ::= ;
-select_stmt__2 ::= ;
-select_stmt__2 ::= K_RECURSIVE ;
-select_stmt__3 ::= select_stmt__4 ;
-select_stmt__4 ::= ;
-select_stmt__4 ::= select_stmt__5 select_stmt__4 ;
-select_stmt__5 ::= ',' common_table_expression ;
-select_stmt__1 ::= K_WITH select_stmt__2 common_table_expression select_stmt__3 ;
-select_stmt__6 ::= select_stmt__7 ;
-select_stmt__7 ::= ;
-select_stmt__7 ::= select_stmt__8 select_stmt__7 ;
-select_stmt__8 ::= compound_operator select_or_values ;
-select_stmt__9 ::= ;
-select_stmt__10 ::= select_stmt__11 ;
-select_stmt__11 ::= ;
-select_stmt__11 ::= select_stmt__12 select_stmt__11 ;
-select_stmt__12 ::= ',' ordering_term ;
-select_stmt__9 ::= K_ORDER K_BY ordering_term select_stmt__10 ;
-select_stmt__13 ::= ;
-select_stmt__14 ::= ;
-select_stmt__15 ::= K_OFFSET ;
-select_stmt__15 ::= ',' ;
-select_stmt__14 ::= select_stmt__15 expr ;
-select_stmt__13 ::= K_LIMIT expr select_stmt__14 ;
-select_stmt ::= select_stmt__1 select_or_values select_stmt__6 select_stmt__9 select_stmt__13 ;
-select_or_values__1 ::= ;
-select_or_values__1 ::= K_DISTINCT ;
-select_or_values__1 ::= K_ALL ;
-select_or_values__2 ::= select_or_values__3 ;
-select_or_values__3 ::= ;
-select_or_values__3 ::= select_or_values__4 select_or_values__3 ;
-select_or_values__4 ::= ',' result_column ;
-select_or_values__5 ::= ;
-select_or_values__7 ::= select_or_values__8 ;
-select_or_values__8 ::= ;
-select_or_values__8 ::= select_or_values__9 select_or_values__8 ;
-select_or_values__9 ::= ',' table_or_subquery ;
-select_or_values__6 ::= table_or_subquery select_or_values__7 ;
-select_or_values__6 ::= join_clause ;
-select_or_values__5 ::= K_FROM select_or_values__6 ;
-select_or_values__10 ::= ;
-select_or_values__10 ::= K_WHERE expr ;
-select_or_values__11 ::= ;
-select_or_values__12 ::= select_or_values__13 ;
-select_or_values__13 ::= ;
-select_or_values__13 ::= select_or_values__14 select_or_values__13 ;
-select_or_values__14 ::= ',' expr ;
-select_or_values__15 ::= ;
-select_or_values__15 ::= K_HAVING expr ;
-select_or_values__11 ::= K_GROUP K_BY expr select_or_values__12 select_or_values__15 ;
-select_or_values ::= K_SELECT select_or_values__1 result_column select_or_values__2 select_or_values__5 select_or_values__10 select_or_values__11 ;
-select_or_values__16 ::= select_or_values__17 ;
-select_or_values__17 ::= ;
-select_or_values__17 ::= select_or_values__18 select_or_values__17 ;
-select_or_values__18 ::= ',' expr ;
-select_or_values__19 ::= select_or_values__20 ;
-select_or_values__20 ::= ;
-select_or_values__20 ::= select_or_values__21 select_or_values__20 ;
-select_or_values__22 ::= select_or_values__23 ;
-select_or_values__23 ::= ;
-select_or_values__23 ::= select_or_values__24 select_or_values__23 ;
-select_or_values__24 ::= ',' expr ;
-select_or_values__21 ::= ',' '(' expr select_or_values__22 ')' ;
-select_or_values ::= K_VALUES '(' expr select_or_values__16 ')' select_or_values__19 ;
-update_stmt__1 ::= ;
-update_stmt__1 ::= with_clause ;
-update_stmt__2 ::= ;
-update_stmt__2 ::= K_OR K_ROLLBACK ;
-update_stmt__2 ::= K_OR K_ABORT ;
-update_stmt__2 ::= K_OR K_REPLACE ;
-update_stmt__2 ::= K_OR K_FAIL ;
-update_stmt__2 ::= K_OR K_IGNORE ;
-update_stmt__3 ::= update_stmt__4 ;
-update_stmt__4 ::= ;
-update_stmt__4 ::= update_stmt__5 update_stmt__4 ;
-update_stmt__5 ::= ',' column_name '=' expr ;
-update_stmt__6 ::= ;
-update_stmt__6 ::= K_WHERE expr ;
-update_stmt ::= update_stmt__1 K_UPDATE update_stmt__2 qualified_table_name K_SET column_name '=' expr update_stmt__3 update_stmt__6 ;
-update_stmt_limited__1 ::= ;
-update_stmt_limited__1 ::= with_clause ;
-update_stmt_limited__2 ::= ;
-update_stmt_limited__2 ::= K_OR K_ROLLBACK ;
-update_stmt_limited__2 ::= K_OR K_ABORT ;
-update_stmt_limited__2 ::= K_OR K_REPLACE ;
-update_stmt_limited__2 ::= K_OR K_FAIL ;
-update_stmt_limited__2 ::= K_OR K_IGNORE ;
-update_stmt_limited__3 ::= update_stmt_limited__4 ;
-update_stmt_limited__4 ::= ;
-update_stmt_limited__4 ::= update_stmt_limited__5 update_stmt_limited__4 ;
-update_stmt_limited__5 ::= ',' column_name '=' expr ;
-update_stmt_limited__6 ::= ;
-update_stmt_limited__6 ::= K_WHERE expr ;
-update_stmt_limited__7 ::= ;
-update_stmt_limited__8 ::= ;
-update_stmt_limited__9 ::= update_stmt_limited__10 ;
-update_stmt_limited__10 ::= ;
-update_stmt_limited__10 ::= update_stmt_limited__11 update_stmt_limited__10 ;
-update_stmt_limited__11 ::= ',' ordering_term ;
-update_stmt_limited__8 ::= K_ORDER K_BY ordering_term update_stmt_limited__9 ;
-update_stmt_limited__12 ::= ;
-update_stmt_limited__13 ::= K_OFFSET ;
-update_stmt_limited__13 ::= ',' ;
-update_stmt_limited__12 ::= update_stmt_limited__13 expr ;
-update_stmt_limited__7 ::= update_stmt_limited__8 K_LIMIT expr update_stmt_limited__12 ;
-update_stmt_limited ::= update_stmt_limited__1 K_UPDATE update_stmt_limited__2 qualified_table_name K_SET column_name '=' expr update_stmt_limited__3 update_stmt_limited__6 update_stmt_limited__7 ;
-vacuum_stmt ::= K_VACUUM ;
-column_def__1 ::= ;
-column_def__1 ::= type_name ;
-column_def__2 ::= column_def__3 ;
-column_def__3 ::= ;
-column_def__3 ::= column_def__4 column_def__3 ;
-column_def__4 ::= column_constraint ;
-column_def ::= column_name column_def__1 column_def__2 ;
-type_name__1 ::= type_name__2 ;
-type_name__2 ::= type_name__3 ;
-type_name__2 ::= type_name__3 type_name__2 ;
-type_name__3 ::= name ;
-type_name__4 ::= ;
-type_name__4 ::= '(' signed_number ')' ;
-type_name__4 ::= '(' signed_number ',' signed_number ')' ;
-type_name ::= type_name__1 type_name__4 ;
-column_constraint__1 ::= ;
-column_constraint__1 ::= K_CONSTRAINT name ;
-column_constraint__3 ::= ;
-column_constraint__3 ::= K_ASC ;
-column_constraint__3 ::= K_DESC ;
-column_constraint__4 ::= ;
-column_constraint__4 ::= K_AUTOINCREMENT ;
-column_constraint__2 ::= K_PRIMARY K_KEY column_constraint__3 conflict_clause column_constraint__4 ;
-column_constraint__5 ::= ;
-column_constraint__5 ::= K_NOT ;
-column_constraint__2 ::= column_constraint__5 K_NULL conflict_clause ;
-column_constraint__2 ::= K_UNIQUE conflict_clause ;
-column_constraint__2 ::= K_CHECK '(' expr ')' ;
-column_constraint__6 ::= signed_number ;
-column_constraint__6 ::= literal_value ;
-column_constraint__6 ::= '(' expr ')' ;
-column_constraint__2 ::= K_DEFAULT column_constraint__6 ;
-column_constraint__2 ::= K_COLLATE collation_name ;
-column_constraint__2 ::= foreign_key_clause ;
-column_constraint ::= column_constraint__1 column_constraint__2 ;
-conflict_clause ::= ;
-conflict_clause__1 ::= K_ROLLBACK ;
-conflict_clause__1 ::= K_ABORT ;
-conflict_clause__1 ::= K_FAIL ;
-conflict_clause__1 ::= K_IGNORE ;
-conflict_clause__1 ::= K_REPLACE ;
-conflict_clause ::= K_ON K_CONFLICT conflict_clause__1 ;
-expr ::= literal_value ;
-expr ::= BIND_PARAMETER ;
-expr__1 ::= ;
-expr__2 ::= ;
-expr__2 ::= database_name '.' ;
-expr__1 ::= expr__2 table_name '.' ;
-expr ::= expr__1 column_name ;
-expr ::= unary_operator expr ;
-expr ::= expr '||' expr ;
-expr__3 ::= '*' ;
-expr__3 ::= '/' ;
-expr__3 ::= '%' ;
-expr ::= expr expr__3 expr ;
-expr__4 ::= '+' ;
-expr__4 ::= '-' ;
-expr ::= expr expr__4 expr ;
-expr__5 ::= '<<' ;
-expr__5 ::= '>>' ;
-expr__5 ::= '&' ;
-expr__5 ::= '|' ;
-expr ::= expr expr__5 expr ;
-expr__6 ::= '<' ;
-expr__6 ::= '<=' ;
-expr__6 ::= '>' ;
-expr__6 ::= '>=' ;
-expr ::= expr expr__6 expr ;
-expr__7 ::= '=' ;
-expr__7 ::= '==' ;
-expr__7 ::= '!=' ;
-expr__7 ::= '<>' ;
-expr__7 ::= K_IS ;
-expr__7 ::= K_IS K_NOT ;
-expr__7 ::= K_IN ;
-expr__7 ::= K_LIKE ;
-expr__7 ::= K_GLOB ;
-expr__7 ::= K_MATCH ;
-expr__7 ::= K_REGEXP ;
-expr ::= expr expr__7 expr ;
-expr ::= expr K_AND expr ;
-expr ::= expr K_OR expr ;
-expr__8 ::= ;
-expr__9 ::= ;
-expr__9 ::= K_DISTINCT ;
-expr__10 ::= expr__11 ;
-expr__11 ::= ;
-expr__11 ::= expr__12 expr__11 ;
-expr__12 ::= ',' expr ;
-expr__8 ::= expr__9 expr expr__10 ;
-expr__8 ::= '*' ;
-expr ::= function_name '(' expr__8 ')' ;
-expr ::= '(' expr ')' ;
-expr ::= K_CAST '(' expr K_AS type_name ')' ;
-expr ::= expr K_COLLATE collation_name ;
-expr__13 ::= ;
-expr__13 ::= K_NOT ;
-expr__14 ::= K_LIKE ;
-expr__14 ::= K_GLOB ;
-expr__14 ::= K_REGEXP ;
-expr__14 ::= K_MATCH ;
-expr__15 ::= ;
-expr__15 ::= K_ESCAPE expr ;
-expr ::= expr expr__13 expr__14 expr expr__15 ;
-expr__16 ::= K_ISNULL ;
-expr__16 ::= K_NOTNULL ;
-expr__16 ::= K_NOT K_NULL ;
-expr ::= expr expr__16 ;
-expr__17 ::= ;
-expr__17 ::= K_NOT ;
-expr ::= expr K_IS expr__17 expr ;
-expr__18 ::= ;
-expr__18 ::= K_NOT ;
-expr ::= expr expr__18 K_BETWEEN expr K_AND expr ;
-expr__19 ::= ;
-expr__19 ::= K_NOT ;
-expr__21 ::= ;
-expr__21 ::= select_stmt ;
-expr__22 ::= expr__23 ;
-expr__23 ::= ;
-expr__23 ::= expr__24 expr__23 ;
-expr__24 ::= ',' expr ;
-expr__21 ::= expr expr__22 ;
-expr__20 ::= '(' expr__21 ')' ;
-expr__25 ::= ;
-expr__25 ::= database_name '.' ;
-expr__20 ::= expr__25 table_name ;
-expr ::= expr expr__19 K_IN expr__20 ;
-expr__26 ::= ;
-expr__27 ::= ;
-expr__27 ::= K_NOT ;
-expr__26 ::= expr__27 K_EXISTS ;
-expr ::= expr__26 '(' select_stmt ')' ;
-expr__28 ::= ;
-expr__28 ::= expr ;
-expr__29 ::= expr__30 ;
-expr__30 ::= expr__31 ;
-expr__30 ::= expr__31 expr__30 ;
-expr__31 ::= K_WHEN expr K_THEN expr ;
-expr__32 ::= ;
-expr__32 ::= K_ELSE expr ;
-expr ::= K_CASE expr__28 expr__29 expr__32 K_END ;
-expr ::= raise_function ;
-foreign_key_clause__1 ::= ;
-foreign_key_clause__2 ::= foreign_key_clause__3 ;
-foreign_key_clause__3 ::= ;
-foreign_key_clause__3 ::= foreign_key_clause__4 foreign_key_clause__3 ;
-foreign_key_clause__4 ::= ',' column_name ;
-foreign_key_clause__1 ::= '(' column_name foreign_key_clause__2 ')' ;
-foreign_key_clause__5 ::= foreign_key_clause__6 ;
-foreign_key_clause__6 ::= ;
-foreign_key_clause__6 ::= foreign_key_clause__7 foreign_key_clause__6 ;
-foreign_key_clause__8 ::= K_DELETE ;
-foreign_key_clause__8 ::= K_UPDATE ;
-foreign_key_clause__9 ::= K_SET K_NULL ;
-foreign_key_clause__9 ::= K_SET K_DEFAULT ;
-foreign_key_clause__9 ::= K_CASCADE ;
-foreign_key_clause__9 ::= K_RESTRICT ;
-foreign_key_clause__9 ::= K_NO K_ACTION ;
-foreign_key_clause__7 ::= K_ON foreign_key_clause__8 foreign_key_clause__9 ;
-foreign_key_clause__7 ::= K_MATCH name ;
-foreign_key_clause__10 ::= ;
-foreign_key_clause__11 ::= ;
-foreign_key_clause__11 ::= K_NOT ;
-foreign_key_clause__12 ::= ;
-foreign_key_clause__12 ::= K_INITIALLY K_DEFERRED ;
-foreign_key_clause__12 ::= K_INITIALLY K_IMMEDIATE ;
-foreign_key_clause__10 ::= foreign_key_clause__11 K_DEFERRABLE foreign_key_clause__12 ;
-foreign_key_clause ::= K_REFERENCES foreign_table foreign_key_clause__1 foreign_key_clause__5 foreign_key_clause__10 ;
-raise_function__1 ::= K_IGNORE ;
-raise_function__2 ::= K_ROLLBACK ;
-raise_function__2 ::= K_ABORT ;
-raise_function__2 ::= K_FAIL ;
-raise_function__1 ::= raise_function__2 ',' error_message ;
-raise_function ::= K_RAISE '(' raise_function__1 ')' ;
-indexed_column__1 ::= ;
-indexed_column__1 ::= K_COLLATE collation_name ;
-indexed_column__2 ::= ;
-indexed_column__2 ::= K_ASC ;
-indexed_column__2 ::= K_DESC ;
-indexed_column ::= column_name indexed_column__1 indexed_column__2 ;
-table_constraint__1 ::= ;
-table_constraint__1 ::= K_CONSTRAINT name ;
-table_constraint__3 ::= K_PRIMARY K_KEY ;
-table_constraint__3 ::= K_UNIQUE ;
-table_constraint__4 ::= table_constraint__5 ;
-table_constraint__5 ::= ;
-table_constraint__5 ::= table_constraint__6 table_constraint__5 ;
-table_constraint__6 ::= ',' indexed_column ;
-table_constraint__2 ::= table_constraint__3 '(' indexed_column table_constraint__4 ')' conflict_clause ;
-table_constraint__2 ::= K_CHECK '(' expr ')' ;
-table_constraint__7 ::= table_constraint__8 ;
-table_constraint__8 ::= ;
-table_constraint__8 ::= table_constraint__9 table_constraint__8 ;
-table_constraint__9 ::= ',' column_name ;
-table_constraint__2 ::= K_FOREIGN K_KEY '(' column_name table_constraint__7 ')' foreign_key_clause ;
-table_constraint ::= table_constraint__1 table_constraint__2 ;
-with_clause__1 ::= ;
-with_clause__1 ::= K_RECURSIVE ;
-with_clause__2 ::= with_clause__3 ;
-with_clause__3 ::= ;
-with_clause__3 ::= with_clause__4 with_clause__3 ;
-with_clause__4 ::= ',' cte_table_name K_AS '(' select_stmt ')' ;
-with_clause ::= K_WITH with_clause__1 cte_table_name K_AS '(' select_stmt ')' with_clause__2 ;
-qualified_table_name__1 ::= ;
-qualified_table_name__1 ::= database_name '.' ;
-qualified_table_name__2 ::= ;
-qualified_table_name__2 ::= K_INDEXED K_BY index_name ;
-qualified_table_name__2 ::= K_NOT K_INDEXED ;
-qualified_table_name ::= qualified_table_name__1 table_name qualified_table_name__2 ;
-ordering_term__1 ::= ;
-ordering_term__1 ::= K_COLLATE collation_name ;
-ordering_term__2 ::= ;
-ordering_term__2 ::= K_ASC ;
-ordering_term__2 ::= K_DESC ;
-ordering_term ::= expr ordering_term__1 ordering_term__2 ;
-pragma_value ::= signed_number ;
-pragma_value ::= name ;
-pragma_value ::= STRING_LITERAL ;
-common_table_expression__1 ::= ;
-common_table_expression__2 ::= common_table_expression__3 ;
-common_table_expression__3 ::= ;
-common_table_expression__3 ::= common_table_expression__4 common_table_expression__3 ;
-common_table_expression__4 ::= ',' column_name ;
-common_table_expression__1 ::= '(' column_name common_table_expression__2 ')' ;
-common_table_expression ::= table_name common_table_expression__1 K_AS '(' select_stmt ')' ;
-result_column ::= '*' ;
-result_column ::= table_name '.' '*' ;
-result_column__1 ::= ;
-result_column__2 ::= ;
-result_column__2 ::= K_AS ;
-result_column__1 ::= result_column__2 column_alias ;
-result_column ::= expr result_column__1 ;
-table_or_subquery__1 ::= ;
-table_or_subquery__1 ::= database_name '.' ;
-table_or_subquery__2 ::= ;
-table_or_subquery__3 ::= ;
-table_or_subquery__3 ::= K_AS ;
-table_or_subquery__2 ::= table_or_subquery__3 table_alias ;
-table_or_subquery__4 ::= ;
-table_or_subquery__4 ::= K_INDEXED K_BY index_name ;
-table_or_subquery__4 ::= K_NOT K_INDEXED ;
-table_or_subquery ::= table_or_subquery__1 table_name table_or_subquery__2 table_or_subquery__4 ;
-table_or_subquery__6 ::= table_or_subquery__7 ;
-table_or_subquery__7 ::= ;
-table_or_subquery__7 ::= table_or_subquery__8 table_or_subquery__7 ;
-table_or_subquery__8 ::= ',' table_or_subquery ;
-table_or_subquery__5 ::= table_or_subquery table_or_subquery__6 ;
-table_or_subquery__5 ::= join_clause ;
-table_or_subquery__9 ::= ;
-table_or_subquery__10 ::= ;
-table_or_subquery__10 ::= K_AS ;
-table_or_subquery__9 ::= table_or_subquery__10 table_alias ;
-table_or_subquery ::= '(' table_or_subquery__5 ')' table_or_subquery__9 ;
-table_or_subquery__11 ::= ;
-table_or_subquery__12 ::= ;
-table_or_subquery__12 ::= K_AS ;
-table_or_subquery__11 ::= table_or_subquery__12 table_alias ;
-table_or_subquery ::= '(' select_stmt ')' table_or_subquery__11 ;
-join_clause__1 ::= join_clause__2 ;
-join_clause__2 ::= ;
-join_clause__2 ::= join_clause__3 join_clause__2 ;
-join_clause__3 ::= join_operator table_or_subquery join_constraint ;
-join_clause ::= table_or_subquery join_clause__1 ;
-join_operator ::= ',' ;
-join_operator__1 ::= ;
-join_operator__1 ::= K_NATURAL ;
-join_operator__2 ::= ;
-join_operator__3 ::= ;
-join_operator__3 ::= K_OUTER ;
-join_operator__2 ::= K_LEFT join_operator__3 ;
-join_operator__2 ::= K_INNER ;
-join_operator__2 ::= K_CROSS ;
-join_operator ::= join_operator__1 join_operator__2 K_JOIN ;
-join_constraint ::= ;
-join_constraint ::= K_ON expr ;
-join_constraint__1 ::= join_constraint__2 ;
-join_constraint__2 ::= ;
-join_constraint__2 ::= join_constraint__3 join_constraint__2 ;
-join_constraint__3 ::= ',' column_name ;
-join_constraint ::= K_USING '(' column_name join_constraint__1 ')' ;
-select_core__1 ::= ;
-select_core__1 ::= K_DISTINCT ;
-select_core__1 ::= K_ALL ;
-select_core__2 ::= select_core__3 ;
-select_core__3 ::= ;
-select_core__3 ::= select_core__4 select_core__3 ;
-select_core__4 ::= ',' result_column ;
-select_core__5 ::= ;
-select_core__7 ::= select_core__8 ;
-select_core__8 ::= ;
-select_core__8 ::= select_core__9 select_core__8 ;
-select_core__9 ::= ',' table_or_subquery ;
-select_core__6 ::= table_or_subquery select_core__7 ;
-select_core__6 ::= join_clause ;
-select_core__5 ::= K_FROM select_core__6 ;
-select_core__10 ::= ;
-select_core__10 ::= K_WHERE expr ;
-select_core__11 ::= ;
-select_core__12 ::= select_core__13 ;
-select_core__13 ::= ;
-select_core__13 ::= select_core__14 select_core__13 ;
-select_core__14 ::= ',' expr ;
-select_core__15 ::= ;
-select_core__15 ::= K_HAVING expr ;
-select_core__11 ::= K_GROUP K_BY expr select_core__12 select_core__15 ;
-select_core ::= K_SELECT select_core__1 result_column select_core__2 select_core__5 select_core__10 select_core__11 ;
-select_core__16 ::= select_core__17 ;
-select_core__17 ::= ;
-select_core__17 ::= select_core__18 select_core__17 ;
-select_core__18 ::= ',' expr ;
-select_core__19 ::= select_core__20 ;
-select_core__20 ::= ;
-select_core__20 ::= select_core__21 select_core__20 ;
-select_core__22 ::= select_core__23 ;
-select_core__23 ::= ;
-select_core__23 ::= select_core__24 select_core__23 ;
-select_core__24 ::= ',' expr ;
-select_core__21 ::= ',' '(' expr select_core__22 ')' ;
-select_core ::= K_VALUES '(' expr select_core__16 ')' select_core__19 ;
-compound_operator ::= K_UNION ;
-compound_operator ::= K_UNION K_ALL ;
-compound_operator ::= K_INTERSECT ;
-compound_operator ::= K_EXCEPT ;
-cte_table_name__1 ::= ;
-cte_table_name__2 ::= cte_table_name__3 ;
-cte_table_name__3 ::= ;
-cte_table_name__3 ::= cte_table_name__4 cte_table_name__3 ;
-cte_table_name__4 ::= ',' column_name ;
-cte_table_name__1 ::= '(' column_name cte_table_name__2 ')' ;
-cte_table_name ::= table_name cte_table_name__1 ;
-signed_number__1 ::= ;
-signed_number__1 ::= '+' ;
-signed_number__1 ::= '-' ;
-signed_number ::= signed_number__1 NUMERIC_LITERAL ;
-literal_value ::= NUMERIC_LITERAL ;
-literal_value ::= STRING_LITERAL ;
-literal_value ::= BLOB_LITERAL ;
-literal_value ::= K_NULL ;
-literal_value ::= K_CURRENT_TIME ;
-literal_value ::= K_CURRENT_DATE ;
-literal_value ::= K_CURRENT_TIMESTAMP ;
-unary_operator ::= '-' ;
-unary_operator ::= '+' ;
-unary_operator ::= '~' ;
-unary_operator ::= K_NOT ;
-error_message ::= STRING_LITERAL ;
-module_argument ::= expr ;
-module_argument ::= column_def ;
-column_alias ::= IDENTIFIER ;
-column_alias ::= STRING_LITERAL ;
-keyword ::= K_ABORT ;
-keyword ::= K_ACTION ;
-keyword ::= K_ADD ;
-keyword ::= K_AFTER ;
-keyword ::= K_ALL ;
-keyword ::= K_ALTER ;
-keyword ::= K_ANALYZE ;
-keyword ::= K_AND ;
-keyword ::= K_AS ;
-keyword ::= K_ASC ;
-keyword ::= K_ATTACH ;
-keyword ::= K_AUTOINCREMENT ;
-keyword ::= K_BEFORE ;
-keyword ::= K_BEGIN ;
-keyword ::= K_BETWEEN ;
-keyword ::= K_BY ;
-keyword ::= K_CASCADE ;
-keyword ::= K_CASE ;
-keyword ::= K_CAST ;
-keyword ::= K_CHECK ;
-keyword ::= K_COLLATE ;
-keyword ::= K_COLUMN ;
-keyword ::= K_COMMIT ;
-keyword ::= K_CONFLICT ;
-keyword ::= K_CONSTRAINT ;
-keyword ::= K_CREATE ;
-keyword ::= K_CROSS ;
-keyword ::= K_CURRENT_DATE ;
-keyword ::= K_CURRENT_TIME ;
-keyword ::= K_CURRENT_TIMESTAMP ;
-keyword ::= K_DATABASE ;
-keyword ::= K_DEFAULT ;
-keyword ::= K_DEFERRABLE ;
-keyword ::= K_DEFERRED ;
-keyword ::= K_DELETE ;
-keyword ::= K_DESC ;
-keyword ::= K_DETACH ;
-keyword ::= K_DISTINCT ;
-keyword ::= K_DROP ;
-keyword ::= K_EACH ;
-keyword ::= K_ELSE ;
-keyword ::= K_END ;
-keyword ::= K_ESCAPE ;
-keyword ::= K_EXCEPT ;
-keyword ::= K_EXCLUSIVE ;
-keyword ::= K_EXISTS ;
-keyword ::= K_EXPLAIN ;
-keyword ::= K_FAIL ;
-keyword ::= K_FOR ;
-keyword ::= K_FOREIGN ;
-keyword ::= K_FROM ;
-keyword ::= K_FULL ;
-keyword ::= K_GLOB ;
-keyword ::= K_GROUP ;
-keyword ::= K_HAVING ;
-keyword ::= K_IF ;
-keyword ::= K_IGNORE ;
-keyword ::= K_IMMEDIATE ;
-keyword ::= K_IN ;
-keyword ::= K_INDEX ;
-keyword ::= K_INDEXED ;
-keyword ::= K_INITIALLY ;
-keyword ::= K_INNER ;
-keyword ::= K_INSERT ;
-keyword ::= K_INSTEAD ;
-keyword ::= K_INTERSECT ;
-keyword ::= K_INTO ;
-keyword ::= K_IS ;
-keyword ::= K_ISNULL ;
-keyword ::= K_JOIN ;
-keyword ::= K_KEY ;
-keyword ::= K_LEFT ;
-keyword ::= K_LIKE ;
-keyword ::= K_LIMIT ;
-keyword ::= K_MATCH ;
-keyword ::= K_NATURAL ;
-keyword ::= K_NO ;
-keyword ::= K_NOT ;
-keyword ::= K_NOTNULL ;
-keyword ::= K_NULL ;
-keyword ::= K_OF ;
-keyword ::= K_OFFSET ;
-keyword ::= K_ON ;
-keyword ::= K_OR ;
-keyword ::= K_ORDER ;
-keyword ::= K_OUTER ;
-keyword ::= K_PLAN ;
-keyword ::= K_PRAGMA ;
-keyword ::= K_PRIMARY ;
-keyword ::= K_QUERY ;
-keyword ::= K_RAISE ;
-keyword ::= K_RECURSIVE ;
-keyword ::= K_REFERENCES ;
-keyword ::= K_REGEXP ;
-keyword ::= K_REINDEX ;
-keyword ::= K_RELEASE ;
-keyword ::= K_RENAME ;
-keyword ::= K_REPLACE ;
-keyword ::= K_RESTRICT ;
-keyword ::= K_RIGHT ;
-keyword ::= K_ROLLBACK ;
-keyword ::= K_ROW ;
-keyword ::= K_SAVEPOINT ;
-keyword ::= K_SELECT ;
-keyword ::= K_SET ;
-keyword ::= K_TABLE ;
-keyword ::= K_TEMP ;
-keyword ::= K_TEMPORARY ;
-keyword ::= K_THEN ;
-keyword ::= K_TO ;
-keyword ::= K_TRANSACTION ;
-keyword ::= K_TRIGGER ;
-keyword ::= K_UNION ;
-keyword ::= K_UNIQUE ;
-keyword ::= K_UPDATE ;
-keyword ::= K_USING ;
-keyword ::= K_VACUUM ;
-keyword ::= K_VALUES ;
-keyword ::= K_VIEW ;
-keyword ::= K_VIRTUAL ;
-keyword ::= K_WHEN ;
-keyword ::= K_WHERE ;
-keyword ::= K_WITH ;
-keyword ::= K_WITHOUT ;
-name ::= any_name ;
-function_name ::= any_name ;
-database_name ::= any_name ;
-table_name ::= any_name ;
-table_or_index_name ::= any_name ;
-new_table_name ::= any_name ;
-column_name ::= any_name ;
-collation_name ::= any_name ;
-foreign_table ::= any_name ;
-index_name ::= any_name ;
-trigger_name ::= any_name ;
-view_name ::= any_name ;
-module_name ::= any_name ;
-pragma_name ::= any_name ;
-savepoint_name ::= any_name ;
-table_alias ::= any_name ;
-transaction_name ::= any_name ;
-any_name ::= IDENTIFIER ;
-any_name ::= keyword ;
-any_name ::= STRING_LITERAL ;
-any_name ::= '(' any_name ')' ;
-SCOL ::= ';' ;
-DOT ::= '.' ;
-OPEN_PAR ::= '(' ;
-CLOSE_PAR ::= ')' ;
-COMMA ::= ',' ;
-ASSIGN ::= '=' ;
-STAR ::= '*' ;
-PLUS ::= '+' ;
-MINUS ::= '-' ;
-TILDE ::= '~' ;
-PIPE2 ::= '||' ;
-DIV ::= '/' ;
-MOD ::= '%' ;
-LT2 ::= '<<' ;
-GT2 ::= '>>' ;
-AMP ::= '&' ;
-PIPE ::= '|' ;
-LT ::= '<' ;
-LT_EQ ::= '<=' ;
-GT ::= '>' ;
-GT_EQ ::= '>=' ;
-EQ ::= '==' ;
-NOT_EQ1 ::= '!=' ;
-NOT_EQ2 ::= '<>' ;
-K_ABORT ::= A B O R T ;
-K_ACTION ::= A C T I O N ;
-K_ADD ::= A D D ;
-K_AFTER ::= A F T E R ;
-K_ALL ::= A L L ;
-K_ALTER ::= A L T E R ;
-K_ANALYZE ::= A N A L Y Z E ;
-K_AND ::= A N D ;
-K_AS ::= A S ;
-K_ASC ::= A S C ;
-K_ATTACH ::= A T T A C H ;
-K_AUTOINCREMENT ::= A U T O I N C R E M E N T ;
-K_BEFORE ::= B E F O R E ;
-K_BEGIN ::= B E G I N ;
-K_BETWEEN ::= B E T W E E N ;
-K_BY ::= B Y ;
-K_CASCADE ::= C A S C A D E ;
-K_CASE ::= C A S E ;
-K_CAST ::= C A S T ;
-K_CHECK ::= C H E C K ;
-K_COLLATE ::= C O L L A T E ;
-K_COLUMN ::= C O L U M N ;
-K_COMMIT ::= C O M M I T ;
-K_CONFLICT ::= C O N F L I C T ;
-K_CONSTRAINT ::= C O N S T R A I N T ;
-K_CREATE ::= C R E A T E ;
-K_CROSS ::= C R O S S ;
-K_CURRENT_DATE ::= C U R R E N T '_' D A T E ;
-K_CURRENT_TIME ::= C U R R E N T '_' T I M E ;
-K_CURRENT_TIMESTAMP ::= C U R R E N T '_' T I M E S T A M P ;
-K_DATABASE ::= D A T A B A S E ;
-K_DEFAULT ::= D E F A U L T ;
-K_DEFERRABLE ::= D E F E R R A B L E ;
-K_DEFERRED ::= D E F E R R E D ;
-K_DELETE ::= D E L E T E ;
-K_DESC ::= D E S C ;
-K_DETACH ::= D E T A C H ;
-K_DISTINCT ::= D I S T I N C T ;
-K_DROP ::= D R O P ;
-K_EACH ::= E A C H ;
-K_ELSE ::= E L S E ;
-K_END ::= E N D ;
-K_ESCAPE ::= E S C A P E ;
-K_EXCEPT ::= E X C E P T ;
-K_EXCLUSIVE ::= E X C L U S I V E ;
-K_EXISTS ::= E X I S T S ;
-K_EXPLAIN ::= E X P L A I N ;
-K_FAIL ::= F A I L ;
-K_FOR ::= F O R ;
-K_FOREIGN ::= F O R E I G N ;
-K_FROM ::= F R O M ;
-K_FULL ::= F U L L ;
-K_GLOB ::= G L O B ;
-K_GROUP ::= G R O U P ;
-K_HAVING ::= H A V I N G ;
-K_IF ::= I F ;
-K_IGNORE ::= I G N O R E ;
-K_IMMEDIATE ::= I M M E D I A T E ;
-K_IN ::= I N ;
-K_INDEX ::= I N D E X ;
-K_INDEXED ::= I N D E X E D ;
-K_INITIALLY ::= I N I T I A L L Y ;
-K_INNER ::= I N N E R ;
-K_INSERT ::= I N S E R T ;
-K_INSTEAD ::= I N S T E A D ;
-K_INTERSECT ::= I N T E R S E C T ;
-K_INTO ::= I N T O ;
-K_IS ::= I S ;
-K_ISNULL ::= I S N U L L ;
-K_JOIN ::= J O I N ;
-K_KEY ::= K E Y ;
-K_LEFT ::= L E F T ;
-K_LIKE ::= L I K E ;
-K_LIMIT ::= L I M I T ;
-K_MATCH ::= M A T C H ;
-K_NATURAL ::= N A T U R A L ;
-K_NO ::= N O ;
-K_NOT ::= N O T ;
-K_NOTNULL ::= N O T N U L L ;
-K_NULL ::= N U L L ;
-K_OF ::= O F ;
-K_OFFSET ::= O F F S E T ;
-K_ON ::= O N ;
-K_OR ::= O R ;
-K_ORDER ::= O R D E R ;
-K_OUTER ::= O U T E R ;
-K_PLAN ::= P L A N ;
-K_PRAGMA ::= P R A G M A ;
-K_PRIMARY ::= P R I M A R Y ;
-K_QUERY ::= Q U E R Y ;
-K_RAISE ::= R A I S E ;
-K_RECURSIVE ::= R E C U R S I V E ;
-K_REFERENCES ::= R E F E R E N C E S ;
-K_REGEXP ::= R E G E X P ;
-K_REINDEX ::= R E I N D E X ;
-K_RELEASE ::= R E L E A S E ;
-K_RENAME ::= R E N A M E ;
-K_REPLACE ::= R E P L A C E ;
-K_RESTRICT ::= R E S T R I C T ;
-K_RIGHT ::= R I G H T ;
-K_ROLLBACK ::= R O L L B A C K ;
-K_ROW ::= R O W ;
-K_SAVEPOINT ::= S A V E P O I N T ;
-K_SELECT ::= S E L E C T ;
-K_SET ::= S E T ;
-K_TABLE ::= T A B L E ;
-K_TEMP ::= T E M P ;
-K_TEMPORARY ::= T E M P O R A R Y ;
-K_THEN ::= T H E N ;
-K_TO ::= T O ;
-K_TRANSACTION ::= T R A N S A C T I O N ;
-K_TRIGGER ::= T R I G G E R ;
-K_UNION ::= U N I O N ;
-K_UNIQUE ::= U N I Q U E ;
-K_UPDATE ::= U P D A T E ;
-K_USING ::= U S I N G ;
-K_VACUUM ::= V A C U U M ;
-K_VALUES ::= V A L U E S ;
-K_VIEW ::= V I E W ;
-K_VIRTUAL ::= V I R T U A L ;
-K_WHEN ::= W H E N ;
-K_WHERE ::= W H E R E ;
-K_WITH ::= W I T H ;
-K_WITHOUT ::= W I T H O U T ;
-IDENTIFIER__1 ::= IDENTIFIER__2 ;
-IDENTIFIER__2 ::= ;
-IDENTIFIER__2 ::= IDENTIFIER__3 IDENTIFIER__2 ;
-IDENTIFIER__3 ::= ' ' ;
-IDENTIFIER__3 ::= '!' ;
-IDENTIFIER__3 ::= '#' ;
-IDENTIFIER__3 ::= '$' ;
-IDENTIFIER__3 ::= '%' ;
-IDENTIFIER__3 ::= '&' ;
-IDENTIFIER__3 ::= '\'' ;
-IDENTIFIER__3 ::= '(' ;
-IDENTIFIER__3 ::= ')' ;
-IDENTIFIER__3 ::= '*' ;
-IDENTIFIER__3 ::= '+' ;
-IDENTIFIER__3 ::= ',' ;
-IDENTIFIER__3 ::= '-' ;
-IDENTIFIER__3 ::= '.' ;
-IDENTIFIER__3 ::= '/' ;
-IDENTIFIER__3 ::= '0' ;
-IDENTIFIER__3 ::= '1' ;
-IDENTIFIER__3 ::= '2' ;
-IDENTIFIER__3 ::= '3' ;
-IDENTIFIER__3 ::= '4' ;
-IDENTIFIER__3 ::= '5' ;
-IDENTIFIER__3 ::= '6' ;
-IDENTIFIER__3 ::= '7' ;
-IDENTIFIER__3 ::= '8' ;
-IDENTIFIER__3 ::= '9' ;
-IDENTIFIER__3 ::= ':' ;
-IDENTIFIER__3 ::= ';' ;
-IDENTIFIER__3 ::= '<' ;
-IDENTIFIER__3 ::= '=' ;
-IDENTIFIER__3 ::= '>' ;
-IDENTIFIER__3 ::= '?' ;
-IDENTIFIER__3 ::= '@' ;
-IDENTIFIER__3 ::= 'A' ;
-IDENTIFIER__3 ::= 'B' ;
-IDENTIFIER__3 ::= 'C' ;
-IDENTIFIER__3 ::= 'D' ;
-IDENTIFIER__3 ::= 'E' ;
-IDENTIFIER__3 ::= 'F' ;
-IDENTIFIER__3 ::= 'G' ;
-IDENTIFIER__3 ::= 'H' ;
-IDENTIFIER__3 ::= 'I' ;
-IDENTIFIER__3 ::= 'J' ;
-IDENTIFIER__3 ::= 'K' ;
-IDENTIFIER__3 ::= 'L' ;
-IDENTIFIER__3 ::= 'M' ;
-IDENTIFIER__3 ::= 'N' ;
-IDENTIFIER__3 ::= 'O' ;
-IDENTIFIER__3 ::= 'P' ;
-IDENTIFIER__3 ::= 'Q' ;
-IDENTIFIER__3 ::= 'R' ;
-IDENTIFIER__3 ::= 'S' ;
-IDENTIFIER__3 ::= 'T' ;
-IDENTIFIER__3 ::= 'U' ;
-IDENTIFIER__3 ::= 'V' ;
-IDENTIFIER__3 ::= 'W' ;
-IDENTIFIER__3 ::= 'X' ;
-IDENTIFIER__3 ::= 'Y' ;
-IDENTIFIER__3 ::= 'Z' ;
-IDENTIFIER__3 ::= '[' ;
-IDENTIFIER__3 ::= '\\' ;
-IDENTIFIER__3 ::= ']' ;
-IDENTIFIER__3 ::= '^' ;
-IDENTIFIER__3 ::= '_' ;
-IDENTIFIER__3 ::= '`' ;
-IDENTIFIER__3 ::= 'a' ;
-IDENTIFIER__3 ::= 'b' ;
-IDENTIFIER__3 ::= 'c' ;
-IDENTIFIER__3 ::= 'd' ;
-IDENTIFIER__3 ::= 'e' ;
-IDENTIFIER__3 ::= 'f' ;
-IDENTIFIER__3 ::= 'g' ;
-IDENTIFIER__3 ::= 'h' ;
-IDENTIFIER__3 ::= 'i' ;
-IDENTIFIER__3 ::= 'j' ;
-IDENTIFIER__3 ::= 'k' ;
-IDENTIFIER__3 ::= 'l' ;
-IDENTIFIER__3 ::= 'm' ;
-IDENTIFIER__3 ::= 'n' ;
-IDENTIFIER__3 ::= 'o' ;
-IDENTIFIER__3 ::= 'p' ;
-IDENTIFIER__3 ::= 'q' ;
-IDENTIFIER__3 ::= 'r' ;
-IDENTIFIER__3 ::= 's' ;
-IDENTIFIER__3 ::= 't' ;
-IDENTIFIER__3 ::= 'u' ;
-IDENTIFIER__3 ::= 'v' ;
-IDENTIFIER__3 ::= 'w' ;
-IDENTIFIER__3 ::= 'x' ;
-IDENTIFIER__3 ::= 'y' ;
-IDENTIFIER__3 ::= 'z' ;
-IDENTIFIER__3 ::= '{' ;
-IDENTIFIER__3 ::= '|' ;
-IDENTIFIER__3 ::= '}' ;
-IDENTIFIER__3 ::= '~' ;
-IDENTIFIER__3 ::= '\"\"' ;
-IDENTIFIER ::= '\"' IDENTIFIER__1 '\"' ;
-IDENTIFIER__4 ::= IDENTIFIER__5 ;
-IDENTIFIER__5 ::= ;
-IDENTIFIER__5 ::= IDENTIFIER__6 IDENTIFIER__5 ;
-IDENTIFIER__6 ::= ' ' ;
-IDENTIFIER__6 ::= '!' ;
-IDENTIFIER__6 ::= '\"' ;
-IDENTIFIER__6 ::= '#' ;
-IDENTIFIER__6 ::= '$' ;
-IDENTIFIER__6 ::= '%' ;
-IDENTIFIER__6 ::= '&' ;
-IDENTIFIER__6 ::= '\'' ;
-IDENTIFIER__6 ::= '(' ;
-IDENTIFIER__6 ::= ')' ;
-IDENTIFIER__6 ::= '*' ;
-IDENTIFIER__6 ::= '+' ;
-IDENTIFIER__6 ::= ',' ;
-IDENTIFIER__6 ::= '-' ;
-IDENTIFIER__6 ::= '.' ;
-IDENTIFIER__6 ::= '/' ;
-IDENTIFIER__6 ::= '0' ;
-IDENTIFIER__6 ::= '1' ;
-IDENTIFIER__6 ::= '2' ;
-IDENTIFIER__6 ::= '3' ;
-IDENTIFIER__6 ::= '4' ;
-IDENTIFIER__6 ::= '5' ;
-IDENTIFIER__6 ::= '6' ;
-IDENTIFIER__6 ::= '7' ;
-IDENTIFIER__6 ::= '8' ;
-IDENTIFIER__6 ::= '9' ;
-IDENTIFIER__6 ::= ':' ;
-IDENTIFIER__6 ::= ';' ;
-IDENTIFIER__6 ::= '<' ;
-IDENTIFIER__6 ::= '=' ;
-IDENTIFIER__6 ::= '>' ;
-IDENTIFIER__6 ::= '?' ;
-IDENTIFIER__6 ::= '@' ;
-IDENTIFIER__6 ::= 'A' ;
-IDENTIFIER__6 ::= 'B' ;
-IDENTIFIER__6 ::= 'C' ;
-IDENTIFIER__6 ::= 'D' ;
-IDENTIFIER__6 ::= 'E' ;
-IDENTIFIER__6 ::= 'F' ;
-IDENTIFIER__6 ::= 'G' ;
-IDENTIFIER__6 ::= 'H' ;
-IDENTIFIER__6 ::= 'I' ;
-IDENTIFIER__6 ::= 'J' ;
-IDENTIFIER__6 ::= 'K' ;
-IDENTIFIER__6 ::= 'L' ;
-IDENTIFIER__6 ::= 'M' ;
-IDENTIFIER__6 ::= 'N' ;
-IDENTIFIER__6 ::= 'O' ;
-IDENTIFIER__6 ::= 'P' ;
-IDENTIFIER__6 ::= 'Q' ;
-IDENTIFIER__6 ::= 'R' ;
-IDENTIFIER__6 ::= 'S' ;
-IDENTIFIER__6 ::= 'T' ;
-IDENTIFIER__6 ::= 'U' ;
-IDENTIFIER__6 ::= 'V' ;
-IDENTIFIER__6 ::= 'W' ;
-IDENTIFIER__6 ::= 'X' ;
-IDENTIFIER__6 ::= 'Y' ;
-IDENTIFIER__6 ::= 'Z' ;
-IDENTIFIER__6 ::= '[' ;
-IDENTIFIER__6 ::= '\\' ;
-IDENTIFIER__6 ::= ']' ;
-IDENTIFIER__6 ::= '^' ;
-IDENTIFIER__6 ::= '_' ;
-IDENTIFIER__6 ::= 'a' ;
-IDENTIFIER__6 ::= 'b' ;
-IDENTIFIER__6 ::= 'c' ;
-IDENTIFIER__6 ::= 'd' ;
-IDENTIFIER__6 ::= 'e' ;
-IDENTIFIER__6 ::= 'f' ;
-IDENTIFIER__6 ::= 'g' ;
-IDENTIFIER__6 ::= 'h' ;
-IDENTIFIER__6 ::= 'i' ;
-IDENTIFIER__6 ::= 'j' ;
-IDENTIFIER__6 ::= 'k' ;
-IDENTIFIER__6 ::= 'l' ;
-IDENTIFIER__6 ::= 'm' ;
-IDENTIFIER__6 ::= 'n' ;
-IDENTIFIER__6 ::= 'o' ;
-IDENTIFIER__6 ::= 'p' ;
-IDENTIFIER__6 ::= 'q' ;
-IDENTIFIER__6 ::= 'r' ;
-IDENTIFIER__6 ::= 's' ;
-IDENTIFIER__6 ::= 't' ;
-IDENTIFIER__6 ::= 'u' ;
-IDENTIFIER__6 ::= 'v' ;
-IDENTIFIER__6 ::= 'w' ;
-IDENTIFIER__6 ::= 'x' ;
-IDENTIFIER__6 ::= 'y' ;
-IDENTIFIER__6 ::= 'z' ;
-IDENTIFIER__6 ::= '{' ;
-IDENTIFIER__6 ::= '|' ;
-IDENTIFIER__6 ::= '}' ;
-IDENTIFIER__6 ::= '~' ;
-IDENTIFIER__6 ::= '``' ;
-IDENTIFIER ::= '`' IDENTIFIER__4 '`' ;
-IDENTIFIER__7 ::= IDENTIFIER__8 ;
-IDENTIFIER__8 ::= ;
-IDENTIFIER__8 ::= IDENTIFIER__9 IDENTIFIER__8 ;
-IDENTIFIER__9 ::= ' ' ;
-IDENTIFIER__9 ::= '!' ;
-IDENTIFIER__9 ::= '\"' ;
-IDENTIFIER__9 ::= '#' ;
-IDENTIFIER__9 ::= '$' ;
-IDENTIFIER__9 ::= '%' ;
-IDENTIFIER__9 ::= '&' ;
-IDENTIFIER__9 ::= '\'' ;
-IDENTIFIER__9 ::= '(' ;
-IDENTIFIER__9 ::= ')' ;
-IDENTIFIER__9 ::= '*' ;
-IDENTIFIER__9 ::= '+' ;
-IDENTIFIER__9 ::= ',' ;
-IDENTIFIER__9 ::= '-' ;
-IDENTIFIER__9 ::= '.' ;
-IDENTIFIER__9 ::= '/' ;
-IDENTIFIER__9 ::= '0' ;
-IDENTIFIER__9 ::= '1' ;
-IDENTIFIER__9 ::= '2' ;
-IDENTIFIER__9 ::= '3' ;
-IDENTIFIER__9 ::= '4' ;
-IDENTIFIER__9 ::= '5' ;
-IDENTIFIER__9 ::= '6' ;
-IDENTIFIER__9 ::= '7' ;
-IDENTIFIER__9 ::= '8' ;
-IDENTIFIER__9 ::= '9' ;
-IDENTIFIER__9 ::= ':' ;
-IDENTIFIER__9 ::= ';' ;
-IDENTIFIER__9 ::= '<' ;
-IDENTIFIER__9 ::= '=' ;
-IDENTIFIER__9 ::= '>' ;
-IDENTIFIER__9 ::= '?' ;
-IDENTIFIER__9 ::= '@' ;
-IDENTIFIER__9 ::= 'A' ;
-IDENTIFIER__9 ::= 'B' ;
-IDENTIFIER__9 ::= 'C' ;
-IDENTIFIER__9 ::= 'D' ;
-IDENTIFIER__9 ::= 'E' ;
-IDENTIFIER__9 ::= 'F' ;
-IDENTIFIER__9 ::= 'G' ;
-IDENTIFIER__9 ::= 'H' ;
-IDENTIFIER__9 ::= 'I' ;
-IDENTIFIER__9 ::= 'J' ;
-IDENTIFIER__9 ::= 'K' ;
-IDENTIFIER__9 ::= 'L' ;
-IDENTIFIER__9 ::= 'M' ;
-IDENTIFIER__9 ::= 'N' ;
-IDENTIFIER__9 ::= 'O' ;
-IDENTIFIER__9 ::= 'P' ;
-IDENTIFIER__9 ::= 'Q' ;
-IDENTIFIER__9 ::= 'R' ;
-IDENTIFIER__9 ::= 'S' ;
-IDENTIFIER__9 ::= 'T' ;
-IDENTIFIER__9 ::= 'U' ;
-IDENTIFIER__9 ::= 'V' ;
-IDENTIFIER__9 ::= 'W' ;
-IDENTIFIER__9 ::= 'X' ;
-IDENTIFIER__9 ::= 'Y' ;
-IDENTIFIER__9 ::= 'Z' ;
-IDENTIFIER__9 ::= '[' ;
-IDENTIFIER__9 ::= '\\' ;
-IDENTIFIER__9 ::= '^' ;
-IDENTIFIER__9 ::= '_' ;
-IDENTIFIER__9 ::= '`' ;
-IDENTIFIER__9 ::= 'a' ;
-IDENTIFIER__9 ::= 'b' ;
-IDENTIFIER__9 ::= 'c' ;
-IDENTIFIER__9 ::= 'd' ;
-IDENTIFIER__9 ::= 'e' ;
-IDENTIFIER__9 ::= 'f' ;
-IDENTIFIER__9 ::= 'g' ;
-IDENTIFIER__9 ::= 'h' ;
-IDENTIFIER__9 ::= 'i' ;
-IDENTIFIER__9 ::= 'j' ;
-IDENTIFIER__9 ::= 'k' ;
-IDENTIFIER__9 ::= 'l' ;
-IDENTIFIER__9 ::= 'm' ;
-IDENTIFIER__9 ::= 'n' ;
-IDENTIFIER__9 ::= 'o' ;
-IDENTIFIER__9 ::= 'p' ;
-IDENTIFIER__9 ::= 'q' ;
-IDENTIFIER__9 ::= 'r' ;
-IDENTIFIER__9 ::= 's' ;
-IDENTIFIER__9 ::= 't' ;
-IDENTIFIER__9 ::= 'u' ;
-IDENTIFIER__9 ::= 'v' ;
-IDENTIFIER__9 ::= 'w' ;
-IDENTIFIER__9 ::= 'x' ;
-IDENTIFIER__9 ::= 'y' ;
-IDENTIFIER__9 ::= 'z' ;
-IDENTIFIER__9 ::= '{' ;
-IDENTIFIER__9 ::= '|' ;
-IDENTIFIER__9 ::= '}' ;
-IDENTIFIER__9 ::= '~' ;
-IDENTIFIER ::= '[' IDENTIFIER__7 ']' ;
-IDENTIFIER__10 ::= 'a' ;
-IDENTIFIER__10 ::= 'b' ;
-IDENTIFIER__10 ::= 'c' ;
-IDENTIFIER__10 ::= 'd' ;
-IDENTIFIER__10 ::= 'e' ;
-IDENTIFIER__10 ::= 'f' ;
-IDENTIFIER__10 ::= 'g' ;
-IDENTIFIER__10 ::= 'h' ;
-IDENTIFIER__10 ::= 'i' ;
-IDENTIFIER__10 ::= 'j' ;
-IDENTIFIER__10 ::= 'k' ;
-IDENTIFIER__10 ::= 'l' ;
-IDENTIFIER__10 ::= 'm' ;
-IDENTIFIER__10 ::= 'n' ;
-IDENTIFIER__10 ::= 'o' ;
-IDENTIFIER__10 ::= 'p' ;
-IDENTIFIER__10 ::= 'q' ;
-IDENTIFIER__10 ::= 'r' ;
-IDENTIFIER__10 ::= 's' ;
-IDENTIFIER__10 ::= 't' ;
-IDENTIFIER__10 ::= 'u' ;
-IDENTIFIER__10 ::= 'v' ;
-IDENTIFIER__10 ::= 'w' ;
-IDENTIFIER__10 ::= 'x' ;
-IDENTIFIER__10 ::= 'y' ;
-IDENTIFIER__10 ::= 'z' ;
-IDENTIFIER__10 ::= 'A' ;
-IDENTIFIER__10 ::= 'B' ;
-IDENTIFIER__10 ::= 'C' ;
-IDENTIFIER__10 ::= 'D' ;
-IDENTIFIER__10 ::= 'E' ;
-IDENTIFIER__10 ::= 'F' ;
-IDENTIFIER__10 ::= 'G' ;
-IDENTIFIER__10 ::= 'H' ;
-IDENTIFIER__10 ::= 'I' ;
-IDENTIFIER__10 ::= 'J' ;
-IDENTIFIER__10 ::= 'K' ;
-IDENTIFIER__10 ::= 'L' ;
-IDENTIFIER__10 ::= 'M' ;
-IDENTIFIER__10 ::= 'N' ;
-IDENTIFIER__10 ::= 'O' ;
-IDENTIFIER__10 ::= 'P' ;
-IDENTIFIER__10 ::= 'Q' ;
-IDENTIFIER__10 ::= 'R' ;
-IDENTIFIER__10 ::= 'S' ;
-IDENTIFIER__10 ::= 'T' ;
-IDENTIFIER__10 ::= 'U' ;
-IDENTIFIER__10 ::= 'V' ;
-IDENTIFIER__10 ::= 'W' ;
-IDENTIFIER__10 ::= 'X' ;
-IDENTIFIER__10 ::= 'Y' ;
-IDENTIFIER__10 ::= 'Z' ;
-IDENTIFIER__10 ::= '_' ;
-IDENTIFIER__11 ::= IDENTIFIER__12 ;
-IDENTIFIER__12 ::= ;
-IDENTIFIER__12 ::= IDENTIFIER__13 IDENTIFIER__12 ;
-IDENTIFIER__13 ::= 'a' ;
-IDENTIFIER__13 ::= 'b' ;
-IDENTIFIER__13 ::= 'c' ;
-IDENTIFIER__13 ::= 'd' ;
-IDENTIFIER__13 ::= 'e' ;
-IDENTIFIER__13 ::= 'f' ;
-IDENTIFIER__13 ::= 'g' ;
-IDENTIFIER__13 ::= 'h' ;
-IDENTIFIER__13 ::= 'i' ;
-IDENTIFIER__13 ::= 'j' ;
-IDENTIFIER__13 ::= 'k' ;
-IDENTIFIER__13 ::= 'l' ;
-IDENTIFIER__13 ::= 'm' ;
-IDENTIFIER__13 ::= 'n' ;
-IDENTIFIER__13 ::= 'o' ;
-IDENTIFIER__13 ::= 'p' ;
-IDENTIFIER__13 ::= 'q' ;
-IDENTIFIER__13 ::= 'r' ;
-IDENTIFIER__13 ::= 's' ;
-IDENTIFIER__13 ::= 't' ;
-IDENTIFIER__13 ::= 'u' ;
-IDENTIFIER__13 ::= 'v' ;
-IDENTIFIER__13 ::= 'w' ;
-IDENTIFIER__13 ::= 'x' ;
-IDENTIFIER__13 ::= 'y' ;
-IDENTIFIER__13 ::= 'z' ;
-IDENTIFIER__13 ::= 'A' ;
-IDENTIFIER__13 ::= 'B' ;
-IDENTIFIER__13 ::= 'C' ;
-IDENTIFIER__13 ::= 'D' ;
-IDENTIFIER__13 ::= 'E' ;
-IDENTIFIER__13 ::= 'F' ;
-IDENTIFIER__13 ::= 'G' ;
-IDENTIFIER__13 ::= 'H' ;
-IDENTIFIER__13 ::= 'I' ;
-IDENTIFIER__13 ::= 'J' ;
-IDENTIFIER__13 ::= 'K' ;
-IDENTIFIER__13 ::= 'L' ;
-IDENTIFIER__13 ::= 'M' ;
-IDENTIFIER__13 ::= 'N' ;
-IDENTIFIER__13 ::= 'O' ;
-IDENTIFIER__13 ::= 'P' ;
-IDENTIFIER__13 ::= 'Q' ;
-IDENTIFIER__13 ::= 'R' ;
-IDENTIFIER__13 ::= 'S' ;
-IDENTIFIER__13 ::= 'T' ;
-IDENTIFIER__13 ::= 'U' ;
-IDENTIFIER__13 ::= 'V' ;
-IDENTIFIER__13 ::= 'W' ;
-IDENTIFIER__13 ::= 'X' ;
-IDENTIFIER__13 ::= 'Y' ;
-IDENTIFIER__13 ::= 'Z' ;
-IDENTIFIER__13 ::= '_' ;
-IDENTIFIER__13 ::= '0' ;
-IDENTIFIER__13 ::= '1' ;
-IDENTIFIER__13 ::= '2' ;
-IDENTIFIER__13 ::= '3' ;
-IDENTIFIER__13 ::= '4' ;
-IDENTIFIER__13 ::= '5' ;
-IDENTIFIER__13 ::= '6' ;
-IDENTIFIER__13 ::= '7' ;
-IDENTIFIER__13 ::= '8' ;
-IDENTIFIER__13 ::= '9' ;
-IDENTIFIER ::= IDENTIFIER__10 IDENTIFIER__11 ;
-NUMERIC_LITERAL__1 ::= NUMERIC_LITERAL__2 ;
-NUMERIC_LITERAL__2 ::= NUMERIC_LITERAL__3 ;
-NUMERIC_LITERAL__2 ::= NUMERIC_LITERAL__3 NUMERIC_LITERAL__2 ;
-NUMERIC_LITERAL__3 ::= DIGIT ;
-NUMERIC_LITERAL__4 ::= ;
-NUMERIC_LITERAL__5 ::= NUMERIC_LITERAL__6 ;
-NUMERIC_LITERAL__6 ::= ;
-NUMERIC_LITERAL__6 ::= NUMERIC_LITERAL__7 NUMERIC_LITERAL__6 ;
-NUMERIC_LITERAL__7 ::= DIGIT ;
-NUMERIC_LITERAL__4 ::= '.' NUMERIC_LITERAL__5 ;
-NUMERIC_LITERAL__8 ::= ;
-NUMERIC_LITERAL__9 ::= ;
-NUMERIC_LITERAL__9 ::= '-' ;
-NUMERIC_LITERAL__9 ::= '+' ;
-NUMERIC_LITERAL__10 ::= NUMERIC_LITERAL__11 ;
-NUMERIC_LITERAL__11 ::= NUMERIC_LITERAL__12 ;
-NUMERIC_LITERAL__11 ::= NUMERIC_LITERAL__12 NUMERIC_LITERAL__11 ;
-NUMERIC_LITERAL__12 ::= DIGIT ;
-NUMERIC_LITERAL__8 ::= E NUMERIC_LITERAL__9 NUMERIC_LITERAL__10 ;
-NUMERIC_LITERAL ::= NUMERIC_LITERAL__1 NUMERIC_LITERAL__4 NUMERIC_LITERAL__8 ;
-NUMERIC_LITERAL__13 ::= NUMERIC_LITERAL__14 ;
-NUMERIC_LITERAL__14 ::= NUMERIC_LITERAL__15 ;
-NUMERIC_LITERAL__14 ::= NUMERIC_LITERAL__15 NUMERIC_LITERAL__14 ;
-NUMERIC_LITERAL__15 ::= DIGIT ;
-NUMERIC_LITERAL__16 ::= ;
-NUMERIC_LITERAL__17 ::= ;
-NUMERIC_LITERAL__17 ::= '-' ;
-NUMERIC_LITERAL__17 ::= '+' ;
-NUMERIC_LITERAL__18 ::= NUMERIC_LITERAL__19 ;
-NUMERIC_LITERAL__19 ::= NUMERIC_LITERAL__20 ;
-NUMERIC_LITERAL__19 ::= NUMERIC_LITERAL__20 NUMERIC_LITERAL__19 ;
-NUMERIC_LITERAL__20 ::= DIGIT ;
-NUMERIC_LITERAL__16 ::= E NUMERIC_LITERAL__17 NUMERIC_LITERAL__18 ;
-NUMERIC_LITERAL ::= '.' NUMERIC_LITERAL__13 NUMERIC_LITERAL__16 ;
-BIND_PARAMETER__1 ::= BIND_PARAMETER__2 ;
-BIND_PARAMETER__2 ::= ;
-BIND_PARAMETER__2 ::= BIND_PARAMETER__3 BIND_PARAMETER__2 ;
-BIND_PARAMETER__3 ::= DIGIT ;
-BIND_PARAMETER ::= '?' BIND_PARAMETER__1 ;
-BIND_PARAMETER__4 ::= ':' ;
-BIND_PARAMETER__4 ::= '@' ;
-BIND_PARAMETER__4 ::= '$' ;
-BIND_PARAMETER ::= BIND_PARAMETER__4 IDENTIFIER ;
-STRING_LITERAL__1 ::= STRING_LITERAL__2 ;
-STRING_LITERAL__2 ::= ;
-STRING_LITERAL__2 ::= STRING_LITERAL__3 STRING_LITERAL__2 ;
-STRING_LITERAL__3 ::= ' ' ;
-STRING_LITERAL__3 ::= '!' ;
-STRING_LITERAL__3 ::= '\"' ;
-STRING_LITERAL__3 ::= '#' ;
-STRING_LITERAL__3 ::= '$' ;
-STRING_LITERAL__3 ::= '%' ;
-STRING_LITERAL__3 ::= '&' ;
-STRING_LITERAL__3 ::= '(' ;
-STRING_LITERAL__3 ::= ')' ;
-STRING_LITERAL__3 ::= '*' ;
-STRING_LITERAL__3 ::= '+' ;
-STRING_LITERAL__3 ::= ',' ;
-STRING_LITERAL__3 ::= '-' ;
-STRING_LITERAL__3 ::= '.' ;
-STRING_LITERAL__3 ::= '/' ;
-STRING_LITERAL__3 ::= '0' ;
-STRING_LITERAL__3 ::= '1' ;
-STRING_LITERAL__3 ::= '2' ;
-STRING_LITERAL__3 ::= '3' ;
-STRING_LITERAL__3 ::= '4' ;
-STRING_LITERAL__3 ::= '5' ;
-STRING_LITERAL__3 ::= '6' ;
-STRING_LITERAL__3 ::= '7' ;
-STRING_LITERAL__3 ::= '8' ;
-STRING_LITERAL__3 ::= '9' ;
-STRING_LITERAL__3 ::= ':' ;
-STRING_LITERAL__3 ::= ';' ;
-STRING_LITERAL__3 ::= '<' ;
-STRING_LITERAL__3 ::= '=' ;
-STRING_LITERAL__3 ::= '>' ;
-STRING_LITERAL__3 ::= '?' ;
-STRING_LITERAL__3 ::= '@' ;
-STRING_LITERAL__3 ::= 'A' ;
-STRING_LITERAL__3 ::= 'B' ;
-STRING_LITERAL__3 ::= 'C' ;
-STRING_LITERAL__3 ::= 'D' ;
-STRING_LITERAL__3 ::= 'E' ;
-STRING_LITERAL__3 ::= 'F' ;
-STRING_LITERAL__3 ::= 'G' ;
-STRING_LITERAL__3 ::= 'H' ;
-STRING_LITERAL__3 ::= 'I' ;
-STRING_LITERAL__3 ::= 'J' ;
-STRING_LITERAL__3 ::= 'K' ;
-STRING_LITERAL__3 ::= 'L' ;
-STRING_LITERAL__3 ::= 'M' ;
-STRING_LITERAL__3 ::= 'N' ;
-STRING_LITERAL__3 ::= 'O' ;
-STRING_LITERAL__3 ::= 'P' ;
-STRING_LITERAL__3 ::= 'Q' ;
-STRING_LITERAL__3 ::= 'R' ;
-STRING_LITERAL__3 ::= 'S' ;
-STRING_LITERAL__3 ::= 'T' ;
-STRING_LITERAL__3 ::= 'U' ;
-STRING_LITERAL__3 ::= 'V' ;
-STRING_LITERAL__3 ::= 'W' ;
-STRING_LITERAL__3 ::= 'X' ;
-STRING_LITERAL__3 ::= 'Y' ;
-STRING_LITERAL__3 ::= 'Z' ;
-STRING_LITERAL__3 ::= '[' ;
-STRING_LITERAL__3 ::= '\\' ;
-STRING_LITERAL__3 ::= ']' ;
-STRING_LITERAL__3 ::= '^' ;
-STRING_LITERAL__3 ::= '_' ;
-STRING_LITERAL__3 ::= '`' ;
-STRING_LITERAL__3 ::= 'a' ;
-STRING_LITERAL__3 ::= 'b' ;
-STRING_LITERAL__3 ::= 'c' ;
-STRING_LITERAL__3 ::= 'd' ;
-STRING_LITERAL__3 ::= 'e' ;
-STRING_LITERAL__3 ::= 'f' ;
-STRING_LITERAL__3 ::= 'g' ;
-STRING_LITERAL__3 ::= 'h' ;
-STRING_LITERAL__3 ::= 'i' ;
-STRING_LITERAL__3 ::= 'j' ;
-STRING_LITERAL__3 ::= 'k' ;
-STRING_LITERAL__3 ::= 'l' ;
-STRING_LITERAL__3 ::= 'm' ;
-STRING_LITERAL__3 ::= 'n' ;
-STRING_LITERAL__3 ::= 'o' ;
-STRING_LITERAL__3 ::= 'p' ;
-STRING_LITERAL__3 ::= 'q' ;
-STRING_LITERAL__3 ::= 'r' ;
-STRING_LITERAL__3 ::= 's' ;
-STRING_LITERAL__3 ::= 't' ;
-STRING_LITERAL__3 ::= 'u' ;
-STRING_LITERAL__3 ::= 'v' ;
-STRING_LITERAL__3 ::= 'w' ;
-STRING_LITERAL__3 ::= 'x' ;
-STRING_LITERAL__3 ::= 'y' ;
-STRING_LITERAL__3 ::= 'z' ;
-STRING_LITERAL__3 ::= '{' ;
-STRING_LITERAL__3 ::= '|' ;
-STRING_LITERAL__3 ::= '}' ;
-STRING_LITERAL__3 ::= '~' ;
-STRING_LITERAL__3 ::= '\'\'' ;
-STRING_LITERAL ::= '\'' STRING_LITERAL__1 '\'' ;
-BLOB_LITERAL ::= X STRING_LITERAL ;
-SINGLE_LINE_COMMENT__1 ::= SINGLE_LINE_COMMENT__2 ;
-SINGLE_LINE_COMMENT__2 ::= ;
-SINGLE_LINE_COMMENT__2 ::= SINGLE_LINE_COMMENT__3 SINGLE_LINE_COMMENT__2 ;
-SINGLE_LINE_COMMENT__3 ::= ' ' ;
-SINGLE_LINE_COMMENT__3 ::= '!' ;
-SINGLE_LINE_COMMENT__3 ::= '\"' ;
-SINGLE_LINE_COMMENT__3 ::= '#' ;
-SINGLE_LINE_COMMENT__3 ::= '$' ;
-SINGLE_LINE_COMMENT__3 ::= '%' ;
-SINGLE_LINE_COMMENT__3 ::= '&' ;
-SINGLE_LINE_COMMENT__3 ::= '\'' ;
-SINGLE_LINE_COMMENT__3 ::= '(' ;
-SINGLE_LINE_COMMENT__3 ::= ')' ;
-SINGLE_LINE_COMMENT__3 ::= '*' ;
-SINGLE_LINE_COMMENT__3 ::= '+' ;
-SINGLE_LINE_COMMENT__3 ::= ',' ;
-SINGLE_LINE_COMMENT__3 ::= '-' ;
-SINGLE_LINE_COMMENT__3 ::= '.' ;
-SINGLE_LINE_COMMENT__3 ::= '/' ;
-SINGLE_LINE_COMMENT__3 ::= '0' ;
-SINGLE_LINE_COMMENT__3 ::= '1' ;
-SINGLE_LINE_COMMENT__3 ::= '2' ;
-SINGLE_LINE_COMMENT__3 ::= '3' ;
-SINGLE_LINE_COMMENT__3 ::= '4' ;
-SINGLE_LINE_COMMENT__3 ::= '5' ;
-SINGLE_LINE_COMMENT__3 ::= '6' ;
-SINGLE_LINE_COMMENT__3 ::= '7' ;
-SINGLE_LINE_COMMENT__3 ::= '8' ;
-SINGLE_LINE_COMMENT__3 ::= '9' ;
-SINGLE_LINE_COMMENT__3 ::= ':' ;
-SINGLE_LINE_COMMENT__3 ::= ';' ;
-SINGLE_LINE_COMMENT__3 ::= '<' ;
-SINGLE_LINE_COMMENT__3 ::= '=' ;
-SINGLE_LINE_COMMENT__3 ::= '>' ;
-SINGLE_LINE_COMMENT__3 ::= '?' ;
-SINGLE_LINE_COMMENT__3 ::= '@' ;
-SINGLE_LINE_COMMENT__3 ::= 'A' ;
-SINGLE_LINE_COMMENT__3 ::= 'B' ;
-SINGLE_LINE_COMMENT__3 ::= 'C' ;
-SINGLE_LINE_COMMENT__3 ::= 'D' ;
-SINGLE_LINE_COMMENT__3 ::= 'E' ;
-SINGLE_LINE_COMMENT__3 ::= 'F' ;
-SINGLE_LINE_COMMENT__3 ::= 'G' ;
-SINGLE_LINE_COMMENT__3 ::= 'H' ;
-SINGLE_LINE_COMMENT__3 ::= 'I' ;
-SINGLE_LINE_COMMENT__3 ::= 'J' ;
-SINGLE_LINE_COMMENT__3 ::= 'K' ;
-SINGLE_LINE_COMMENT__3 ::= 'L' ;
-SINGLE_LINE_COMMENT__3 ::= 'M' ;
-SINGLE_LINE_COMMENT__3 ::= 'N' ;
-SINGLE_LINE_COMMENT__3 ::= 'O' ;
-SINGLE_LINE_COMMENT__3 ::= 'P' ;
-SINGLE_LINE_COMMENT__3 ::= 'Q' ;
-SINGLE_LINE_COMMENT__3 ::= 'R' ;
-SINGLE_LINE_COMMENT__3 ::= 'S' ;
-SINGLE_LINE_COMMENT__3 ::= 'T' ;
-SINGLE_LINE_COMMENT__3 ::= 'U' ;
-SINGLE_LINE_COMMENT__3 ::= 'V' ;
-SINGLE_LINE_COMMENT__3 ::= 'W' ;
-SINGLE_LINE_COMMENT__3 ::= 'X' ;
-SINGLE_LINE_COMMENT__3 ::= 'Y' ;
-SINGLE_LINE_COMMENT__3 ::= 'Z' ;
-SINGLE_LINE_COMMENT__3 ::= '[' ;
-SINGLE_LINE_COMMENT__3 ::= '\\' ;
-SINGLE_LINE_COMMENT__3 ::= ']' ;
-SINGLE_LINE_COMMENT__3 ::= '^' ;
-SINGLE_LINE_COMMENT__3 ::= '_' ;
-SINGLE_LINE_COMMENT__3 ::= '`' ;
-SINGLE_LINE_COMMENT__3 ::= 'a' ;
-SINGLE_LINE_COMMENT__3 ::= 'b' ;
-SINGLE_LINE_COMMENT__3 ::= 'c' ;
-SINGLE_LINE_COMMENT__3 ::= 'd' ;
-SINGLE_LINE_COMMENT__3 ::= 'e' ;
-SINGLE_LINE_COMMENT__3 ::= 'f' ;
-SINGLE_LINE_COMMENT__3 ::= 'g' ;
-SINGLE_LINE_COMMENT__3 ::= 'h' ;
-SINGLE_LINE_COMMENT__3 ::= 'i' ;
-SINGLE_LINE_COMMENT__3 ::= 'j' ;
-SINGLE_LINE_COMMENT__3 ::= 'k' ;
-SINGLE_LINE_COMMENT__3 ::= 'l' ;
-SINGLE_LINE_COMMENT__3 ::= 'm' ;
-SINGLE_LINE_COMMENT__3 ::= 'o' ;
-SINGLE_LINE_COMMENT__3 ::= 'p' ;
-SINGLE_LINE_COMMENT__3 ::= 'q' ;
-SINGLE_LINE_COMMENT__3 ::= 's' ;
-SINGLE_LINE_COMMENT__3 ::= 't' ;
-SINGLE_LINE_COMMENT__3 ::= 'u' ;
-SINGLE_LINE_COMMENT__3 ::= 'v' ;
-SINGLE_LINE_COMMENT__3 ::= 'w' ;
-SINGLE_LINE_COMMENT__3 ::= 'x' ;
-SINGLE_LINE_COMMENT__3 ::= 'y' ;
-SINGLE_LINE_COMMENT__3 ::= 'z' ;
-SINGLE_LINE_COMMENT__3 ::= '{' ;
-SINGLE_LINE_COMMENT__3 ::= '|' ;
-SINGLE_LINE_COMMENT__3 ::= '}' ;
-SINGLE_LINE_COMMENT__3 ::= '~' ;
-SINGLE_LINE_COMMENT ::= '--' SINGLE_LINE_COMMENT__1 ;
-MULTILINE_COMMENT__1 ::= ;
-MULTILINE_COMMENT__1 ::= ' ' ;
-MULTILINE_COMMENT__1 ::= '!' ;
-MULTILINE_COMMENT__1 ::= '\"' ;
-MULTILINE_COMMENT__1 ::= '#' ;
-MULTILINE_COMMENT__1 ::= '$' ;
-MULTILINE_COMMENT__1 ::= '%' ;
-MULTILINE_COMMENT__1 ::= '&' ;
-MULTILINE_COMMENT__1 ::= '\'' ;
-MULTILINE_COMMENT__1 ::= '(' ;
-MULTILINE_COMMENT__1 ::= ')' ;
-MULTILINE_COMMENT__1 ::= '*' ;
-MULTILINE_COMMENT__1 ::= '+' ;
-MULTILINE_COMMENT__1 ::= ',' ;
-MULTILINE_COMMENT__1 ::= '-' ;
-MULTILINE_COMMENT__1 ::= '.' ;
-MULTILINE_COMMENT__1 ::= '/' ;
-MULTILINE_COMMENT__1 ::= '0' ;
-MULTILINE_COMMENT__1 ::= '1' ;
-MULTILINE_COMMENT__1 ::= '2' ;
-MULTILINE_COMMENT__1 ::= '3' ;
-MULTILINE_COMMENT__1 ::= '4' ;
-MULTILINE_COMMENT__1 ::= '5' ;
-MULTILINE_COMMENT__1 ::= '6' ;
-MULTILINE_COMMENT__1 ::= '7' ;
-MULTILINE_COMMENT__1 ::= '8' ;
-MULTILINE_COMMENT__1 ::= '9' ;
-MULTILINE_COMMENT__1 ::= ':' ;
-MULTILINE_COMMENT__1 ::= ';' ;
-MULTILINE_COMMENT__1 ::= '<' ;
-MULTILINE_COMMENT__1 ::= '=' ;
-MULTILINE_COMMENT__1 ::= '>' ;
-MULTILINE_COMMENT__1 ::= '?' ;
-MULTILINE_COMMENT__1 ::= '@' ;
-MULTILINE_COMMENT__1 ::= 'A' ;
-MULTILINE_COMMENT__1 ::= 'B' ;
-MULTILINE_COMMENT__1 ::= 'C' ;
-MULTILINE_COMMENT__1 ::= 'D' ;
-MULTILINE_COMMENT__1 ::= 'E' ;
-MULTILINE_COMMENT__1 ::= 'F' ;
-MULTILINE_COMMENT__1 ::= 'G' ;
-MULTILINE_COMMENT__1 ::= 'H' ;
-MULTILINE_COMMENT__1 ::= 'I' ;
-MULTILINE_COMMENT__1 ::= 'J' ;
-MULTILINE_COMMENT__1 ::= 'K' ;
-MULTILINE_COMMENT__1 ::= 'L' ;
-MULTILINE_COMMENT__1 ::= 'M' ;
-MULTILINE_COMMENT__1 ::= 'N' ;
-MULTILINE_COMMENT__1 ::= 'O' ;
-MULTILINE_COMMENT__1 ::= 'P' ;
-MULTILINE_COMMENT__1 ::= 'Q' ;
-MULTILINE_COMMENT__1 ::= 'R' ;
-MULTILINE_COMMENT__1 ::= 'S' ;
-MULTILINE_COMMENT__1 ::= 'T' ;
-MULTILINE_COMMENT__1 ::= 'U' ;
-MULTILINE_COMMENT__1 ::= 'V' ;
-MULTILINE_COMMENT__1 ::= 'W' ;
-MULTILINE_COMMENT__1 ::= 'X' ;
-MULTILINE_COMMENT__1 ::= 'Y' ;
-MULTILINE_COMMENT__1 ::= 'Z' ;
-MULTILINE_COMMENT__1 ::= '[' ;
-MULTILINE_COMMENT__1 ::= '\\' ;
-MULTILINE_COMMENT__1 ::= ']' ;
-MULTILINE_COMMENT__1 ::= '^' ;
-MULTILINE_COMMENT__1 ::= '_' ;
-MULTILINE_COMMENT__1 ::= '`' ;
-MULTILINE_COMMENT__1 ::= 'a' ;
-MULTILINE_COMMENT__1 ::= 'b' ;
-MULTILINE_COMMENT__1 ::= 'c' ;
-MULTILINE_COMMENT__1 ::= 'd' ;
-MULTILINE_COMMENT__1 ::= 'e' ;
-MULTILINE_COMMENT__1 ::= 'f' ;
-MULTILINE_COMMENT__1 ::= 'g' ;
-MULTILINE_COMMENT__1 ::= 'h' ;
-MULTILINE_COMMENT__1 ::= 'i' ;
-MULTILINE_COMMENT__1 ::= 'j' ;
-MULTILINE_COMMENT__1 ::= 'k' ;
-MULTILINE_COMMENT__1 ::= 'l' ;
-MULTILINE_COMMENT__1 ::= 'm' ;
-MULTILINE_COMMENT__1 ::= 'n' ;
-MULTILINE_COMMENT__1 ::= 'o' ;
-MULTILINE_COMMENT__1 ::= 'p' ;
-MULTILINE_COMMENT__1 ::= 'q' ;
-MULTILINE_COMMENT__1 ::= 'r' ;
-MULTILINE_COMMENT__1 ::= 's' ;
-MULTILINE_COMMENT__1 ::= 't' ;
-MULTILINE_COMMENT__1 ::= 'u' ;
-MULTILINE_COMMENT__1 ::= 'v' ;
-MULTILINE_COMMENT__1 ::= 'w' ;
-MULTILINE_COMMENT__1 ::= 'x' ;
-MULTILINE_COMMENT__1 ::= 'y' ;
-MULTILINE_COMMENT__1 ::= 'z' ;
-MULTILINE_COMMENT__1 ::= '{' ;
-MULTILINE_COMMENT__1 ::= '|' ;
-MULTILINE_COMMENT__1 ::= '}' ;
-MULTILINE_COMMENT__1 ::= '~' ;
-MULTILINE_COMMENT__2 ::= '*/' ;
-MULTILINE_COMMENT__2 ::= EOF ;
-MULTILINE_COMMENT ::= '/*' MULTILINE_COMMENT__1 MULTILINE_COMMENT__2 ;
-SPACES ::= ' ' ;
-SPACES ::= 'u' ;
-SPACES ::= '0' ;
-SPACES ::= '0' ;
-SPACES ::= '0' ;
-SPACES ::= 'B' ;
-SPACES ::= 't' ;
-SPACES ::= 'r' ;
-SPACES ::= 'n' ;
-UNEXPECTED_CHAR ::= ' ' ;
-UNEXPECTED_CHAR ::= '!' ;
-UNEXPECTED_CHAR ::= '\"' ;
-UNEXPECTED_CHAR ::= '#' ;
-UNEXPECTED_CHAR ::= '$' ;
-UNEXPECTED_CHAR ::= '%' ;
-UNEXPECTED_CHAR ::= '&' ;
-UNEXPECTED_CHAR ::= '\'' ;
-UNEXPECTED_CHAR ::= '(' ;
-UNEXPECTED_CHAR ::= ')' ;
-UNEXPECTED_CHAR ::= '*' ;
-UNEXPECTED_CHAR ::= '+' ;
-UNEXPECTED_CHAR ::= ',' ;
-UNEXPECTED_CHAR ::= '-' ;
-UNEXPECTED_CHAR ::= '.' ;
-UNEXPECTED_CHAR ::= '/' ;
-UNEXPECTED_CHAR ::= '0' ;
-UNEXPECTED_CHAR ::= '1' ;
-UNEXPECTED_CHAR ::= '2' ;
-UNEXPECTED_CHAR ::= '3' ;
-UNEXPECTED_CHAR ::= '4' ;
-UNEXPECTED_CHAR ::= '5' ;
-UNEXPECTED_CHAR ::= '6' ;
-UNEXPECTED_CHAR ::= '7' ;
-UNEXPECTED_CHAR ::= '8' ;
-UNEXPECTED_CHAR ::= '9' ;
-UNEXPECTED_CHAR ::= ':' ;
-UNEXPECTED_CHAR ::= ';' ;
-UNEXPECTED_CHAR ::= '<' ;
-UNEXPECTED_CHAR ::= '=' ;
-UNEXPECTED_CHAR ::= '>' ;
-UNEXPECTED_CHAR ::= '?' ;
-UNEXPECTED_CHAR ::= '@' ;
-UNEXPECTED_CHAR ::= 'A' ;
-UNEXPECTED_CHAR ::= 'B' ;
-UNEXPECTED_CHAR ::= 'C' ;
-UNEXPECTED_CHAR ::= 'D' ;
-UNEXPECTED_CHAR ::= 'E' ;
-UNEXPECTED_CHAR ::= 'F' ;
-UNEXPECTED_CHAR ::= 'G' ;
-UNEXPECTED_CHAR ::= 'H' ;
-UNEXPECTED_CHAR ::= 'I' ;
-UNEXPECTED_CHAR ::= 'J' ;
-UNEXPECTED_CHAR ::= 'K' ;
-UNEXPECTED_CHAR ::= 'L' ;
-UNEXPECTED_CHAR ::= 'M' ;
-UNEXPECTED_CHAR ::= 'N' ;
-UNEXPECTED_CHAR ::= 'O' ;
-UNEXPECTED_CHAR ::= 'P' ;
-UNEXPECTED_CHAR ::= 'Q' ;
-UNEXPECTED_CHAR ::= 'R' ;
-UNEXPECTED_CHAR ::= 'S' ;
-UNEXPECTED_CHAR ::= 'T' ;
-UNEXPECTED_CHAR ::= 'U' ;
-UNEXPECTED_CHAR ::= 'V' ;
-UNEXPECTED_CHAR ::= 'W' ;
-UNEXPECTED_CHAR ::= 'X' ;
-UNEXPECTED_CHAR ::= 'Y' ;
-UNEXPECTED_CHAR ::= 'Z' ;
-UNEXPECTED_CHAR ::= '[' ;
-UNEXPECTED_CHAR ::= '\\' ;
-UNEXPECTED_CHAR ::= ']' ;
-UNEXPECTED_CHAR ::= '^' ;
-UNEXPECTED_CHAR ::= '_' ;
-UNEXPECTED_CHAR ::= '`' ;
-UNEXPECTED_CHAR ::= 'a' ;
-UNEXPECTED_CHAR ::= 'b' ;
-UNEXPECTED_CHAR ::= 'c' ;
-UNEXPECTED_CHAR ::= 'd' ;
-UNEXPECTED_CHAR ::= 'e' ;
-UNEXPECTED_CHAR ::= 'f' ;
-UNEXPECTED_CHAR ::= 'g' ;
-UNEXPECTED_CHAR ::= 'h' ;
-UNEXPECTED_CHAR ::= 'i' ;
-UNEXPECTED_CHAR ::= 'j' ;
-UNEXPECTED_CHAR ::= 'k' ;
-UNEXPECTED_CHAR ::= 'l' ;
-UNEXPECTED_CHAR ::= 'm' ;
-UNEXPECTED_CHAR ::= 'n' ;
-UNEXPECTED_CHAR ::= 'o' ;
-UNEXPECTED_CHAR ::= 'p' ;
-UNEXPECTED_CHAR ::= 'q' ;
-UNEXPECTED_CHAR ::= 'r' ;
-UNEXPECTED_CHAR ::= 's' ;
-UNEXPECTED_CHAR ::= 't' ;
-UNEXPECTED_CHAR ::= 'u' ;
-UNEXPECTED_CHAR ::= 'v' ;
-UNEXPECTED_CHAR ::= 'w' ;
-UNEXPECTED_CHAR ::= 'x' ;
-UNEXPECTED_CHAR ::= 'y' ;
-UNEXPECTED_CHAR ::= 'z' ;
-UNEXPECTED_CHAR ::= '{' ;
-UNEXPECTED_CHAR ::= '|' ;
-UNEXPECTED_CHAR ::= '}' ;
-UNEXPECTED_CHAR ::= '~' ;
-DIGIT ::= '0' ;
-DIGIT ::= '1' ;
-DIGIT ::= '2' ;
-DIGIT ::= '3' ;
-DIGIT ::= '4' ;
-DIGIT ::= '5' ;
-DIGIT ::= '6' ;
-DIGIT ::= '7' ;
-DIGIT ::= '8' ;
-DIGIT ::= '9' ;
-A ::= 'a' ;
-A ::= 'A' ;
-B ::= 'b' ;
-B ::= 'B' ;
-C ::= 'c' ;
-C ::= 'C' ;
-D ::= 'd' ;
-D ::= 'D' ;
-E ::= 'e' ;
-E ::= 'E' ;
-F ::= 'f' ;
-F ::= 'F' ;
-G ::= 'g' ;
-G ::= 'G' ;
-H ::= 'h' ;
-H ::= 'H' ;
-I ::= 'i' ;
-I ::= 'I' ;
-J ::= 'j' ;
-J ::= 'J' ;
-K ::= 'k' ;
-K ::= 'K' ;
-L ::= 'l' ;
-L ::= 'L' ;
-M ::= 'm' ;
-M ::= 'M' ;
-N ::= 'n' ;
-N ::= 'N' ;
-O ::= 'o' ;
-O ::= 'O' ;
-P ::= 'p' ;
-P ::= 'P' ;
-Q ::= 'q' ;
-Q ::= 'Q' ;
-R ::= 'r' ;
-R ::= 'R' ;
-S ::= 's' ;
-S ::= 'S' ;
-T ::= 't' ;
-T ::= 'T' ;
-U ::= 'u' ;
-U ::= 'U' ;
-V ::= 'v' ;
-V ::= 'V' ;
-W ::= 'w' ;
-W ::= 'W' ;
-X ::= 'x' ;
-X ::= 'X' ;
-Y ::= 'y' ;
-Y ::= 'Y' ;
-Z ::= 'z' ;
-Z ::= 'Z' ;
+<parse> ;
+# PARSER: parse
+<parse_-_1> ::= <parse_-_2>  ;
+<parse_-_2> ::= <parse_-_3>  ;
+<parse_-_2> ::= <parse_-_3>  <parse_-_2>  ;
+<parse_-_3> ::= <sql_stmt_list>  ;
+<parse_-_4> ::= ;
+<parse_-_4> ::= <SINGLE_LINE_COMMENT>  ;
+<parse_-_4> ::= <MULTILINE_COMMENT_EOF>  ;
+<parse> ::= <parse_-_1>  <parse_-_4>  ;
+# PARSER: sql_stmt_list
+<sql_stmt_list_-_1> ::= <sql_stmt_list_-_2>  ;
+<sql_stmt_list_-_2> ::= ;
+<sql_stmt_list_-_4> ::= <sql_stmt_list_-_5>  ;
+<sql_stmt_list_-_5> ::= <sql_stmt_list_-_6>  ;
+<sql_stmt_list_-_5> ::= <sql_stmt_list_-_6>  <sql_stmt_list_-_5>  ;
+<sql_stmt_list_-_6> ::= ';'  ;
+<sql_stmt_list_-_3> ::= <sql_stmt_list_-_4>  <sql_stmt>  ;
+<sql_stmt_list_-_2> ::= <sql_stmt_list_-_3>  <sql_stmt_list_-_2>  ;
+<sql_stmt_list> ::= <sql_stmt>  <sql_stmt_list_-_1>  ;
+# PARSER: sql_stmt
+<sql_stmt_-_1> ::= ;
+<sql_stmt_-_2> ::= ;
+<sql_stmt_-_2> ::= <K_QUERY>  <K_PLAN>  ;
+<sql_stmt_-_1> ::= <K_EXPLAIN>  <sql_stmt_-_2>  ;
+<sql_stmt_-_3> ::= <alter_table_stmt>  ;
+<sql_stmt_-_3> ::= <analyze_stmt>  ;
+<sql_stmt_-_3> ::= <attach_stmt>  ;
+<sql_stmt_-_3> ::= <begin_stmt>  ;
+<sql_stmt_-_3> ::= <commit_stmt>  ;
+<sql_stmt_-_3> ::= <compound_select_stmt>  ;
+<sql_stmt_-_3> ::= <create_index_stmt>  ;
+<sql_stmt_-_3> ::= <create_table_stmt>  ;
+<sql_stmt_-_3> ::= <create_trigger_stmt>  ;
+<sql_stmt_-_3> ::= <create_view_stmt>  ;
+<sql_stmt_-_3> ::= <create_virtual_table_stmt>  ;
+<sql_stmt_-_3> ::= <delete_stmt>  ;
+<sql_stmt_-_3> ::= <delete_stmt_limited>  ;
+<sql_stmt_-_3> ::= <detach_stmt>  ;
+<sql_stmt_-_3> ::= <drop_index_stmt>  ;
+<sql_stmt_-_3> ::= <drop_table_stmt>  ;
+<sql_stmt_-_3> ::= <drop_trigger_stmt>  ;
+<sql_stmt_-_3> ::= <drop_view_stmt>  ;
+<sql_stmt_-_3> ::= <factored_select_stmt>  ;
+<sql_stmt_-_3> ::= <insert_stmt>  ;
+<sql_stmt_-_3> ::= <pragma_stmt>  ;
+<sql_stmt_-_3> ::= <reindex_stmt>  ;
+<sql_stmt_-_3> ::= <release_stmt>  ;
+<sql_stmt_-_3> ::= <rollback_stmt>  ;
+<sql_stmt_-_3> ::= <savepoint_stmt>  ;
+<sql_stmt_-_3> ::= <simple_select_stmt>  ;
+<sql_stmt_-_3> ::= <select_stmt>  ;
+<sql_stmt_-_3> ::= <update_stmt>  ;
+<sql_stmt_-_3> ::= <update_stmt_limited>  ;
+<sql_stmt_-_3> ::= <vacuum_stmt>  ;
+<sql_stmt> ::= <sql_stmt_-_1>  <sql_stmt_-_3>  ;
+# PARSER: alter_table_stmt
+<alter_table_stmt_-_1> ::= ;
+<alter_table_stmt_-_1> ::= <database_name>  '.'  ;
+<alter_table_stmt_-_2> ::= <K_RENAME>  <K_TO>  <new_table_name>  ;
+<alter_table_stmt_-_3> ::= ;
+<alter_table_stmt_-_3> ::= <K_COLUMN>  ;
+<alter_table_stmt_-_2> ::= <K_ADD>  <alter_table_stmt_-_3>  <column_def>  ;
+<alter_table_stmt> ::= <K_ALTER>  <K_TABLE>  <alter_table_stmt_-_1>  <table_name>  <alter_table_stmt_-_2>  ;
+# PARSER: analyze_stmt
+<analyze_stmt_-_1> ::= ;
+<analyze_stmt_-_1> ::= <database_name>  ;
+<analyze_stmt_-_1> ::= <table_or_index_name>  ;
+<analyze_stmt_-_1> ::= <database_name>  '.'  <table_or_index_name>  ;
+<analyze_stmt> ::= <K_ANALYZE>  <analyze_stmt_-_1>  ;
+# PARSER: attach_stmt
+<attach_stmt_-_1> ::= ;
+<attach_stmt_-_1> ::= <K_DATABASE>  ;
+<attach_stmt> ::= <K_ATTACH>  <attach_stmt_-_1>  <expr>  <K_AS>  <database_name>  ;
+# PARSER: begin_stmt
+<begin_stmt_-_1> ::= ;
+<begin_stmt_-_1> ::= <K_DEFERRED>  ;
+<begin_stmt_-_1> ::= <K_IMMEDIATE>  ;
+<begin_stmt_-_1> ::= <K_EXCLUSIVE>  ;
+<begin_stmt_-_2> ::= ;
+<begin_stmt_-_3> ::= ;
+<begin_stmt_-_3> ::= <transaction_name>  ;
+<begin_stmt_-_2> ::= <K_TRANSACTION>  <begin_stmt_-_3>  ;
+<begin_stmt> ::= <K_BEGIN>  <begin_stmt_-_1>  <begin_stmt_-_2>  ;
+# PARSER: commit_stmt
+<commit_stmt_-_1> ::= <K_COMMIT>  ;
+<commit_stmt_-_1> ::= <K_END>  ;
+<commit_stmt_-_2> ::= ;
+<commit_stmt_-_3> ::= ;
+<commit_stmt_-_3> ::= <transaction_name>  ;
+<commit_stmt_-_2> ::= <K_TRANSACTION>  <commit_stmt_-_3>  ;
+<commit_stmt> ::= <commit_stmt_-_1>  <commit_stmt_-_2>  ;
+# PARSER: compound_select_stmt
+<compound_select_stmt_-_1> ::= ;
+<compound_select_stmt_-_2> ::= ;
+<compound_select_stmt_-_2> ::= <K_RECURSIVE>  ;
+<compound_select_stmt_-_3> ::= <compound_select_stmt_-_4>  ;
+<compound_select_stmt_-_4> ::= ;
+<compound_select_stmt_-_5> ::= ','  <common_table_expression>  ;
+<compound_select_stmt_-_4> ::= <compound_select_stmt_-_5>  <compound_select_stmt_-_4>  ;
+<compound_select_stmt_-_1> ::= <K_WITH>  <compound_select_stmt_-_2>  <common_table_expression>  <compound_select_stmt_-_3>  ;
+<compound_select_stmt_-_6> ::= <compound_select_stmt_-_7>  ;
+<compound_select_stmt_-_7> ::= <compound_select_stmt_-_8>  ;
+<compound_select_stmt_-_7> ::= <compound_select_stmt_-_8>  <compound_select_stmt_-_7>  ;
+<compound_select_stmt_-_10> ::= ;
+<compound_select_stmt_-_10> ::= <K_ALL>  ;
+<compound_select_stmt_-_9> ::= <K_UNION>  <compound_select_stmt_-_10>  ;
+<compound_select_stmt_-_9> ::= <K_INTERSECT>  ;
+<compound_select_stmt_-_9> ::= <K_EXCEPT>  ;
+<compound_select_stmt_-_8> ::= <compound_select_stmt_-_9>  <select_core>  ;
+<compound_select_stmt_-_11> ::= ;
+<compound_select_stmt_-_12> ::= <compound_select_stmt_-_13>  ;
+<compound_select_stmt_-_13> ::= ;
+<compound_select_stmt_-_14> ::= ','  <ordering_term>  ;
+<compound_select_stmt_-_13> ::= <compound_select_stmt_-_14>  <compound_select_stmt_-_13>  ;
+<compound_select_stmt_-_11> ::= <K_ORDER>  <K_BY>  <ordering_term>  <compound_select_stmt_-_12>  ;
+<compound_select_stmt_-_15> ::= ;
+<compound_select_stmt_-_16> ::= ;
+<compound_select_stmt_-_17> ::= <K_OFFSET>  ;
+<compound_select_stmt_-_17> ::= ','  ;
+<compound_select_stmt_-_16> ::= <compound_select_stmt_-_17>  <expr>  ;
+<compound_select_stmt_-_15> ::= <K_LIMIT>  <expr>  <compound_select_stmt_-_16>  ;
+<compound_select_stmt> ::= <compound_select_stmt_-_1>  <select_core>  <compound_select_stmt_-_6>  <compound_select_stmt_-_11>  <compound_select_stmt_-_15>  ;
+# PARSER: create_index_stmt
+<create_index_stmt_-_1> ::= ;
+<create_index_stmt_-_1> ::= <K_UNIQUE>  ;
+<create_index_stmt_-_2> ::= ;
+<create_index_stmt_-_2> ::= <K_IF>  <K_NOT>  <K_EXISTS>  ;
+<create_index_stmt_-_3> ::= ;
+<create_index_stmt_-_3> ::= <database_name>  '.'  ;
+<create_index_stmt_-_4> ::= <create_index_stmt_-_5>  ;
+<create_index_stmt_-_5> ::= ;
+<create_index_stmt_-_6> ::= ','  <indexed_column>  ;
+<create_index_stmt_-_5> ::= <create_index_stmt_-_6>  <create_index_stmt_-_5>  ;
+<create_index_stmt_-_7> ::= ;
+<create_index_stmt_-_7> ::= <K_WHERE>  <expr>  ;
+<create_index_stmt> ::= <K_CREATE>  <create_index_stmt_-_1>  <K_INDEX>  <create_index_stmt_-_2>  <create_index_stmt_-_3>  <index_name>  <K_ON>  <table_name>  '('  <indexed_column>  <create_index_stmt_-_4>  ')'  <create_index_stmt_-_7>  ;
+# PARSER: create_table_stmt
+<create_table_stmt_-_1> ::= ;
+<create_table_stmt_-_1> ::= <K_TEMP>  ;
+<create_table_stmt_-_1> ::= <K_TEMPORARY>  ;
+<create_table_stmt_-_2> ::= ;
+<create_table_stmt_-_2> ::= <K_IF>  <K_NOT>  <K_EXISTS>  ;
+<create_table_stmt_-_3> ::= ;
+<create_table_stmt_-_3> ::= <database_name>  '.'  ;
+<create_table_stmt_-_5> ::= <create_table_stmt_-_6>  ;
+<create_table_stmt_-_6> ::= ;
+<create_table_stmt_-_7> ::= ','  <column_def>  ;
+<create_table_stmt_-_6> ::= <create_table_stmt_-_7>  <create_table_stmt_-_6>  ;
+<create_table_stmt_-_8> ::= <create_table_stmt_-_9>  ;
+<create_table_stmt_-_9> ::= ;
+<create_table_stmt_-_10> ::= ','  <table_constraint>  ;
+<create_table_stmt_-_9> ::= <create_table_stmt_-_10>  <create_table_stmt_-_9>  ;
+<create_table_stmt_-_11> ::= ;
+<create_table_stmt_-_11> ::= <K_WITHOUT>  <IDENTIFIER>  ;
+<create_table_stmt_-_4> ::= '('  <column_def>  <create_table_stmt_-_5>  <create_table_stmt_-_8>  ')'  <create_table_stmt_-_11>  ;
+<create_table_stmt_-_4> ::= <K_AS>  <select_stmt>  ;
+<create_table_stmt> ::= <K_CREATE>  <create_table_stmt_-_1>  <K_TABLE>  <create_table_stmt_-_2>  <create_table_stmt_-_3>  <table_name>  <create_table_stmt_-_4>  ;
+# PARSER: create_trigger_stmt
+<create_trigger_stmt_-_1> ::= ;
+<create_trigger_stmt_-_1> ::= <K_TEMP>  ;
+<create_trigger_stmt_-_1> ::= <K_TEMPORARY>  ;
+<create_trigger_stmt_-_2> ::= ;
+<create_trigger_stmt_-_2> ::= <K_IF>  <K_NOT>  <K_EXISTS>  ;
+<create_trigger_stmt_-_3> ::= ;
+<create_trigger_stmt_-_3> ::= <database_name>  '.'  ;
+<create_trigger_stmt_-_4> ::= ;
+<create_trigger_stmt_-_4> ::= <K_BEFORE>  ;
+<create_trigger_stmt_-_4> ::= <K_AFTER>  ;
+<create_trigger_stmt_-_4> ::= <K_INSTEAD>  <K_OF>  ;
+<create_trigger_stmt_-_5> ::= <K_DELETE>  ;
+<create_trigger_stmt_-_5> ::= <K_INSERT>  ;
+<create_trigger_stmt_-_6> ::= ;
+<create_trigger_stmt_-_7> ::= <create_trigger_stmt_-_8>  ;
+<create_trigger_stmt_-_8> ::= ;
+<create_trigger_stmt_-_9> ::= ','  <column_name>  ;
+<create_trigger_stmt_-_8> ::= <create_trigger_stmt_-_9>  <create_trigger_stmt_-_8>  ;
+<create_trigger_stmt_-_6> ::= <K_OF>  <column_name>  <create_trigger_stmt_-_7>  ;
+<create_trigger_stmt_-_5> ::= <K_UPDATE>  <create_trigger_stmt_-_6>  ;
+<create_trigger_stmt_-_10> ::= ;
+<create_trigger_stmt_-_10> ::= <database_name>  '.'  ;
+<create_trigger_stmt_-_11> ::= ;
+<create_trigger_stmt_-_11> ::= <K_FOR>  <K_EACH>  <K_ROW>  ;
+<create_trigger_stmt_-_12> ::= ;
+<create_trigger_stmt_-_12> ::= <K_WHEN>  <expr>  ;
+<create_trigger_stmt_-_13> ::= <create_trigger_stmt_-_14>  ;
+<create_trigger_stmt_-_14> ::= <create_trigger_stmt_-_15>  ;
+<create_trigger_stmt_-_14> ::= <create_trigger_stmt_-_15>  <create_trigger_stmt_-_14>  ;
+<create_trigger_stmt_-_16> ::= <update_stmt>  ;
+<create_trigger_stmt_-_16> ::= <insert_stmt>  ;
+<create_trigger_stmt_-_16> ::= <delete_stmt>  ;
+<create_trigger_stmt_-_16> ::= <select_stmt>  ;
+<create_trigger_stmt_-_15> ::= <create_trigger_stmt_-_16>  ';'  ;
+<create_trigger_stmt> ::= <K_CREATE>  <create_trigger_stmt_-_1>  <K_TRIGGER>  <create_trigger_stmt_-_2>  <create_trigger_stmt_-_3>  <trigger_name>  <create_trigger_stmt_-_4>  <create_trigger_stmt_-_5>  <K_ON>  <create_trigger_stmt_-_10>  <table_name>  <create_trigger_stmt_-_11>  <create_trigger_stmt_-_12>  <K_BEGIN>  <create_trigger_stmt_-_13>  <K_END>  ;
+# PARSER: create_view_stmt
+<create_view_stmt_-_1> ::= ;
+<create_view_stmt_-_1> ::= <K_TEMP>  ;
+<create_view_stmt_-_1> ::= <K_TEMPORARY>  ;
+<create_view_stmt_-_2> ::= ;
+<create_view_stmt_-_2> ::= <K_IF>  <K_NOT>  <K_EXISTS>  ;
+<create_view_stmt_-_3> ::= ;
+<create_view_stmt_-_3> ::= <database_name>  '.'  ;
+<create_view_stmt> ::= <K_CREATE>  <create_view_stmt_-_1>  <K_VIEW>  <create_view_stmt_-_2>  <create_view_stmt_-_3>  <view_name>  <K_AS>  <select_stmt>  ;
+# PARSER: create_virtual_table_stmt
+<create_virtual_table_stmt_-_1> ::= ;
+<create_virtual_table_stmt_-_1> ::= <K_IF>  <K_NOT>  <K_EXISTS>  ;
+<create_virtual_table_stmt_-_2> ::= ;
+<create_virtual_table_stmt_-_2> ::= <database_name>  '.'  ;
+<create_virtual_table_stmt_-_3> ::= ;
+<create_virtual_table_stmt_-_4> ::= <create_virtual_table_stmt_-_5>  ;
+<create_virtual_table_stmt_-_5> ::= ;
+<create_virtual_table_stmt_-_6> ::= ','  <module_argument>  ;
+<create_virtual_table_stmt_-_5> ::= <create_virtual_table_stmt_-_6>  <create_virtual_table_stmt_-_5>  ;
+<create_virtual_table_stmt_-_3> ::= '('  <module_argument>  <create_virtual_table_stmt_-_4>  ')'  ;
+<create_virtual_table_stmt> ::= <K_CREATE>  <K_VIRTUAL>  <K_TABLE>  <create_virtual_table_stmt_-_1>  <create_virtual_table_stmt_-_2>  <table_name>  <K_USING>  <module_name>  <create_virtual_table_stmt_-_3>  ;
+# PARSER: delete_stmt
+<delete_stmt_-_1> ::= ;
+<delete_stmt_-_1> ::= <with_clause>  ;
+<delete_stmt_-_2> ::= ;
+<delete_stmt_-_2> ::= <K_WHERE>  <expr>  ;
+<delete_stmt> ::= <delete_stmt_-_1>  <K_DELETE>  <K_FROM>  <qualified_table_name>  <delete_stmt_-_2>  ;
+# PARSER: delete_stmt_limited
+<delete_stmt_limited_-_1> ::= ;
+<delete_stmt_limited_-_1> ::= <with_clause>  ;
+<delete_stmt_limited_-_2> ::= ;
+<delete_stmt_limited_-_2> ::= <K_WHERE>  <expr>  ;
+<delete_stmt_limited_-_3> ::= ;
+<delete_stmt_limited_-_4> ::= ;
+<delete_stmt_limited_-_5> ::= <delete_stmt_limited_-_6>  ;
+<delete_stmt_limited_-_6> ::= ;
+<delete_stmt_limited_-_7> ::= ','  <ordering_term>  ;
+<delete_stmt_limited_-_6> ::= <delete_stmt_limited_-_7>  <delete_stmt_limited_-_6>  ;
+<delete_stmt_limited_-_4> ::= <K_ORDER>  <K_BY>  <ordering_term>  <delete_stmt_limited_-_5>  ;
+<delete_stmt_limited_-_8> ::= ;
+<delete_stmt_limited_-_9> ::= <K_OFFSET>  ;
+<delete_stmt_limited_-_9> ::= ','  ;
+<delete_stmt_limited_-_8> ::= <delete_stmt_limited_-_9>  <expr>  ;
+<delete_stmt_limited_-_3> ::= <delete_stmt_limited_-_4>  <K_LIMIT>  <expr>  <delete_stmt_limited_-_8>  ;
+<delete_stmt_limited> ::= <delete_stmt_limited_-_1>  <K_DELETE>  <K_FROM>  <qualified_table_name>  <delete_stmt_limited_-_2>  <delete_stmt_limited_-_3>  ;
+# PARSER: detach_stmt
+<detach_stmt_-_1> ::= ;
+<detach_stmt_-_1> ::= <K_DATABASE>  ;
+<detach_stmt> ::= <K_DETACH>  <detach_stmt_-_1>  <database_name>  ;
+# PARSER: drop_index_stmt
+<drop_index_stmt_-_1> ::= ;
+<drop_index_stmt_-_1> ::= <K_IF>  <K_EXISTS>  ;
+<drop_index_stmt_-_2> ::= ;
+<drop_index_stmt_-_2> ::= <database_name>  '.'  ;
+<drop_index_stmt> ::= <K_DROP>  <K_INDEX>  <drop_index_stmt_-_1>  <drop_index_stmt_-_2>  <index_name>  ;
+# PARSER: drop_table_stmt
+<drop_table_stmt_-_1> ::= ;
+<drop_table_stmt_-_1> ::= <K_IF>  <K_EXISTS>  ;
+<drop_table_stmt_-_2> ::= ;
+<drop_table_stmt_-_2> ::= <database_name>  '.'  ;
+<drop_table_stmt> ::= <K_DROP>  <K_TABLE>  <drop_table_stmt_-_1>  <drop_table_stmt_-_2>  <table_name>  ;
+# PARSER: drop_trigger_stmt
+<drop_trigger_stmt_-_1> ::= ;
+<drop_trigger_stmt_-_1> ::= <K_IF>  <K_EXISTS>  ;
+<drop_trigger_stmt_-_2> ::= ;
+<drop_trigger_stmt_-_2> ::= <database_name>  '.'  ;
+<drop_trigger_stmt> ::= <K_DROP>  <K_TRIGGER>  <drop_trigger_stmt_-_1>  <drop_trigger_stmt_-_2>  <trigger_name>  ;
+# PARSER: drop_view_stmt
+<drop_view_stmt_-_1> ::= ;
+<drop_view_stmt_-_1> ::= <K_IF>  <K_EXISTS>  ;
+<drop_view_stmt_-_2> ::= ;
+<drop_view_stmt_-_2> ::= <database_name>  '.'  ;
+<drop_view_stmt> ::= <K_DROP>  <K_VIEW>  <drop_view_stmt_-_1>  <drop_view_stmt_-_2>  <view_name>  ;
+# PARSER: factored_select_stmt
+<factored_select_stmt_-_1> ::= ;
+<factored_select_stmt_-_2> ::= ;
+<factored_select_stmt_-_2> ::= <K_RECURSIVE>  ;
+<factored_select_stmt_-_3> ::= <factored_select_stmt_-_4>  ;
+<factored_select_stmt_-_4> ::= ;
+<factored_select_stmt_-_5> ::= ','  <common_table_expression>  ;
+<factored_select_stmt_-_4> ::= <factored_select_stmt_-_5>  <factored_select_stmt_-_4>  ;
+<factored_select_stmt_-_1> ::= <K_WITH>  <factored_select_stmt_-_2>  <common_table_expression>  <factored_select_stmt_-_3>  ;
+<factored_select_stmt_-_6> ::= <factored_select_stmt_-_7>  ;
+<factored_select_stmt_-_7> ::= ;
+<factored_select_stmt_-_8> ::= <compound_operator>  <select_core>  ;
+<factored_select_stmt_-_7> ::= <factored_select_stmt_-_8>  <factored_select_stmt_-_7>  ;
+<factored_select_stmt_-_9> ::= ;
+<factored_select_stmt_-_10> ::= <factored_select_stmt_-_11>  ;
+<factored_select_stmt_-_11> ::= ;
+<factored_select_stmt_-_12> ::= ','  <ordering_term>  ;
+<factored_select_stmt_-_11> ::= <factored_select_stmt_-_12>  <factored_select_stmt_-_11>  ;
+<factored_select_stmt_-_9> ::= <K_ORDER>  <K_BY>  <ordering_term>  <factored_select_stmt_-_10>  ;
+<factored_select_stmt_-_13> ::= ;
+<factored_select_stmt_-_14> ::= ;
+<factored_select_stmt_-_15> ::= <K_OFFSET>  ;
+<factored_select_stmt_-_15> ::= ','  ;
+<factored_select_stmt_-_14> ::= <factored_select_stmt_-_15>  <expr>  ;
+<factored_select_stmt_-_13> ::= <K_LIMIT>  <expr>  <factored_select_stmt_-_14>  ;
+<factored_select_stmt> ::= <factored_select_stmt_-_1>  <select_core>  <factored_select_stmt_-_6>  <factored_select_stmt_-_9>  <factored_select_stmt_-_13>  ;
+# PARSER: insert_stmt
+<insert_stmt_-_1> ::= ;
+<insert_stmt_-_1> ::= <with_clause>  ;
+<insert_stmt_-_2> ::= <K_INSERT>  ;
+<insert_stmt_-_2> ::= <K_REPLACE>  ;
+<insert_stmt_-_2> ::= <K_INSERT>  <K_OR>  <K_REPLACE>  ;
+<insert_stmt_-_2> ::= <K_INSERT>  <K_OR>  <K_ROLLBACK>  ;
+<insert_stmt_-_2> ::= <K_INSERT>  <K_OR>  <K_ABORT>  ;
+<insert_stmt_-_2> ::= <K_INSERT>  <K_OR>  <K_FAIL>  ;
+<insert_stmt_-_2> ::= <K_INSERT>  <K_OR>  <K_IGNORE>  ;
+<insert_stmt_-_3> ::= ;
+<insert_stmt_-_3> ::= <database_name>  '.'  ;
+<insert_stmt_-_4> ::= ;
+<insert_stmt_-_5> ::= <insert_stmt_-_6>  ;
+<insert_stmt_-_6> ::= ;
+<insert_stmt_-_7> ::= ','  <column_name>  ;
+<insert_stmt_-_6> ::= <insert_stmt_-_7>  <insert_stmt_-_6>  ;
+<insert_stmt_-_4> ::= '('  <column_name>  <insert_stmt_-_5>  ')'  ;
+<insert_stmt_-_9> ::= <insert_stmt_-_10>  ;
+<insert_stmt_-_10> ::= ;
+<insert_stmt_-_11> ::= ','  <expr>  ;
+<insert_stmt_-_10> ::= <insert_stmt_-_11>  <insert_stmt_-_10>  ;
+<insert_stmt_-_12> ::= <insert_stmt_-_13>  ;
+<insert_stmt_-_13> ::= ;
+<insert_stmt_-_15> ::= <insert_stmt_-_16>  ;
+<insert_stmt_-_16> ::= ;
+<insert_stmt_-_17> ::= ','  <expr>  ;
+<insert_stmt_-_16> ::= <insert_stmt_-_17>  <insert_stmt_-_16>  ;
+<insert_stmt_-_14> ::= ','  '('  <expr>  <insert_stmt_-_15>  ')'  ;
+<insert_stmt_-_13> ::= <insert_stmt_-_14>  <insert_stmt_-_13>  ;
+<insert_stmt_-_8> ::= <K_VALUES>  '('  <expr>  <insert_stmt_-_9>  ')'  <insert_stmt_-_12>  ;
+<insert_stmt_-_8> ::= <select_stmt>  ;
+<insert_stmt_-_8> ::= <K_DEFAULT>  <K_VALUES>  ;
+<insert_stmt> ::= <insert_stmt_-_1>  <insert_stmt_-_2>  <K_INTO>  <insert_stmt_-_3>  <table_name>  <insert_stmt_-_4>  <insert_stmt_-_8>  ;
+# PARSER: pragma_stmt
+<pragma_stmt_-_1> ::= ;
+<pragma_stmt_-_1> ::= <database_name>  '.'  ;
+<pragma_stmt_-_2> ::= ;
+<pragma_stmt_-_2> ::= '='  <pragma_value>  ;
+<pragma_stmt_-_2> ::= '('  <pragma_value>  ')'  ;
+<pragma_stmt> ::= <K_PRAGMA>  <pragma_stmt_-_1>  <pragma_name>  <pragma_stmt_-_2>  ;
+# PARSER: reindex_stmt
+<reindex_stmt_-_1> ::= ;
+<reindex_stmt_-_1> ::= <collation_name>  ;
+<reindex_stmt_-_2> ::= ;
+<reindex_stmt_-_2> ::= <database_name>  '.'  ;
+<reindex_stmt_-_3> ::= <table_name>  ;
+<reindex_stmt_-_3> ::= <index_name>  ;
+<reindex_stmt_-_1> ::= <reindex_stmt_-_2>  <reindex_stmt_-_3>  ;
+<reindex_stmt> ::= <K_REINDEX>  <reindex_stmt_-_1>  ;
+# PARSER: release_stmt
+<release_stmt_-_1> ::= ;
+<release_stmt_-_1> ::= <K_SAVEPOINT>  ;
+<release_stmt> ::= <K_RELEASE>  <release_stmt_-_1>  <savepoint_name>  ;
+# PARSER: rollback_stmt
+<rollback_stmt_-_1> ::= ;
+<rollback_stmt_-_2> ::= ;
+<rollback_stmt_-_2> ::= <transaction_name>  ;
+<rollback_stmt_-_1> ::= <K_TRANSACTION>  <rollback_stmt_-_2>  ;
+<rollback_stmt_-_3> ::= ;
+<rollback_stmt_-_4> ::= ;
+<rollback_stmt_-_4> ::= <K_SAVEPOINT>  ;
+<rollback_stmt_-_3> ::= <K_TO>  <rollback_stmt_-_4>  <savepoint_name>  ;
+<rollback_stmt> ::= <K_ROLLBACK>  <rollback_stmt_-_1>  <rollback_stmt_-_3>  ;
+# PARSER: savepoint_stmt
+<savepoint_stmt> ::= <K_SAVEPOINT>  <savepoint_name>  ;
+# PARSER: simple_select_stmt
+<simple_select_stmt_-_1> ::= ;
+<simple_select_stmt_-_2> ::= ;
+<simple_select_stmt_-_2> ::= <K_RECURSIVE>  ;
+<simple_select_stmt_-_3> ::= <simple_select_stmt_-_4>  ;
+<simple_select_stmt_-_4> ::= ;
+<simple_select_stmt_-_5> ::= ','  <common_table_expression>  ;
+<simple_select_stmt_-_4> ::= <simple_select_stmt_-_5>  <simple_select_stmt_-_4>  ;
+<simple_select_stmt_-_1> ::= <K_WITH>  <simple_select_stmt_-_2>  <common_table_expression>  <simple_select_stmt_-_3>  ;
+<simple_select_stmt_-_6> ::= ;
+<simple_select_stmt_-_7> ::= <simple_select_stmt_-_8>  ;
+<simple_select_stmt_-_8> ::= ;
+<simple_select_stmt_-_9> ::= ','  <ordering_term>  ;
+<simple_select_stmt_-_8> ::= <simple_select_stmt_-_9>  <simple_select_stmt_-_8>  ;
+<simple_select_stmt_-_6> ::= <K_ORDER>  <K_BY>  <ordering_term>  <simple_select_stmt_-_7>  ;
+<simple_select_stmt_-_10> ::= ;
+<simple_select_stmt_-_11> ::= ;
+<simple_select_stmt_-_12> ::= <K_OFFSET>  ;
+<simple_select_stmt_-_12> ::= ','  ;
+<simple_select_stmt_-_11> ::= <simple_select_stmt_-_12>  <expr>  ;
+<simple_select_stmt_-_10> ::= <K_LIMIT>  <expr>  <simple_select_stmt_-_11>  ;
+<simple_select_stmt> ::= <simple_select_stmt_-_1>  <select_core>  <simple_select_stmt_-_6>  <simple_select_stmt_-_10>  ;
+# PARSER: select_stmt
+<select_stmt_-_1> ::= ;
+<select_stmt_-_2> ::= ;
+<select_stmt_-_2> ::= <K_RECURSIVE>  ;
+<select_stmt_-_3> ::= <select_stmt_-_4>  ;
+<select_stmt_-_4> ::= ;
+<select_stmt_-_5> ::= ','  <common_table_expression>  ;
+<select_stmt_-_4> ::= <select_stmt_-_5>  <select_stmt_-_4>  ;
+<select_stmt_-_1> ::= <K_WITH>  <select_stmt_-_2>  <common_table_expression>  <select_stmt_-_3>  ;
+<select_stmt_-_6> ::= <select_stmt_-_7>  ;
+<select_stmt_-_7> ::= ;
+<select_stmt_-_8> ::= <compound_operator>  <select_or_values>  ;
+<select_stmt_-_7> ::= <select_stmt_-_8>  <select_stmt_-_7>  ;
+<select_stmt_-_9> ::= ;
+<select_stmt_-_10> ::= <select_stmt_-_11>  ;
+<select_stmt_-_11> ::= ;
+<select_stmt_-_12> ::= ','  <ordering_term>  ;
+<select_stmt_-_11> ::= <select_stmt_-_12>  <select_stmt_-_11>  ;
+<select_stmt_-_9> ::= <K_ORDER>  <K_BY>  <ordering_term>  <select_stmt_-_10>  ;
+<select_stmt_-_13> ::= ;
+<select_stmt_-_14> ::= ;
+<select_stmt_-_15> ::= <K_OFFSET>  ;
+<select_stmt_-_15> ::= ','  ;
+<select_stmt_-_14> ::= <select_stmt_-_15>  <expr>  ;
+<select_stmt_-_13> ::= <K_LIMIT>  <expr>  <select_stmt_-_14>  ;
+<select_stmt> ::= <select_stmt_-_1>  <select_or_values>  <select_stmt_-_6>  <select_stmt_-_9>  <select_stmt_-_13>  ;
+# PARSER: select_or_values
+<select_or_values_-_1> ::= ;
+<select_or_values_-_1> ::= <K_DISTINCT>  ;
+<select_or_values_-_1> ::= <K_ALL>  ;
+<select_or_values_-_2> ::= <select_or_values_-_3>  ;
+<select_or_values_-_3> ::= ;
+<select_or_values_-_4> ::= ','  <result_column>  ;
+<select_or_values_-_3> ::= <select_or_values_-_4>  <select_or_values_-_3>  ;
+<select_or_values_-_5> ::= ;
+<select_or_values_-_7> ::= <select_or_values_-_8>  ;
+<select_or_values_-_8> ::= ;
+<select_or_values_-_9> ::= ','  <table_or_subquery>  ;
+<select_or_values_-_8> ::= <select_or_values_-_9>  <select_or_values_-_8>  ;
+<select_or_values_-_6> ::= <table_or_subquery>  <select_or_values_-_7>  ;
+<select_or_values_-_6> ::= <join_clause>  ;
+<select_or_values_-_5> ::= <K_FROM>  <select_or_values_-_6>  ;
+<select_or_values_-_10> ::= ;
+<select_or_values_-_10> ::= <K_WHERE>  <expr>  ;
+<select_or_values_-_11> ::= ;
+<select_or_values_-_12> ::= <select_or_values_-_13>  ;
+<select_or_values_-_13> ::= ;
+<select_or_values_-_14> ::= ','  <expr>  ;
+<select_or_values_-_13> ::= <select_or_values_-_14>  <select_or_values_-_13>  ;
+<select_or_values_-_15> ::= ;
+<select_or_values_-_15> ::= <K_HAVING>  <expr>  ;
+<select_or_values_-_11> ::= <K_GROUP>  <K_BY>  <expr>  <select_or_values_-_12>  <select_or_values_-_15>  ;
+<select_or_values> ::= <K_SELECT>  <select_or_values_-_1>  <result_column>  <select_or_values_-_2>  <select_or_values_-_5>  <select_or_values_-_10>  <select_or_values_-_11>  ;
+<select_or_values_-_16> ::= <select_or_values_-_17>  ;
+<select_or_values_-_17> ::= ;
+<select_or_values_-_18> ::= ','  <expr>  ;
+<select_or_values_-_17> ::= <select_or_values_-_18>  <select_or_values_-_17>  ;
+<select_or_values_-_19> ::= <select_or_values_-_20>  ;
+<select_or_values_-_20> ::= ;
+<select_or_values_-_22> ::= <select_or_values_-_23>  ;
+<select_or_values_-_23> ::= ;
+<select_or_values_-_24> ::= ','  <expr>  ;
+<select_or_values_-_23> ::= <select_or_values_-_24>  <select_or_values_-_23>  ;
+<select_or_values_-_21> ::= ','  '('  <expr>  <select_or_values_-_22>  ')'  ;
+<select_or_values_-_20> ::= <select_or_values_-_21>  <select_or_values_-_20>  ;
+<select_or_values> ::= <K_VALUES>  '('  <expr>  <select_or_values_-_16>  ')'  <select_or_values_-_19>  ;
+# PARSER: update_stmt
+<update_stmt_-_1> ::= ;
+<update_stmt_-_1> ::= <with_clause>  ;
+<update_stmt_-_2> ::= ;
+<update_stmt_-_2> ::= <K_OR>  <K_ROLLBACK>  ;
+<update_stmt_-_2> ::= <K_OR>  <K_ABORT>  ;
+<update_stmt_-_2> ::= <K_OR>  <K_REPLACE>  ;
+<update_stmt_-_2> ::= <K_OR>  <K_FAIL>  ;
+<update_stmt_-_2> ::= <K_OR>  <K_IGNORE>  ;
+<update_stmt_-_3> ::= <update_stmt_-_4>  ;
+<update_stmt_-_4> ::= ;
+<update_stmt_-_5> ::= ','  <column_name>  '='  <expr>  ;
+<update_stmt_-_4> ::= <update_stmt_-_5>  <update_stmt_-_4>  ;
+<update_stmt_-_6> ::= ;
+<update_stmt_-_6> ::= <K_WHERE>  <expr>  ;
+<update_stmt> ::= <update_stmt_-_1>  <K_UPDATE>  <update_stmt_-_2>  <qualified_table_name>  <K_SET>  <column_name>  '='  <expr>  <update_stmt_-_3>  <update_stmt_-_6>  ;
+# PARSER: update_stmt_limited
+<update_stmt_limited_-_1> ::= ;
+<update_stmt_limited_-_1> ::= <with_clause>  ;
+<update_stmt_limited_-_2> ::= ;
+<update_stmt_limited_-_2> ::= <K_OR>  <K_ROLLBACK>  ;
+<update_stmt_limited_-_2> ::= <K_OR>  <K_ABORT>  ;
+<update_stmt_limited_-_2> ::= <K_OR>  <K_REPLACE>  ;
+<update_stmt_limited_-_2> ::= <K_OR>  <K_FAIL>  ;
+<update_stmt_limited_-_2> ::= <K_OR>  <K_IGNORE>  ;
+<update_stmt_limited_-_3> ::= <update_stmt_limited_-_4>  ;
+<update_stmt_limited_-_4> ::= ;
+<update_stmt_limited_-_5> ::= ','  <column_name>  '='  <expr>  ;
+<update_stmt_limited_-_4> ::= <update_stmt_limited_-_5>  <update_stmt_limited_-_4>  ;
+<update_stmt_limited_-_6> ::= ;
+<update_stmt_limited_-_6> ::= <K_WHERE>  <expr>  ;
+<update_stmt_limited_-_7> ::= ;
+<update_stmt_limited_-_8> ::= ;
+<update_stmt_limited_-_9> ::= <update_stmt_limited_-_10>  ;
+<update_stmt_limited_-_10> ::= ;
+<update_stmt_limited_-_11> ::= ','  <ordering_term>  ;
+<update_stmt_limited_-_10> ::= <update_stmt_limited_-_11>  <update_stmt_limited_-_10>  ;
+<update_stmt_limited_-_8> ::= <K_ORDER>  <K_BY>  <ordering_term>  <update_stmt_limited_-_9>  ;
+<update_stmt_limited_-_12> ::= ;
+<update_stmt_limited_-_13> ::= <K_OFFSET>  ;
+<update_stmt_limited_-_13> ::= ','  ;
+<update_stmt_limited_-_12> ::= <update_stmt_limited_-_13>  <expr>  ;
+<update_stmt_limited_-_7> ::= <update_stmt_limited_-_8>  <K_LIMIT>  <expr>  <update_stmt_limited_-_12>  ;
+<update_stmt_limited> ::= <update_stmt_limited_-_1>  <K_UPDATE>  <update_stmt_limited_-_2>  <qualified_table_name>  <K_SET>  <column_name>  '='  <expr>  <update_stmt_limited_-_3>  <update_stmt_limited_-_6>  <update_stmt_limited_-_7>  ;
+# PARSER: vacuum_stmt
+<vacuum_stmt> ::= <K_VACUUM>  ;
+# PARSER: column_def
+<column_def_-_1> ::= ;
+<column_def_-_1> ::= <type_name>  ;
+<column_def_-_2> ::= <column_def_-_3>  ;
+<column_def_-_3> ::= ;
+<column_def_-_3> ::= <column_constraint>  <column_def_-_3>  ;
+<column_def> ::= <column_name>  <column_def_-_1>  <column_def_-_2>  ;
+# PARSER: type_name
+<type_name_-_1> ::= <type_name_-_2>  ;
+<type_name_-_2> ::= <type_name_-_3>  ;
+<type_name_-_2> ::= <type_name_-_3>  <type_name_-_2>  ;
+<type_name_-_3> ::= <name>  ;
+<type_name_-_4> ::= ;
+<type_name_-_4> ::= '('  <signed_number>  ')'  ;
+<type_name_-_4> ::= '('  <signed_number>  ','  <signed_number>  ')'  ;
+<type_name> ::= <type_name_-_1>  <type_name_-_4>  ;
+# PARSER: column_constraint
+<column_constraint_-_1> ::= ;
+<column_constraint_-_1> ::= <K_CONSTRAINT>  <name>  ;
+<column_constraint_-_3> ::= ;
+<column_constraint_-_3> ::= <K_ASC>  ;
+<column_constraint_-_3> ::= <K_DESC>  ;
+<column_constraint_-_4> ::= ;
+<column_constraint_-_4> ::= <K_AUTOINCREMENT>  ;
+<column_constraint_-_2> ::= <K_PRIMARY>  <K_KEY>  <column_constraint_-_3>  <conflict_clause>  <column_constraint_-_4>  ;
+<column_constraint_-_5> ::= ;
+<column_constraint_-_5> ::= <K_NOT>  ;
+<column_constraint_-_2> ::= <column_constraint_-_5>  <K_NULL>  <conflict_clause>  ;
+<column_constraint_-_2> ::= <K_UNIQUE>  <conflict_clause>  ;
+<column_constraint_-_2> ::= <K_CHECK>  '('  <expr>  ')'  ;
+<column_constraint_-_6> ::= <signed_number>  ;
+<column_constraint_-_6> ::= <literal_value>  ;
+<column_constraint_-_6> ::= '('  <expr>  ')'  ;
+<column_constraint_-_2> ::= <K_DEFAULT>  <column_constraint_-_6>  ;
+<column_constraint_-_2> ::= <K_COLLATE>  <collation_name>  ;
+<column_constraint_-_2> ::= <foreign_key_clause>  ;
+<column_constraint> ::= <column_constraint_-_1>  <column_constraint_-_2>  ;
+# PARSER: conflict_clause
+<conflict_clause> ::= ;
+<conflict_clause_-_1> ::= <K_ROLLBACK>  ;
+<conflict_clause_-_1> ::= <K_ABORT>  ;
+<conflict_clause_-_1> ::= <K_FAIL>  ;
+<conflict_clause_-_1> ::= <K_IGNORE>  ;
+<conflict_clause_-_1> ::= <K_REPLACE>  ;
+<conflict_clause> ::= <K_ON>  <K_CONFLICT>  <conflict_clause_-_1>  ;
+# PARSER: expr
+<expr> ::= <literal_value>  ;
+<expr> ::= <BIND_PARAMETER>  ;
+<expr_-_1> ::= ;
+<expr_-_2> ::= ;
+<expr_-_2> ::= <database_name>  '.'  ;
+<expr_-_1> ::= <expr_-_2>  <table_name>  '.'  ;
+<expr> ::= <expr_-_1>  <column_name>  ;
+<expr> ::= <unary_operator>  <expr>  ;
+<expr> ::= <expr>  '||'  <expr>  ;
+<expr_-_3> ::= '*'  ;
+<expr_-_3> ::= '/'  ;
+<expr_-_3> ::= '%'  ;
+<expr> ::= <expr>  <expr_-_3>  <expr>  ;
+<expr_-_4> ::= '+'  ;
+<expr_-_4> ::= '-'  ;
+<expr> ::= <expr>  <expr_-_4>  <expr>  ;
+<expr_-_5> ::= '<<'  ;
+<expr_-_5> ::= '>>'  ;
+<expr_-_5> ::= '&'  ;
+<expr_-_5> ::= '|'  ;
+<expr> ::= <expr>  <expr_-_5>  <expr>  ;
+<expr_-_6> ::= '<'  ;
+<expr_-_6> ::= '<='  ;
+<expr_-_6> ::= '>'  ;
+<expr_-_6> ::= '>='  ;
+<expr> ::= <expr>  <expr_-_6>  <expr>  ;
+<expr_-_7> ::= '='  ;
+<expr_-_7> ::= '=='  ;
+<expr_-_7> ::= '!='  ;
+<expr_-_7> ::= '<>'  ;
+<expr_-_7> ::= <K_IS>  ;
+<expr_-_7> ::= <K_IS>  <K_NOT>  ;
+<expr_-_7> ::= <K_IN>  ;
+<expr_-_7> ::= <K_LIKE>  ;
+<expr_-_7> ::= <K_GLOB>  ;
+<expr_-_7> ::= <K_MATCH>  ;
+<expr_-_7> ::= <K_REGEXP>  ;
+<expr> ::= <expr>  <expr_-_7>  <expr>  ;
+<expr> ::= <expr>  <K_AND>  <expr>  ;
+<expr> ::= <expr>  <K_OR>  <expr>  ;
+<expr_-_8> ::= ;
+<expr_-_9> ::= ;
+<expr_-_9> ::= <K_DISTINCT>  ;
+<expr_-_10> ::= <expr_-_11>  ;
+<expr_-_11> ::= ;
+<expr_-_12> ::= ','  <expr>  ;
+<expr_-_11> ::= <expr_-_12>  <expr_-_11>  ;
+<expr_-_8> ::= <expr_-_9>  <expr>  <expr_-_10>  ;
+<expr_-_8> ::= '*'  ;
+<expr> ::= <function_name>  '('  <expr_-_8>  ')'  ;
+<expr> ::= '('  <expr>  ')'  ;
+<expr> ::= <K_CAST>  '('  <expr>  <K_AS>  <type_name>  ')'  ;
+<expr> ::= <expr>  <K_COLLATE>  <collation_name>  ;
+<expr_-_13> ::= ;
+<expr_-_13> ::= <K_NOT>  ;
+<expr_-_14> ::= <K_LIKE>  ;
+<expr_-_14> ::= <K_GLOB>  ;
+<expr_-_14> ::= <K_REGEXP>  ;
+<expr_-_14> ::= <K_MATCH>  ;
+<expr_-_15> ::= ;
+<expr_-_15> ::= <K_ESCAPE>  <expr>  ;
+<expr> ::= <expr>  <expr_-_13>  <expr_-_14>  <expr>  <expr_-_15>  ;
+<expr_-_16> ::= <K_ISNULL>  ;
+<expr_-_16> ::= <K_NOTNULL>  ;
+<expr_-_16> ::= <K_NOT>  <K_NULL>  ;
+<expr> ::= <expr>  <expr_-_16>  ;
+<expr_-_17> ::= ;
+<expr_-_17> ::= <K_NOT>  ;
+<expr> ::= <expr>  <K_IS>  <expr_-_17>  <expr>  ;
+<expr_-_18> ::= ;
+<expr_-_18> ::= <K_NOT>  ;
+<expr> ::= <expr>  <expr_-_18>  <K_BETWEEN>  <expr>  <K_AND>  <expr>  ;
+<expr_-_19> ::= ;
+<expr_-_19> ::= <K_NOT>  ;
+<expr_-_21> ::= ;
+<expr_-_21> ::= <select_stmt>  ;
+<expr_-_22> ::= <expr_-_23>  ;
+<expr_-_23> ::= ;
+<expr_-_24> ::= ','  <expr>  ;
+<expr_-_23> ::= <expr_-_24>  <expr_-_23>  ;
+<expr_-_21> ::= <expr>  <expr_-_22>  ;
+<expr_-_20> ::= '('  <expr_-_21>  ')'  ;
+<expr_-_25> ::= ;
+<expr_-_25> ::= <database_name>  '.'  ;
+<expr_-_20> ::= <expr_-_25>  <table_name>  ;
+<expr> ::= <expr>  <expr_-_19>  <K_IN>  <expr_-_20>  ;
+<expr_-_26> ::= ;
+<expr_-_27> ::= ;
+<expr_-_27> ::= <K_NOT>  ;
+<expr_-_26> ::= <expr_-_27>  <K_EXISTS>  ;
+<expr> ::= <expr_-_26>  '('  <select_stmt>  ')'  ;
+<expr_-_28> ::= ;
+<expr_-_28> ::= <expr>  ;
+<expr_-_29> ::= <expr_-_30>  ;
+<expr_-_30> ::= <expr_-_31>  ;
+<expr_-_30> ::= <expr_-_31>  <expr_-_30>  ;
+<expr_-_31> ::= <K_WHEN>  <expr>  <K_THEN>  <expr>  ;
+<expr_-_32> ::= ;
+<expr_-_32> ::= <K_ELSE>  <expr>  ;
+<expr> ::= <K_CASE>  <expr_-_28>  <expr_-_29>  <expr_-_32>  <K_END>  ;
+<expr> ::= <raise_function>  ;
+# PARSER: foreign_key_clause
+<foreign_key_clause_-_1> ::= ;
+<foreign_key_clause_-_2> ::= <foreign_key_clause_-_3>  ;
+<foreign_key_clause_-_3> ::= ;
+<foreign_key_clause_-_4> ::= ','  <column_name>  ;
+<foreign_key_clause_-_3> ::= <foreign_key_clause_-_4>  <foreign_key_clause_-_3>  ;
+<foreign_key_clause_-_1> ::= '('  <column_name>  <foreign_key_clause_-_2>  ')'  ;
+<foreign_key_clause_-_5> ::= <foreign_key_clause_-_6>  ;
+<foreign_key_clause_-_6> ::= ;
+<foreign_key_clause_-_8> ::= <K_DELETE>  ;
+<foreign_key_clause_-_8> ::= <K_UPDATE>  ;
+<foreign_key_clause_-_9> ::= <K_SET>  <K_NULL>  ;
+<foreign_key_clause_-_9> ::= <K_SET>  <K_DEFAULT>  ;
+<foreign_key_clause_-_9> ::= <K_CASCADE>  ;
+<foreign_key_clause_-_9> ::= <K_RESTRICT>  ;
+<foreign_key_clause_-_9> ::= <K_NO>  <K_ACTION>  ;
+<foreign_key_clause_-_7> ::= <K_ON>  <foreign_key_clause_-_8>  <foreign_key_clause_-_9>  ;
+<foreign_key_clause_-_7> ::= <K_MATCH>  <name>  ;
+<foreign_key_clause_-_6> ::= <foreign_key_clause_-_7>  <foreign_key_clause_-_6>  ;
+<foreign_key_clause_-_10> ::= ;
+<foreign_key_clause_-_11> ::= ;
+<foreign_key_clause_-_11> ::= <K_NOT>  ;
+<foreign_key_clause_-_12> ::= ;
+<foreign_key_clause_-_12> ::= <K_INITIALLY>  <K_DEFERRED>  ;
+<foreign_key_clause_-_12> ::= <K_INITIALLY>  <K_IMMEDIATE>  ;
+<foreign_key_clause_-_10> ::= <foreign_key_clause_-_11>  <K_DEFERRABLE>  <foreign_key_clause_-_12>  ;
+<foreign_key_clause> ::= <K_REFERENCES>  <foreign_table>  <foreign_key_clause_-_1>  <foreign_key_clause_-_5>  <foreign_key_clause_-_10>  ;
+# PARSER: raise_function
+<raise_function_-_1> ::= <K_IGNORE>  ;
+<raise_function_-_2> ::= <K_ROLLBACK>  ;
+<raise_function_-_2> ::= <K_ABORT>  ;
+<raise_function_-_2> ::= <K_FAIL>  ;
+<raise_function_-_1> ::= <raise_function_-_2>  ','  <error_message>  ;
+<raise_function> ::= <K_RAISE>  '('  <raise_function_-_1>  ')'  ;
+# PARSER: indexed_column
+<indexed_column_-_1> ::= ;
+<indexed_column_-_1> ::= <K_COLLATE>  <collation_name>  ;
+<indexed_column_-_2> ::= ;
+<indexed_column_-_2> ::= <K_ASC>  ;
+<indexed_column_-_2> ::= <K_DESC>  ;
+<indexed_column> ::= <column_name>  <indexed_column_-_1>  <indexed_column_-_2>  ;
+# PARSER: table_constraint
+<table_constraint_-_1> ::= ;
+<table_constraint_-_1> ::= <K_CONSTRAINT>  <name>  ;
+<table_constraint_-_3> ::= <K_PRIMARY>  <K_KEY>  ;
+<table_constraint_-_3> ::= <K_UNIQUE>  ;
+<table_constraint_-_4> ::= <table_constraint_-_5>  ;
+<table_constraint_-_5> ::= ;
+<table_constraint_-_6> ::= ','  <indexed_column>  ;
+<table_constraint_-_5> ::= <table_constraint_-_6>  <table_constraint_-_5>  ;
+<table_constraint_-_2> ::= <table_constraint_-_3>  '('  <indexed_column>  <table_constraint_-_4>  ')'  <conflict_clause>  ;
+<table_constraint_-_2> ::= <K_CHECK>  '('  <expr>  ')'  ;
+<table_constraint_-_7> ::= <table_constraint_-_8>  ;
+<table_constraint_-_8> ::= ;
+<table_constraint_-_9> ::= ','  <column_name>  ;
+<table_constraint_-_8> ::= <table_constraint_-_9>  <table_constraint_-_8>  ;
+<table_constraint_-_2> ::= <K_FOREIGN>  <K_KEY>  '('  <column_name>  <table_constraint_-_7>  ')'  <foreign_key_clause>  ;
+<table_constraint> ::= <table_constraint_-_1>  <table_constraint_-_2>  ;
+# PARSER: with_clause
+<with_clause_-_1> ::= ;
+<with_clause_-_1> ::= <K_RECURSIVE>  ;
+<with_clause_-_2> ::= <with_clause_-_3>  ;
+<with_clause_-_3> ::= ;
+<with_clause_-_4> ::= ','  <cte_table_name>  <K_AS>  '('  <select_stmt>  ')'  ;
+<with_clause_-_3> ::= <with_clause_-_4>  <with_clause_-_3>  ;
+<with_clause> ::= <K_WITH>  <with_clause_-_1>  <cte_table_name>  <K_AS>  '('  <select_stmt>  ')'  <with_clause_-_2>  ;
+# PARSER: qualified_table_name
+<qualified_table_name_-_1> ::= ;
+<qualified_table_name_-_1> ::= <database_name>  '.'  ;
+<qualified_table_name_-_2> ::= ;
+<qualified_table_name_-_2> ::= <K_INDEXED>  <K_BY>  <index_name>  ;
+<qualified_table_name_-_2> ::= <K_NOT>  <K_INDEXED>  ;
+<qualified_table_name> ::= <qualified_table_name_-_1>  <table_name>  <qualified_table_name_-_2>  ;
+# PARSER: ordering_term
+<ordering_term_-_1> ::= ;
+<ordering_term_-_1> ::= <K_COLLATE>  <collation_name>  ;
+<ordering_term_-_2> ::= ;
+<ordering_term_-_2> ::= <K_ASC>  ;
+<ordering_term_-_2> ::= <K_DESC>  ;
+<ordering_term> ::= <expr>  <ordering_term_-_1>  <ordering_term_-_2>  ;
+# PARSER: pragma_value
+<pragma_value> ::= <signed_number>  ;
+<pragma_value> ::= <name>  ;
+<pragma_value> ::= <STRING_LITERAL>  ;
+# PARSER: common_table_expression
+<common_table_expression_-_1> ::= ;
+<common_table_expression_-_2> ::= <common_table_expression_-_3>  ;
+<common_table_expression_-_3> ::= ;
+<common_table_expression_-_4> ::= ','  <column_name>  ;
+<common_table_expression_-_3> ::= <common_table_expression_-_4>  <common_table_expression_-_3>  ;
+<common_table_expression_-_1> ::= '('  <column_name>  <common_table_expression_-_2>  ')'  ;
+<common_table_expression> ::= <table_name>  <common_table_expression_-_1>  <K_AS>  '('  <select_stmt>  ')'  ;
+# PARSER: result_column
+<result_column> ::= '*'  ;
+<result_column> ::= <table_name>  '.'  '*'  ;
+<result_column_-_1> ::= ;
+<result_column_-_2> ::= ;
+<result_column_-_2> ::= <K_AS>  ;
+<result_column_-_1> ::= <result_column_-_2>  <column_alias>  ;
+<result_column> ::= <expr>  <result_column_-_1>  ;
+# PARSER: table_or_subquery
+<table_or_subquery_-_1> ::= ;
+<table_or_subquery_-_1> ::= <database_name>  '.'  ;
+<table_or_subquery_-_2> ::= ;
+<table_or_subquery_-_3> ::= ;
+<table_or_subquery_-_3> ::= <K_AS>  ;
+<table_or_subquery_-_2> ::= <table_or_subquery_-_3>  <table_alias>  ;
+<table_or_subquery_-_4> ::= ;
+<table_or_subquery_-_4> ::= <K_INDEXED>  <K_BY>  <index_name>  ;
+<table_or_subquery_-_4> ::= <K_NOT>  <K_INDEXED>  ;
+<table_or_subquery> ::= <table_or_subquery_-_1>  <table_name>  <table_or_subquery_-_2>  <table_or_subquery_-_4>  ;
+<table_or_subquery_-_6> ::= <table_or_subquery_-_7>  ;
+<table_or_subquery_-_7> ::= ;
+<table_or_subquery_-_8> ::= ','  <table_or_subquery>  ;
+<table_or_subquery_-_7> ::= <table_or_subquery_-_8>  <table_or_subquery_-_7>  ;
+<table_or_subquery_-_5> ::= <table_or_subquery>  <table_or_subquery_-_6>  ;
+<table_or_subquery_-_5> ::= <join_clause>  ;
+<table_or_subquery_-_9> ::= ;
+<table_or_subquery_-_10> ::= ;
+<table_or_subquery_-_10> ::= <K_AS>  ;
+<table_or_subquery_-_9> ::= <table_or_subquery_-_10>  <table_alias>  ;
+<table_or_subquery> ::= '('  <table_or_subquery_-_5>  ')'  <table_or_subquery_-_9>  ;
+<table_or_subquery_-_11> ::= ;
+<table_or_subquery_-_12> ::= ;
+<table_or_subquery_-_12> ::= <K_AS>  ;
+<table_or_subquery_-_11> ::= <table_or_subquery_-_12>  <table_alias>  ;
+<table_or_subquery> ::= '('  <select_stmt>  ')'  <table_or_subquery_-_11>  ;
+# PARSER: join_clause
+<join_clause_-_1> ::= <join_clause_-_2>  ;
+<join_clause_-_2> ::= ;
+<join_clause_-_3> ::= <join_operator>  <table_or_subquery>  <join_constraint>  ;
+<join_clause_-_2> ::= <join_clause_-_3>  <join_clause_-_2>  ;
+<join_clause> ::= <table_or_subquery>  <join_clause_-_1>  ;
+# PARSER: join_operator
+<join_operator> ::= ','  ;
+<join_operator_-_1> ::= ;
+<join_operator_-_1> ::= <K_NATURAL>  ;
+<join_operator_-_2> ::= ;
+<join_operator_-_3> ::= ;
+<join_operator_-_3> ::= <K_OUTER>  ;
+<join_operator_-_2> ::= <K_LEFT>  <join_operator_-_3>  ;
+<join_operator_-_2> ::= <K_INNER>  ;
+<join_operator_-_2> ::= <K_CROSS>  ;
+<join_operator> ::= <join_operator_-_1>  <join_operator_-_2>  <K_JOIN>  ;
+# PARSER: join_constraint
+<join_constraint> ::= ;
+<join_constraint> ::= <K_ON>  <expr>  ;
+<join_constraint_-_1> ::= <join_constraint_-_2>  ;
+<join_constraint_-_2> ::= ;
+<join_constraint_-_3> ::= ','  <column_name>  ;
+<join_constraint_-_2> ::= <join_constraint_-_3>  <join_constraint_-_2>  ;
+<join_constraint> ::= <K_USING>  '('  <column_name>  <join_constraint_-_1>  ')'  ;
+# PARSER: select_core
+<select_core_-_1> ::= ;
+<select_core_-_1> ::= <K_DISTINCT>  ;
+<select_core_-_1> ::= <K_ALL>  ;
+<select_core_-_2> ::= <select_core_-_3>  ;
+<select_core_-_3> ::= ;
+<select_core_-_4> ::= ','  <result_column>  ;
+<select_core_-_3> ::= <select_core_-_4>  <select_core_-_3>  ;
+<select_core_-_5> ::= ;
+<select_core_-_7> ::= <select_core_-_8>  ;
+<select_core_-_8> ::= ;
+<select_core_-_9> ::= ','  <table_or_subquery>  ;
+<select_core_-_8> ::= <select_core_-_9>  <select_core_-_8>  ;
+<select_core_-_6> ::= <table_or_subquery>  <select_core_-_7>  ;
+<select_core_-_6> ::= <join_clause>  ;
+<select_core_-_5> ::= <K_FROM>  <select_core_-_6>  ;
+<select_core_-_10> ::= ;
+<select_core_-_10> ::= <K_WHERE>  <expr>  ;
+<select_core_-_11> ::= ;
+<select_core_-_12> ::= <select_core_-_13>  ;
+<select_core_-_13> ::= ;
+<select_core_-_14> ::= ','  <expr>  ;
+<select_core_-_13> ::= <select_core_-_14>  <select_core_-_13>  ;
+<select_core_-_15> ::= ;
+<select_core_-_15> ::= <K_HAVING>  <expr>  ;
+<select_core_-_11> ::= <K_GROUP>  <K_BY>  <expr>  <select_core_-_12>  <select_core_-_15>  ;
+<select_core> ::= <K_SELECT>  <select_core_-_1>  <result_column>  <select_core_-_2>  <select_core_-_5>  <select_core_-_10>  <select_core_-_11>  ;
+<select_core_-_16> ::= <select_core_-_17>  ;
+<select_core_-_17> ::= ;
+<select_core_-_18> ::= ','  <expr>  ;
+<select_core_-_17> ::= <select_core_-_18>  <select_core_-_17>  ;
+<select_core_-_19> ::= <select_core_-_20>  ;
+<select_core_-_20> ::= ;
+<select_core_-_22> ::= <select_core_-_23>  ;
+<select_core_-_23> ::= ;
+<select_core_-_24> ::= ','  <expr>  ;
+<select_core_-_23> ::= <select_core_-_24>  <select_core_-_23>  ;
+<select_core_-_21> ::= ','  '('  <expr>  <select_core_-_22>  ')'  ;
+<select_core_-_20> ::= <select_core_-_21>  <select_core_-_20>  ;
+<select_core> ::= <K_VALUES>  '('  <expr>  <select_core_-_16>  ')'  <select_core_-_19>  ;
+# PARSER: compound_operator
+<compound_operator> ::= <K_UNION>  ;
+<compound_operator> ::= <K_UNION>  <K_ALL>  ;
+<compound_operator> ::= <K_INTERSECT>  ;
+<compound_operator> ::= <K_EXCEPT>  ;
+# PARSER: cte_table_name
+<cte_table_name_-_1> ::= ;
+<cte_table_name_-_2> ::= <cte_table_name_-_3>  ;
+<cte_table_name_-_3> ::= ;
+<cte_table_name_-_4> ::= ','  <column_name>  ;
+<cte_table_name_-_3> ::= <cte_table_name_-_4>  <cte_table_name_-_3>  ;
+<cte_table_name_-_1> ::= '('  <column_name>  <cte_table_name_-_2>  ')'  ;
+<cte_table_name> ::= <table_name>  <cte_table_name_-_1>  ;
+# PARSER: signed_number
+<signed_number_-_1> ::= ;
+<signed_number_-_1> ::= '+'  ;
+<signed_number_-_1> ::= '-'  ;
+<signed_number> ::= <signed_number_-_1>  <NUMERIC_LITERAL>  ;
+# PARSER: literal_value
+<literal_value> ::= <NUMERIC_LITERAL>  ;
+<literal_value> ::= <STRING_LITERAL>  ;
+<literal_value> ::= <BLOB_LITERAL>  ;
+<literal_value> ::= <K_NULL>  ;
+<literal_value> ::= <K_CURRENT_TIME>  ;
+<literal_value> ::= <K_CURRENT_DATE>  ;
+<literal_value> ::= <K_CURRENT_TIMESTAMP>  ;
+# PARSER: unary_operator
+<unary_operator> ::= '-'  ;
+<unary_operator> ::= '+'  ;
+<unary_operator> ::= '~'  ;
+<unary_operator> ::= <K_NOT>  ;
+# PARSER: error_message
+<error_message> ::= <STRING_LITERAL>  ;
+# PARSER: module_argument
+<module_argument> ::= <expr>  ;
+<module_argument> ::= <column_def>  ;
+# PARSER: column_alias
+<column_alias> ::= <IDENTIFIER>  ;
+<column_alias> ::= <STRING_LITERAL>  ;
+# PARSER: keyword
+<keyword> ::= <K_ABORT>  ;
+<keyword> ::= <K_ACTION>  ;
+<keyword> ::= <K_ADD>  ;
+<keyword> ::= <K_AFTER>  ;
+<keyword> ::= <K_ALL>  ;
+<keyword> ::= <K_ALTER>  ;
+<keyword> ::= <K_ANALYZE>  ;
+<keyword> ::= <K_AND>  ;
+<keyword> ::= <K_AS>  ;
+<keyword> ::= <K_ASC>  ;
+<keyword> ::= <K_ATTACH>  ;
+<keyword> ::= <K_AUTOINCREMENT>  ;
+<keyword> ::= <K_BEFORE>  ;
+<keyword> ::= <K_BEGIN>  ;
+<keyword> ::= <K_BETWEEN>  ;
+<keyword> ::= <K_BY>  ;
+<keyword> ::= <K_CASCADE>  ;
+<keyword> ::= <K_CASE>  ;
+<keyword> ::= <K_CAST>  ;
+<keyword> ::= <K_CHECK>  ;
+<keyword> ::= <K_COLLATE>  ;
+<keyword> ::= <K_COLUMN>  ;
+<keyword> ::= <K_COMMIT>  ;
+<keyword> ::= <K_CONFLICT>  ;
+<keyword> ::= <K_CONSTRAINT>  ;
+<keyword> ::= <K_CREATE>  ;
+<keyword> ::= <K_CROSS>  ;
+<keyword> ::= <K_CURRENT_DATE>  ;
+<keyword> ::= <K_CURRENT_TIME>  ;
+<keyword> ::= <K_CURRENT_TIMESTAMP>  ;
+<keyword> ::= <K_DATABASE>  ;
+<keyword> ::= <K_DEFAULT>  ;
+<keyword> ::= <K_DEFERRABLE>  ;
+<keyword> ::= <K_DEFERRED>  ;
+<keyword> ::= <K_DELETE>  ;
+<keyword> ::= <K_DESC>  ;
+<keyword> ::= <K_DETACH>  ;
+<keyword> ::= <K_DISTINCT>  ;
+<keyword> ::= <K_DROP>  ;
+<keyword> ::= <K_EACH>  ;
+<keyword> ::= <K_ELSE>  ;
+<keyword> ::= <K_END>  ;
+<keyword> ::= <K_ESCAPE>  ;
+<keyword> ::= <K_EXCEPT>  ;
+<keyword> ::= <K_EXCLUSIVE>  ;
+<keyword> ::= <K_EXISTS>  ;
+<keyword> ::= <K_EXPLAIN>  ;
+<keyword> ::= <K_FAIL>  ;
+<keyword> ::= <K_FOR>  ;
+<keyword> ::= <K_FOREIGN>  ;
+<keyword> ::= <K_FROM>  ;
+<keyword> ::= <K_FULL>  ;
+<keyword> ::= <K_GLOB>  ;
+<keyword> ::= <K_GROUP>  ;
+<keyword> ::= <K_HAVING>  ;
+<keyword> ::= <K_IF>  ;
+<keyword> ::= <K_IGNORE>  ;
+<keyword> ::= <K_IMMEDIATE>  ;
+<keyword> ::= <K_IN>  ;
+<keyword> ::= <K_INDEX>  ;
+<keyword> ::= <K_INDEXED>  ;
+<keyword> ::= <K_INITIALLY>  ;
+<keyword> ::= <K_INNER>  ;
+<keyword> ::= <K_INSERT>  ;
+<keyword> ::= <K_INSTEAD>  ;
+<keyword> ::= <K_INTERSECT>  ;
+<keyword> ::= <K_INTO>  ;
+<keyword> ::= <K_IS>  ;
+<keyword> ::= <K_ISNULL>  ;
+<keyword> ::= <K_JOIN>  ;
+<keyword> ::= <K_KEY>  ;
+<keyword> ::= <K_LEFT>  ;
+<keyword> ::= <K_LIKE>  ;
+<keyword> ::= <K_LIMIT>  ;
+<keyword> ::= <K_MATCH>  ;
+<keyword> ::= <K_NATURAL>  ;
+<keyword> ::= <K_NO>  ;
+<keyword> ::= <K_NOT>  ;
+<keyword> ::= <K_NOTNULL>  ;
+<keyword> ::= <K_NULL>  ;
+<keyword> ::= <K_OF>  ;
+<keyword> ::= <K_OFFSET>  ;
+<keyword> ::= <K_ON>  ;
+<keyword> ::= <K_OR>  ;
+<keyword> ::= <K_ORDER>  ;
+<keyword> ::= <K_OUTER>  ;
+<keyword> ::= <K_PLAN>  ;
+<keyword> ::= <K_PRAGMA>  ;
+<keyword> ::= <K_PRIMARY>  ;
+<keyword> ::= <K_QUERY>  ;
+<keyword> ::= <K_RAISE>  ;
+<keyword> ::= <K_RECURSIVE>  ;
+<keyword> ::= <K_REFERENCES>  ;
+<keyword> ::= <K_REGEXP>  ;
+<keyword> ::= <K_REINDEX>  ;
+<keyword> ::= <K_RELEASE>  ;
+<keyword> ::= <K_RENAME>  ;
+<keyword> ::= <K_REPLACE>  ;
+<keyword> ::= <K_RESTRICT>  ;
+<keyword> ::= <K_RIGHT>  ;
+<keyword> ::= <K_ROLLBACK>  ;
+<keyword> ::= <K_ROW>  ;
+<keyword> ::= <K_SAVEPOINT>  ;
+<keyword> ::= <K_SELECT>  ;
+<keyword> ::= <K_SET>  ;
+<keyword> ::= <K_TABLE>  ;
+<keyword> ::= <K_TEMP>  ;
+<keyword> ::= <K_TEMPORARY>  ;
+<keyword> ::= <K_THEN>  ;
+<keyword> ::= <K_TO>  ;
+<keyword> ::= <K_TRANSACTION>  ;
+<keyword> ::= <K_TRIGGER>  ;
+<keyword> ::= <K_UNION>  ;
+<keyword> ::= <K_UNIQUE>  ;
+<keyword> ::= <K_UPDATE>  ;
+<keyword> ::= <K_USING>  ;
+<keyword> ::= <K_VACUUM>  ;
+<keyword> ::= <K_VALUES>  ;
+<keyword> ::= <K_VIEW>  ;
+<keyword> ::= <K_VIRTUAL>  ;
+<keyword> ::= <K_WHEN>  ;
+<keyword> ::= <K_WHERE>  ;
+<keyword> ::= <K_WITH>  ;
+<keyword> ::= <K_WITHOUT>  ;
+# PARSER: name
+<name> ::= <any_name>  ;
+# PARSER: function_name
+<function_name> ::= <any_name>  ;
+# PARSER: database_name
+<database_name> ::= <any_name>  ;
+# PARSER: table_name
+<table_name> ::= <any_name>  ;
+# PARSER: table_or_index_name
+<table_or_index_name> ::= <any_name>  ;
+# PARSER: new_table_name
+<new_table_name> ::= <any_name>  ;
+# PARSER: column_name
+<column_name> ::= <any_name>  ;
+# PARSER: collation_name
+<collation_name> ::= <any_name>  ;
+# PARSER: foreign_table
+<foreign_table> ::= <any_name>  ;
+# PARSER: index_name
+<index_name> ::= <any_name>  ;
+# PARSER: trigger_name
+<trigger_name> ::= <any_name>  ;
+# PARSER: view_name
+<view_name> ::= <any_name>  ;
+# PARSER: module_name
+<module_name> ::= <any_name>  ;
+# PARSER: pragma_name
+<pragma_name> ::= <any_name>  ;
+# PARSER: savepoint_name
+<savepoint_name> ::= <any_name>  ;
+# PARSER: table_alias
+<table_alias> ::= <any_name>  ;
+# PARSER: transaction_name
+<transaction_name> ::= <any_name>  ;
+# PARSER: any_name
+<any_name> ::= <IDENTIFIER>  ;
+<any_name> ::= <keyword>  ;
+<any_name> ::= <STRING_LITERAL>  ;
+<any_name> ::= '('  <any_name>  ')'  ;
+# LEXER: SCOL
+# BEGIN LEXER FOR  SCOL string
+<SCOL> ::= ';' <WS_POIROT> ;
+# END
+# LEXER: DOT
+# BEGIN LEXER FOR  DOT string
+<DOT> ::= '.' <WS_POIROT> ;
+# END
+# LEXER: OPEN_PAR
+# BEGIN LEXER FOR  OPEN_PAR string
+<OPEN_PAR> ::= '(' <WS_POIROT> ;
+# END
+# LEXER: CLOSE_PAR
+# BEGIN LEXER FOR  CLOSE_PAR string
+<CLOSE_PAR> ::= ')' <WS_POIROT> ;
+# END
+# LEXER: COMMA
+# BEGIN LEXER FOR  COMMA string
+<COMMA> ::= ',' <WS_POIROT> ;
+# END
+# LEXER: ASSIGN
+# BEGIN LEXER FOR  ASSIGN string
+<ASSIGN> ::= '=' <WS_POIROT> ;
+# END
+# LEXER: STAR
+# BEGIN LEXER FOR  STAR string
+<STAR> ::= '*' <WS_POIROT> ;
+# END
+# LEXER: PLUS
+# BEGIN LEXER FOR  PLUS string
+<PLUS> ::= '+' <WS_POIROT> ;
+# END
+# LEXER: MINUS
+# BEGIN LEXER FOR  MINUS string
+<MINUS> ::= '-' <WS_POIROT> ;
+# END
+# LEXER: TILDE
+# BEGIN LEXER FOR  TILDE string
+<TILDE> ::= '~' <WS_POIROT> ;
+# END
+# LEXER: PIPE2
+# BEGIN LEXER FOR  PIPE2 string
+<PIPE2> ::= '||' <WS_POIROT> ;
+# END
+# LEXER: DIV
+# BEGIN LEXER FOR  DIV string
+<DIV> ::= '/' <WS_POIROT> ;
+# END
+# LEXER: MOD
+# BEGIN LEXER FOR  MOD string
+<MOD> ::= '%' <WS_POIROT> ;
+# END
+# LEXER: LT2
+# BEGIN LEXER FOR  LT2 string
+<LT2> ::= '<<' <WS_POIROT> ;
+# END
+# LEXER: GT2
+# BEGIN LEXER FOR  GT2 string
+<GT2> ::= '>>' <WS_POIROT> ;
+# END
+# LEXER: AMP
+# BEGIN LEXER FOR  AMP string
+<AMP> ::= '&' <WS_POIROT> ;
+# END
+# LEXER: PIPE
+# BEGIN LEXER FOR  PIPE string
+<PIPE> ::= '|' <WS_POIROT> ;
+# END
+# LEXER: LT
+# BEGIN LEXER FOR  LT string
+<LT> ::= '<' <WS_POIROT> ;
+# END
+# LEXER: LT_EQ
+# BEGIN LEXER FOR  LT_EQ string
+<LT_EQ> ::= '<=' <WS_POIROT> ;
+# END
+# LEXER: GT
+# BEGIN LEXER FOR  GT string
+<GT> ::= '>' <WS_POIROT> ;
+# END
+# LEXER: GT_EQ
+# BEGIN LEXER FOR  GT_EQ string
+<GT_EQ> ::= '>=' <WS_POIROT> ;
+# END
+# LEXER: EQ
+# BEGIN LEXER FOR  EQ string
+<EQ> ::= '==' <WS_POIROT> ;
+# END
+# LEXER: NOT_EQ1
+# BEGIN LEXER FOR  NOT_EQ1 string
+<NOT_EQ1> ::= '!=' <WS_POIROT> ;
+# END
+# LEXER: NOT_EQ2
+# BEGIN LEXER FOR  NOT_EQ2 string
+<NOT_EQ2> ::= '<>' <WS_POIROT> ;
+# END
+# LEXER: K_ABORT
+# BEGIN LEXER FOR  K_ABORT and
+<K_ABORT> ::= <A> <B> <O> <R> <T> <WS_POIROT> ;
+# END
+# LEXER: K_ACTION
+# BEGIN LEXER FOR  K_ACTION and
+<K_ACTION> ::= <A> <C> <T> <I> <O> <N> <WS_POIROT> ;
+# END
+# LEXER: K_ADD
+# BEGIN LEXER FOR  K_ADD and
+<K_ADD> ::= <A> <D> <D> <WS_POIROT> ;
+# END
+# LEXER: K_AFTER
+# BEGIN LEXER FOR  K_AFTER and
+<K_AFTER> ::= <A> <F> <T> <E> <R> <WS_POIROT> ;
+# END
+# LEXER: K_ALL
+# BEGIN LEXER FOR  K_ALL and
+<K_ALL> ::= <A> <L> <L> <WS_POIROT> ;
+# END
+# LEXER: K_ALTER
+# BEGIN LEXER FOR  K_ALTER and
+<K_ALTER> ::= <A> <L> <T> <E> <R> <WS_POIROT> ;
+# END
+# LEXER: K_ANALYZE
+# BEGIN LEXER FOR  K_ANALYZE and
+<K_ANALYZE> ::= <A> <N> <A> <L> <Y> <Z> <E> <WS_POIROT> ;
+# END
+# LEXER: K_AND
+# BEGIN LEXER FOR  K_AND and
+<K_AND> ::= <A> <N> <D> <WS_POIROT> ;
+# END
+# LEXER: K_AS
+# BEGIN LEXER FOR  K_AS and
+<K_AS> ::= <A> <S> <WS_POIROT> ;
+# END
+# LEXER: K_ASC
+# BEGIN LEXER FOR  K_ASC and
+<K_ASC> ::= <A> <S> <C> <WS_POIROT> ;
+# END
+# LEXER: K_ATTACH
+# BEGIN LEXER FOR  K_ATTACH and
+<K_ATTACH> ::= <A> <T> <T> <A> <C> <H> <WS_POIROT> ;
+# END
+# LEXER: K_AUTOINCREMENT
+# BEGIN LEXER FOR  K_AUTOINCREMENT and
+<K_AUTOINCREMENT> ::= <A> <U> <T> <O> <I> <N> <C> <R> <E> <M> <E> <N> <T> <WS_POIROT> ;
+# END
+# LEXER: K_BEFORE
+# BEGIN LEXER FOR  K_BEFORE and
+<K_BEFORE> ::= <B> <E> <F> <O> <R> <E> <WS_POIROT> ;
+# END
+# LEXER: K_BEGIN
+# BEGIN LEXER FOR  K_BEGIN and
+<K_BEGIN> ::= <B> <E> <G> <I> <N> <WS_POIROT> ;
+# END
+# LEXER: K_BETWEEN
+# BEGIN LEXER FOR  K_BETWEEN and
+<K_BETWEEN> ::= <B> <E> <T> <W> <E> <E> <N> <WS_POIROT> ;
+# END
+# LEXER: K_BY
+# BEGIN LEXER FOR  K_BY and
+<K_BY> ::= <B> <Y> <WS_POIROT> ;
+# END
+# LEXER: K_CASCADE
+# BEGIN LEXER FOR  K_CASCADE and
+<K_CASCADE> ::= <C> <A> <S> <C> <A> <D> <E> <WS_POIROT> ;
+# END
+# LEXER: K_CASE
+# BEGIN LEXER FOR  K_CASE and
+<K_CASE> ::= <C> <A> <S> <E> <WS_POIROT> ;
+# END
+# LEXER: K_CAST
+# BEGIN LEXER FOR  K_CAST and
+<K_CAST> ::= <C> <A> <S> <T> <WS_POIROT> ;
+# END
+# LEXER: K_CHECK
+# BEGIN LEXER FOR  K_CHECK and
+<K_CHECK> ::= <C> <H> <E> <C> <K> <WS_POIROT> ;
+# END
+# LEXER: K_COLLATE
+# BEGIN LEXER FOR  K_COLLATE and
+<K_COLLATE> ::= <C> <O> <L> <L> <A> <T> <E> <WS_POIROT> ;
+# END
+# LEXER: K_COLUMN
+# BEGIN LEXER FOR  K_COLUMN and
+<K_COLUMN> ::= <C> <O> <L> <U> <M> <N> <WS_POIROT> ;
+# END
+# LEXER: K_COMMIT
+# BEGIN LEXER FOR  K_COMMIT and
+<K_COMMIT> ::= <C> <O> <M> <M> <I> <T> <WS_POIROT> ;
+# END
+# LEXER: K_CONFLICT
+# BEGIN LEXER FOR  K_CONFLICT and
+<K_CONFLICT> ::= <C> <O> <N> <F> <L> <I> <C> <T> <WS_POIROT> ;
+# END
+# LEXER: K_CONSTRAINT
+# BEGIN LEXER FOR  K_CONSTRAINT and
+<K_CONSTRAINT> ::= <C> <O> <N> <S> <T> <R> <A> <I> <N> <T> <WS_POIROT> ;
+# END
+# LEXER: K_CREATE
+# BEGIN LEXER FOR  K_CREATE and
+<K_CREATE> ::= <C> <R> <E> <A> <T> <E> <WS_POIROT> ;
+# END
+# LEXER: K_CROSS
+# BEGIN LEXER FOR  K_CROSS and
+<K_CROSS> ::= <C> <R> <O> <S> <S> <WS_POIROT> ;
+# END
+# LEXER: K_CURRENT_DATE
+# BEGIN LEXER FOR  K_CURRENT_DATE and
+<K_CURRENT_DATE> ::= <C> <U> <R> <R> <E> <N> <T> '_' <D> <A> <T> <E> <WS_POIROT> ;
+# END
+# LEXER: K_CURRENT_TIME
+# BEGIN LEXER FOR  K_CURRENT_TIME and
+<K_CURRENT_TIME> ::= <C> <U> <R> <R> <E> <N> <T> '_' <T> <I> <M> <E> <WS_POIROT> ;
+# END
+# LEXER: K_CURRENT_TIMESTAMP
+# BEGIN LEXER FOR  K_CURRENT_TIMESTAMP and
+<K_CURRENT_TIMESTAMP> ::= <C> <U> <R> <R> <E> <N> <T> '_' <T> <I> <M> <E> <S> <T> <A> <M> <P> <WS_POIROT> ;
+# END
+# LEXER: K_DATABASE
+# BEGIN LEXER FOR  K_DATABASE and
+<K_DATABASE> ::= <D> <A> <T> <A> <B> <A> <S> <E> <WS_POIROT> ;
+# END
+# LEXER: K_DEFAULT
+# BEGIN LEXER FOR  K_DEFAULT and
+<K_DEFAULT> ::= <D> <E> <F> <A> <U> <L> <T> <WS_POIROT> ;
+# END
+# LEXER: K_DEFERRABLE
+# BEGIN LEXER FOR  K_DEFERRABLE and
+<K_DEFERRABLE> ::= <D> <E> <F> <E> <R> <R> <A> <B> <L> <E> <WS_POIROT> ;
+# END
+# LEXER: K_DEFERRED
+# BEGIN LEXER FOR  K_DEFERRED and
+<K_DEFERRED> ::= <D> <E> <F> <E> <R> <R> <E> <D> <WS_POIROT> ;
+# END
+# LEXER: K_DELETE
+# BEGIN LEXER FOR  K_DELETE and
+<K_DELETE> ::= <D> <E> <L> <E> <T> <E> <WS_POIROT> ;
+# END
+# LEXER: K_DESC
+# BEGIN LEXER FOR  K_DESC and
+<K_DESC> ::= <D> <E> <S> <C> <WS_POIROT> ;
+# END
+# LEXER: K_DETACH
+# BEGIN LEXER FOR  K_DETACH and
+<K_DETACH> ::= <D> <E> <T> <A> <C> <H> <WS_POIROT> ;
+# END
+# LEXER: K_DISTINCT
+# BEGIN LEXER FOR  K_DISTINCT and
+<K_DISTINCT> ::= <D> <I> <S> <T> <I> <N> <C> <T> <WS_POIROT> ;
+# END
+# LEXER: K_DROP
+# BEGIN LEXER FOR  K_DROP and
+<K_DROP> ::= <D> <R> <O> <P> <WS_POIROT> ;
+# END
+# LEXER: K_EACH
+# BEGIN LEXER FOR  K_EACH and
+<K_EACH> ::= <E> <A> <C> <H> <WS_POIROT> ;
+# END
+# LEXER: K_ELSE
+# BEGIN LEXER FOR  K_ELSE and
+<K_ELSE> ::= <E> <L> <S> <E> <WS_POIROT> ;
+# END
+# LEXER: K_END
+# BEGIN LEXER FOR  K_END and
+<K_END> ::= <E> <N> <D> <WS_POIROT> ;
+# END
+# LEXER: K_ESCAPE
+# BEGIN LEXER FOR  K_ESCAPE and
+<K_ESCAPE> ::= <E> <S> <C> <A> <P> <E> <WS_POIROT> ;
+# END
+# LEXER: K_EXCEPT
+# BEGIN LEXER FOR  K_EXCEPT and
+<K_EXCEPT> ::= <E> <X> <C> <E> <P> <T> <WS_POIROT> ;
+# END
+# LEXER: K_EXCLUSIVE
+# BEGIN LEXER FOR  K_EXCLUSIVE and
+<K_EXCLUSIVE> ::= <E> <X> <C> <L> <U> <S> <I> <V> <E> <WS_POIROT> ;
+# END
+# LEXER: K_EXISTS
+# BEGIN LEXER FOR  K_EXISTS and
+<K_EXISTS> ::= <E> <X> <I> <S> <T> <S> <WS_POIROT> ;
+# END
+# LEXER: K_EXPLAIN
+# BEGIN LEXER FOR  K_EXPLAIN and
+<K_EXPLAIN> ::= <E> <X> <P> <L> <A> <I> <N> <WS_POIROT> ;
+# END
+# LEXER: K_FAIL
+# BEGIN LEXER FOR  K_FAIL and
+<K_FAIL> ::= <F> <A> <I> <L> <WS_POIROT> ;
+# END
+# LEXER: K_FOR
+# BEGIN LEXER FOR  K_FOR and
+<K_FOR> ::= <F> <O> <R> <WS_POIROT> ;
+# END
+# LEXER: K_FOREIGN
+# BEGIN LEXER FOR  K_FOREIGN and
+<K_FOREIGN> ::= <F> <O> <R> <E> <I> <G> <N> <WS_POIROT> ;
+# END
+# LEXER: K_FROM
+# BEGIN LEXER FOR  K_FROM and
+<K_FROM> ::= <F> <R> <O> <M> <WS_POIROT> ;
+# END
+# LEXER: K_FULL
+# BEGIN LEXER FOR  K_FULL and
+<K_FULL> ::= <F> <U> <L> <L> <WS_POIROT> ;
+# END
+# LEXER: K_GLOB
+# BEGIN LEXER FOR  K_GLOB and
+<K_GLOB> ::= <G> <L> <O> <B> <WS_POIROT> ;
+# END
+# LEXER: K_GROUP
+# BEGIN LEXER FOR  K_GROUP and
+<K_GROUP> ::= <G> <R> <O> <U> <P> <WS_POIROT> ;
+# END
+# LEXER: K_HAVING
+# BEGIN LEXER FOR  K_HAVING and
+<K_HAVING> ::= <H> <A> <V> <I> <N> <G> <WS_POIROT> ;
+# END
+# LEXER: K_IF
+# BEGIN LEXER FOR  K_IF and
+<K_IF> ::= <I> <F> <WS_POIROT> ;
+# END
+# LEXER: K_IGNORE
+# BEGIN LEXER FOR  K_IGNORE and
+<K_IGNORE> ::= <I> <G> <N> <O> <R> <E> <WS_POIROT> ;
+# END
+# LEXER: K_IMMEDIATE
+# BEGIN LEXER FOR  K_IMMEDIATE and
+<K_IMMEDIATE> ::= <I> <M> <M> <E> <D> <I> <A> <T> <E> <WS_POIROT> ;
+# END
+# LEXER: K_IN
+# BEGIN LEXER FOR  K_IN and
+<K_IN> ::= <I> <N> <WS_POIROT> ;
+# END
+# LEXER: K_INDEX
+# BEGIN LEXER FOR  K_INDEX and
+<K_INDEX> ::= <I> <N> <D> <E> <X> <WS_POIROT> ;
+# END
+# LEXER: K_INDEXED
+# BEGIN LEXER FOR  K_INDEXED and
+<K_INDEXED> ::= <I> <N> <D> <E> <X> <E> <D> <WS_POIROT> ;
+# END
+# LEXER: K_INITIALLY
+# BEGIN LEXER FOR  K_INITIALLY and
+<K_INITIALLY> ::= <I> <N> <I> <T> <I> <A> <L> <L> <Y> <WS_POIROT> ;
+# END
+# LEXER: K_INNER
+# BEGIN LEXER FOR  K_INNER and
+<K_INNER> ::= <I> <N> <N> <E> <R> <WS_POIROT> ;
+# END
+# LEXER: K_INSERT
+# BEGIN LEXER FOR  K_INSERT and
+<K_INSERT> ::= <I> <N> <S> <E> <R> <T> <WS_POIROT> ;
+# END
+# LEXER: K_INSTEAD
+# BEGIN LEXER FOR  K_INSTEAD and
+<K_INSTEAD> ::= <I> <N> <S> <T> <E> <A> <D> <WS_POIROT> ;
+# END
+# LEXER: K_INTERSECT
+# BEGIN LEXER FOR  K_INTERSECT and
+<K_INTERSECT> ::= <I> <N> <T> <E> <R> <S> <E> <C> <T> <WS_POIROT> ;
+# END
+# LEXER: K_INTO
+# BEGIN LEXER FOR  K_INTO and
+<K_INTO> ::= <I> <N> <T> <O> <WS_POIROT> ;
+# END
+# LEXER: K_IS
+# BEGIN LEXER FOR  K_IS and
+<K_IS> ::= <I> <S> <WS_POIROT> ;
+# END
+# LEXER: K_ISNULL
+# BEGIN LEXER FOR  K_ISNULL and
+<K_ISNULL> ::= <I> <S> <N> <U> <L> <L> <WS_POIROT> ;
+# END
+# LEXER: K_JOIN
+# BEGIN LEXER FOR  K_JOIN and
+<K_JOIN> ::= <J> <O> <I> <N> <WS_POIROT> ;
+# END
+# LEXER: K_KEY
+# BEGIN LEXER FOR  K_KEY and
+<K_KEY> ::= <K> <E> <Y> <WS_POIROT> ;
+# END
+# LEXER: K_LEFT
+# BEGIN LEXER FOR  K_LEFT and
+<K_LEFT> ::= <L> <E> <F> <T> <WS_POIROT> ;
+# END
+# LEXER: K_LIKE
+# BEGIN LEXER FOR  K_LIKE and
+<K_LIKE> ::= <L> <I> <K> <E> <WS_POIROT> ;
+# END
+# LEXER: K_LIMIT
+# BEGIN LEXER FOR  K_LIMIT and
+<K_LIMIT> ::= <L> <I> <M> <I> <T> <WS_POIROT> ;
+# END
+# LEXER: K_MATCH
+# BEGIN LEXER FOR  K_MATCH and
+<K_MATCH> ::= <M> <A> <T> <C> <H> <WS_POIROT> ;
+# END
+# LEXER: K_NATURAL
+# BEGIN LEXER FOR  K_NATURAL and
+<K_NATURAL> ::= <N> <A> <T> <U> <R> <A> <L> <WS_POIROT> ;
+# END
+# LEXER: K_NO
+# BEGIN LEXER FOR  K_NO and
+<K_NO> ::= <N> <O> <WS_POIROT> ;
+# END
+# LEXER: K_NOT
+# BEGIN LEXER FOR  K_NOT and
+<K_NOT> ::= <N> <O> <T> <WS_POIROT> ;
+# END
+# LEXER: K_NOTNULL
+# BEGIN LEXER FOR  K_NOTNULL and
+<K_NOTNULL> ::= <N> <O> <T> <N> <U> <L> <L> <WS_POIROT> ;
+# END
+# LEXER: K_NULL
+# BEGIN LEXER FOR  K_NULL and
+<K_NULL> ::= <N> <U> <L> <L> <WS_POIROT> ;
+# END
+# LEXER: K_OF
+# BEGIN LEXER FOR  K_OF and
+<K_OF> ::= <O> <F> <WS_POIROT> ;
+# END
+# LEXER: K_OFFSET
+# BEGIN LEXER FOR  K_OFFSET and
+<K_OFFSET> ::= <O> <F> <F> <S> <E> <T> <WS_POIROT> ;
+# END
+# LEXER: K_ON
+# BEGIN LEXER FOR  K_ON and
+<K_ON> ::= <O> <N> <WS_POIROT> ;
+# END
+# LEXER: K_OR
+# BEGIN LEXER FOR  K_OR and
+<K_OR> ::= <O> <R> <WS_POIROT> ;
+# END
+# LEXER: K_ORDER
+# BEGIN LEXER FOR  K_ORDER and
+<K_ORDER> ::= <O> <R> <D> <E> <R> <WS_POIROT> ;
+# END
+# LEXER: K_OUTER
+# BEGIN LEXER FOR  K_OUTER and
+<K_OUTER> ::= <O> <U> <T> <E> <R> <WS_POIROT> ;
+# END
+# LEXER: K_PLAN
+# BEGIN LEXER FOR  K_PLAN and
+<K_PLAN> ::= <P> <L> <A> <N> <WS_POIROT> ;
+# END
+# LEXER: K_PRAGMA
+# BEGIN LEXER FOR  K_PRAGMA and
+<K_PRAGMA> ::= <P> <R> <A> <G> <M> <A> <WS_POIROT> ;
+# END
+# LEXER: K_PRIMARY
+# BEGIN LEXER FOR  K_PRIMARY and
+<K_PRIMARY> ::= <P> <R> <I> <M> <A> <R> <Y> <WS_POIROT> ;
+# END
+# LEXER: K_QUERY
+# BEGIN LEXER FOR  K_QUERY and
+<K_QUERY> ::= <Q> <U> <E> <R> <Y> <WS_POIROT> ;
+# END
+# LEXER: K_RAISE
+# BEGIN LEXER FOR  K_RAISE and
+<K_RAISE> ::= <R> <A> <I> <S> <E> <WS_POIROT> ;
+# END
+# LEXER: K_RECURSIVE
+# BEGIN LEXER FOR  K_RECURSIVE and
+<K_RECURSIVE> ::= <R> <E> <C> <U> <R> <S> <I> <V> <E> <WS_POIROT> ;
+# END
+# LEXER: K_REFERENCES
+# BEGIN LEXER FOR  K_REFERENCES and
+<K_REFERENCES> ::= <R> <E> <F> <E> <R> <E> <N> <C> <E> <S> <WS_POIROT> ;
+# END
+# LEXER: K_REGEXP
+# BEGIN LEXER FOR  K_REGEXP and
+<K_REGEXP> ::= <R> <E> <G> <E> <X> <P> <WS_POIROT> ;
+# END
+# LEXER: K_REINDEX
+# BEGIN LEXER FOR  K_REINDEX and
+<K_REINDEX> ::= <R> <E> <I> <N> <D> <E> <X> <WS_POIROT> ;
+# END
+# LEXER: K_RELEASE
+# BEGIN LEXER FOR  K_RELEASE and
+<K_RELEASE> ::= <R> <E> <L> <E> <A> <S> <E> <WS_POIROT> ;
+# END
+# LEXER: K_RENAME
+# BEGIN LEXER FOR  K_RENAME and
+<K_RENAME> ::= <R> <E> <N> <A> <M> <E> <WS_POIROT> ;
+# END
+# LEXER: K_REPLACE
+# BEGIN LEXER FOR  K_REPLACE and
+<K_REPLACE> ::= <R> <E> <P> <L> <A> <C> <E> <WS_POIROT> ;
+# END
+# LEXER: K_RESTRICT
+# BEGIN LEXER FOR  K_RESTRICT and
+<K_RESTRICT> ::= <R> <E> <S> <T> <R> <I> <C> <T> <WS_POIROT> ;
+# END
+# LEXER: K_RIGHT
+# BEGIN LEXER FOR  K_RIGHT and
+<K_RIGHT> ::= <R> <I> <G> <H> <T> <WS_POIROT> ;
+# END
+# LEXER: K_ROLLBACK
+# BEGIN LEXER FOR  K_ROLLBACK and
+<K_ROLLBACK> ::= <R> <O> <L> <L> <B> <A> <C> <K> <WS_POIROT> ;
+# END
+# LEXER: K_ROW
+# BEGIN LEXER FOR  K_ROW and
+<K_ROW> ::= <R> <O> <W> <WS_POIROT> ;
+# END
+# LEXER: K_SAVEPOINT
+# BEGIN LEXER FOR  K_SAVEPOINT and
+<K_SAVEPOINT> ::= <S> <A> <V> <E> <P> <O> <I> <N> <T> <WS_POIROT> ;
+# END
+# LEXER: K_SELECT
+# BEGIN LEXER FOR  K_SELECT and
+<K_SELECT> ::= <S> <E> <L> <E> <C> <T> <WS_POIROT> ;
+# END
+# LEXER: K_SET
+# BEGIN LEXER FOR  K_SET and
+<K_SET> ::= <S> <E> <T> <WS_POIROT> ;
+# END
+# LEXER: K_TABLE
+# BEGIN LEXER FOR  K_TABLE and
+<K_TABLE> ::= <T> <A> <B> <L> <E> <WS_POIROT> ;
+# END
+# LEXER: K_TEMP
+# BEGIN LEXER FOR  K_TEMP and
+<K_TEMP> ::= <T> <E> <M> <P> <WS_POIROT> ;
+# END
+# LEXER: K_TEMPORARY
+# BEGIN LEXER FOR  K_TEMPORARY and
+<K_TEMPORARY> ::= <T> <E> <M> <P> <O> <R> <A> <R> <Y> <WS_POIROT> ;
+# END
+# LEXER: K_THEN
+# BEGIN LEXER FOR  K_THEN and
+<K_THEN> ::= <T> <H> <E> <N> <WS_POIROT> ;
+# END
+# LEXER: K_TO
+# BEGIN LEXER FOR  K_TO and
+<K_TO> ::= <T> <O> <WS_POIROT> ;
+# END
+# LEXER: K_TRANSACTION
+# BEGIN LEXER FOR  K_TRANSACTION and
+<K_TRANSACTION> ::= <T> <R> <A> <N> <S> <A> <C> <T> <I> <O> <N> <WS_POIROT> ;
+# END
+# LEXER: K_TRIGGER
+# BEGIN LEXER FOR  K_TRIGGER and
+<K_TRIGGER> ::= <T> <R> <I> <G> <G> <E> <R> <WS_POIROT> ;
+# END
+# LEXER: K_UNION
+# BEGIN LEXER FOR  K_UNION and
+<K_UNION> ::= <U> <N> <I> <O> <N> <WS_POIROT> ;
+# END
+# LEXER: K_UNIQUE
+# BEGIN LEXER FOR  K_UNIQUE and
+<K_UNIQUE> ::= <U> <N> <I> <Q> <U> <E> <WS_POIROT> ;
+# END
+# LEXER: K_UPDATE
+# BEGIN LEXER FOR  K_UPDATE and
+<K_UPDATE> ::= <U> <P> <D> <A> <T> <E> <WS_POIROT> ;
+# END
+# LEXER: K_USING
+# BEGIN LEXER FOR  K_USING and
+<K_USING> ::= <U> <S> <I> <N> <G> <WS_POIROT> ;
+# END
+# LEXER: K_VACUUM
+# BEGIN LEXER FOR  K_VACUUM and
+<K_VACUUM> ::= <V> <A> <C> <U> <U> <M> <WS_POIROT> ;
+# END
+# LEXER: K_VALUES
+# BEGIN LEXER FOR  K_VALUES and
+<K_VALUES> ::= <V> <A> <L> <U> <E> <S> <WS_POIROT> ;
+# END
+# LEXER: K_VIEW
+# BEGIN LEXER FOR  K_VIEW and
+<K_VIEW> ::= <V> <I> <E> <W> <WS_POIROT> ;
+# END
+# LEXER: K_VIRTUAL
+# BEGIN LEXER FOR  K_VIRTUAL and
+<K_VIRTUAL> ::= <V> <I> <R> <T> <U> <A> <L> <WS_POIROT> ;
+# END
+# LEXER: K_WHEN
+# BEGIN LEXER FOR  K_WHEN and
+<K_WHEN> ::= <W> <H> <E> <N> <WS_POIROT> ;
+# END
+# LEXER: K_WHERE
+# BEGIN LEXER FOR  K_WHERE and
+<K_WHERE> ::= <W> <H> <E> <R> <E> <WS_POIROT> ;
+# END
+# LEXER: K_WITH
+# BEGIN LEXER FOR  K_WITH and
+<K_WITH> ::= <W> <I> <T> <H> <WS_POIROT> ;
+# END
+# LEXER: K_WITHOUT
+# BEGIN LEXER FOR  K_WITHOUT and
+<K_WITHOUT> ::= <W> <I> <T> <H> <O> <U> <T> <WS_POIROT> ;
+# END
+# LEXER: IDENTIFIER
+# BEGIN LEXER FOR  IDENTIFIER or
+# BEGIN LEXER FOR  IDENTIFIER and
+# BEGIN LEXER FOR  IDENTIFIER *
+<IDENTIFIER_-_1> ::= <IDENTIFIER_-_2> ;
+<IDENTIFIER_-_2> ::= ;
+# BEGIN LEXER FOR  IDENTIFIER and
+# BEGIN LEXER FOR  IDENTIFIER or
+# BEGIN LEXER FOR  IDENTIFIER not
+<IDENTIFIER_-_3> ::= ' ' ;
+<IDENTIFIER_-_3> ::= '!' ;
+<IDENTIFIER_-_3> ::= '#' ;
+<IDENTIFIER_-_3> ::= '$' ;
+<IDENTIFIER_-_3> ::= '%' ;
+<IDENTIFIER_-_3> ::= '&' ;
+<IDENTIFIER_-_3> ::=  39  ;
+<IDENTIFIER_-_3> ::= '(' ;
+<IDENTIFIER_-_3> ::= ')' ;
+<IDENTIFIER_-_3> ::= '*' ;
+<IDENTIFIER_-_3> ::= '+' ;
+<IDENTIFIER_-_3> ::= ',' ;
+<IDENTIFIER_-_3> ::= '-' ;
+<IDENTIFIER_-_3> ::= '.' ;
+<IDENTIFIER_-_3> ::= '/' ;
+<IDENTIFIER_-_3> ::= '0' ;
+<IDENTIFIER_-_3> ::= '1' ;
+<IDENTIFIER_-_3> ::= '2' ;
+<IDENTIFIER_-_3> ::= '3' ;
+<IDENTIFIER_-_3> ::= '4' ;
+<IDENTIFIER_-_3> ::= '5' ;
+<IDENTIFIER_-_3> ::= '6' ;
+<IDENTIFIER_-_3> ::= '7' ;
+<IDENTIFIER_-_3> ::= '8' ;
+<IDENTIFIER_-_3> ::= '9' ;
+<IDENTIFIER_-_3> ::= ':' ;
+<IDENTIFIER_-_3> ::= ';' ;
+<IDENTIFIER_-_3> ::= '<' ;
+<IDENTIFIER_-_3> ::= '=' ;
+<IDENTIFIER_-_3> ::= '>' ;
+<IDENTIFIER_-_3> ::= '?' ;
+<IDENTIFIER_-_3> ::= '@' ;
+<IDENTIFIER_-_3> ::= 'A' ;
+<IDENTIFIER_-_3> ::= 'B' ;
+<IDENTIFIER_-_3> ::= 'C' ;
+<IDENTIFIER_-_3> ::= 'D' ;
+<IDENTIFIER_-_3> ::= 'E' ;
+<IDENTIFIER_-_3> ::= 'F' ;
+<IDENTIFIER_-_3> ::= 'G' ;
+<IDENTIFIER_-_3> ::= 'H' ;
+<IDENTIFIER_-_3> ::= 'I' ;
+<IDENTIFIER_-_3> ::= 'J' ;
+<IDENTIFIER_-_3> ::= 'K' ;
+<IDENTIFIER_-_3> ::= 'L' ;
+<IDENTIFIER_-_3> ::= 'M' ;
+<IDENTIFIER_-_3> ::= 'N' ;
+<IDENTIFIER_-_3> ::= 'O' ;
+<IDENTIFIER_-_3> ::= 'P' ;
+<IDENTIFIER_-_3> ::= 'Q' ;
+<IDENTIFIER_-_3> ::= 'R' ;
+<IDENTIFIER_-_3> ::= 'S' ;
+<IDENTIFIER_-_3> ::= 'T' ;
+<IDENTIFIER_-_3> ::= 'U' ;
+<IDENTIFIER_-_3> ::= 'V' ;
+<IDENTIFIER_-_3> ::= 'W' ;
+<IDENTIFIER_-_3> ::= 'X' ;
+<IDENTIFIER_-_3> ::= 'Y' ;
+<IDENTIFIER_-_3> ::= 'Z' ;
+<IDENTIFIER_-_3> ::= '[' ;
+<IDENTIFIER_-_3> ::= '\' ;
+<IDENTIFIER_-_3> ::= ']' ;
+<IDENTIFIER_-_3> ::= '^' ;
+<IDENTIFIER_-_3> ::= '_' ;
+<IDENTIFIER_-_3> ::= '`' ;
+<IDENTIFIER_-_3> ::= 'a' ;
+<IDENTIFIER_-_3> ::= 'b' ;
+<IDENTIFIER_-_3> ::= 'c' ;
+<IDENTIFIER_-_3> ::= 'd' ;
+<IDENTIFIER_-_3> ::= 'e' ;
+<IDENTIFIER_-_3> ::= 'f' ;
+<IDENTIFIER_-_3> ::= 'g' ;
+<IDENTIFIER_-_3> ::= 'h' ;
+<IDENTIFIER_-_3> ::= 'i' ;
+<IDENTIFIER_-_3> ::= 'j' ;
+<IDENTIFIER_-_3> ::= 'k' ;
+<IDENTIFIER_-_3> ::= 'l' ;
+<IDENTIFIER_-_3> ::= 'm' ;
+<IDENTIFIER_-_3> ::= 'n' ;
+<IDENTIFIER_-_3> ::= 'o' ;
+<IDENTIFIER_-_3> ::= 'p' ;
+<IDENTIFIER_-_3> ::= 'q' ;
+<IDENTIFIER_-_3> ::= 'r' ;
+<IDENTIFIER_-_3> ::= 's' ;
+<IDENTIFIER_-_3> ::= 't' ;
+<IDENTIFIER_-_3> ::= 'u' ;
+<IDENTIFIER_-_3> ::= 'v' ;
+<IDENTIFIER_-_3> ::= 'w' ;
+<IDENTIFIER_-_3> ::= 'x' ;
+<IDENTIFIER_-_3> ::= 'y' ;
+<IDENTIFIER_-_3> ::= 'z' ;
+<IDENTIFIER_-_3> ::= '{' ;
+<IDENTIFIER_-_3> ::= '|' ;
+<IDENTIFIER_-_3> ::= '}' ;
+<IDENTIFIER_-_3> ::= '~' ;
+# END
+# BEGIN LEXER FOR  IDENTIFIER string
+<IDENTIFIER_-_3> ::= '""' ;
+# END
+# END
+<IDENTIFIER_-_2> ::= <IDENTIFIER_-_3> <IDENTIFIER_-_2> ;
+# END
+# END
+<IDENTIFIER> ::= '"' <IDENTIFIER_-_1> '"' <WS_POIROT> ;
+# END
+# BEGIN LEXER FOR  IDENTIFIER and
+# BEGIN LEXER FOR  IDENTIFIER *
+<IDENTIFIER_-_4> ::= <IDENTIFIER_-_5> ;
+<IDENTIFIER_-_5> ::= ;
+# BEGIN LEXER FOR  IDENTIFIER and
+# BEGIN LEXER FOR  IDENTIFIER or
+# BEGIN LEXER FOR  IDENTIFIER not
+<IDENTIFIER_-_6> ::= ' ' ;
+<IDENTIFIER_-_6> ::= '!' ;
+<IDENTIFIER_-_6> ::= '"' ;
+<IDENTIFIER_-_6> ::= '#' ;
+<IDENTIFIER_-_6> ::= '$' ;
+<IDENTIFIER_-_6> ::= '%' ;
+<IDENTIFIER_-_6> ::= '&' ;
+<IDENTIFIER_-_6> ::=  39  ;
+<IDENTIFIER_-_6> ::= '(' ;
+<IDENTIFIER_-_6> ::= ')' ;
+<IDENTIFIER_-_6> ::= '*' ;
+<IDENTIFIER_-_6> ::= '+' ;
+<IDENTIFIER_-_6> ::= ',' ;
+<IDENTIFIER_-_6> ::= '-' ;
+<IDENTIFIER_-_6> ::= '.' ;
+<IDENTIFIER_-_6> ::= '/' ;
+<IDENTIFIER_-_6> ::= '0' ;
+<IDENTIFIER_-_6> ::= '1' ;
+<IDENTIFIER_-_6> ::= '2' ;
+<IDENTIFIER_-_6> ::= '3' ;
+<IDENTIFIER_-_6> ::= '4' ;
+<IDENTIFIER_-_6> ::= '5' ;
+<IDENTIFIER_-_6> ::= '6' ;
+<IDENTIFIER_-_6> ::= '7' ;
+<IDENTIFIER_-_6> ::= '8' ;
+<IDENTIFIER_-_6> ::= '9' ;
+<IDENTIFIER_-_6> ::= ':' ;
+<IDENTIFIER_-_6> ::= ';' ;
+<IDENTIFIER_-_6> ::= '<' ;
+<IDENTIFIER_-_6> ::= '=' ;
+<IDENTIFIER_-_6> ::= '>' ;
+<IDENTIFIER_-_6> ::= '?' ;
+<IDENTIFIER_-_6> ::= '@' ;
+<IDENTIFIER_-_6> ::= 'A' ;
+<IDENTIFIER_-_6> ::= 'B' ;
+<IDENTIFIER_-_6> ::= 'C' ;
+<IDENTIFIER_-_6> ::= 'D' ;
+<IDENTIFIER_-_6> ::= 'E' ;
+<IDENTIFIER_-_6> ::= 'F' ;
+<IDENTIFIER_-_6> ::= 'G' ;
+<IDENTIFIER_-_6> ::= 'H' ;
+<IDENTIFIER_-_6> ::= 'I' ;
+<IDENTIFIER_-_6> ::= 'J' ;
+<IDENTIFIER_-_6> ::= 'K' ;
+<IDENTIFIER_-_6> ::= 'L' ;
+<IDENTIFIER_-_6> ::= 'M' ;
+<IDENTIFIER_-_6> ::= 'N' ;
+<IDENTIFIER_-_6> ::= 'O' ;
+<IDENTIFIER_-_6> ::= 'P' ;
+<IDENTIFIER_-_6> ::= 'Q' ;
+<IDENTIFIER_-_6> ::= 'R' ;
+<IDENTIFIER_-_6> ::= 'S' ;
+<IDENTIFIER_-_6> ::= 'T' ;
+<IDENTIFIER_-_6> ::= 'U' ;
+<IDENTIFIER_-_6> ::= 'V' ;
+<IDENTIFIER_-_6> ::= 'W' ;
+<IDENTIFIER_-_6> ::= 'X' ;
+<IDENTIFIER_-_6> ::= 'Y' ;
+<IDENTIFIER_-_6> ::= 'Z' ;
+<IDENTIFIER_-_6> ::= '[' ;
+<IDENTIFIER_-_6> ::= '\' ;
+<IDENTIFIER_-_6> ::= ']' ;
+<IDENTIFIER_-_6> ::= '^' ;
+<IDENTIFIER_-_6> ::= '_' ;
+<IDENTIFIER_-_6> ::= 'a' ;
+<IDENTIFIER_-_6> ::= 'b' ;
+<IDENTIFIER_-_6> ::= 'c' ;
+<IDENTIFIER_-_6> ::= 'd' ;
+<IDENTIFIER_-_6> ::= 'e' ;
+<IDENTIFIER_-_6> ::= 'f' ;
+<IDENTIFIER_-_6> ::= 'g' ;
+<IDENTIFIER_-_6> ::= 'h' ;
+<IDENTIFIER_-_6> ::= 'i' ;
+<IDENTIFIER_-_6> ::= 'j' ;
+<IDENTIFIER_-_6> ::= 'k' ;
+<IDENTIFIER_-_6> ::= 'l' ;
+<IDENTIFIER_-_6> ::= 'm' ;
+<IDENTIFIER_-_6> ::= 'n' ;
+<IDENTIFIER_-_6> ::= 'o' ;
+<IDENTIFIER_-_6> ::= 'p' ;
+<IDENTIFIER_-_6> ::= 'q' ;
+<IDENTIFIER_-_6> ::= 'r' ;
+<IDENTIFIER_-_6> ::= 's' ;
+<IDENTIFIER_-_6> ::= 't' ;
+<IDENTIFIER_-_6> ::= 'u' ;
+<IDENTIFIER_-_6> ::= 'v' ;
+<IDENTIFIER_-_6> ::= 'w' ;
+<IDENTIFIER_-_6> ::= 'x' ;
+<IDENTIFIER_-_6> ::= 'y' ;
+<IDENTIFIER_-_6> ::= 'z' ;
+<IDENTIFIER_-_6> ::= '{' ;
+<IDENTIFIER_-_6> ::= '|' ;
+<IDENTIFIER_-_6> ::= '}' ;
+<IDENTIFIER_-_6> ::= '~' ;
+# END
+# BEGIN LEXER FOR  IDENTIFIER string
+<IDENTIFIER_-_6> ::= '``' ;
+# END
+# END
+<IDENTIFIER_-_5> ::= <IDENTIFIER_-_6> <IDENTIFIER_-_5> ;
+# END
+# END
+<IDENTIFIER> ::= '`' <IDENTIFIER_-_4> '`' <WS_POIROT> ;
+# END
+# BEGIN LEXER FOR  IDENTIFIER and
+# BEGIN LEXER FOR  IDENTIFIER *
+<IDENTIFIER_-_7> ::= <IDENTIFIER_-_8> ;
+<IDENTIFIER_-_8> ::= ;
+# BEGIN LEXER FOR  IDENTIFIER and
+# BEGIN LEXER FOR  IDENTIFIER not
+<IDENTIFIER_-_9> ::= ' ' ;
+<IDENTIFIER_-_9> ::= '!' ;
+<IDENTIFIER_-_9> ::= '"' ;
+<IDENTIFIER_-_9> ::= '#' ;
+<IDENTIFIER_-_9> ::= '$' ;
+<IDENTIFIER_-_9> ::= '%' ;
+<IDENTIFIER_-_9> ::= '&' ;
+<IDENTIFIER_-_9> ::=  39  ;
+<IDENTIFIER_-_9> ::= '(' ;
+<IDENTIFIER_-_9> ::= ')' ;
+<IDENTIFIER_-_9> ::= '*' ;
+<IDENTIFIER_-_9> ::= '+' ;
+<IDENTIFIER_-_9> ::= ',' ;
+<IDENTIFIER_-_9> ::= '-' ;
+<IDENTIFIER_-_9> ::= '.' ;
+<IDENTIFIER_-_9> ::= '/' ;
+<IDENTIFIER_-_9> ::= '0' ;
+<IDENTIFIER_-_9> ::= '1' ;
+<IDENTIFIER_-_9> ::= '2' ;
+<IDENTIFIER_-_9> ::= '3' ;
+<IDENTIFIER_-_9> ::= '4' ;
+<IDENTIFIER_-_9> ::= '5' ;
+<IDENTIFIER_-_9> ::= '6' ;
+<IDENTIFIER_-_9> ::= '7' ;
+<IDENTIFIER_-_9> ::= '8' ;
+<IDENTIFIER_-_9> ::= '9' ;
+<IDENTIFIER_-_9> ::= ':' ;
+<IDENTIFIER_-_9> ::= ';' ;
+<IDENTIFIER_-_9> ::= '<' ;
+<IDENTIFIER_-_9> ::= '=' ;
+<IDENTIFIER_-_9> ::= '>' ;
+<IDENTIFIER_-_9> ::= '?' ;
+<IDENTIFIER_-_9> ::= '@' ;
+<IDENTIFIER_-_9> ::= 'A' ;
+<IDENTIFIER_-_9> ::= 'B' ;
+<IDENTIFIER_-_9> ::= 'C' ;
+<IDENTIFIER_-_9> ::= 'D' ;
+<IDENTIFIER_-_9> ::= 'E' ;
+<IDENTIFIER_-_9> ::= 'F' ;
+<IDENTIFIER_-_9> ::= 'G' ;
+<IDENTIFIER_-_9> ::= 'H' ;
+<IDENTIFIER_-_9> ::= 'I' ;
+<IDENTIFIER_-_9> ::= 'J' ;
+<IDENTIFIER_-_9> ::= 'K' ;
+<IDENTIFIER_-_9> ::= 'L' ;
+<IDENTIFIER_-_9> ::= 'M' ;
+<IDENTIFIER_-_9> ::= 'N' ;
+<IDENTIFIER_-_9> ::= 'O' ;
+<IDENTIFIER_-_9> ::= 'P' ;
+<IDENTIFIER_-_9> ::= 'Q' ;
+<IDENTIFIER_-_9> ::= 'R' ;
+<IDENTIFIER_-_9> ::= 'S' ;
+<IDENTIFIER_-_9> ::= 'T' ;
+<IDENTIFIER_-_9> ::= 'U' ;
+<IDENTIFIER_-_9> ::= 'V' ;
+<IDENTIFIER_-_9> ::= 'W' ;
+<IDENTIFIER_-_9> ::= 'X' ;
+<IDENTIFIER_-_9> ::= 'Y' ;
+<IDENTIFIER_-_9> ::= 'Z' ;
+<IDENTIFIER_-_9> ::= '[' ;
+<IDENTIFIER_-_9> ::= '\' ;
+<IDENTIFIER_-_9> ::= '^' ;
+<IDENTIFIER_-_9> ::= '_' ;
+<IDENTIFIER_-_9> ::= '`' ;
+<IDENTIFIER_-_9> ::= 'a' ;
+<IDENTIFIER_-_9> ::= 'b' ;
+<IDENTIFIER_-_9> ::= 'c' ;
+<IDENTIFIER_-_9> ::= 'd' ;
+<IDENTIFIER_-_9> ::= 'e' ;
+<IDENTIFIER_-_9> ::= 'f' ;
+<IDENTIFIER_-_9> ::= 'g' ;
+<IDENTIFIER_-_9> ::= 'h' ;
+<IDENTIFIER_-_9> ::= 'i' ;
+<IDENTIFIER_-_9> ::= 'j' ;
+<IDENTIFIER_-_9> ::= 'k' ;
+<IDENTIFIER_-_9> ::= 'l' ;
+<IDENTIFIER_-_9> ::= 'm' ;
+<IDENTIFIER_-_9> ::= 'n' ;
+<IDENTIFIER_-_9> ::= 'o' ;
+<IDENTIFIER_-_9> ::= 'p' ;
+<IDENTIFIER_-_9> ::= 'q' ;
+<IDENTIFIER_-_9> ::= 'r' ;
+<IDENTIFIER_-_9> ::= 's' ;
+<IDENTIFIER_-_9> ::= 't' ;
+<IDENTIFIER_-_9> ::= 'u' ;
+<IDENTIFIER_-_9> ::= 'v' ;
+<IDENTIFIER_-_9> ::= 'w' ;
+<IDENTIFIER_-_9> ::= 'x' ;
+<IDENTIFIER_-_9> ::= 'y' ;
+<IDENTIFIER_-_9> ::= 'z' ;
+<IDENTIFIER_-_9> ::= '{' ;
+<IDENTIFIER_-_9> ::= '|' ;
+<IDENTIFIER_-_9> ::= '}' ;
+<IDENTIFIER_-_9> ::= '~' ;
+# END
+<IDENTIFIER_-_8> ::= <IDENTIFIER_-_9> <IDENTIFIER_-_8> ;
+# END
+# END
+<IDENTIFIER> ::= '[' <IDENTIFIER_-_7> ']' <WS_POIROT> ;
+# END
+# BEGIN LEXER FOR  IDENTIFIER and
+# BEGIN LEXER FOR  IDENTIFIER char_set
+<IDENTIFIER_-_10> ::= 'a' ;
+<IDENTIFIER_-_10> ::= 'b' ;
+<IDENTIFIER_-_10> ::= 'c' ;
+<IDENTIFIER_-_10> ::= 'd' ;
+<IDENTIFIER_-_10> ::= 'e' ;
+<IDENTIFIER_-_10> ::= 'f' ;
+<IDENTIFIER_-_10> ::= 'g' ;
+<IDENTIFIER_-_10> ::= 'h' ;
+<IDENTIFIER_-_10> ::= 'i' ;
+<IDENTIFIER_-_10> ::= 'j' ;
+<IDENTIFIER_-_10> ::= 'k' ;
+<IDENTIFIER_-_10> ::= 'l' ;
+<IDENTIFIER_-_10> ::= 'm' ;
+<IDENTIFIER_-_10> ::= 'n' ;
+<IDENTIFIER_-_10> ::= 'o' ;
+<IDENTIFIER_-_10> ::= 'p' ;
+<IDENTIFIER_-_10> ::= 'q' ;
+<IDENTIFIER_-_10> ::= 'r' ;
+<IDENTIFIER_-_10> ::= 's' ;
+<IDENTIFIER_-_10> ::= 't' ;
+<IDENTIFIER_-_10> ::= 'u' ;
+<IDENTIFIER_-_10> ::= 'v' ;
+<IDENTIFIER_-_10> ::= 'w' ;
+<IDENTIFIER_-_10> ::= 'x' ;
+<IDENTIFIER_-_10> ::= 'y' ;
+<IDENTIFIER_-_10> ::= 'z' ;
+<IDENTIFIER_-_10> ::= 'A' ;
+<IDENTIFIER_-_10> ::= 'B' ;
+<IDENTIFIER_-_10> ::= 'C' ;
+<IDENTIFIER_-_10> ::= 'D' ;
+<IDENTIFIER_-_10> ::= 'E' ;
+<IDENTIFIER_-_10> ::= 'F' ;
+<IDENTIFIER_-_10> ::= 'G' ;
+<IDENTIFIER_-_10> ::= 'H' ;
+<IDENTIFIER_-_10> ::= 'I' ;
+<IDENTIFIER_-_10> ::= 'J' ;
+<IDENTIFIER_-_10> ::= 'K' ;
+<IDENTIFIER_-_10> ::= 'L' ;
+<IDENTIFIER_-_10> ::= 'M' ;
+<IDENTIFIER_-_10> ::= 'N' ;
+<IDENTIFIER_-_10> ::= 'O' ;
+<IDENTIFIER_-_10> ::= 'P' ;
+<IDENTIFIER_-_10> ::= 'Q' ;
+<IDENTIFIER_-_10> ::= 'R' ;
+<IDENTIFIER_-_10> ::= 'S' ;
+<IDENTIFIER_-_10> ::= 'T' ;
+<IDENTIFIER_-_10> ::= 'U' ;
+<IDENTIFIER_-_10> ::= 'V' ;
+<IDENTIFIER_-_10> ::= 'W' ;
+<IDENTIFIER_-_10> ::= 'X' ;
+<IDENTIFIER_-_10> ::= 'Y' ;
+<IDENTIFIER_-_10> ::= 'Z' ;
+<IDENTIFIER_-_10> ::= '_' ;
+# END
+# BEGIN LEXER FOR  IDENTIFIER *
+<IDENTIFIER_-_11> ::= <IDENTIFIER_-_12> ;
+<IDENTIFIER_-_12> ::= ;
+# BEGIN LEXER FOR  IDENTIFIER and
+# BEGIN LEXER FOR  IDENTIFIER char_set
+<IDENTIFIER_-_13> ::= 'a' ;
+<IDENTIFIER_-_13> ::= 'b' ;
+<IDENTIFIER_-_13> ::= 'c' ;
+<IDENTIFIER_-_13> ::= 'd' ;
+<IDENTIFIER_-_13> ::= 'e' ;
+<IDENTIFIER_-_13> ::= 'f' ;
+<IDENTIFIER_-_13> ::= 'g' ;
+<IDENTIFIER_-_13> ::= 'h' ;
+<IDENTIFIER_-_13> ::= 'i' ;
+<IDENTIFIER_-_13> ::= 'j' ;
+<IDENTIFIER_-_13> ::= 'k' ;
+<IDENTIFIER_-_13> ::= 'l' ;
+<IDENTIFIER_-_13> ::= 'm' ;
+<IDENTIFIER_-_13> ::= 'n' ;
+<IDENTIFIER_-_13> ::= 'o' ;
+<IDENTIFIER_-_13> ::= 'p' ;
+<IDENTIFIER_-_13> ::= 'q' ;
+<IDENTIFIER_-_13> ::= 'r' ;
+<IDENTIFIER_-_13> ::= 's' ;
+<IDENTIFIER_-_13> ::= 't' ;
+<IDENTIFIER_-_13> ::= 'u' ;
+<IDENTIFIER_-_13> ::= 'v' ;
+<IDENTIFIER_-_13> ::= 'w' ;
+<IDENTIFIER_-_13> ::= 'x' ;
+<IDENTIFIER_-_13> ::= 'y' ;
+<IDENTIFIER_-_13> ::= 'z' ;
+<IDENTIFIER_-_13> ::= 'A' ;
+<IDENTIFIER_-_13> ::= 'B' ;
+<IDENTIFIER_-_13> ::= 'C' ;
+<IDENTIFIER_-_13> ::= 'D' ;
+<IDENTIFIER_-_13> ::= 'E' ;
+<IDENTIFIER_-_13> ::= 'F' ;
+<IDENTIFIER_-_13> ::= 'G' ;
+<IDENTIFIER_-_13> ::= 'H' ;
+<IDENTIFIER_-_13> ::= 'I' ;
+<IDENTIFIER_-_13> ::= 'J' ;
+<IDENTIFIER_-_13> ::= 'K' ;
+<IDENTIFIER_-_13> ::= 'L' ;
+<IDENTIFIER_-_13> ::= 'M' ;
+<IDENTIFIER_-_13> ::= 'N' ;
+<IDENTIFIER_-_13> ::= 'O' ;
+<IDENTIFIER_-_13> ::= 'P' ;
+<IDENTIFIER_-_13> ::= 'Q' ;
+<IDENTIFIER_-_13> ::= 'R' ;
+<IDENTIFIER_-_13> ::= 'S' ;
+<IDENTIFIER_-_13> ::= 'T' ;
+<IDENTIFIER_-_13> ::= 'U' ;
+<IDENTIFIER_-_13> ::= 'V' ;
+<IDENTIFIER_-_13> ::= 'W' ;
+<IDENTIFIER_-_13> ::= 'X' ;
+<IDENTIFIER_-_13> ::= 'Y' ;
+<IDENTIFIER_-_13> ::= 'Z' ;
+<IDENTIFIER_-_13> ::= '_' ;
+<IDENTIFIER_-_13> ::= '0' ;
+<IDENTIFIER_-_13> ::= '1' ;
+<IDENTIFIER_-_13> ::= '2' ;
+<IDENTIFIER_-_13> ::= '3' ;
+<IDENTIFIER_-_13> ::= '4' ;
+<IDENTIFIER_-_13> ::= '5' ;
+<IDENTIFIER_-_13> ::= '6' ;
+<IDENTIFIER_-_13> ::= '7' ;
+<IDENTIFIER_-_13> ::= '8' ;
+<IDENTIFIER_-_13> ::= '9' ;
+# END
+<IDENTIFIER_-_12> ::= <IDENTIFIER_-_13> <IDENTIFIER_-_12> ;
+# END
+# END
+<IDENTIFIER> ::= <IDENTIFIER_-_10> <IDENTIFIER_-_11> <WS_POIROT> ;
+# END
+# END
+# LEXER: NUMERIC_LITERAL
+# BEGIN LEXER FOR  NUMERIC_LITERAL or
+# BEGIN LEXER FOR  NUMERIC_LITERAL and
+# BEGIN LEXER FOR  NUMERIC_LITERAL +
+<NUMERIC_LITERAL_-_1> ::= <NUMERIC_LITERAL_-_2> ;
+<NUMERIC_LITERAL_-_2> ::= <NUMERIC_LITERAL_-_3> ;
+<NUMERIC_LITERAL_-_2> ::= <NUMERIC_LITERAL_-_3> <NUMERIC_LITERAL_-_2> ;
+# BEGIN LEXER FOR  NUMERIC_LITERAL token
+<NUMERIC_LITERAL_-_3> ::= <DIGIT> ;
+# END
+# END
+# BEGIN LEXER FOR  NUMERIC_LITERAL ?
+<NUMERIC_LITERAL_-_4> ::= ;
+# BEGIN LEXER FOR  NUMERIC_LITERAL and
+# BEGIN LEXER FOR  NUMERIC_LITERAL *
+<NUMERIC_LITERAL_-_5> ::= <NUMERIC_LITERAL_-_6> ;
+<NUMERIC_LITERAL_-_6> ::= ;
+# BEGIN LEXER FOR  NUMERIC_LITERAL and
+<NUMERIC_LITERAL_-_6> ::= <DIGIT> <NUMERIC_LITERAL_-_6> ;
+# END
+# END
+<NUMERIC_LITERAL_-_4> ::= '.' <NUMERIC_LITERAL_-_5> ;
+# END
+# END
+# BEGIN LEXER FOR  NUMERIC_LITERAL ?
+<NUMERIC_LITERAL_-_7> ::= ;
+# BEGIN LEXER FOR  NUMERIC_LITERAL and
+# BEGIN LEXER FOR  NUMERIC_LITERAL ?
+<NUMERIC_LITERAL_-_8> ::= ;
+# BEGIN LEXER FOR  NUMERIC_LITERAL char_set
+<NUMERIC_LITERAL_-_8> ::= '-' ;
+<NUMERIC_LITERAL_-_8> ::= '+' ;
+# END
+# END
+# BEGIN LEXER FOR  NUMERIC_LITERAL +
+<NUMERIC_LITERAL_-_9> ::= <NUMERIC_LITERAL_-_10> ;
+<NUMERIC_LITERAL_-_10> ::= <NUMERIC_LITERAL_-_11> ;
+<NUMERIC_LITERAL_-_10> ::= <NUMERIC_LITERAL_-_11> <NUMERIC_LITERAL_-_10> ;
+# BEGIN LEXER FOR  NUMERIC_LITERAL token
+<NUMERIC_LITERAL_-_11> ::= <DIGIT> ;
+# END
+# END
+<NUMERIC_LITERAL_-_7> ::= <E> <NUMERIC_LITERAL_-_8> <NUMERIC_LITERAL_-_9> ;
+# END
+# END
+<NUMERIC_LITERAL> ::= <NUMERIC_LITERAL_-_1> <NUMERIC_LITERAL_-_4> <NUMERIC_LITERAL_-_7> <WS_POIROT> ;
+# END
+# BEGIN LEXER FOR  NUMERIC_LITERAL and
+# BEGIN LEXER FOR  NUMERIC_LITERAL +
+<NUMERIC_LITERAL_-_12> ::= <NUMERIC_LITERAL_-_13> ;
+<NUMERIC_LITERAL_-_13> ::= <NUMERIC_LITERAL_-_14> ;
+<NUMERIC_LITERAL_-_13> ::= <NUMERIC_LITERAL_-_14> <NUMERIC_LITERAL_-_13> ;
+# BEGIN LEXER FOR  NUMERIC_LITERAL token
+<NUMERIC_LITERAL_-_14> ::= <DIGIT> ;
+# END
+# END
+# BEGIN LEXER FOR  NUMERIC_LITERAL ?
+<NUMERIC_LITERAL_-_15> ::= ;
+# BEGIN LEXER FOR  NUMERIC_LITERAL and
+# BEGIN LEXER FOR  NUMERIC_LITERAL ?
+<NUMERIC_LITERAL_-_16> ::= ;
+# BEGIN LEXER FOR  NUMERIC_LITERAL char_set
+<NUMERIC_LITERAL_-_16> ::= '-' ;
+<NUMERIC_LITERAL_-_16> ::= '+' ;
+# END
+# END
+# BEGIN LEXER FOR  NUMERIC_LITERAL +
+<NUMERIC_LITERAL_-_17> ::= <NUMERIC_LITERAL_-_18> ;
+<NUMERIC_LITERAL_-_18> ::= <NUMERIC_LITERAL_-_19> ;
+<NUMERIC_LITERAL_-_18> ::= <NUMERIC_LITERAL_-_19> <NUMERIC_LITERAL_-_18> ;
+# BEGIN LEXER FOR  NUMERIC_LITERAL token
+<NUMERIC_LITERAL_-_19> ::= <DIGIT> ;
+# END
+# END
+<NUMERIC_LITERAL_-_15> ::= <E> <NUMERIC_LITERAL_-_16> <NUMERIC_LITERAL_-_17> ;
+# END
+# END
+<NUMERIC_LITERAL> ::= '.' <NUMERIC_LITERAL_-_12> <NUMERIC_LITERAL_-_15> <WS_POIROT> ;
+# END
+# END
+# LEXER: BIND_PARAMETER
+# BEGIN LEXER FOR  BIND_PARAMETER or
+# BEGIN LEXER FOR  BIND_PARAMETER and
+# BEGIN LEXER FOR  BIND_PARAMETER *
+<BIND_PARAMETER_-_1> ::= <BIND_PARAMETER_-_2> ;
+<BIND_PARAMETER_-_2> ::= ;
+# BEGIN LEXER FOR  BIND_PARAMETER and
+<BIND_PARAMETER_-_2> ::= <DIGIT> <BIND_PARAMETER_-_2> ;
+# END
+# END
+<BIND_PARAMETER> ::= '?' <BIND_PARAMETER_-_1> <WS_POIROT> ;
+# END
+# BEGIN LEXER FOR  BIND_PARAMETER and
+# BEGIN LEXER FOR  BIND_PARAMETER char_set
+<BIND_PARAMETER_-_3> ::= ':' ;
+<BIND_PARAMETER_-_3> ::= '@' ;
+<BIND_PARAMETER_-_3> ::= '$' ;
+# END
+<BIND_PARAMETER> ::= <BIND_PARAMETER_-_3> <IDENTIFIER> <WS_POIROT> ;
+# END
+# END
+# LEXER: STRING_LITERAL
+# BEGIN LEXER FOR  STRING_LITERAL and
+# BEGIN LEXER FOR  STRING_LITERAL *
+<STRING_LITERAL_-_1> ::= <STRING_LITERAL_-_2> ;
+<STRING_LITERAL_-_2> ::= ;
+# BEGIN LEXER FOR  STRING_LITERAL and
+# BEGIN LEXER FOR  STRING_LITERAL or
+# BEGIN LEXER FOR  STRING_LITERAL not
+<STRING_LITERAL_-_3> ::= ' ' ;
+<STRING_LITERAL_-_3> ::= '!' ;
+<STRING_LITERAL_-_3> ::= '"' ;
+<STRING_LITERAL_-_3> ::= '#' ;
+<STRING_LITERAL_-_3> ::= '$' ;
+<STRING_LITERAL_-_3> ::= '%' ;
+<STRING_LITERAL_-_3> ::= '&' ;
+<STRING_LITERAL_-_3> ::= '(' ;
+<STRING_LITERAL_-_3> ::= ')' ;
+<STRING_LITERAL_-_3> ::= '*' ;
+<STRING_LITERAL_-_3> ::= '+' ;
+<STRING_LITERAL_-_3> ::= ',' ;
+<STRING_LITERAL_-_3> ::= '-' ;
+<STRING_LITERAL_-_3> ::= '.' ;
+<STRING_LITERAL_-_3> ::= '/' ;
+<STRING_LITERAL_-_3> ::= '0' ;
+<STRING_LITERAL_-_3> ::= '1' ;
+<STRING_LITERAL_-_3> ::= '2' ;
+<STRING_LITERAL_-_3> ::= '3' ;
+<STRING_LITERAL_-_3> ::= '4' ;
+<STRING_LITERAL_-_3> ::= '5' ;
+<STRING_LITERAL_-_3> ::= '6' ;
+<STRING_LITERAL_-_3> ::= '7' ;
+<STRING_LITERAL_-_3> ::= '8' ;
+<STRING_LITERAL_-_3> ::= '9' ;
+<STRING_LITERAL_-_3> ::= ':' ;
+<STRING_LITERAL_-_3> ::= ';' ;
+<STRING_LITERAL_-_3> ::= '<' ;
+<STRING_LITERAL_-_3> ::= '=' ;
+<STRING_LITERAL_-_3> ::= '>' ;
+<STRING_LITERAL_-_3> ::= '?' ;
+<STRING_LITERAL_-_3> ::= '@' ;
+<STRING_LITERAL_-_3> ::= 'A' ;
+<STRING_LITERAL_-_3> ::= 'B' ;
+<STRING_LITERAL_-_3> ::= 'C' ;
+<STRING_LITERAL_-_3> ::= 'D' ;
+<STRING_LITERAL_-_3> ::= 'E' ;
+<STRING_LITERAL_-_3> ::= 'F' ;
+<STRING_LITERAL_-_3> ::= 'G' ;
+<STRING_LITERAL_-_3> ::= 'H' ;
+<STRING_LITERAL_-_3> ::= 'I' ;
+<STRING_LITERAL_-_3> ::= 'J' ;
+<STRING_LITERAL_-_3> ::= 'K' ;
+<STRING_LITERAL_-_3> ::= 'L' ;
+<STRING_LITERAL_-_3> ::= 'M' ;
+<STRING_LITERAL_-_3> ::= 'N' ;
+<STRING_LITERAL_-_3> ::= 'O' ;
+<STRING_LITERAL_-_3> ::= 'P' ;
+<STRING_LITERAL_-_3> ::= 'Q' ;
+<STRING_LITERAL_-_3> ::= 'R' ;
+<STRING_LITERAL_-_3> ::= 'S' ;
+<STRING_LITERAL_-_3> ::= 'T' ;
+<STRING_LITERAL_-_3> ::= 'U' ;
+<STRING_LITERAL_-_3> ::= 'V' ;
+<STRING_LITERAL_-_3> ::= 'W' ;
+<STRING_LITERAL_-_3> ::= 'X' ;
+<STRING_LITERAL_-_3> ::= 'Y' ;
+<STRING_LITERAL_-_3> ::= 'Z' ;
+<STRING_LITERAL_-_3> ::= '[' ;
+<STRING_LITERAL_-_3> ::= '\' ;
+<STRING_LITERAL_-_3> ::= ']' ;
+<STRING_LITERAL_-_3> ::= '^' ;
+<STRING_LITERAL_-_3> ::= '_' ;
+<STRING_LITERAL_-_3> ::= '`' ;
+<STRING_LITERAL_-_3> ::= 'a' ;
+<STRING_LITERAL_-_3> ::= 'b' ;
+<STRING_LITERAL_-_3> ::= 'c' ;
+<STRING_LITERAL_-_3> ::= 'd' ;
+<STRING_LITERAL_-_3> ::= 'e' ;
+<STRING_LITERAL_-_3> ::= 'f' ;
+<STRING_LITERAL_-_3> ::= 'g' ;
+<STRING_LITERAL_-_3> ::= 'h' ;
+<STRING_LITERAL_-_3> ::= 'i' ;
+<STRING_LITERAL_-_3> ::= 'j' ;
+<STRING_LITERAL_-_3> ::= 'k' ;
+<STRING_LITERAL_-_3> ::= 'l' ;
+<STRING_LITERAL_-_3> ::= 'm' ;
+<STRING_LITERAL_-_3> ::= 'n' ;
+<STRING_LITERAL_-_3> ::= 'o' ;
+<STRING_LITERAL_-_3> ::= 'p' ;
+<STRING_LITERAL_-_3> ::= 'q' ;
+<STRING_LITERAL_-_3> ::= 'r' ;
+<STRING_LITERAL_-_3> ::= 's' ;
+<STRING_LITERAL_-_3> ::= 't' ;
+<STRING_LITERAL_-_3> ::= 'u' ;
+<STRING_LITERAL_-_3> ::= 'v' ;
+<STRING_LITERAL_-_3> ::= 'w' ;
+<STRING_LITERAL_-_3> ::= 'x' ;
+<STRING_LITERAL_-_3> ::= 'y' ;
+<STRING_LITERAL_-_3> ::= 'z' ;
+<STRING_LITERAL_-_3> ::= '{' ;
+<STRING_LITERAL_-_3> ::= '|' ;
+<STRING_LITERAL_-_3> ::= '}' ;
+<STRING_LITERAL_-_3> ::= '~' ;
+# END
+# BEGIN LEXER FOR  STRING_LITERAL string
+<STRING_LITERAL_-_3> ::=  39  39  ;
+# END
+# END
+<STRING_LITERAL_-_2> ::= <STRING_LITERAL_-_3> <STRING_LITERAL_-_2> ;
+# END
+# END
+<STRING_LITERAL> ::=  39  <STRING_LITERAL_-_1>  39  <WS_POIROT> ;
+# END
+# LEXER: BLOB_LITERAL
+# BEGIN LEXER FOR  BLOB_LITERAL and
+<BLOB_LITERAL> ::= <X> <STRING_LITERAL> <WS_POIROT> ;
+# END
+# LEXER: SINGLE_LINE_COMMENT
+# BEGIN LEXER FOR  SINGLE_LINE_COMMENT and
+# BEGIN LEXER FOR  SINGLE_LINE_COMMENT *
+<SINGLE_LINE_COMMENT_-_1> ::= <SINGLE_LINE_COMMENT_-_2> ;
+<SINGLE_LINE_COMMENT_-_2> ::= ;
+# BEGIN LEXER FOR  SINGLE_LINE_COMMENT and
+# BEGIN LEXER FOR  SINGLE_LINE_COMMENT not
+<SINGLE_LINE_COMMENT_-_3> ::= ' '  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '!'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '"'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '#'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '$'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '%'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '&'  ;
+<SINGLE_LINE_COMMENT_-_3> ::=  39   ;
+<SINGLE_LINE_COMMENT_-_3> ::= '('  ;
+<SINGLE_LINE_COMMENT_-_3> ::= ')'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '*'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '+'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= ','  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '-'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '.'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '/'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '0'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '1'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '2'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '3'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '4'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '5'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '6'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '7'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '8'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '9'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= ':'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= ';'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '<'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '='  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '>'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '?'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '@'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'A'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'B'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'C'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'D'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'E'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'F'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'G'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'H'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'I'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'J'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'K'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'L'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'M'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'N'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'O'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'P'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'Q'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'R'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'S'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'T'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'U'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'V'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'W'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'X'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'Y'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'Z'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '['  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '\'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= ']'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '^'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '_'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '`'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'a'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'b'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'c'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'd'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'e'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'f'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'g'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'h'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'i'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'j'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'k'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'l'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'm'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'o'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'p'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'q'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 's'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 't'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'u'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'v'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'w'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'x'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'y'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= 'z'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '{'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '|'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '}'  ;
+<SINGLE_LINE_COMMENT_-_3> ::= '~'  ;
+# END
+<SINGLE_LINE_COMMENT_-_2> ::= <SINGLE_LINE_COMMENT_-_3> <SINGLE_LINE_COMMENT_-_2> ;
+# END
+# END
+<SINGLE_LINE_COMMENT> ::= '--' <SINGLE_LINE_COMMENT_-_1> <WS_POIROT> ;
+# END
+# LEXER: MULTILINE_COMMENT_EOF
+# BEGIN LEXER FOR  MULTILINE_COMMENT_EOF and
+# BEGIN LEXER FOR  MULTILINE_COMMENT_EOF ?
+<MULTILINE_COMMENT_EOF_-_1> ::= ;
+# BEGIN LEXER FOR  MULTILINE_COMMENT_EOF .
+<MULTILINE_COMMENT_EOF_-_1> ::= ' '  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '!'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '"'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '#'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '$'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '%'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '&'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::=  39   ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '('  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= ')'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '*'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '+'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= ','  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '-'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '.'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '/'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '0'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '1'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '2'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '3'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '4'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '5'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '6'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '7'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '8'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '9'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= ':'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= ';'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '<'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '='  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '>'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '?'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '@'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'A'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'B'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'C'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'D'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'E'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'F'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'G'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'H'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'I'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'J'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'K'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'L'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'M'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'N'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'O'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'P'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'Q'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'R'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'S'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'T'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'U'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'V'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'W'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'X'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'Y'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'Z'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '['  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '\'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= ']'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '^'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '_'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '`'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'a'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'b'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'c'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'd'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'e'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'f'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'g'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'h'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'i'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'j'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'k'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'l'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'm'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'n'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'o'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'p'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'q'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'r'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 's'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 't'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'u'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'v'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'w'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'x'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'y'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= 'z'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '{'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '|'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '}'  ;
+<MULTILINE_COMMENT_EOF_-_1> ::= '~'  ;
+# END
+# END
+<MULTILINE_COMMENT_EOF> ::= '/*' <MULTILINE_COMMENT_EOF_-_1> <WS_POIROT> ;
+# END
+# LEXER: MULTILINE_COMMENT
+# BEGIN LEXER FOR  MULTILINE_COMMENT and
+# BEGIN LEXER FOR  MULTILINE_COMMENT ?
+<MULTILINE_COMMENT_-_1> ::= ;
+# BEGIN LEXER FOR  MULTILINE_COMMENT .
+<MULTILINE_COMMENT_-_1> ::= ' '  ;
+<MULTILINE_COMMENT_-_1> ::= '!'  ;
+<MULTILINE_COMMENT_-_1> ::= '"'  ;
+<MULTILINE_COMMENT_-_1> ::= '#'  ;
+<MULTILINE_COMMENT_-_1> ::= '$'  ;
+<MULTILINE_COMMENT_-_1> ::= '%'  ;
+<MULTILINE_COMMENT_-_1> ::= '&'  ;
+<MULTILINE_COMMENT_-_1> ::=  39   ;
+<MULTILINE_COMMENT_-_1> ::= '('  ;
+<MULTILINE_COMMENT_-_1> ::= ')'  ;
+<MULTILINE_COMMENT_-_1> ::= '*'  ;
+<MULTILINE_COMMENT_-_1> ::= '+'  ;
+<MULTILINE_COMMENT_-_1> ::= ','  ;
+<MULTILINE_COMMENT_-_1> ::= '-'  ;
+<MULTILINE_COMMENT_-_1> ::= '.'  ;
+<MULTILINE_COMMENT_-_1> ::= '/'  ;
+<MULTILINE_COMMENT_-_1> ::= '0'  ;
+<MULTILINE_COMMENT_-_1> ::= '1'  ;
+<MULTILINE_COMMENT_-_1> ::= '2'  ;
+<MULTILINE_COMMENT_-_1> ::= '3'  ;
+<MULTILINE_COMMENT_-_1> ::= '4'  ;
+<MULTILINE_COMMENT_-_1> ::= '5'  ;
+<MULTILINE_COMMENT_-_1> ::= '6'  ;
+<MULTILINE_COMMENT_-_1> ::= '7'  ;
+<MULTILINE_COMMENT_-_1> ::= '8'  ;
+<MULTILINE_COMMENT_-_1> ::= '9'  ;
+<MULTILINE_COMMENT_-_1> ::= ':'  ;
+<MULTILINE_COMMENT_-_1> ::= ';'  ;
+<MULTILINE_COMMENT_-_1> ::= '<'  ;
+<MULTILINE_COMMENT_-_1> ::= '='  ;
+<MULTILINE_COMMENT_-_1> ::= '>'  ;
+<MULTILINE_COMMENT_-_1> ::= '?'  ;
+<MULTILINE_COMMENT_-_1> ::= '@'  ;
+<MULTILINE_COMMENT_-_1> ::= 'A'  ;
+<MULTILINE_COMMENT_-_1> ::= 'B'  ;
+<MULTILINE_COMMENT_-_1> ::= 'C'  ;
+<MULTILINE_COMMENT_-_1> ::= 'D'  ;
+<MULTILINE_COMMENT_-_1> ::= 'E'  ;
+<MULTILINE_COMMENT_-_1> ::= 'F'  ;
+<MULTILINE_COMMENT_-_1> ::= 'G'  ;
+<MULTILINE_COMMENT_-_1> ::= 'H'  ;
+<MULTILINE_COMMENT_-_1> ::= 'I'  ;
+<MULTILINE_COMMENT_-_1> ::= 'J'  ;
+<MULTILINE_COMMENT_-_1> ::= 'K'  ;
+<MULTILINE_COMMENT_-_1> ::= 'L'  ;
+<MULTILINE_COMMENT_-_1> ::= 'M'  ;
+<MULTILINE_COMMENT_-_1> ::= 'N'  ;
+<MULTILINE_COMMENT_-_1> ::= 'O'  ;
+<MULTILINE_COMMENT_-_1> ::= 'P'  ;
+<MULTILINE_COMMENT_-_1> ::= 'Q'  ;
+<MULTILINE_COMMENT_-_1> ::= 'R'  ;
+<MULTILINE_COMMENT_-_1> ::= 'S'  ;
+<MULTILINE_COMMENT_-_1> ::= 'T'  ;
+<MULTILINE_COMMENT_-_1> ::= 'U'  ;
+<MULTILINE_COMMENT_-_1> ::= 'V'  ;
+<MULTILINE_COMMENT_-_1> ::= 'W'  ;
+<MULTILINE_COMMENT_-_1> ::= 'X'  ;
+<MULTILINE_COMMENT_-_1> ::= 'Y'  ;
+<MULTILINE_COMMENT_-_1> ::= 'Z'  ;
+<MULTILINE_COMMENT_-_1> ::= '['  ;
+<MULTILINE_COMMENT_-_1> ::= '\'  ;
+<MULTILINE_COMMENT_-_1> ::= ']'  ;
+<MULTILINE_COMMENT_-_1> ::= '^'  ;
+<MULTILINE_COMMENT_-_1> ::= '_'  ;
+<MULTILINE_COMMENT_-_1> ::= '`'  ;
+<MULTILINE_COMMENT_-_1> ::= 'a'  ;
+<MULTILINE_COMMENT_-_1> ::= 'b'  ;
+<MULTILINE_COMMENT_-_1> ::= 'c'  ;
+<MULTILINE_COMMENT_-_1> ::= 'd'  ;
+<MULTILINE_COMMENT_-_1> ::= 'e'  ;
+<MULTILINE_COMMENT_-_1> ::= 'f'  ;
+<MULTILINE_COMMENT_-_1> ::= 'g'  ;
+<MULTILINE_COMMENT_-_1> ::= 'h'  ;
+<MULTILINE_COMMENT_-_1> ::= 'i'  ;
+<MULTILINE_COMMENT_-_1> ::= 'j'  ;
+<MULTILINE_COMMENT_-_1> ::= 'k'  ;
+<MULTILINE_COMMENT_-_1> ::= 'l'  ;
+<MULTILINE_COMMENT_-_1> ::= 'm'  ;
+<MULTILINE_COMMENT_-_1> ::= 'n'  ;
+<MULTILINE_COMMENT_-_1> ::= 'o'  ;
+<MULTILINE_COMMENT_-_1> ::= 'p'  ;
+<MULTILINE_COMMENT_-_1> ::= 'q'  ;
+<MULTILINE_COMMENT_-_1> ::= 'r'  ;
+<MULTILINE_COMMENT_-_1> ::= 's'  ;
+<MULTILINE_COMMENT_-_1> ::= 't'  ;
+<MULTILINE_COMMENT_-_1> ::= 'u'  ;
+<MULTILINE_COMMENT_-_1> ::= 'v'  ;
+<MULTILINE_COMMENT_-_1> ::= 'w'  ;
+<MULTILINE_COMMENT_-_1> ::= 'x'  ;
+<MULTILINE_COMMENT_-_1> ::= 'y'  ;
+<MULTILINE_COMMENT_-_1> ::= 'z'  ;
+<MULTILINE_COMMENT_-_1> ::= '{'  ;
+<MULTILINE_COMMENT_-_1> ::= '|'  ;
+<MULTILINE_COMMENT_-_1> ::= '}'  ;
+<MULTILINE_COMMENT_-_1> ::= '~'  ;
+# END
+# END
+<MULTILINE_COMMENT> ::= '/*' <MULTILINE_COMMENT_-_1> '*/' <WS_POIROT> ;
+# END
+# LEXER: SPACES
+# BEGIN LEXER FOR  SPACES char_set
+<SPACES> ::= ' ' <WS_POIROT> ;
+<SPACES> ::=  11 <WS_POIROT> ;
+<SPACES> ::=  9 <WS_POIROT> ;
+<SPACES> ::=  13 <WS_POIROT> ;
+<SPACES> ::=  10 <WS_POIROT> ;
+# END
+# LEXER: UNEXPECTED_CHAR
+# BEGIN LEXER FOR  UNEXPECTED_CHAR .
+<UNEXPECTED_CHAR> ::= ' '  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '!'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '"'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '#'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '$'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '%'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '&'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::=  39   <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '('  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= ')'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '*'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '+'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= ','  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '-'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '.'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '/'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '0'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '1'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '2'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '3'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '4'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '5'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '6'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '7'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '8'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '9'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= ':'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= ';'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '<'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '='  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '>'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '?'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '@'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'A'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'B'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'C'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'D'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'E'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'F'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'G'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'H'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'I'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'J'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'K'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'L'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'M'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'N'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'O'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'P'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'Q'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'R'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'S'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'T'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'U'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'V'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'W'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'X'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'Y'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'Z'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '['  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '\'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= ']'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '^'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '_'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '`'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'a'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'b'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'c'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'd'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'e'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'f'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'g'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'h'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'i'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'j'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'k'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'l'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'm'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'n'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'o'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'p'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'q'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'r'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 's'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 't'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'u'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'v'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'w'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'x'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'y'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= 'z'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '{'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '|'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '}'  <WS_POIROT> ;
+<UNEXPECTED_CHAR> ::= '~'  <WS_POIROT> ;
+# END
+# LEXER: DIGIT
+# BEGIN LEXER FOR  DIGIT char_set
+<DIGIT> ::= '0' ;
+<DIGIT> ::= '1' ;
+<DIGIT> ::= '2' ;
+<DIGIT> ::= '3' ;
+<DIGIT> ::= '4' ;
+<DIGIT> ::= '5' ;
+<DIGIT> ::= '6' ;
+<DIGIT> ::= '7' ;
+<DIGIT> ::= '8' ;
+<DIGIT> ::= '9' ;
+# END
+# LEXER: A
+# BEGIN LEXER FOR  A char_set
+<A> ::= 'a' ;
+<A> ::= 'A' ;
+# END
+# LEXER: B
+# BEGIN LEXER FOR  B char_set
+<B> ::= 'b' ;
+<B> ::= 'B' ;
+# END
+# LEXER: C
+# BEGIN LEXER FOR  C char_set
+<C> ::= 'c' ;
+<C> ::= 'C' ;
+# END
+# LEXER: D
+# BEGIN LEXER FOR  D char_set
+<D> ::= 'd' ;
+<D> ::= 'D' ;
+# END
+# LEXER: E
+# BEGIN LEXER FOR  E char_set
+<E> ::= 'e' ;
+<E> ::= 'E' ;
+# END
+# LEXER: F
+# BEGIN LEXER FOR  F char_set
+<F> ::= 'f' ;
+<F> ::= 'F' ;
+# END
+# LEXER: G
+# BEGIN LEXER FOR  G char_set
+<G> ::= 'g' ;
+<G> ::= 'G' ;
+# END
+# LEXER: H
+# BEGIN LEXER FOR  H char_set
+<H> ::= 'h' ;
+<H> ::= 'H' ;
+# END
+# LEXER: I
+# BEGIN LEXER FOR  I char_set
+<I> ::= 'i' ;
+<I> ::= 'I' ;
+# END
+# LEXER: J
+# BEGIN LEXER FOR  J char_set
+<J> ::= 'j' ;
+<J> ::= 'J' ;
+# END
+# LEXER: K
+# BEGIN LEXER FOR  K char_set
+<K> ::= 'k' ;
+<K> ::= 'K' ;
+# END
+# LEXER: L
+# BEGIN LEXER FOR  L char_set
+<L> ::= 'l' ;
+<L> ::= 'L' ;
+# END
+# LEXER: M
+# BEGIN LEXER FOR  M char_set
+<M> ::= 'm' ;
+<M> ::= 'M' ;
+# END
+# LEXER: N
+# BEGIN LEXER FOR  N char_set
+<N> ::= 'n' ;
+<N> ::= 'N' ;
+# END
+# LEXER: O
+# BEGIN LEXER FOR  O char_set
+<O> ::= 'o' ;
+<O> ::= 'O' ;
+# END
+# LEXER: P
+# BEGIN LEXER FOR  P char_set
+<P> ::= 'p' ;
+<P> ::= 'P' ;
+# END
+# LEXER: Q
+# BEGIN LEXER FOR  Q char_set
+<Q> ::= 'q' ;
+<Q> ::= 'Q' ;
+# END
+# LEXER: R
+# BEGIN LEXER FOR  R char_set
+<R> ::= 'r' ;
+<R> ::= 'R' ;
+# END
+# LEXER: S
+# BEGIN LEXER FOR  S char_set
+<S> ::= 's' ;
+<S> ::= 'S' ;
+# END
+# LEXER: T
+# BEGIN LEXER FOR  T char_set
+<T> ::= 't' ;
+<T> ::= 'T' ;
+# END
+# LEXER: U
+# BEGIN LEXER FOR  U char_set
+<U> ::= 'u' ;
+<U> ::= 'U' ;
+# END
+# LEXER: V
+# BEGIN LEXER FOR  V char_set
+<V> ::= 'v' ;
+<V> ::= 'V' ;
+# END
+# LEXER: W
+# BEGIN LEXER FOR  W char_set
+<W> ::= 'w' ;
+<W> ::= 'W' ;
+# END
+# LEXER: X
+# BEGIN LEXER FOR  X char_set
+<X> ::= 'x' ;
+<X> ::= 'X' ;
+# END
+# LEXER: Y
+# BEGIN LEXER FOR  Y char_set
+<Y> ::= 'y' ;
+<Y> ::= 'Y' ;
+# END
+# LEXER: Z
+# BEGIN LEXER FOR  Z char_set
+<Z> ::= 'z' ;
+<Z> ::= 'Z' ;
+# END
+<WS_POIROT> ::= ' ';
