@@ -22,14 +22,15 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
         end in
 
     (* based on level decomposition *)
-    let rec update_best_rule (original_rules: rule list) : bool =
+    let rec update_best_rule (necessary: element) (original_rules: rule list) : unit =
         match original_rules with
-        | [] -> false
-        | _ -> let usable_rules = List.filter (fun r -> List.for_all (fun s -> is_terminal s || Hashtbl.mem best_rule s) r.right_part) original_rules in
-                List.iter (fun r -> Hashtbl.replace best_rule r.left_symbol r.right_part) (List.sort compare_rule usable_rules);
-                if not (Hashtbl.mem best_rule g.axiom) then
-                    (update_best_rule [@tailcall]) (List.filter (fun r -> not (Hashtbl.mem best_rule r.left_symbol)) original_rules)
-                else true
+        | [] -> ()
+        | _ ->
+                if not (Hashtbl.mem best_rule necessary) then
+                    let usable_rules = List.filter (fun r -> List.for_all (fun s -> is_terminal s || Hashtbl.mem best_rule s) r.right_part) original_rules in
+                    List.iter (fun r -> Hashtbl.replace best_rule r.left_symbol r.right_part) (List.sort compare_rule usable_rules);
+                    (update_best_rule [@tailcall]) necessary (List.filter (fun r -> not (Hashtbl.mem best_rule r.left_symbol)) original_rules)
+                else ()
         in
 
     let rec fuzzer_minimize (goal_rules: rule list) (root: element) : parse_tree =
@@ -61,10 +62,11 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
             Leaf (Terminal (List.nth all_bindings (Random.int (List.length all_bindings))))
         end else if is_terminal e then
             Leaf e
-        else if depth >= max_depth then
+        else if depth >= max_depth then begin
+            update_best_rule e g.rules;
             fuzzer_minimize [] e
             (*fuzzer_minimize [] [] e*)
-        else begin
+        end else begin
             let possible_rules = List.filter (fun r -> r.left_symbol = e) g.rules in
             let r = List.nth possible_rules (Random.int (List.length possible_rules)) in (* random rule *)
             let trees = List.map (fuzzer_explode (depth + 1)) r.right_part in
@@ -94,8 +96,8 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
             if List.exists ((=) None) trees then None
             else Some (trees |> List.map Option.get |> List.flatten) in
 
-    let status = update_best_rule g.rules in
-    if not status then None
+    update_best_rule g.axiom g.rules;
+    if not (Hashtbl.mem best_rule g.axiom) then None
     else
         part_of_tree "" (
             if Option.is_some goal && is_reachable g (Option.get goal) g.axiom then begin
@@ -104,5 +106,5 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
     (*        fuzzer_minimize (find_path_to_goal ()) [] g.axiom*)
             end else begin
                 Log.L.debug (fun m -> m "Fuzzing");
-                fuzzer_explode 0 g.axiom
+                fuzzer_explode 5 g.axiom
             end)
