@@ -16,9 +16,9 @@ let string_of_oracle_status (s: oracle_status) : string = match s with
 
 let oracle_status_of_int : int -> oracle_status = function
     | 0 -> No_error
-    | 1 -> Syntax_error
-    | 2 -> Semantic_error
-    | _ -> failwith "Unknown error code!"
+    | 180 -> Syntax_error
+    | 181 -> Semantic_error
+    | n -> failwith ("Oracle failure: "^(string_of_int n))
 
 (* add memoization to an oracle *)
 let oracle_mem (o: string -> oracle_status) : string -> oracle_status =

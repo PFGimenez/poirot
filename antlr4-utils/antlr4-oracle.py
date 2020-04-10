@@ -37,7 +37,7 @@ def main():
         getattr(parser, axiom)()
     except Exception as e:
         print("Exception:",e)
-        exit(1)
+        exit(180)
     exit(0)
 
 if __name__ == '__main__':

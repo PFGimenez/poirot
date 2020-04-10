@@ -1,5 +1,5 @@
 all: SQLite.bnf
-grammarv4_commit = f40d77f85ee8a299d309cdcd15bfff5041bc44ad
+grammarv4_commit = 31f313996d1be86df4cb0cc9af50051f4051432f
 antlr_version = 4.8
 
 # ANTLR4 processing
