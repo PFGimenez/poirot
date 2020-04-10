@@ -1,0 +1,26 @@
+--- XMLParser.g4	2020-04-10 11:57:21.189020497 +0200
++++ XMLParser_new.g4	2020-04-10 11:53:23.378480002 +0200
+@@ -31,12 +31,10 @@
+ 
+ options { tokenVocab=XMLLexer; }
+ 
+-document    :   prolog? misc* element misc*;
+-
+-prolog      :   XMLDeclOpen attribute* SPECIAL_CLOSE ;
++document    :   misc* element misc*;
+ 
+ content     :   chardata?
+-                ((element | reference | CDATA | PI | COMMENT) chardata?)* ;
++                ((element | reference | CDATA | COMMENT) chardata?)* ;
+ 
+ element     :   '<' Name attribute* '>' content '<' '/' Name '>'
+             |   '<' Name attribute* '/>'
+@@ -49,6 +47,6 @@
+ /** ``All text that is not markup constitutes the character data of
+  *  the document.''
+  */
+-chardata    :   TEXT | SEA_WS ;
++chardata    :   TEXT ;
+ 
+-misc        :   COMMENT | PI | SEA_WS ;
++misc        :   COMMENT ;

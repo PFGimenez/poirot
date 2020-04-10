@@ -1,6 +1,15 @@
---- XMLLexer.g4	2020-04-09 16:40:29.776183015 +0200
-+++ XMLLexer_new.g4	2020-04-09 16:40:22.564103372 +0200
-@@ -72,18 +72,11 @@
+--- XMLLexer.g4	2020-04-10 11:57:14.416945956 +0200
++++ XMLLexer_new.g4	2020-04-10 11:52:15.749862213 +0200
+@@ -40,8 +40,6 @@
+ CharRef     :   '&#' DIGIT+ ';'
+             |   '&#x' HEXDIGIT+ ';'
+             ;
+-SEA_WS      :   (' '|'\t'|'\r'? '\n')+ ;
+-
+ OPEN        :   '<'                     -> pushMode(INSIDE) ;
+ XMLDeclOpen :   '<?xml' S               -> pushMode(INSIDE) ;
+ SPECIAL_OPEN:   '<?' Name               -> more, pushMode(PROC_INSTR) ;
+@@ -72,18 +70,11 @@
  NameChar    :   NameStartChar
              |   '-' | '_' | '.' | DIGIT
              |   '\u00B7'

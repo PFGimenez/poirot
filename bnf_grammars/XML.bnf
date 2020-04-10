@@ -4,20 +4,13 @@
 # Grammar name:  ('token', 'XMLParser')
 <document> ;
 # PARSER: document
-<document_-_1> ::= ;
-<document_-_1> ::= <prolog>  ;
-<document_-_2> ::= <document_-_3>  ;
-<document_-_3> ::= ;
-<document_-_3> ::= <misc>  <document_-_3>  ;
-<document_-_4> ::= <document_-_5>  ;
-<document_-_5> ::= ;
-<document_-_5> ::= <misc>  <document_-_5>  ;
-<document> ::= <document_-_1>  <document_-_2>  <element>  <document_-_4>  ;
-# PARSER: prolog
-<prolog_-_1> ::= <prolog_-_2>  ;
-<prolog_-_2> ::= ;
-<prolog_-_2> ::= <attribute>  <prolog_-_2>  ;
-<prolog> ::= <XMLDeclOpen>  <prolog_-_1>  <SPECIAL_CLOSE>  ;
+<document_-_1> ::= <document_-_2>  ;
+<document_-_2> ::= ;
+<document_-_2> ::= <misc>  <document_-_2>  ;
+<document_-_3> ::= <document_-_4>  ;
+<document_-_4> ::= ;
+<document_-_4> ::= <misc>  <document_-_4>  ;
+<document> ::= <document_-_1>  <element>  <document_-_3>  ;
 # PARSER: content
 <content_-_1> ::= ;
 <content_-_1> ::= <chardata>  ;
@@ -26,7 +19,6 @@
 <content_-_5> ::= <element>  ;
 <content_-_5> ::= <reference>  ;
 <content_-_5> ::= <CDATA>  ;
-<content_-_5> ::= <PI>  ;
 <content_-_5> ::= <COMMENT>  ;
 <content_-_6> ::= ;
 <content_-_6> ::= <chardata>  ;
@@ -49,11 +41,8 @@
 <attribute> ::= <Name>  '='  <STRING>  ;
 # PARSER: chardata
 <chardata> ::= <TEXT>  ;
-<chardata> ::= <SEA_WS>  ;
 # PARSER: misc
 <misc> ::= <COMMENT>  ;
-<misc> ::= <PI>  ;
-<misc> ::= <SEA_WS>  ;
 # Grammar LEXER= lexer
 # Grammar PARSER= None
 # Grammar GRAMMAR= grammar
@@ -397,29 +386,6 @@
 # END
 # END
 <CharRef> ::= '&#x' <CharRef_-_4> ';' ' ' ;
-# END
-# END
-# LEXER: SEA_WS
-# BEGIN LEXER FOR  SEA_WS +
-<SEA_WS> ::= <SEA_WS_-_1> ' ' ;
-<SEA_WS_-_1> ::= <SEA_WS_-_2> ' ' ;
-<SEA_WS_-_1> ::= <SEA_WS_-_2> <SEA_WS_-_1> ' ' ;
-# BEGIN LEXER FOR  SEA_WS or
-# BEGIN LEXER FOR  SEA_WS string
-<SEA_WS_-_2> ::= ' ' ;
-# END
-# BEGIN LEXER FOR  SEA_WS string
-<SEA_WS_-_2> ::=  9 ;
-# END
-# BEGIN LEXER FOR  SEA_WS and
-# BEGIN LEXER FOR  SEA_WS ?
-<SEA_WS_-_3> ::= ;
-# BEGIN LEXER FOR  SEA_WS string
-<SEA_WS_-_3> ::=  13 ;
-# END
-# END
-<SEA_WS_-_2> ::= <SEA_WS_-_3>  10 ;
-# END
 # END
 # END
 # LEXER: OPEN

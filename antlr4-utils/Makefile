@@ -71,6 +71,7 @@ XMLLexer.g4:
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/xml/XMLLexer.g4
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/xml/XMLParser.g4
 	patch < XMLLexer.diff
+	patch < XMLParser.diff
 
 SQLite.g4:
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/sql/sqlite/SQLite.g4
