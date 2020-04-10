@@ -1,6 +1,65 @@
---- PhpParser.g4	2020-04-09 16:56:29.404452283 +0200
-+++ PhpParser_new.g4	2020-04-09 16:51:40.133976765 +0200
-@@ -457,67 +457,67 @@
+--- PhpParser.g4	2020-04-10 10:19:43.092818412 +0200
++++ PhpParser_new.g4	2020-04-10 10:17:45.335416950 +0200
+@@ -25,57 +25,11 @@
+ 
+ parser grammar PhpParser;
+ 
+-options { tokenVocab=PhpLexer; }
+-
+ // HTML
+ // Also see here: https://github.com/antlr/grammars-v4/tree/master/html
+ 
+ htmlDocument
+-    : Shebang? htmlElementOrPhpBlock* EOF
+-    ;
+-
+-htmlElementOrPhpBlock
+-    : htmlElements
+-    | phpBlock
+-    | scriptTextPart
+-    ;
+-
+-htmlElements
+-    : htmlElement+
+-    ;
+-
+-htmlElement
+-    : HtmlDtd
+-    | HtmlScriptOpen
+-    | HtmlClose
+-    | HtmlStyleOpen
+-    | HtmlOpen
+-    | HtmlName
+-    | HtmlSlashClose
+-    | HtmlSlash
+-    | HtmlText
+-    | HtmlEquals
+-    | HtmlStartQuoteString
+-    | HtmlEndQuoteString
+-    | HtmlStartDoubleQuoteString
+-    | HtmlEndDoubleQuoteString
+-    | HtmlHex
+-    | HtmlDecimal
+-    | HtmlQuoteString
+-    | HtmlDoubleQuoteString
+-
+-    | StyleBody
+-    
+-    | ScriptClose
+-
+-    | XmlStart XmlText* XmlClose
+-    ;
+-
+-// Script
+-// Parse JavaScript with https://github.com/antlr/grammars-v4/tree/master/ecmascript if necessary.
+-    
+-scriptTextPart
+-    : ScriptText+
++    : phpBlock+ EOF
+     ;
+ 
+ // PHP
+@@ -457,67 +411,67 @@
  // Expressions
  // Grouped by priorities: http://php.net/manual/en/language.operators.precedence.php
  expression

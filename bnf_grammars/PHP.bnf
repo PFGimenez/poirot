@@ -4,51 +4,11 @@
 # Grammar name:  ('token', 'PhpParser')
 <htmlDocument> ;
 # PARSER: htmlDocument
-<htmlDocument_-_1> ::= ;
-<htmlDocument_-_1> ::= <Shebang>  ;
+<htmlDocument_-_1> ::= <htmlDocument_-_2>  ;
 <htmlDocument_-_2> ::= <htmlDocument_-_3>  ;
-<htmlDocument_-_3> ::= ;
-<htmlDocument_-_3> ::= <htmlElementOrPhpBlock>  <htmlDocument_-_3>  ;
-<htmlDocument> ::= <htmlDocument_-_1>  <htmlDocument_-_2>  <EOF>  ;
-# PARSER: htmlElementOrPhpBlock
-<htmlElementOrPhpBlock> ::= <htmlElements>  ;
-<htmlElementOrPhpBlock> ::= <phpBlock>  ;
-<htmlElementOrPhpBlock> ::= <scriptTextPart>  ;
-# PARSER: htmlElements
-<htmlElements> ::= <htmlElements_-_1>  ;
-<htmlElements_-_1> ::= <htmlElements_-_2>  ;
-<htmlElements_-_1> ::= <htmlElements_-_2>  <htmlElements_-_1>  ;
-<htmlElements_-_2> ::= <htmlElement>  ;
-# PARSER: htmlElement
-<htmlElement> ::= <HtmlDtd>  ;
-<htmlElement> ::= <HtmlScriptOpen>  ;
-<htmlElement> ::= <HtmlClose>  ;
-<htmlElement> ::= <HtmlStyleOpen>  ;
-<htmlElement> ::= <HtmlOpen>  ;
-<htmlElement> ::= <HtmlName>  ;
-<htmlElement> ::= <HtmlSlashClose>  ;
-<htmlElement> ::= <HtmlSlash>  ;
-<htmlElement> ::= <HtmlText>  ;
-<htmlElement> ::= <HtmlEquals>  ;
-<htmlElement> ::= <HtmlStartQuoteString>  ;
-<htmlElement> ::= <HtmlEndQuoteString>  ;
-<htmlElement> ::= <HtmlStartDoubleQuoteString>  ;
-<htmlElement> ::= <HtmlEndDoubleQuoteString>  ;
-<htmlElement> ::= <HtmlHex>  ;
-<htmlElement> ::= <HtmlDecimal>  ;
-<htmlElement> ::= <HtmlQuoteString>  ;
-<htmlElement> ::= <HtmlDoubleQuoteString>  ;
-<htmlElement> ::= <StyleBody>  ;
-<htmlElement> ::= <ScriptClose>  ;
-<htmlElement_-_1> ::= <htmlElement_-_2>  ;
-<htmlElement_-_2> ::= ;
-<htmlElement_-_2> ::= <XmlText>  <htmlElement_-_2>  ;
-<htmlElement> ::= <XmlStart>  <htmlElement_-_1>  <XmlClose>  ;
-# PARSER: scriptTextPart
-<scriptTextPart> ::= <scriptTextPart_-_1>  ;
-<scriptTextPart_-_1> ::= <scriptTextPart_-_2>  ;
-<scriptTextPart_-_1> ::= <scriptTextPart_-_2>  <scriptTextPart_-_1>  ;
-<scriptTextPart_-_2> ::= <ScriptText>  ;
+<htmlDocument_-_2> ::= <htmlDocument_-_3>  <htmlDocument_-_2>  ;
+<htmlDocument_-_3> ::= <phpBlock>  ;
+<htmlDocument> ::= <htmlDocument_-_1>  <EOF>  ;
 # PARSER: phpBlock
 <phpBlock_-_1> ::= <phpBlock_-_2>  ;
 <phpBlock_-_2> ::= ;
