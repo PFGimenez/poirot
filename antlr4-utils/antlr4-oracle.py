@@ -23,18 +23,30 @@ def main():
     injection = sys.argv[5]
 
     lexer_name = sys.argv[1]+"Lexer"
-    lexer_module = importlib.import_module(lexer_name)
+    try:
+        lexer_module = importlib.import_module(lexer_name)
+    except Exception as e:
+        print("Lexer",lexer_name,"not found")
+        exit(1)
     lexer = getattr(lexer_module, lexer_name)(InputStream(prefix+injection+suffix))
 
     stream = CommonTokenStream(lexer)
 
     parser_name = sys.argv[1]+"Parser"
-    parser_module = importlib.import_module(parser_name)
+    try:
+        parser_module = importlib.import_module(parser_name)
+    except Exception as e:
+        print("Parser",parser_name,"not found")
+        exit(1)
     parser = getattr(parser_module, parser_name)(stream)
     parser.addErrorListener(MyErrorListener())
-
     try:
-        getattr(parser, axiom)()
+        p = getattr(parser, axiom)
+    except Exception as e:
+        print("Unknown axiom")
+        exit(1)
+    try:
+        p()
     except Exception as e:
         print("Exception:",e)
         exit(180)
