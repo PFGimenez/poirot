@@ -18,7 +18,7 @@ let oracle_status_of_int : int -> oracle_status = function
     | 0 -> No_error
     | 180 -> Syntax_error
     | 181 -> Semantic_error
-    | n -> failwith ("Oracle failure: "^(string_of_int n))
+    | n -> Log.L.err (fun m -> m "Oracle failure: %d" n); raise Sys.Break
 
 (* add memoization to an oracle *)
 let oracle_mem (o: string -> oracle_status) : string -> oracle_status =
@@ -50,7 +50,6 @@ let oracle_from_script (fname: string) (inj: string) : oracle_status =
         | Some Logs.Debug -> fname^" \""^inj^"\""
         | _ -> fname^" \""^inj^"\" >/dev/null 2>&1" in
     let error_code = Sys.command cmd in
-    if error_code >= 190 then raise Sys.Break;
     let answer = oracle_status_of_int error_code in
     Log.L.info (fun m -> m "Call to oracle: %s. Answer: %s" inj (string_of_oracle_status answer));
     answer

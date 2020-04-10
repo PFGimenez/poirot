@@ -14,7 +14,7 @@ let ()=
     and lowercase = ref false
     and uppercase = ref false
     and simplify = ref false
-    and verbose_lvl = ref None
+    and verbose_lvl = ref (Some Logs.Error)
     and avoid = ref "" in
 
     let speclist = [
