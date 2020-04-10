@@ -50,7 +50,7 @@ let oracle_from_script (fname: string) (inj: string) : oracle_status =
         | Some Logs.Debug -> fname^" \""^inj^"\""
         | _ -> fname^" \""^inj^"\" >/dev/null 2>&1" in
     let error_code = Sys.command cmd in
-    if error_code >= 128 then raise Sys.Break;
+    if error_code >= 190 then raise Sys.Break;
     let answer = oracle_status_of_int error_code in
     Log.L.info (fun m -> m "Call to oracle: %s. Answer: %s" inj (string_of_oracle_status answer));
     answer
