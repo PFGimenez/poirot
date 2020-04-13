@@ -13,6 +13,7 @@ depends: [
     "menhir" {build}
     "dune"
     "logs"
+    "fmt"
     "odoc" {with-doc}
 ]
 build: [

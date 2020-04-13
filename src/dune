@@ -1,0 +1,23 @@
+(executable
+    (name poirot)
+    (public_name poirot)
+    (modules poirot)
+    (libraries poirot logs.fmt))
+
+(executable
+    (name quotient_poirot)
+    (public_name quotient_poirot)
+    (modules quotient_poirot)
+    (libraries poirot))
+
+(executable
+    (name fuzzer_poirot)
+    (public_name fuzzer_poirot)
+    (modules fuzzer_poirot)
+    (libraries poirot logs.fmt))
+
+(executable
+    (name bnf2antlr4)
+    (public_name bnf2antlr4)
+    (modules bnf2antlr4)
+    (libraries poirot))
