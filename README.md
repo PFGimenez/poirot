@@ -11,36 +11,37 @@ To use Poirot, you will need the OCaml package manager, `opam`. You can also fol
     opam switch create 4.08.1
     eval `opam env`
 
+It is recommended that you add `eval \`opam env\`` in the configuration file of your shell (most likely `~/.bashrc` or `~/.profile`)
+
 To install Poirot, run the following steps. `opam` will automatically install the dependencies of Poirot.
 
     git clone https://github.com/PFGimenez/poirot.git
     cd poirot
-    opam install fmt
     opam install .
 
 You will need ANTLR4 to convert grammars from .g4 format and to use the prefix/suffix oracle generator. Make sure you have python 3 and Java JRE installed. Execute:
 
     pip3 install --user -r antlr4-utils/requirements.txt
 
-# Use Poirot directly
+# Use Poirot
 
 ## Injection in black-box systems
 
-The script `poirot.sh` allows you to use Poirot without making your own program. You can run `./poirot.sh -help` to get the list of parameters on how to use it. The workflow of injection searching in black-box systems is described in the following figure:
+Run `poirot -help` to get the list of parameters on how to use it. The workflow of injection searching in black-box systems is described in the following figure:
 
-![poirot.sh workflow](https://raw.githubusercontent.com/PFGimenez/poirot/master/resources/poirot_workflow.png)
+![poirot workflow](https://raw.githubusercontent.com/PFGimenez/poirot/master/resources/poirot_workflow.png)
 
 The following examples use the prefix/suffix oracle generator described in a later section.
 
 Here is an example that uses the simple grammar `msg_exec`. Run:
 
-    ./poirot.sh -grammar bnf_grammars/toy/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"
+    poirot -grammar bnf_grammars/toy/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"
 
 It will generates the injection `value ; exec cmd ; msg key = value`.
 
 You can experiment with the more complex grammar `parenthesis` as well. Run:
 
-    ./poirot.sh -grammar bnf_grammars/toy/parenthesis.bnf -goal "'b'" -start "'a'" -oracle "oracles/prefix-suffix.py parenthesis axiom '([[([' '])]])'"
+    poirot -grammar bnf_grammars/toy/parenthesis.bnf -goal "'b'" -start "'a'" -oracle "oracles/prefix-suffix.py parenthesis axiom '([[([' '])]])'"
 
 It will generate the injection `a])]])b([[([a`.
 
@@ -50,7 +51,7 @@ If you know the query (i.e. the prefix and the suffix surrounding the injection 
 
 For example, you can run:
 
-    ./poirot_whitebox.sh -grammar bnf_grammars/toy/msg_exec.bnf -pf "'msg ' 'key' ' = '" -sf "' & ' 'key' ' = ' 'value'" -goal "Exe"
+    quotient_poirot -grammar bnf_grammars/toy/msg_exec.bnf -pf "'msg ' 'key' ' = '" -sf "' & ' 'key' ' = ' 'value'" -goal "Exe"
 
 It will generate the injection `value ; exec cmd ; msg key = value`.
 
@@ -60,7 +61,7 @@ Using Poirot in your project with `dune` is easy: just add `poirot` in the list 
 
 The documentation is available online at https://pfgimenez.github.io/poirot/Poirot/index.html. To generate the documentation locally, make sure `odoc` is installed (or install it with `opam install odoc`). You can then generate the documentation with `dune build @doc`. It will be stored in `_build/default/_doc/_html/poirot/Poirot/index.html`.
 
-Check `examples/poirot_example.ml` for an example using the library.
+Check `src/poirot.ml` for an executable using the library.
 
 # Use the ANTLR4 ⇌ BNF converter
 
@@ -76,7 +77,7 @@ Go into the directory `antlr4-utils`. If you have a grammar named `test.g4`, you
 
 If you have a grammar `test.bnf`, run
 
-    dune exec examples/bnf2antlr4.exe test.bnf
+    bnf2antlr4 test.bnf
 
 It will generate the file `test.g4` containing the grammar in ANTLR4 format. Its axiom is named `axiom`.
 
