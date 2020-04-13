@@ -55,6 +55,12 @@ XML.bnf: XMLLexer.g4 XMLParser.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py L
 	cat XMLParser.g4 | python3 antlr4-to-bnf.py true "' '" > $@
 	cat XMLLexer.g4 | python3 antlr4-to-bnf.py false "' '" >> $@
 
+XMLexample.bnf: ldap.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py antlr4-to-bnf.py
+	cat XMLexample.g4 | python3 antlr4-to-bnf.py true > XMLexample.bnf
+
+ldap.bnf: ldap.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py antlr4-to-bnf.py
+	cat ldap.g4 | python3 antlr4-to-bnf.py true > ldap.bnf
+
 %.bnf: %.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py antlr4-to-bnf.py
 	cat $< | python3 antlr4-to-bnf.py true "' '" > $@
 
