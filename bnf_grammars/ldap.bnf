@@ -1,0 +1,123 @@
+# Grammar LEXER= None
+# Grammar PARSER= None
+# Grammar GRAMMAR= grammar
+# Grammar name:  ('rule', 'ldap')
+<axiom> ;
+# PARSER: axiom
+<axiom> ::= <s>  <EOF>  ;
+# PARSER: s
+<s> ::= <filtre>  ;
+# PARSER: filtre
+<filtre> ::= '('  <filtrecomp>  ')'  ;
+# PARSER: filtrecomp
+<filtrecomp_-_1> ::= <filtrecomp_-_2>  ;
+<filtrecomp_-_2> ::= ;
+<filtrecomp_-_2> ::= <filtre>  <filtrecomp_-_2>  ;
+<filtrecomp> ::= '&'  <filtrecomp_-_1>  ;
+<filtrecomp_-_3> ::= <filtrecomp_-_4>  ;
+<filtrecomp_-_4> ::= ;
+<filtrecomp_-_4> ::= <filtre>  <filtrecomp_-_4>  ;
+<filtrecomp> ::= '|'  <filtrecomp_-_3>  ;
+<filtrecomp> ::= '!'  <filtre>  ;
+<filtrecomp> ::= <item>  ;
+# PARSER: item
+<item> ::= <attr>  '='  <something>  ;
+# PARSER: attr
+<attr> ::= 'cn'  ;
+<attr> ::= 'dn'  ;
+<attr> ::= 'ou'  ;
+<attr> ::= 'objectClass'  ;
+<attr> ::= <TEXT>  ;
+# PARSER: something
+<something> ::= '*'  ;
+<something> ::= '*'  <TEXT>  ;
+<something> ::= <TEXT>  '*'  ;
+<something> ::= '*'  <TEXT>  '*'  ;
+<something> ::= <TEXT>  ;
+<something> ::= <NUMBER>  ;
+# LEXER: NUMBER
+# BEGIN LEXER FOR  NUMBER +
+<NUMBER> ::= <NUMBER_-_1>  ;
+<NUMBER_-_1> ::= <NUMBER_-_2>  ;
+<NUMBER_-_1> ::= <NUMBER_-_2> <NUMBER_-_1>  ;
+# BEGIN LEXER FOR  NUMBER token
+<NUMBER_-_2> ::= <DIGIT> ;
+# END
+# END
+# LEXER: TEXT
+# BEGIN LEXER FOR  TEXT +
+<TEXT> ::= <TEXT_-_1>  ;
+<TEXT_-_1> ::= <TEXT_-_2>  ;
+<TEXT_-_1> ::= <TEXT_-_2> <TEXT_-_1>  ;
+# BEGIN LEXER FOR  TEXT token
+<TEXT_-_2> ::= <CHAR> ;
+# END
+# END
+# LEXER: DIGIT
+# BEGIN LEXER FOR  DIGIT char_set
+<DIGIT> ::= '0' ;
+<DIGIT> ::= '1' ;
+<DIGIT> ::= '2' ;
+<DIGIT> ::= '3' ;
+<DIGIT> ::= '4' ;
+<DIGIT> ::= '5' ;
+<DIGIT> ::= '6' ;
+<DIGIT> ::= '7' ;
+<DIGIT> ::= '8' ;
+<DIGIT> ::= '9' ;
+# END
+# LEXER: CHAR
+# BEGIN LEXER FOR  CHAR char_set
+<CHAR> ::= 'a' ;
+<CHAR> ::= 'b' ;
+<CHAR> ::= 'c' ;
+<CHAR> ::= 'd' ;
+<CHAR> ::= 'e' ;
+<CHAR> ::= 'f' ;
+<CHAR> ::= 'g' ;
+<CHAR> ::= 'h' ;
+<CHAR> ::= 'i' ;
+<CHAR> ::= 'j' ;
+<CHAR> ::= 'k' ;
+<CHAR> ::= 'l' ;
+<CHAR> ::= 'm' ;
+<CHAR> ::= 'n' ;
+<CHAR> ::= 'o' ;
+<CHAR> ::= 'p' ;
+<CHAR> ::= 'q' ;
+<CHAR> ::= 'r' ;
+<CHAR> ::= 's' ;
+<CHAR> ::= 't' ;
+<CHAR> ::= 'u' ;
+<CHAR> ::= 'v' ;
+<CHAR> ::= 'w' ;
+<CHAR> ::= 'x' ;
+<CHAR> ::= 'y' ;
+<CHAR> ::= 'z' ;
+<CHAR> ::= 'A' ;
+<CHAR> ::= 'B' ;
+<CHAR> ::= 'C' ;
+<CHAR> ::= 'D' ;
+<CHAR> ::= 'E' ;
+<CHAR> ::= 'F' ;
+<CHAR> ::= 'G' ;
+<CHAR> ::= 'H' ;
+<CHAR> ::= 'I' ;
+<CHAR> ::= 'J' ;
+<CHAR> ::= 'K' ;
+<CHAR> ::= 'L' ;
+<CHAR> ::= 'M' ;
+<CHAR> ::= 'N' ;
+<CHAR> ::= 'O' ;
+<CHAR> ::= 'P' ;
+<CHAR> ::= 'Q' ;
+<CHAR> ::= 'R' ;
+<CHAR> ::= 'S' ;
+<CHAR> ::= 'T' ;
+<CHAR> ::= 'U' ;
+<CHAR> ::= 'V' ;
+<CHAR> ::= 'W' ;
+<CHAR> ::= 'X' ;
+<CHAR> ::= 'Y' ;
+<CHAR> ::= 'Z' ;
+# END
