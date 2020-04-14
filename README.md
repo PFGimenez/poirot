@@ -85,7 +85,7 @@ It will generate the file `test.g4` containing the grammar in ANTLR4 format. Its
 
 ### What is an oracle ?
 
-An oracle is a script that can send injection to the black-box system and, by examining this system, tell whether this injection is syntactically correct or not. Poirot gets the answer by checking its error code: 0 if the injection is syntactically correct, 1 otherwise.
+An oracle is a script that can send injection to the black-box system and, by examining this system, tell whether this injection is syntactically correct or not. Poirot gets the answer by checking its error code: 0 if the injection is syntactically correct, 180 otherwise. Make sure the executable permission is enabled (added with `chmod +x`).
 
 More precisely, Poirot will use this oracle by calling it with a single parameter, the injection. If you need more parameters for your oracle (e.g. an URL), you should give a partial application of the oracle to Poirot. For example, if your oracle script is `oracle.sh param1 param2 param3 inj`, just tell Poirot your script is `oracle.sh param1 param2 param3`.
 
