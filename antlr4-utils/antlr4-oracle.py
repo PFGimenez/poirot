@@ -29,6 +29,7 @@ def main():
         print("Lexer",lexer_name,"not found")
         exit(1)
     lexer = getattr(lexer_module, lexer_name)(InputStream(prefix+injection+suffix))
+    lexer.addErrorListener(MyErrorListener())
 
     stream = CommonTokenStream(lexer)
 

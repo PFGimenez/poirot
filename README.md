@@ -11,7 +11,7 @@ To use Poirot, you will need the OCaml package manager, `opam`. You can also fol
     opam switch create 4.08.1
     eval `opam env`
 
-It is recommended that you add `eval \`opam env\`` in the configuration file of your shell (most likely `~/.bashrc` or `~/.profile`)
+It is recommended that you add ``eval `opam env` `` in the configuration file of your shell (most likely `\~/.bashrc` or `\~/.profile`)
 
 To install Poirot, run the following steps. `opam` will automatically install the dependencies of Poirot.
 
