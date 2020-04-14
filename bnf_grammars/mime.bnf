@@ -1,0 +1,325 @@
+# Grammar LEXER= None
+# Grammar PARSER= None
+# Grammar GRAMMAR= grammar
+# Grammar name:  ('rule', 'mime')
+<axiom> ;
+# PARSER: axiom
+<axiom> ::= <s>  <EOF>  ;
+# PARSER: s
+<s_-_1> ::= ;
+<s_-_1> ::= <CRLF>  <body>  ;
+<s> ::= <fields>  <s_-_1>  ;
+# PARSER: body
+<body_-_1> ::= <body_-_2>  ;
+<body_-_2> ::= ;
+<body_-_3> ::= <CRLF>  <phrase>  ;
+<body_-_2> ::= <body_-_3>  <body_-_2>  ;
+<body_-_4> ::= ;
+<body_-_4> ::= <CRLF>  ;
+<body> ::= <phrase>  <body_-_1>  <body_-_4>  ;
+# PARSER: atom
+<atom> ::= <TEXT>  ;
+# PARSER: dot_atom
+<dot_atom_-_1> ::= <dot_atom_-_2>  ;
+<dot_atom_-_2> ::= ;
+<dot_atom_-_3> ::= '.'  <atom>  ;
+<dot_atom_-_2> ::= <dot_atom_-_3>  <dot_atom_-_2>  ;
+<dot_atom> ::= <atom>  <dot_atom_-_1>  ;
+# PARSER: phrase
+<phrase_-_1> ::= <phrase_-_2>  ;
+<phrase_-_2> ::= ;
+<phrase_-_3> ::= <FWS>  <atom>  ;
+<phrase_-_2> ::= <phrase_-_3>  <phrase_-_2>  ;
+<phrase> ::= <atom>  <phrase_-_1>  ;
+# PARSER: date_time
+<date_time> ::= <day_name>  ','  <FWS>  <day_number>  <FWS>  <month_name>  <FWS>  <year>  <FWS>  <time>  ;
+# PARSER: day_name
+<day_name> ::= 'Mon'  ;
+<day_name> ::= 'Tue'  ;
+<day_name> ::= 'Wed'  ;
+<day_name> ::= 'Thu'  ;
+<day_name> ::= 'Fri'  ;
+<day_name> ::= 'Sat'  ;
+<day_name> ::= 'Sun'  ;
+# PARSER: month_name
+<month_name> ::= 'Jan'  ;
+<month_name> ::= 'Feb'  ;
+<month_name> ::= 'Mar'  ;
+<month_name> ::= 'Apr'  ;
+<month_name> ::= 'May'  ;
+<month_name> ::= 'Jun'  ;
+<month_name> ::= 'Jul'  ;
+<month_name> ::= 'Aug'  ;
+<month_name> ::= 'Sep'  ;
+<month_name> ::= 'Oct'  ;
+<month_name> ::= 'Nov'  ;
+<month_name> ::= 'Dec'  ;
+# PARSER: day_number
+<day_number> ::= <C_NUMBER>  ;
+# PARSER: year
+<year> ::= <Q_NUMBER>  ;
+# PARSER: time
+<time_-_1> ::= ;
+<time_-_1> ::= ':'  <second>  ;
+<time_-_2> ::= '+'  ;
+<time_-_2> ::= '-'  ;
+<time> ::= <hour>  ':'  <minute>  <time_-_1>  <FWS>  <time_-_2>  <zone>  ;
+# PARSER: zone
+<zone> ::= <Q_NUMBER>  <FWS>  '('  <UPPER_CHARS>  ')'  ;
+# PARSER: hour
+<hour> ::= <D_NUMBER>  ;
+# PARSER: minute
+<minute> ::= <D_NUMBER>  ;
+# PARSER: second
+<second> ::= <D_NUMBER>  ;
+# PARSER: address
+<address> ::= <name_addr>  ;
+<address> ::= <addr_spec>  ;
+# PARSER: name_addr
+<name_addr_-_1> ::= ;
+<name_addr_-_1> ::= <display_name>  ;
+<name_addr> ::= <name_addr_-_1>  <angle_addr>  ;
+# PARSER: angle_addr
+<angle_addr_-_1> ::= ;
+<angle_addr_-_1> ::= <FWS>  ;
+<angle_addr> ::= <angle_addr_-_1>  '<'  <addr_spec>  '>'  ;
+# PARSER: display_name
+<display_name> ::= <phrase>  ;
+# PARSER: addr_spec
+<addr_spec> ::= <local_part>  '@'  <domain>  ;
+# PARSER: local_part
+<local_part> ::= <dot_atom>  ;
+# PARSER: domain
+<domain> ::= <dot_atom>  ;
+# PARSER: address_list
+<address_list_-_1> ::= <address_list_-_2>  ;
+<address_list_-_2> ::= ;
+<address_list_-_4> ::= ;
+<address_list_-_4> ::= <FWS>  ;
+<address_list_-_3> ::= ','  <address_list_-_4>  <address>  ;
+<address_list_-_2> ::= <address_list_-_3>  <address_list_-_2>  ;
+<address_list> ::= <address>  <address_list_-_1>  ;
+# PARSER: fields
+<fields> ::= <fields_-_1>  ;
+<fields_-_1> ::= ;
+<fields_-_2> ::= <return_path>  ;
+<fields_-_2> ::= <received>  ;
+<fields_-_2> ::= <orig_date>  ;
+<fields_-_2> ::= <r_from>  ;
+<fields_-_2> ::= <google_from>  ;
+<fields_-_2> ::= <to>  ;
+<fields_-_2> ::= <cc>  ;
+<fields_-_2> ::= <bcc>  ;
+<fields_-_2> ::= <message_id>  ;
+<fields_-_2> ::= <subject>  ;
+<fields_-_1> ::= <fields_-_2>  <fields_-_1>  ;
+# PARSER: return_path
+<return_path> ::= 'Return-Path:'  <angle_addr>  <CRLF>  ;
+# PARSER: received
+<received_-_1> ::= ;
+<received_-_1> ::= <FWS>  ;
+<received_-_2> ::= ;
+<received_-_2> ::= <CRLF>  ;
+<received> ::= 'Received:'  <received_-_1>  <RECEIVED_CONTENT>  ';'  <received_-_2>  <date_time>  <CRLF>  ;
+# PARSER: orig_date
+<orig_date_-_1> ::= ;
+<orig_date_-_1> ::= <FWS>  ;
+<orig_date> ::= 'Date:'  <orig_date_-_1>  <date_time>  <CRLF>  ;
+# PARSER: r_from
+<r_from_-_1> ::= ;
+<r_from_-_1> ::= <FWS>  ;
+<r_from> ::= 'From:'  <r_from_-_1>  <address_list>  <CRLF>  ;
+# PARSER: google_from
+<google_from_-_1> ::= ;
+<google_from_-_1> ::= <FWS>  ;
+<google_from> ::= 'X-Google-Original-From:'  <google_from_-_1>  <address_list>  <CRLF>  ;
+# PARSER: to
+<to_-_1> ::= ;
+<to_-_1> ::= <FWS>  ;
+<to> ::= 'To:'  <to_-_1>  <address_list>  <CRLF>  ;
+# PARSER: cc
+<cc_-_1> ::= ;
+<cc_-_1> ::= <FWS>  ;
+<cc> ::= 'Cc:'  <cc_-_1>  <address_list>  <CRLF>  ;
+# PARSER: bcc
+<bcc_-_1> ::= ;
+<bcc_-_1> ::= <FWS>  ;
+<bcc> ::= 'Bcc:'  <bcc_-_1>  <address_list>  <CRLF>  ;
+# PARSER: message_id
+<message_id_-_1> ::= ;
+<message_id_-_1> ::= <FWS>  ;
+<message_id> ::= 'Message-ID:'  <message_id_-_1>  <msg_id>  <CRLF>  ;
+# PARSER: msg_id
+<msg_id> ::= '<'  <dot_atom>  '@'  <dot_atom>  '>'  ;
+# PARSER: subject
+<subject_-_1> ::= ;
+<subject_-_1> ::= <FWS>  ;
+<subject> ::= 'Subject:'  <subject_-_1>  <phrase>  <CRLF>  ;
+# LEXER: DIGIT
+# BEGIN LEXER FOR  DIGIT char_set
+<DIGIT> ::= '0' ;
+<DIGIT> ::= '1' ;
+<DIGIT> ::= '2' ;
+<DIGIT> ::= '3' ;
+<DIGIT> ::= '4' ;
+<DIGIT> ::= '5' ;
+<DIGIT> ::= '6' ;
+<DIGIT> ::= '7' ;
+<DIGIT> ::= '8' ;
+<DIGIT> ::= '9' ;
+# END
+# LEXER: D_NUMBER
+# BEGIN LEXER FOR  D_NUMBER and
+<D_NUMBER> ::= <DIGIT> <DIGIT>  ;
+# END
+# LEXER: Q_NUMBER
+# BEGIN LEXER FOR  Q_NUMBER and
+<Q_NUMBER> ::= <DIGIT> <DIGIT> <DIGIT> <DIGIT>  ;
+# END
+# LEXER: C_NUMBER
+# BEGIN LEXER FOR  C_NUMBER or
+# BEGIN LEXER FOR  C_NUMBER token
+<C_NUMBER> ::= <DIGIT>  ;
+# END
+# BEGIN LEXER FOR  C_NUMBER and
+<C_NUMBER> ::= <DIGIT> <DIGIT>  ;
+# END
+# END
+# LEXER: UPPER_CHARS
+# BEGIN LEXER FOR  UPPER_CHARS +
+<UPPER_CHARS> ::= <UPPER_CHARS_-_1>  ;
+<UPPER_CHARS_-_1> ::= <UPPER_CHARS_-_2>  ;
+<UPPER_CHARS_-_1> ::= <UPPER_CHARS_-_2> <UPPER_CHARS_-_1>  ;
+# BEGIN LEXER FOR  UPPER_CHARS char_set
+<UPPER_CHARS_-_2> ::= 'A' ;
+<UPPER_CHARS_-_2> ::= 'B' ;
+<UPPER_CHARS_-_2> ::= 'C' ;
+<UPPER_CHARS_-_2> ::= 'D' ;
+<UPPER_CHARS_-_2> ::= 'E' ;
+<UPPER_CHARS_-_2> ::= 'F' ;
+<UPPER_CHARS_-_2> ::= 'G' ;
+<UPPER_CHARS_-_2> ::= 'H' ;
+<UPPER_CHARS_-_2> ::= 'I' ;
+<UPPER_CHARS_-_2> ::= 'J' ;
+<UPPER_CHARS_-_2> ::= 'K' ;
+<UPPER_CHARS_-_2> ::= 'L' ;
+<UPPER_CHARS_-_2> ::= 'M' ;
+<UPPER_CHARS_-_2> ::= 'N' ;
+<UPPER_CHARS_-_2> ::= 'O' ;
+<UPPER_CHARS_-_2> ::= 'P' ;
+<UPPER_CHARS_-_2> ::= 'Q' ;
+<UPPER_CHARS_-_2> ::= 'R' ;
+<UPPER_CHARS_-_2> ::= 'S' ;
+<UPPER_CHARS_-_2> ::= 'T' ;
+<UPPER_CHARS_-_2> ::= 'U' ;
+<UPPER_CHARS_-_2> ::= 'V' ;
+<UPPER_CHARS_-_2> ::= 'W' ;
+<UPPER_CHARS_-_2> ::= 'X' ;
+<UPPER_CHARS_-_2> ::= 'Y' ;
+<UPPER_CHARS_-_2> ::= 'Z' ;
+# END
+# END
+# LEXER: CR
+# BEGIN LEXER FOR  CR string
+<CR> ::= '%0A' ;
+# END
+# LEXER: LF
+# BEGIN LEXER FOR  LF string
+<LF> ::= '%0D' ;
+# END
+# LEXER: SP
+# BEGIN LEXER FOR  SP string
+<SP> ::= '%20' ;
+# END
+# LEXER: RECEIVED_CONTENT
+# BEGIN LEXER FOR  RECEIVED_CONTENT +
+<RECEIVED_CONTENT> ::= <RECEIVED_CONTENT_-_1>  ;
+<RECEIVED_CONTENT_-_1> ::= <RECEIVED_CONTENT_-_2>  ;
+<RECEIVED_CONTENT_-_1> ::= <RECEIVED_CONTENT_-_2> <RECEIVED_CONTENT_-_1>  ;
+# BEGIN LEXER FOR  RECEIVED_CONTENT char_set
+<RECEIVED_CONTENT_-_2> ::= '^' ;
+<RECEIVED_CONTENT_-_2> ::= ';' ;
+# END
+# END
+# LEXER: CRLF
+# BEGIN LEXER FOR  CRLF token
+<CRLF> ::= <CR>  ;
+# END
+# LEXER: TEXT
+# BEGIN LEXER FOR  TEXT +
+<TEXT> ::= <TEXT_-_1>  ;
+<TEXT_-_1> ::= <TEXT_-_2>  ;
+<TEXT_-_1> ::= <TEXT_-_2> <TEXT_-_1>  ;
+# BEGIN LEXER FOR  TEXT char_set
+<TEXT_-_2> ::= 'a' ;
+<TEXT_-_2> ::= 'b' ;
+<TEXT_-_2> ::= 'c' ;
+<TEXT_-_2> ::= 'd' ;
+<TEXT_-_2> ::= 'e' ;
+<TEXT_-_2> ::= 'f' ;
+<TEXT_-_2> ::= 'g' ;
+<TEXT_-_2> ::= 'h' ;
+<TEXT_-_2> ::= 'i' ;
+<TEXT_-_2> ::= 'j' ;
+<TEXT_-_2> ::= 'k' ;
+<TEXT_-_2> ::= 'l' ;
+<TEXT_-_2> ::= 'm' ;
+<TEXT_-_2> ::= 'n' ;
+<TEXT_-_2> ::= 'o' ;
+<TEXT_-_2> ::= 'p' ;
+<TEXT_-_2> ::= 'q' ;
+<TEXT_-_2> ::= 'r' ;
+<TEXT_-_2> ::= 's' ;
+<TEXT_-_2> ::= 't' ;
+<TEXT_-_2> ::= 'u' ;
+<TEXT_-_2> ::= 'v' ;
+<TEXT_-_2> ::= 'w' ;
+<TEXT_-_2> ::= 'x' ;
+<TEXT_-_2> ::= 'y' ;
+<TEXT_-_2> ::= 'z' ;
+<TEXT_-_2> ::= 'A' ;
+<TEXT_-_2> ::= 'B' ;
+<TEXT_-_2> ::= 'C' ;
+<TEXT_-_2> ::= 'D' ;
+<TEXT_-_2> ::= 'E' ;
+<TEXT_-_2> ::= 'F' ;
+<TEXT_-_2> ::= 'G' ;
+<TEXT_-_2> ::= 'H' ;
+<TEXT_-_2> ::= 'I' ;
+<TEXT_-_2> ::= 'J' ;
+<TEXT_-_2> ::= 'K' ;
+<TEXT_-_2> ::= 'L' ;
+<TEXT_-_2> ::= 'M' ;
+<TEXT_-_2> ::= 'N' ;
+<TEXT_-_2> ::= 'O' ;
+<TEXT_-_2> ::= 'P' ;
+<TEXT_-_2> ::= 'Q' ;
+<TEXT_-_2> ::= 'R' ;
+<TEXT_-_2> ::= 'S' ;
+<TEXT_-_2> ::= 'T' ;
+<TEXT_-_2> ::= 'U' ;
+<TEXT_-_2> ::= 'V' ;
+<TEXT_-_2> ::= 'W' ;
+<TEXT_-_2> ::= 'X' ;
+<TEXT_-_2> ::= 'Y' ;
+<TEXT_-_2> ::= 'Z' ;
+<TEXT_-_2> ::= '0' ;
+<TEXT_-_2> ::= '1' ;
+<TEXT_-_2> ::= '2' ;
+<TEXT_-_2> ::= '3' ;
+<TEXT_-_2> ::= '4' ;
+<TEXT_-_2> ::= '5' ;
+<TEXT_-_2> ::= '6' ;
+<TEXT_-_2> ::= '7' ;
+<TEXT_-_2> ::= '8' ;
+<TEXT_-_2> ::= '9' ;
+<TEXT_-_2> ::= '\' ;
+<TEXT_-_2> ::= ']' ;
+<TEXT_-_2> ::= '^' ;
+<TEXT_-_2> ::= '_' ;
+# END
+# END
+# LEXER: FWS
+# BEGIN LEXER FOR  FWS token
+<FWS> ::= <SP>  ;
+# END
