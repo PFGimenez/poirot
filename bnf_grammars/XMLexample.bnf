@@ -1,0 +1,94 @@
+# Grammar LEXER= None
+# Grammar PARSER= None
+# Grammar GRAMMAR= grammar
+# Grammar name:  ('token', 'XMLexample')
+<axiom> ;
+# PARSER: axiom
+<axiom> ::= <userlist>  <EOF>  ;
+# PARSER: userlist
+<userlist_-_1> ::= <userlist_-_2>  ;
+<userlist_-_2> ::= ;
+<userlist_-_2> ::= <user>  <userlist_-_2>  ;
+<userlist> ::= '<userlist>'  <userlist_-_1>  '</userlist>'  ;
+# PARSER: user
+<user_-_1> ::= ;
+<user_-_1> ::= <status>  ;
+<user> ::= '<user>'  <user_-_1>  <name>  '</user>'  ;
+# PARSER: status
+<status> ::= '<status>'  <st>  '</status>'  ;
+# PARSER: st
+<st> ::= 'root'  ;
+<st> ::= 'visitor'  ;
+# PARSER: name
+<name> ::= '<name>'  <TEXT>  '</name>'  ;
+# LEXER: S
+# BEGIN LEXER FOR  S char_set
+<S> ::= ' '  ;
+<S> ::=  9  ;
+<S> ::=  13  ;
+<S> ::=  10  ;
+# END
+# LEXER: TEXT
+# BEGIN LEXER FOR  TEXT +
+<TEXT> ::= <TEXT_-_1>  ;
+<TEXT_-_1> ::= <TEXT_-_2>  ;
+<TEXT_-_1> ::= <TEXT_-_2> <TEXT_-_1>  ;
+# BEGIN LEXER FOR  TEXT token
+<TEXT_-_2> ::= <CHAR> ;
+# END
+# END
+# LEXER: CHAR
+# BEGIN LEXER FOR  CHAR char_set
+<CHAR> ::= 'a' ;
+<CHAR> ::= 'b' ;
+<CHAR> ::= 'c' ;
+<CHAR> ::= 'd' ;
+<CHAR> ::= 'e' ;
+<CHAR> ::= 'f' ;
+<CHAR> ::= 'g' ;
+<CHAR> ::= 'h' ;
+<CHAR> ::= 'i' ;
+<CHAR> ::= 'j' ;
+<CHAR> ::= 'k' ;
+<CHAR> ::= 'l' ;
+<CHAR> ::= 'm' ;
+<CHAR> ::= 'n' ;
+<CHAR> ::= 'o' ;
+<CHAR> ::= 'p' ;
+<CHAR> ::= 'q' ;
+<CHAR> ::= 'r' ;
+<CHAR> ::= 's' ;
+<CHAR> ::= 't' ;
+<CHAR> ::= 'u' ;
+<CHAR> ::= 'v' ;
+<CHAR> ::= 'w' ;
+<CHAR> ::= 'x' ;
+<CHAR> ::= 'y' ;
+<CHAR> ::= 'z' ;
+<CHAR> ::= 'A' ;
+<CHAR> ::= 'B' ;
+<CHAR> ::= 'C' ;
+<CHAR> ::= 'D' ;
+<CHAR> ::= 'E' ;
+<CHAR> ::= 'F' ;
+<CHAR> ::= 'G' ;
+<CHAR> ::= 'H' ;
+<CHAR> ::= 'I' ;
+<CHAR> ::= 'J' ;
+<CHAR> ::= 'K' ;
+<CHAR> ::= 'L' ;
+<CHAR> ::= 'M' ;
+<CHAR> ::= 'N' ;
+<CHAR> ::= 'O' ;
+<CHAR> ::= 'P' ;
+<CHAR> ::= 'Q' ;
+<CHAR> ::= 'R' ;
+<CHAR> ::= 'S' ;
+<CHAR> ::= 'T' ;
+<CHAR> ::= 'U' ;
+<CHAR> ::= 'V' ;
+<CHAR> ::= 'W' ;
+<CHAR> ::= 'X' ;
+<CHAR> ::= 'Y' ;
+<CHAR> ::= 'Z' ;
+# END
