@@ -1,10 +1,9 @@
---- PhpParser.g4	2020-04-10 10:19:43.092818412 +0200
-+++ PhpParser_new.g4	2020-04-10 10:17:45.335416950 +0200
-@@ -25,57 +25,11 @@
- 
+--- PhpParser.g4	2020-04-14 10:41:44.901579841 +0200
++++ PhpParser_new.g4	2020-04-14 10:35:56.394355480 +0200
+@@ -26,60 +26,14 @@
  parser grammar PhpParser;
  
--options { tokenVocab=PhpLexer; }
+ options { tokenVocab=PhpLexer; }
 -
  // HTML
  // Also see here: https://github.com/antlr/grammars-v4/tree/master/html
@@ -59,7 +58,35 @@
      ;
  
  // PHP
-@@ -457,67 +411,67 @@
+-    
+ phpBlock
+     : importStatement* topStatement+
+     ;
+@@ -229,7 +183,6 @@
+     | gotoStatement
+     | declareStatement
+     | emptyStatement
+-    | inlineHtmlStatement
+     ;
+ 
+ emptyStatement
+@@ -341,15 +294,6 @@
+     : Declare '(' declareList ')' (statement | ':' innerStatementList EndDeclare ';')
+     ;
+ 
+-inlineHtmlStatement
+-    : inlineHtml+
+-    ;
+-
+-inlineHtml
+-    : htmlElements
+-    | scriptTextPart
+-    ;
+-
+ declareList
+     : identifierInititalizer (',' identifierInititalizer)*
+     ;
+@@ -457,67 +401,67 @@
  // Expressions
  // Grouped by priorities: http://php.net/manual/en/language.operators.precedence.php
  expression
