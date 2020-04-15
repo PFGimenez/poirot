@@ -1,7 +1,10 @@
 # v0.3
+- Dune installs `poirot`, `fuzzer_poirot`, `quotient_poirot` and `bnf2antlr4`
+- Oracle should return error code 180 in case of an syntax error
 - Fuzzer update
 - Use the Logs library
 - Handle ctrl-C
+- Various bugfixes
 
 # v0.2
 - Heuristic serialization and memoization
