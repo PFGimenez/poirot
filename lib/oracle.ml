@@ -6,18 +6,18 @@ open Grammar
  * no error: the injection is syntactically and semantically correct
  * grammar error: no injection
  *)
-type oracle_status = Syntax_error | Semantic_error | No_error | Grammar_error
+type oracle_status = Syntax_error | (*Semantic_error |*) No_error | Grammar_error
 
 let string_of_oracle_status (s: oracle_status) : string = match s with
     | Syntax_error -> "Syntax error"
-    | Semantic_error -> "Semantic error"
+(*    | Semantic_error -> "Semantic error"*)
     | No_error -> "No error"
     | Grammar_error -> "Grammar error"
 
 let oracle_status_of_int : int -> oracle_status = function
     | 0 -> No_error
     | 180 -> Syntax_error
-    | 181 -> Semantic_error
+(*    | 181 -> Semantic_error*)
     | n -> Log.L.err (fun m -> m "Oracle failure: %d" n); raise Sys.Break
 
 (* add memoization to an oracle *)

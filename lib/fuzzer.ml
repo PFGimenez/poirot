@@ -8,9 +8,16 @@ type parse_tree = Leaf of element | Node of element * parse_tree list
 let best_rule : (element, part) Hashtbl.t = Hashtbl.create 500
 
 (* all nonterminal must be the left-hand side of a rule *)
-let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: element option) (g : grammar) : part option =
+let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: element option) (forbidden: char list) (g : grammar) : part option =
     Random.self_init ();
     Hashtbl.clear best_rule;
+
+    let is_allowed (e: element): bool = match e with
+        | Terminal s -> not (List.exists (String.contains s) forbidden)
+        | _ -> true in
+
+    let allowed_rules = List.filter (fun r -> List.for_all is_allowed r.right_part) g.rules in
+    let g = Clean.clean_grammar (g.axiom @@ allowed_rules) in
 
     let compare_rule (r1: rule) (r2: rule) : int =
         let diff = List.compare_lengths (List.filter is_non_terminal r1.right_part) (List.filter is_non_terminal r2.right_part) in

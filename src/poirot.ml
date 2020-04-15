@@ -53,6 +53,6 @@ let ()=
         let g = Poirot.search ~subst:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle grammar goal start in
         match (g,!injg_fname) with
         | Some gram, Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^(Option.get (Poirot.fuzzer ~subst:s ~complexity:0 ~goal:(Some goal) gram)))
-        | Some gram, _ -> print_endline ("Injection: "^(Option.get (Poirot.fuzzer ~subst:s ~complexity:0 ~goal:(Some goal) gram)))
+        | Some gram, _ -> print_endline ("Injection: "^(Option.get (Poirot.fuzzer ~subst:s ~forbidden_chars:(explode !avoid) ~complexity:0 ~goal:(Some goal) gram)))
         | None, _ -> print_endline "No grammar found";
     else print_endline usage

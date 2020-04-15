@@ -32,7 +32,7 @@ val search : ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?max_
 val quotient : grammar -> element list -> element list -> grammar
 
 (** [fuzzer ~complexity:10 ~goal:e g] returns a word from [g]. If [complexity] is high, longer words should be generated. If [complexity = 0], the returned word is deterministic (always the same) and should be short. If a goal is specified, then it will be included in the generated word. Beware: this is a primitive fuzzer. *)
-val fuzzer : ?subst:(element,string) Hashtbl.t option -> ?complexity:int -> ?goal:element option -> grammar -> string option
+val fuzzer : ?subst:(element,string) Hashtbl.t option -> ?forbidden_chars: char list -> ?complexity:int -> ?goal:element option -> grammar -> string option
 
 (** {1 Oracle functions} *)
 

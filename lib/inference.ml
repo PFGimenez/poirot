@@ -9,7 +9,7 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (forbidden: char list) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) : ext_grammar option =
+let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) : ext_grammar option =
     Log.L.info (fun m -> m "Clean grammar…");
     let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
     let quotient = Quotient.quotient_mem g qgraph_channel
@@ -33,17 +33,13 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
     let set_node_color_in_graph: ext_element -> string -> unit =
         Grammar_io.set_node_color_in_graph graph_channel in
 
-    let is_allowed ({e;_}: ext_element): bool = match e with
-        | Terminal s -> not (List.exists (String.contains s) forbidden)
-        | _ -> true in
-
      (* compute the non-trivial grammar. To do that, just add a new axiom with the same rules as the normal axiom EXCEPT the trivial rule (the rule that leads to the parent grammar) *)
     let make_non_trivial_grammar (g: ext_grammar) (par: ext_element) : ext_grammar =
         let e = g.ext_axiom in
         let dummy_axiom : ext_element = {e=Nonterminal ((string_of_element e.e)^"_dummy_axiom"); pf=e.pf; sf=e.sf} in
         let new_rules = g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = e && r.ext_right_part <> [par]) |> List.map (fun r -> dummy_axiom ---> r.ext_right_part) in
-        let allowed_rules = List.filter (fun r -> List.for_all is_allowed r.ext_right_part) (new_rules @ g.ext_rules) in
-        dummy_axiom @@@ allowed_rules in
+        
+        dummy_axiom @@@ (new_rules @ g.ext_rules) in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
     let split (e: ext_element) (original_rule: rule) : (ext_element * ext_element) list =
