@@ -17,7 +17,7 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
         | _ -> true in
 
     let allowed_rules = List.filter (fun r -> List.for_all is_allowed r.right_part) g.rules in
-    let g = Clean.clean_grammar (g.axiom @@ allowed_rules) in
+    let g = g.axiom @@ allowed_rules in
 
     let compare_rule (r1: rule) (r2: rule) : int =
         let diff = List.compare_lengths (List.filter is_non_terminal r1.right_part) (List.filter is_non_terminal r2.right_part) in
