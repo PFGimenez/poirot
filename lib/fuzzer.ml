@@ -23,15 +23,12 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
 
     (* based on level decomposition *)
     let rec update_best_rule (necessary: element) (original_rules: rule list) : unit =
-        match original_rules with
-        | [] -> ()
-        | _ ->
-                if not (Hashtbl.mem best_rule necessary) then
-                    let usable_rules = List.filter (fun r -> List.for_all (fun s -> is_terminal s || Hashtbl.mem best_rule s) r.right_part) original_rules in
-                    List.iter (fun r -> Hashtbl.replace best_rule r.left_symbol r.right_part) (List.sort compare_rule usable_rules);
-                    (update_best_rule [@tailcall]) necessary (List.filter (fun r -> not (Hashtbl.mem best_rule r.left_symbol)) original_rules)
-                else ()
-        in
+        if is_terminal necessary || Hashtbl.mem best_rule necessary || original_rules = [] then ()
+        else begin
+            let usable_rules = List.filter (fun r -> List.for_all (fun s -> is_terminal s || Hashtbl.mem best_rule s) r.right_part) original_rules in
+            List.iter (fun r -> Hashtbl.replace best_rule r.left_symbol r.right_part) (List.sort compare_rule usable_rules);
+            (update_best_rule [@tailcall]) necessary (List.filter (fun r -> not (Hashtbl.mem best_rule r.left_symbol)) original_rules)
+        end in
 
     let rec fuzzer_minimize (goal_rules: rule list) (root: element) : parse_tree =
         if Option.map (fun v -> Hashtbl.mem v root) values = Some true then
@@ -40,6 +37,8 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
             Leaf root
         else if goal_rules <> [] then begin
             let r = List.hd goal_rules in
+            (* the symbols of the rhs of this rule may not be in the best_rule hashtable *)
+            List.iter (fun e -> update_best_rule e g.rules) r.right_part;
             if List.tl goal_rules = [] then
                 (* don't update used_symbols as the path to goal may require producing a tree with two identical symbols in the same branch *)
                 Node (root,List.map (fuzzer_minimize []) r.right_part)
@@ -65,7 +64,6 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
         else if depth >= max_depth then begin
             update_best_rule e g.rules;
             fuzzer_minimize [] e
-            (*fuzzer_minimize [] [] e*)
         end else begin
             let possible_rules = List.filter (fun r -> r.left_symbol = e) g.rules in
             let r = List.nth possible_rules (Random.int (List.length possible_rules)) in (* random rule *)
