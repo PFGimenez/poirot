@@ -17,6 +17,13 @@ let ()=
     and verbose_lvl = ref (Some Logs.Error)
     and avoid = ref "" in
 
+    let set_verbose_lvl (s: string) =
+        let r = Logs.level_of_string s in
+        if Result.is_error r then
+            failwith "Unknown verbose level. Possibles levels are: debug, info, warning, error."
+        else
+            verbose_lvl := Result.get_ok r in
+
     let speclist = [
         ("-grammar",    Arg.String (fun s -> print_endline "Loading grammar…"; grammar := Some (Poirot.read_bnf_grammar s)),     "Target grammar");
         ("-goal",       Arg.String (fun s -> goal := Some (Poirot.read_token s)),     "Terminal or nonterminal to reach");
@@ -32,7 +39,7 @@ let ()=
         ("-lowercase",  Arg.Set lowercase,     "Convert all terminals to lowercase");
         ("-uppercase",  Arg.Set uppercase,     "Convert all terminals to uppercase");
         ("-simplify",   Arg.Set simplify,     "If used with -lowercase or -uppercase, simplify the grammar");
-        ("-verbose_lvl",    Arg.String(fun s -> verbose_lvl := Result.get_ok (Logs.level_of_string s)),     "Choose Poirot verbosity: debug, info, warning or error")
+        ("-verbose_lvl",    Arg.String(set_verbose_lvl),     "Choose Poirot verbosity: debug, info, warning or error")
     ] in
     let usage = "Error: grammar, goal, start and oracle are necessary" in
     Arg.parse speclist ignore usage;
