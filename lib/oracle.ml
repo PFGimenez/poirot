@@ -49,9 +49,10 @@ let oracle_from_script (fname: string) (inj: string) : oracle_status =
     let cmd = match Logs.Src.level Log.poirotsrc with
         | Some Logs.Debug -> fname^" \""^inj^"\""
         | _ -> fname^" \""^inj^"\" >/dev/null 2>&1" in
+    Log.L.debug (fun m -> m "Call to oracle: %s." inj);
     let error_code = Sys.command cmd in
     let answer = oracle_status_of_int error_code in
-    Log.L.info (fun m -> m "Call to oracle: %s. Answer: %s" inj (string_of_oracle_status answer));
+    Log.L.info (fun m -> m "Oracle answer: %s" (string_of_oracle_status answer));
     answer
 
 (* construct an oracle from a function *)
