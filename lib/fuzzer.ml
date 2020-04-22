@@ -37,45 +37,30 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
             (update_best_rule [@tailcall]) necessary (List.filter (fun r -> not (Hashtbl.mem best_rule r.left_symbol)) original_rules)
         end in
 
-    let rec fuzzer_minimize (goal_rules: rule list) (root: element) : parse_tree =
-        if Option.map (fun v -> Hashtbl.mem v root) values = Some true then
-            Leaf (Terminal (Hashtbl.find (Option.get values) root))
-        else if is_terminal root then
-            Leaf root
-        else if goal_rules <> [] then begin
-            let r = List.hd goal_rules in
-            (* the symbols of the rhs of this rule may not be in the best_rule hashtable *)
-            List.iter (fun e -> update_best_rule e g.rules) r.right_part;
-            if List.tl goal_rules = [] then
-                (* don't update used_symbols as the path to goal may require producing a tree with two identical symbols in the same branch *)
-                Node (root,List.map (fuzzer_minimize []) r.right_part)
-            else begin
-                let q = List.tl goal_rules in
-                let next_sym = (List.hd q).left_symbol in
-                let first = List.find ((=) next_sym) r.right_part in
-                (* the PHYSICAL equality is not an error : we want the first, not all of them *)
-                Node (root,List.map (fun e -> fuzzer_minimize (if e == first then q else []) e) r.right_part)
-            end
-        end else
-            (* goal_rules is empty *)
-            Node (root,List.map (fuzzer_minimize []) (Hashtbl.find best_rule root))
-        in
+    (* tail-recursive *)
+    let rec fuzzer_minimize (goal_rules: rule list) (word_prefix: element list) (sentential_suffix: element list) : element list = match sentential_suffix, goal_rules with
+        | [],_ -> assert (goal_rules = []); List.rev word_prefix
+        | t::q,_ when is_terminal t -> (fuzzer_minimize [@tailcall]) goal_rules (t::word_prefix) q
+        | t::q,r::q2 when r.left_symbol=t -> (fuzzer_minimize [@tailcall]) q2 word_prefix (r.right_part@q)
+        | t::q,_ when Option.map (fun v -> Hashtbl.mem v t) values = Some true ->
+                (fuzzer_minimize [@tailcall]) goal_rules ((Terminal (Hashtbl.find (Option.get values) t))::word_prefix) q
+        | t::q,_ -> (fuzzer_minimize [@tailcall]) goal_rules word_prefix ((Hashtbl.find best_rule t)@q) in
 
     (* not tail-recursive ! but the max depth is controlled *)
-    let rec fuzzer_explode (depth: int) (e: element) : parse_tree =
+    let rec fuzzer_explode (depth: int) (e: element) : element list =
         if Option.map (fun v -> Hashtbl.mem v e) values = Some true then begin
             let all_bindings = Hashtbl.find_all (Option.get values) e in
-            Leaf (Terminal (List.nth all_bindings (Random.int (List.length all_bindings))))
+            [Terminal (List.nth all_bindings (Random.int (List.length all_bindings)))]
         end else if is_terminal e then
-            Leaf e
+            [e]
         else if depth >= max_depth then begin
             update_best_rule e g.rules;
-            fuzzer_minimize [] e
+            fuzzer_minimize [] [] [e]
         end else begin
             let possible_rules = List.filter (fun r -> r.left_symbol = e) g.rules in
             let r = List.nth possible_rules (Random.int (List.length possible_rules)) in (* random rule *)
-            let trees = List.map (fuzzer_explode (depth + 1)) r.right_part in
-            Node (e,trees)
+            let parts = List.map (fuzzer_explode (depth + 1)) r.right_part in
+            List.concat parts;
         end in
 
     let rec has_new (seen: element list) (p: element list) : bool = match p with
@@ -92,23 +77,20 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
         | (form,path)::q -> let new_items = List.map (fun (r,p) -> (p,r::path)) (build_derivation g form) in
             (find_path_to_goal_aux [@tailcall]) (List.sort_uniq compare (form@seen)) (q@new_items) in
 
-    let find_path_to_goal () : rule list = find_path_to_goal_aux [] [([g.axiom],[])] in
-
-    let rec part_of_tree (verbose_pf: string) (t: parse_tree) : part option = match t with
-        | Leaf e -> Log.L.debug (fun m -> m "%s" (verbose_pf^(decorated_string_of_element e))); Some [e]
-        | Node (e,l) -> Log.L.debug (fun m -> m "%s" (verbose_pf^(decorated_string_of_element e)));
-                let trees = List.map (part_of_tree (verbose_pf^"   ")) l in
-            if List.exists ((=) None) trees then None
-            else Some (trees |> List.map Option.get |> List.flatten) in
+    let find_path_to_goal () : rule list =
+        let l = find_path_to_goal_aux [] [([g.axiom],[])] in
+        l |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare |> List.iter (fun e -> update_best_rule e g.rules);
+        l
+        (* we update the best rules for all the rhs of the rules towards the goal *)
+    in
 
     update_best_rule g.axiom g.rules;
     if not (Hashtbl.mem best_rule g.axiom) then None
     else
-        part_of_tree "" (
-            if Option.is_some goal && is_reachable g (Option.get goal) g.axiom then begin
-                Log.L.debug (fun m -> m "Fuzzing with goal");
-                fuzzer_minimize (find_path_to_goal ()) g.axiom
-            end else begin
-                Log.L.debug (fun m -> m "Fuzzing");
-                fuzzer_explode 0 g.axiom
-            end)
+        if Option.is_some goal && is_reachable g (Option.get goal) g.axiom then begin
+            Log.L.debug (fun m -> m "Fuzzing with goal");
+            Some (fuzzer_minimize (find_path_to_goal ()) [] [g.axiom])
+        end else begin
+            Log.L.debug (fun m -> m "Fuzzing");
+            Some (fuzzer_explode 0 g.axiom)
+        end
