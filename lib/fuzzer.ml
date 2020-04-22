@@ -49,7 +49,7 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
         | t::q,_ -> (fuzzer_minimize [@tailcall]) goal_rules word_prefix ((Hashtbl.find best_rule t)@q) in
 
     (* not tail-recursive ! but the max depth is controlled *)
-    let rec fuzzer_explode (depth: int) (e: element) : element list =
+    let rec fuzzer_explode_aux (depth: int) (e: element) : element list =
         if Option.map (fun v -> Hashtbl.mem v e) values = Some true then begin
             let all_bindings = Hashtbl.find_all (Option.get values) e in
             [Terminal (List.nth all_bindings (Random.int (List.length all_bindings)))]
@@ -61,9 +61,12 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
         end else begin
             let possible_rules = List.filter (fun r -> r.left_symbol = e) g.rules in
             let r = List.nth possible_rules (Random.int (List.length possible_rules)) in (* random rule *)
-            let parts = List.map (fuzzer_explode (depth + 1)) r.right_part in
-            fuzzer_minimize [] [] (List.concat parts);
+            let parts = List.map (fuzzer_explode_aux (depth + 1)) r.right_part in
+            List.concat parts
         end in
+
+    let fuzzer_explode (depth: int) (e: element) : element list =
+        fuzzer_minimize [] [] (fuzzer_explode_aux depth e) in
 
     let rec has_new (seen: element list) (p: element list) : bool = match p with
         | [] -> false
