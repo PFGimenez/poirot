@@ -42,17 +42,16 @@ let handle_option (oracle : string -> oracle_status): string option -> oracle_st
 (* construct an oracle from a script *)
 let oracle_from_script (fname: string) (inj: string) : oracle_status =
     let escape_char (c: char) : string = match c with
-        | '"' -> "\\\""
-        | '\\' -> "\\"
+        | '\'' -> "'\"'\"'" (* in single quote string, only ' must be escaped *)
         | _ -> String.make 1 c in
-    let inj = (string_of_list "" "" escape_char (List.init (String.length inj) (String.get inj))) in
+    let esc_inj = (string_of_list "" "" escape_char (List.init (String.length inj) (String.get inj))) in
     let cmd = match Logs.Src.level Log.poirotsrc with
-        | Some Logs.Debug -> fname^" \""^inj^"\""
-        | _ -> fname^" \""^inj^"\" >/dev/null 2>&1" in
-    Log.L.debug (fun m -> m "Call to oracle: %s." inj);
+        | Some Logs.Debug -> fname^" \'"^esc_inj^"\'"
+        | _ -> fname^" \'"^esc_inj^"\' >/dev/null 2>&1" in
+    Log.L.debug (fun m -> m "Call to oracle: %s." cmd);
     let error_code = Sys.command cmd in
     let answer = oracle_status_of_int error_code in
-    Log.L.info (fun m -> m "Oracle answer: %s" (string_of_oracle_status answer));
+    Log.L.info (fun m -> m "Oracle answer to %s: %s" inj (string_of_oracle_status answer));
     answer
 
 (* construct an oracle from a function *)
