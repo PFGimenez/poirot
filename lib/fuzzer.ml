@@ -110,5 +110,5 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
                 fuzzer_minimize (find_path_to_goal ()) g.axiom
             end else begin
                 Log.L.debug (fun m -> m "Fuzzing");
-                fuzzer_explode 5 g.axiom
+                fuzzer_explode 0 g.axiom
             end)
