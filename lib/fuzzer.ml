@@ -1,16 +1,16 @@
 open Grammar
 
-type parse_tree = Leaf of element | Node of element * parse_tree list
-
 (* the fuzzer is deterministic when max_depth = 0
  * this is on purpose, so similar grammars yield same words and the oracle memoization can be exploited *)
 
 let best_rule : (element, part) Hashtbl.t = Hashtbl.create 500
+let words : (element, part) Hashtbl.t = Hashtbl.create 500
 
 (* all nonterminal must be the left-hand side of a rule *)
 let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: element option) (forbidden: char list) (g : grammar) : part option =
     Random.self_init ();
     Hashtbl.clear best_rule;
+    Hashtbl.clear words;
 
     let is_allowed (e: element): bool = match e with
         | Terminal s -> not (List.exists (String.contains s) forbidden)
@@ -28,25 +28,40 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
             else (Hashtbl.hash r2.right_part) - (Hashtbl.hash r1.right_part) (* to be deterministic we want to compare any couple *)
         end in
 
+    (* tail-recursive *)
+    let rec fuzzer_minimize (goal_rules: rule list) (word_prefix: element list) (sentential_suffix: element list) : element list =
+        match sentential_suffix, goal_rules with
+        (* verify the sentential form length *)
+        | l,_ when List.compare_length_with l 1000000 > 0 -> failwith "Fuzzing failure: word too long"
+        (* no more suffix. All goal rules should have been used. *)
+        | [],_ -> assert (goal_rules = []); List.rev word_prefix
+        (* the suffix starts with a terminal *)
+        | t::q,_ when is_terminal t -> (fuzzer_minimize [@tailcall]) goal_rules (t::word_prefix) q
+        (* the suffix starts with a goal rule *)
+        | t::q,r::q2 when r.left_symbol=t -> (fuzzer_minimize [@tailcall]) q2 word_prefix (r.right_part@q)
+        (* do we have a specific request for the start of the suffix ? *)
+        | t::q,_ when Option.map (fun v -> Hashtbl.mem v t) values = Some true ->
+                (fuzzer_minimize [@tailcall]) goal_rules ((Terminal (Hashtbl.find (Option.get values) t))::word_prefix) q
+        (* do we have a words saved for the start of the suffix ? *)
+        | t::q,_ when Hashtbl.mem words t -> (fuzzer_minimize [@tailcall]) goal_rules ((Hashtbl.find words t)@word_prefix) q
+        (* apply the best rule *)
+        | t::q,_ -> (fuzzer_minimize [@tailcall]) goal_rules word_prefix ((Hashtbl.find best_rule t)@q) in
+
+    let memorize_best_rule (r: rule) : unit =
+        if not (Hashtbl.mem best_rule r.left_symbol) then begin
+            Hashtbl.add best_rule r.left_symbol r.right_part;
+            (* the word is reserved so we can add it easily to the reversed prefix *)
+            Hashtbl.add words r.left_symbol (List.rev (fuzzer_minimize [] [] [r.left_symbol]))
+        end in
+
     (* based on level decomposition *)
     let rec update_best_rule (necessary: element) (original_rules: rule list) : unit =
         if is_terminal necessary || Hashtbl.mem best_rule necessary || original_rules = [] then ()
         else begin
             let usable_rules = List.filter (fun r -> List.for_all (fun s -> is_terminal s || Hashtbl.mem best_rule s) r.right_part) original_rules in
-            List.iter (fun r -> if not (Hashtbl.mem best_rule r.left_symbol) then Hashtbl.replace best_rule r.left_symbol r.right_part) (List.sort compare_rule usable_rules);
+            List.iter memorize_best_rule (List.sort compare_rule usable_rules);
             (update_best_rule [@tailcall]) necessary (List.filter (fun r -> not (Hashtbl.mem best_rule r.left_symbol)) original_rules)
         end in
-
-    (* tail-recursive *)
-    let rec fuzzer_minimize (goal_rules: rule list) (word_prefix: element list) (sentential_suffix: element list) : element list =
-        match sentential_suffix, goal_rules with
-        | l,_ when List.compare_length_with l 1000000 > 0 -> failwith "Fuzzing failure: word too long"
-        | [],_ -> assert (goal_rules = []); List.rev word_prefix
-        | t::q,_ when is_terminal t -> (fuzzer_minimize [@tailcall]) goal_rules (t::word_prefix) q
-        | t::q,r::q2 when r.left_symbol=t -> (fuzzer_minimize [@tailcall]) q2 word_prefix (r.right_part@q)
-        | t::q,_ when Option.map (fun v -> Hashtbl.mem v t) values = Some true ->
-                (fuzzer_minimize [@tailcall]) goal_rules ((Terminal (Hashtbl.find (Option.get values) t))::word_prefix) q
-        | t::q,_ -> (fuzzer_minimize [@tailcall]) goal_rules word_prefix ((Hashtbl.find best_rule t)@q) in
 
     (* not tail-recursive ! but the max depth is controlled *)
     let rec fuzzer_explode_aux (depth: int) (e: element) : element list =
