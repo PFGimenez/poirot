@@ -33,12 +33,14 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
         if is_terminal necessary || Hashtbl.mem best_rule necessary || original_rules = [] then ()
         else begin
             let usable_rules = List.filter (fun r -> List.for_all (fun s -> is_terminal s || Hashtbl.mem best_rule s) r.right_part) original_rules in
-            List.iter (fun r -> Hashtbl.replace best_rule r.left_symbol r.right_part) (List.sort compare_rule usable_rules);
+            List.iter (fun r -> if not (Hashtbl.mem best_rule r.left_symbol) then Hashtbl.replace best_rule r.left_symbol r.right_part) (List.sort compare_rule usable_rules);
             (update_best_rule [@tailcall]) necessary (List.filter (fun r -> not (Hashtbl.mem best_rule r.left_symbol)) original_rules)
         end in
 
     (* tail-recursive *)
-    let rec fuzzer_minimize (goal_rules: rule list) (word_prefix: element list) (sentential_suffix: element list) : element list = match sentential_suffix, goal_rules with
+    let rec fuzzer_minimize (goal_rules: rule list) (word_prefix: element list) (sentential_suffix: element list) : element list =
+        match sentential_suffix, goal_rules with
+        | l,_ when List.compare_length_with l 1000000 > 0 -> failwith "Fuzzing failure: word too long"
         | [],_ -> assert (goal_rules = []); List.rev word_prefix
         | t::q,_ when is_terminal t -> (fuzzer_minimize [@tailcall]) goal_rules (t::word_prefix) q
         | t::q,r::q2 when r.left_symbol=t -> (fuzzer_minimize [@tailcall]) q2 word_prefix (r.right_part@q)
@@ -55,12 +57,12 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
             [e]
         else if depth >= max_depth then begin
             update_best_rule e g.rules;
-            fuzzer_minimize [] [] [e]
+            [e]
         end else begin
             let possible_rules = List.filter (fun r -> r.left_symbol = e) g.rules in
             let r = List.nth possible_rules (Random.int (List.length possible_rules)) in (* random rule *)
             let parts = List.map (fuzzer_explode (depth + 1)) r.right_part in
-            List.concat parts;
+            fuzzer_minimize [] [] (List.concat parts);
         end in
 
     let rec has_new (seen: element list) (p: element list) : bool = match p with
