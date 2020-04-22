@@ -37,7 +37,7 @@ rule token = parse
     | '\'' (([^ '\'' '\n' '\r'])+ as s) '\'' { make_term s } (* terminal *)
     | (['0'-'9']+ as s) { make_term_from_int (int_of_string s) } (* terminal *)
 
-    | ['A'-'Z' 'a'-'z'] ['A'-'Z' 'a'-'z' '0'-'9' '_']* ("_[" [^ ']' '\n' '\r']* "]")? as s { NTERM s } (* nonterminal *)
+    | ['A'-'Z' 'a'-'z'] ['A'-'Z' 'a'-'z' '0'-'9' '_' '-']* ("_[" [^ ']' '\n' '\r']* "]")? as s { NTERM s } (* nonterminal *)
     | '<' ([^ '>' '\n' '\r']* as s) '>' { NTERM s } (* nonterminal *)
 
     | _ as c { syntax_error ("couldn't identify the token '"^(String.make 1 c)^"'")}

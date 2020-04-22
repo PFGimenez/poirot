@@ -160,10 +160,10 @@ let ext_rule_of_rule (r: rule) : ext_rule = (ext_element_of_element r.left_symbo
 let ext_grammar_of_grammar (g: grammar) : ext_grammar = {ext_axiom = ext_element_of_element g.axiom; ext_rules = List.rev_map ext_rule_of_rule g.rules}
 
 let full_element_of_ext_element (e : ext_element) : element =
-    let underscore_string_of_part = string_of_list "_" "ε" string_of_element in match e with
+    let underscore_string_of_part = string_of_list "_" "epsilon" string_of_element in match e with
     | {pf=_;e=Terminal _;sf=_} -> e.e
     | {pf=[];e=Nonterminal x;sf=[]} -> Nonterminal(x)
-    | {pf=_;e=Nonterminal x;sf=_} -> Nonterminal((underscore_string_of_part (List.rev e.pf))^"^"^x^"^"^(underscore_string_of_part e.sf))
+    | {pf=_;e=Nonterminal x;sf=_} -> Nonterminal((underscore_string_of_part (List.rev e.pf))^"__"^x^"__"^(underscore_string_of_part e.sf))
 
 let rule_of_ext_rule (r: ext_rule) : rule = full_element_of_ext_element r.ext_left_symbol --> (List.map full_element_of_ext_element r.ext_right_part)
 
