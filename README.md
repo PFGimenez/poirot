@@ -18,6 +18,7 @@ To install Poirot, run the following steps. `opam` will automatically install th
     git clone https://github.com/PFGimenez/poirot.git
     cd poirot
     opam install .
+    eval `opam env`
 
 You will need ANTLR4 to convert grammars from .g4 format and to use the prefix/suffix oracle generator. Make sure you have python 3 and Java JRE installed. Execute:
 
