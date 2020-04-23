@@ -2,16 +2,15 @@ open Grammar
 
 type side = Left | Right
 
-(* a small finite-state automata for the element. not in status hashtable -> In_progress -> Processed *)
-type elem_status = In_progress | Processed
+(* TODO: best_rule et words dans quotient ! Ainsi, ils ne sont pas jetés à chaque fois… *)
 
 let quotient_mem (g: grammar) (graph_channel: out_channel option) (*(verbose: bool)*): ext_element -> ext_grammar  =
     (* the grammar must be clean ! *)
-    let ext_g : ext_grammar = ext_grammar_of_grammar g
+    let ext_g : ext_grammar = Clean.clean (ext_grammar_of_grammar g)
+    (* the dummy axiom is only used when the regular axiom is terminal *)
     and da = {pf=[];e=Nonterminal("dummy_axiom");sf=[]}
     (* all the computed rules *)
-    and mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 100000
-    and status : (ext_element, elem_status) Hashtbl.t = Hashtbl.create 100000 in
+    and mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 100000 in
 
     let rec get_reachable_symbols (slist : ext_element list) : ext_element list =
         let get_reachable_symbols_once (slist : ext_element list) : ext_element list = slist |> List.rev_map (Hashtbl.find mem) |> List.concat |> List.cons slist |> List.concat |> List.sort_uniq compare |> List.filter is_ext_element_non_terminal in
@@ -19,130 +18,149 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) (*(verbose: bo
             if List.compare_lengths slist slist2 = 0 then slist else (get_reachable_symbols [@tailcall]) slist2
     in
 
-    let is_in_progress (e: ext_element) : bool = Hashtbl.find_opt status e = Some In_progress in
-
-    let is_processed (e: ext_element) : bool = Hashtbl.find_opt status e = Some Processed in
+    let is_processed (e: ext_element) : bool = Hashtbl.mem mem e in
 
     (* is the element useless, i.e. it is processed but is not bound to any rule *)
-    let is_useless (e: ext_element) : bool = is_processed e && Hashtbl.find_opt mem e = Some [] in
+    let is_useless (e: ext_element) : bool = Hashtbl.find_opt mem e = Some [] in
 
     let set_useless (e: ext_element) : unit = Hashtbl.replace mem e [] in
+
+    let initialize_mem (e: ext_element) : unit = assert (not (is_processed e)); Hashtbl.replace mem e [] in
 
     let set_color (c: string) (e: ext_element) : unit = Grammar_io.set_node_color_in_graph graph_channel e c in
 
     (* construct a grammar, given an axiom, from the memory *)
     let grammar_of_mem (axiom : ext_element) : ext_grammar =
-        if is_ext_element_terminal axiom then
-            da @@@ [da ---> [axiom]]
-        else begin
-            let rules_of_element : ext_element -> ext_rule list = fun e -> (Hashtbl.find mem e |> List.rev_map ((--->) e)) in
-            let rules = get_reachable_symbols [axiom] |> List.rev_map rules_of_element |> List.concat in axiom @@@ rules
-        end
+        assert (is_ext_element_non_terminal axiom);
+        let rules_of_element : ext_element -> ext_rule list = fun e -> (Hashtbl.find mem e |> List.rev_map ((--->) e)) in
+        let rules = get_reachable_symbols [axiom] |> List.rev_map rules_of_element |> List.concat in
+        axiom @@@ rules
     in
 
     (* reverse an extended element depending of the reverse variable *)
-    let reverse_ext_elem (sd: side) (e: ext_element) = match sd with
+    let reverse_ext_elem (sd: side) (e: ext_element) : ext_element = match sd with
         | Right -> {pf=e.sf;e=e.e;sf=e.pf}
         | Left -> e in
 
     (* reverse a rule depending of the reverse variable *)
-    let reverse_rule (sd: side) (r: ext_part) = match sd with
+    let reverse_rule (sd: side) (r: ext_part) : ext_part = match sd with
         | Right -> List.rev_map (reverse_ext_elem Right) r (* this rev_map is not an optimization but is mandatory *)
         | Left -> r in
 
     (* get the rules from mem, reversing them if necessary *)
-    let get_rules (sd: side) (lhs: ext_element) =
+    let get_rules (sd: side) (lhs: ext_element) : ext_part list =
         Hashtbl.find mem lhs |> List.rev_map (reverse_rule sd) in
 
     (* memorize rules, reversing them if necessary *)
     let add_rules_in_mem (sd: side) (lhs: ext_element) (rlist: ext_part list) : unit =
-    let rev_new_rules = List.rev_map (reverse_rule sd) rlist in
-    match rlist with
-        | [] -> ()
-        | _ -> let prev_rules = Hashtbl.find_opt mem lhs in
-            if prev_rules = None then Hashtbl.add mem lhs rev_new_rules
-            else Hashtbl.replace mem lhs (rev_new_rules@(Option.get prev_rules)) in
+        (*print_endline ("Add "^(string_of_ext_element lhs)^(if sd=Right then "right" else "left"));*)
+        let rev_new_rules = List.rev_map (reverse_rule sd) rlist in
+        match rlist with
+            | [] -> ()
+            | _ -> let prev_rules = Hashtbl.find_opt mem lhs in
+                if prev_rules = None then Hashtbl.add mem lhs rev_new_rules
+                else Hashtbl.replace mem lhs (rev_new_rules@(Option.get prev_rules)) in
 
     (* memorize a rule, reversing them if necessary *)
     let add_rule_in_mem (sd: side) (lhs: ext_element) (r: ext_part) : unit = add_rules_in_mem sd lhs [r] in
 
     (* does e only derive epsilon ? *)
-    let is_epsilon (e: ext_element) : bool = assert (is_in_progress e || is_processed e); List.for_all ((=) []) (Hashtbl.find mem e)
+    let is_epsilon (e: ext_element) : bool = List.for_all ((=) []) (Hashtbl.find mem e)
 
     (* can e derive epsilon ? *)
-    and can_epsilon (e: ext_element) : bool = assert (is_in_progress e || is_processed e); List.exists ((=) []) (Hashtbl.find mem e) in
+    and can_epsilon (e: ext_element) : bool = List.exists ((=) []) (Hashtbl.find mem e) in
+
+    let replace_rules_in_mem (rlist: ext_rule list) : unit =
+        (* remove the previous rhs *)
+        List.iter (fun r -> Hashtbl.replace mem r.ext_left_symbol []) rlist;
+        (* add the new rules *)
+        List.iter (fun r -> add_rule_in_mem Left r.ext_left_symbol r.ext_right_part) rlist in
 
     (* create variants of a rule depending of whether the first element is or can be epsilon (and only the first element) *)
-    let remove_epsilon : ext_part -> ext_part list = function
-        | [] -> []
-        | (t::_) as l when is_ext_element_terminal t -> [l] (* a terminal can't derive an epsilon *)
-        | t::q when is_epsilon t -> [q] (* t always derive an epsilon: we remove it *)
-        | (t::q) as l when can_epsilon t -> [l;q] (* t can derive an epsilon: we add a new rule without it *)
-        | l -> [l] in
+    let remove_epsilon (r: ext_rule) : ext_rule list = match r.ext_right_part with
+        | [] -> [r.ext_left_symbol ---> []]
+        | (t::_) as l when is_ext_element_terminal t -> [r.ext_left_symbol ---> l] (* a terminal can't derive an epsilon *)
+        | t::q when is_epsilon t -> [r.ext_left_symbol ---> q] (* t always derive an epsilon: we remove it *)
+        | (t::q) as l when can_epsilon t -> [r.ext_left_symbol ---> l;r.ext_left_symbol ---> q] (* t can derive an epsilon: we add a new rule without it *)
+        | l -> [r.ext_left_symbol ---> l] in
 
     (* call remove_epsilon with the rules and the reversed rules *)
-    let rec remove_pf_sf_epsilon (rlist: ext_part list): ext_part list =
-        let remove_pf_sf_epsilon_once (rlist: ext_part list): ext_part list =
-            rlist |> List.filter (List.for_all (fun e -> not (is_useless e)))
-                |> List.rev_map remove_epsilon |> List.flatten (* remove epsilon at beginning *)
-                |> List.rev_map List.rev |> List.rev_map remove_epsilon |> List.flatten |> List.rev_map List.rev (* remove epsilon at end *)
+    (* doesn't need to reverse as it applies to both sides *)
+    let rec remove_pf_sf_epsilon (rlist: ext_rule list): ext_rule list =
+        let remove_pf_sf_epsilon_once (rlist: ext_rule list): ext_rule list =
+            rlist |> List.rev_map remove_epsilon |> List.flatten (* remove epsilon at beginning *)
+                |> List.rev_map (fun r -> r.ext_left_symbol ---> (List.rev r.ext_right_part)) |> List.rev_map remove_epsilon |> List.flatten |> List.rev_map (fun r -> r.ext_left_symbol ---> (List.rev r.ext_right_part)) (* remove epsilon at end *)
                 |> List.sort_uniq compare in
         let new_rules = remove_pf_sf_epsilon_once rlist in
+(*        print_endline "New rules";
+        print_endline (string_of_ext_rules new_rules);*)
         if List.compare_lengths new_rules rlist = 0 then new_rules
         else (remove_pf_sf_epsilon [@tailcall]) new_rules in
 
     (* we add the rules A -> A so A_[A|] can derive epsilon *)
-    ext_g.ext_rules |> List.rev_map lhs_of_ext_rule |> List.sort_uniq compare |> List.iter (fun e -> add_rule_in_mem Left e [e]);
+    (*ext_g.ext_rules |> List.rev_map lhs_of_ext_rule |> List.sort_uniq compare |> List.iter (fun e -> add_rule_in_mem Left e [e]);*)
 
     (* we add the rules of the base grammar *)
-    List.iter (fun r -> add_rule_in_mem Left r.ext_left_symbol r.ext_right_part) ext_g.ext_rules;
-
+(*    List.iter (fun r -> add_rule_in_mem Left r.ext_left_symbol r.ext_right_part) ext_g.ext_rules;*)
+    replace_rules_in_mem ext_g.ext_rules;
     (* the base grammar is usable *)
-    ext_g.ext_rules |> List.rev_map (fun r -> r.ext_left_symbol::r.ext_right_part) |> List.flatten |> List.iter (fun e -> Hashtbl.add status e Processed);
+(*    ext_g.ext_rules |> List.rev_map (fun r -> r.ext_left_symbol::r.ext_right_part) |> List.flatten |> List.iter (fun e -> Hashtbl.add status e Processed);*)
 
     (* apply a left quotient of a single rule with a prefix that is a single element *)
     let quotient_by_one_element (sd: side) (pf: element) (new_lhs: ext_element) (r: ext_part) : ext_element option =
-        assert (is_in_progress new_lhs);
+        assert (is_non_terminal new_lhs.e);
+        if new_lhs.e = pf && (new_lhs.pf@new_lhs.sf) = [pf] then
+            add_rule_in_mem sd new_lhs [];
         match r with
         | [] -> None
         (* A -> aBC with prefix = a *)
         | t::q when t.e=pf && is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); add_rule_in_mem sd new_lhs q; None
         (* A -> aBC with prefix != a *)
         | t::_ when is_ext_element_terminal t -> None
-        (* A -> BC with prefix = B *)
-        | t::q when t.e=pf && t.pf=[] -> let new_elem = {pf=[pf];e=t.e;sf=t.sf} in
-            (* if B_{B|} is a dead end *)
-            if is_useless new_elem then
-                (add_rule_in_mem sd new_lhs q; None)
-            (* if B can derive a leftmost B *)
-            else
-                (add_rules_in_mem sd new_lhs [q;new_elem::q]; Some new_elem)
         (* A -> B_{D|}C *)
         | t::q -> let new_elem = {pf=pf::t.pf;e=t.e;sf=t.sf} in
-            if is_useless new_elem then None
-            else (add_rule_in_mem sd new_lhs (new_elem::q); Some new_elem) in
+            add_rule_in_mem sd new_lhs (new_elem::q); Some t in
 
     (* compute the rules of e with a new prefix (a single element) pf *)
     (* the new rules (left symbol: new_lhs) are based on the rules of the previous_lhs *)
-    let quotient_by_one_element_mem (sd: side) (pf: element) (new_lhs: ext_element) (previous_lhs: ext_element) : (ext_element list) =
-        assert (is_in_progress new_lhs && is_processed previous_lhs);
-        let new_elems_with_seen = get_rules sd previous_lhs |> List.filter_map (quotient_by_one_element sd pf new_lhs) |> List.rev_map (reverse_ext_elem sd)  |> List.sort_uniq compare in
-        new_elems_with_seen |> List.filter ((<>) new_lhs) |> List.iter (Grammar_io.add_edge_in_graph graph_channel "" new_lhs);
-        List.filter (fun e -> not (is_processed e) && not (is_in_progress e)) new_elems_with_seen in
+    (* tail recursive *)
+    let rec quotient_by_one_element_mem (sd: side) (prefix: element) (lhs_list: ext_element list) (all_new_elems: ext_element list) : (ext_element list) =
+        match lhs_list with
+        | [] -> all_new_elems
+        | prev_lhs::q ->
+            begin
+                let new_lhs = match sd with
+                    | Right -> {pf=prev_lhs.pf;e=prev_lhs.e;sf=prefix::prev_lhs.sf}
+                    | Left -> {pf=prefix::prev_lhs.pf;e=prev_lhs.e;sf=prev_lhs.sf} in
+                (*print_endline ("New: "^(string_of_ext_element new_lhs));*)
+                if not (is_processed new_lhs) then begin
+                    initialize_mem new_lhs;
+                    let prev_lhs_to_quotient = get_rules sd prev_lhs |> List.filter_map (quotient_by_one_element sd prefix new_lhs) |> List.rev_map (reverse_ext_elem sd) |> List.sort_uniq compare in
+                    (*List.iter (fun e -> print_endline (string_of_ext_element e)) prev_lhs_to_quotient;*)
+                    if Option.is_some graph_channel then begin
+                        let new_elems = List.map (fun {pf;e;sf} -> {pf=prefix::pf;e=e;sf=sf}) prev_lhs_to_quotient in
+                        List.iter (fun e -> Grammar_io.add_edge_in_graph graph_channel "" new_lhs (reverse_ext_elem sd e)) new_elems;
+                    end;
+                    (*List.iter (fun p -> print_endline (string_of_ext_rule (new_lhs ---> p))) (Hashtbl.find mem new_lhs);*)
+                    (quotient_by_one_element_mem [@tailcall]) sd prefix (prev_lhs_to_quotient@q) (new_lhs::all_new_elems)
+                end else
+                    (print_endline "Already processed!";
+                    (quotient_by_one_element_mem [@tailcall]) sd prefix q all_new_elems);
+            end in
 
-    (* compute the rules of a ext_element and do it recursively with every new symbol *)
-    (* not completely tail-recursive *)
+    (* compute the rules of a ext_element and do it recursively with all the prefix/suffix *)
+    (* tail-recursive *)
     let rec quotient_symbols (nb_iter: int) (elist: ext_element list) : int =
         match elist with
-        | [] -> nb_iter
+        | [] -> print_endline "quotient finished"; nb_iter
         | lhs::q ->
             (* Nothing to do *)
-            (*print_endline ("Work on: "^(string_of_ext_element lhs));*)
+            print_endline ("Work on: "^(string_of_ext_element lhs));
             if lhs.pf = [] && lhs.sf = [] then begin
                 assert (is_ext_element_terminal lhs || is_processed lhs);
                 (quotient_symbols [@tailcall]) (nb_iter + 1) q
             end else if is_processed lhs then
-                    ((*print_endline " Already known";*) (quotient_symbols [@tailcall]) (nb_iter + 1) q)
+                    (print_endline " Already known"; (quotient_symbols [@tailcall]) (nb_iter + 1) q)
             else begin
                 let (base_lhs,sd,qu) = match lhs.pf,lhs.sf with
                 | [],[] -> assert false (* impossible : case verified just before *)
@@ -153,18 +171,39 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) (*(verbose: bo
                     (* we ignore this element *)
                     set_useless lhs;
                     set_color "grey" lhs;
-                    Hashtbl.add status lhs Processed;
-                    (*print_endline (" Useless because of "^(string_of_ext_element base_lhs));*)
+                    print_endline (" Useless because of "^(string_of_ext_element base_lhs));
                     (quotient_symbols [@tailcall]) (nb_iter + 1) q
                 end else if is_processed base_lhs then begin
+                    print_endline ("ICI "^(string_of_ext_element lhs));
                     Grammar_io.add_edge_in_graph graph_channel "penwidth=3" lhs base_lhs;
                     (* we can compute the current symbol *)
-                    (*print_endline "  Compute";*)
-                    Hashtbl.add status lhs In_progress;
-                    let new_elist = quotient_by_one_element_mem sd qu lhs base_lhs in
+                    print_endline "  Compute";
+                    let new_elist = quotient_by_one_element_mem sd qu [base_lhs] [] in
+
+                    (* TODO: retirer ceux qui ne produisent rien (symboles inutiles) avec une décomposition en niveau. Il suffit de le faire avec les nouvelles règles car tous les autres symboles déjà connus sont utiles *)
+
+                    print_endline "Before epsilon-free";
+                    List.iter (fun new_lhs -> List.iter (fun p -> print_endline (string_of_ext_rule (new_lhs ---> p))) (Hashtbl.find mem new_lhs)) new_elist;
+                    (* make the grammar epsilon-free. Only the new rules are concerned *)
+                    new_elist (* get the new elements *)
+                        |> List.map (fun e -> List.map (fun rhs -> e ---> rhs) (Hashtbl.find mem e)) (* get their rules *)
+                        |> List.concat
+                        |> List.filter (fun r -> List.for_all (fun e -> not (is_useless e)) r.ext_right_part) (* remove rules with useless symbols *)
+                        |> remove_pf_sf_epsilon (* make epsilon-free *)
+                        |> replace_rules_in_mem; (* replace in memory *)
+
+                    (* à virer, remplacer par la destruction des symboles inutiles *)
+                    print_endline "Before self-referencing";
+                    List.iter (fun new_lhs -> List.iter (fun p -> print_endline (string_of_ext_rule (new_lhs ---> p))) (Hashtbl.find mem new_lhs)) new_elist;
+                    List.iter (fun lhs -> if Hashtbl.find mem lhs |> List.for_all (List.exists ((=) lhs)) then set_useless lhs) new_elist;
+                    (* y'a de nouveuax useless, donc epsilon free peut avoir changé, etc. *)
+
+                    print_endline "Finally";
+                    List.iter (fun new_lhs -> List.iter (fun p -> print_endline (string_of_ext_rule (new_lhs ---> p))) (Hashtbl.find mem new_lhs)) new_elist;
+                    print_endline "End";
                     (* List.iter (fun p -> print_endline (string_of_ext_rule (lhs ---> p))) (Hashtbl.find mem lhs);*)
                     (* quick check : if a nonterminal is present in the rhs of all its rules, it is useless *)
-                    if Hashtbl.find mem lhs |> List.for_all (List.exists ((=) lhs)) then set_useless lhs;
+(*                    if Hashtbl.find mem lhs |> List.for_all (List.exists ((=) lhs)) then set_useless lhs;
                     (* before we compute all the new elements, we verify if the current lhs is useful. Indeed, there could be an circular dependency structure *)
                     (*print_endline "New elements:";
                     List.iter (fun e -> print_endline (string_of_ext_element e)) new_elist;*)
@@ -180,11 +219,12 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) (*(verbose: bo
                     (* we check again: if a nonterminal is present in the rhs of all its rules, it is useless *)
                     if Hashtbl.find mem lhs |> List.for_all (List.exists ((=) lhs)) then set_useless lhs;
                     (* if all rhs contain at least one useless element : lhs is useless *)
-                    if not (is_useless lhs) && Hashtbl.find mem lhs |> List.for_all (List.exists (fun e -> is_useless e)) then set_useless lhs;
-                    if is_useless lhs then (set_color "grey" lhs; (*print_endline ("Useless: "^(string_of_ext_element lhs))*));
-                    (quotient_symbols [@tailcall]) (new_nb_iter + 1) q
+                    if not (is_useless lhs) && Hashtbl.find mem lhs |> List.for_all (List.exists (fun e -> is_useless e)) then set_useless lhs;*)
+
+                    if Option.is_some graph_channel then List.iter (fun e -> if is_useless e then (set_color "grey" e)) new_elist;
+                    (quotient_symbols [@tailcall]) (nb_iter + 1) q
                 end else begin
-                    (*print_endline "  Postpone";*)
+                    print_endline "  Postpone";
                     (* we can't compute the current symbol so we keep it on the list *)
                     (quotient_symbols [@tailcall]) (nb_iter + 1) (base_lhs::elist)
                 end
@@ -203,8 +243,7 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) (*(verbose: bo
             else
                 da@@@[]
         end else begin
-            ignore (quotient_symbols 0 [e]);
-(*            let nb_iter = quotient_symbols 0 [e] in
-            if verbose then print_endline ("Nb iter: "^(string_of_int nb_iter)^", memory size: "^(string_of_int (Hashtbl.length mem)));*)
+            let nb_iter = quotient_symbols 0 [e] in
+            Log.L.info (fun m -> m "Nb iter: %d, memory size: %d" nb_iter (Hashtbl.length mem));
             grammar_of_mem e
         end
