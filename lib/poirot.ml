@@ -24,8 +24,12 @@ let make_oracle_from_fun (f: string -> int) = Oracle.oracle_mem (fun s -> Oracle
 
 let read_subst : string -> (element,string) Hashtbl.t = Grammar_io.read_subst
 
-let quotient (g: grammar) (prefix: element list) (suffix: element list) : grammar =
-    Grammar.grammar_of_ext_grammar (Clean.clean (Quotient.quotient_mem (Clean.clean_grammar g) None {pf=List.rev prefix;e=g.axiom;sf=suffix}))
+let quotient ?(qgraph_fname: string option = None) (g: grammar) (prefix: element list) (suffix: element list) : grammar =
+    let qgraph_channel = Option.map open_out qgraph_fname in
+    Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
+    let out = Grammar.grammar_of_ext_grammar (Clean.clean (Quotient.quotient_mem (Clean.clean_grammar g) None {pf=List.rev prefix;e=g.axiom;sf=suffix})) in
+    Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
+    out
 
 let fuzzer ?(subst: (element,string) Hashtbl.t option = None) ?(forbidden_chars: char list = []) ?(complexity: int = 10) ?(goal: element option = None) (g: grammar) : string option =
     Option.map Grammar.string_of_word (Fuzzer.fuzzer complexity subst goal forbidden_chars g)
