@@ -27,7 +27,7 @@ let read_subst : string -> (element,string) Hashtbl.t = Grammar_io.read_subst
 let quotient ?(qgraph_fname: string option = None) (g: grammar) (prefix: element list) (suffix: element list) : grammar =
     let qgraph_channel = Option.map open_out qgraph_fname in
     Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
-    let out = Grammar.grammar_of_ext_grammar (Clean.clean (Quotient.quotient_mem (Clean.clean_grammar g) None {pf=List.rev prefix;e=g.axiom;sf=suffix})) in
+    let out = Grammar.grammar_of_ext_grammar (Clean.clean (Quotient.quotient_mem (Clean.clean_grammar g) qgraph_channel {pf=List.rev prefix;e=g.axiom;sf=suffix})) in
     Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
     out
 
