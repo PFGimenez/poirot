@@ -9,8 +9,8 @@ let words : (element, part) Hashtbl.t = Hashtbl.create 500
 (* all nonterminal must be the left-hand side of a rule *)
 let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: element option) (forbidden: char list) (g : grammar) : part option =
     Random.self_init ();
-    Hashtbl.clear best_rule;
-    Hashtbl.clear words;
+(*    Hashtbl.clear best_rule;
+    Hashtbl.clear words;*)
 
     let is_allowed (e: element): bool = match e with
         | Terminal s -> not (List.exists (String.contains s) forbidden)

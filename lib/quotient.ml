@@ -2,15 +2,42 @@ open Grammar
 
 type side = Left | Right
 
+
+
 (* TODO: best_rule et words dans quotient ! Ainsi, ils ne sont pas jetés à chaque fois… *)
+let best_rule : (ext_element, ext_part) Hashtbl.t = Hashtbl.create 10000
+let words : (ext_element, part) Hashtbl.t = Hashtbl.create 10000
+    (* all the computed rules *)
+let mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 10000
+
+
+let compare_rule (r1: ext_rule) (r2: ext_rule) : int =
+    let diff = List.compare_lengths (List.filter is_ext_element_non_terminal r1.ext_right_part) (List.filter is_ext_element_non_terminal r2.ext_right_part) in
+    if diff <> 0 then diff
+    else begin
+        let diff2 = List.compare_lengths r1.ext_right_part r2.ext_right_part in
+        if diff2 <> 0 then diff2
+        else (Hashtbl.hash r2.ext_right_part) - (Hashtbl.hash r1.ext_right_part) (* to be deterministic we want to compare any couple *)
+    end
+
+let memorize_best_rule (r: ext_rule) : unit =
+    if not (Hashtbl.mem best_rule r.ext_left_symbol) then begin
+        Hashtbl.add best_rule r.ext_left_symbol r.ext_right_part;
+        (* the word is reserved so we can add it easily to the reversed prefix *)
+        r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else Hashtbl.find words e) |> List.concat |> List.rev |> Hashtbl.add words r.ext_left_symbol
+        (* all the prerequisite for computing the word are already computed ! *)
+    end
+
+(* based on level decomposition *)
+let rec update_best_rule (reached_sym: ext_element list) (original_rules: ext_rule list) : ext_element list =
+    let usable_rules = List.filter (fun r -> List.for_all (fun s -> is_ext_element_terminal s || Hashtbl.mem best_rule s) r.ext_right_part) original_rules in
+    List.iter memorize_best_rule (List.sort compare_rule usable_rules);
+    if List.compare_lengths usable_rules original_rules = 0 then reached_sym (* the algorithm is done *)
+    else (update_best_rule [@tailcall]) ((List.map lhs_of_ext_rule usable_rules)@reached_sym) (List.filter (fun r -> not (Hashtbl.mem best_rule r.ext_left_symbol)) original_rules)
 
 let quotient_mem (g: grammar) (graph_channel: out_channel option) (*(verbose: bool)*): ext_element -> ext_grammar  =
     (* the grammar must be clean ! *)
-    let ext_g : ext_grammar = Clean.clean (ext_grammar_of_grammar g)
-    (* the dummy axiom is only used when the regular axiom is terminal *)
-    and da = {pf=[];e=Nonterminal("dummy_axiom");sf=[]}
-    (* all the computed rules *)
-    and mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 100000 in
+    let ext_g : ext_grammar = Clean.clean (ext_grammar_of_grammar g) in
 
     let rec get_reachable_symbols (slist : ext_element list) : ext_element list =
         let get_reachable_symbols_once (slist : ext_element list) : ext_element list = slist |> List.rev_map (Hashtbl.find mem) |> List.concat |> List.cons slist |> List.concat |> List.sort_uniq compare |> List.filter is_ext_element_non_terminal in
@@ -28,6 +55,10 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) (*(verbose: bo
     let initialize_mem (e: ext_element) : unit = assert (not (is_processed e)); Hashtbl.replace mem e [] in
 
     let set_color (c: string) (e: ext_element) : unit = Grammar_io.set_node_color_in_graph graph_channel e c in
+
+    (* Get the set of rules of a list of ext_element. No reverse *)
+    let get_all_rules (elist: ext_element list) : ext_rule list =
+        elist |> List.map (fun e -> List.map (fun rhs -> e ---> rhs) (Hashtbl.find mem e)) |> List.concat in
 
     (* construct a grammar, given an axiom, from the memory *)
     let grammar_of_mem (axiom : ext_element) : ext_grammar =
@@ -182,44 +213,22 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) (*(verbose: bo
 
                     (* TODO: retirer ceux qui ne produisent rien (symboles inutiles) avec une décomposition en niveau. Il suffit de le faire avec les nouvelles règles car tous les autres symboles déjà connus sont utiles *)
 
+
                     print_endline "Before epsilon-free";
                     List.iter (fun new_lhs -> List.iter (fun p -> print_endline (string_of_ext_rule (new_lhs ---> p))) (Hashtbl.find mem new_lhs)) new_elist;
                     (* make the grammar epsilon-free. Only the new rules are concerned *)
-                    new_elist (* get the new elements *)
-                        |> List.map (fun e -> List.map (fun rhs -> e ---> rhs) (Hashtbl.find mem e)) (* get their rules *)
-                        |> List.concat
+                    new_elist |> get_all_rules (* get the new elements *)
+                        |> List.map (fun r -> print_endline ("A: "^(string_of_ext_rule r)); r)
+                        |> update_best_rule []
+                        |> get_all_rules
+                        |> List.map (fun r -> print_endline ("B: "^(string_of_ext_rule r)); r)
                         |> List.filter (fun r -> List.for_all (fun e -> not (is_useless e)) r.ext_right_part) (* remove rules with useless symbols *)
                         |> remove_pf_sf_epsilon (* make epsilon-free *)
                         |> replace_rules_in_mem; (* replace in memory *)
 
-                    (* à virer, remplacer par la destruction des symboles inutiles *)
-                    print_endline "Before self-referencing";
-                    List.iter (fun new_lhs -> List.iter (fun p -> print_endline (string_of_ext_rule (new_lhs ---> p))) (Hashtbl.find mem new_lhs)) new_elist;
-                    List.iter (fun lhs -> if Hashtbl.find mem lhs |> List.for_all (List.exists ((=) lhs)) then set_useless lhs) new_elist;
-                    (* y'a de nouveuax useless, donc epsilon free peut avoir changé, etc. *)
-
                     print_endline "Finally";
                     List.iter (fun new_lhs -> List.iter (fun p -> print_endline (string_of_ext_rule (new_lhs ---> p))) (Hashtbl.find mem new_lhs)) new_elist;
                     print_endline "End";
-                    (* List.iter (fun p -> print_endline (string_of_ext_rule (lhs ---> p))) (Hashtbl.find mem lhs);*)
-                    (* quick check : if a nonterminal is present in the rhs of all its rules, it is useless *)
-(*                    if Hashtbl.find mem lhs |> List.for_all (List.exists ((=) lhs)) then set_useless lhs;
-                    (* before we compute all the new elements, we verify if the current lhs is useful. Indeed, there could be an circular dependency structure *)
-                    (*print_endline "New elements:";
-                    List.iter (fun e -> print_endline (string_of_ext_element e)) new_elist;*)
-                    let new_nb_iter = quotient_symbols nb_iter new_elist in
-                    Hashtbl.add status lhs Processed;
-                    assert (Hashtbl.find_opt mem lhs <> None);
-                    if not (is_useless lhs) then begin
-                        (* remove epsilon productions at the start and the end of the rhs *)
-                        let rules = remove_pf_sf_epsilon (Hashtbl.find mem lhs) in
-                        Hashtbl.replace mem lhs rules;
-                        (*List.iter (fun p -> print_endline (string_of_ext_rule (lhs ---> p))) (Hashtbl.find mem lhs);*)
-                    end;
-                    (* we check again: if a nonterminal is present in the rhs of all its rules, it is useless *)
-                    if Hashtbl.find mem lhs |> List.for_all (List.exists ((=) lhs)) then set_useless lhs;
-                    (* if all rhs contain at least one useless element : lhs is useless *)
-                    if not (is_useless lhs) && Hashtbl.find mem lhs |> List.for_all (List.exists (fun e -> is_useless e)) then set_useless lhs;*)
 
                     if Option.is_some graph_channel then List.iter (fun e -> if is_useless e then (set_color "grey" e)) new_elist;
                     (quotient_symbols [@tailcall]) (nb_iter + 1) q
@@ -233,6 +242,8 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) (*(verbose: bo
     fun (e: ext_element) : ext_grammar ->
         (* the case when e is terminal is handled separately *)
         if is_ext_element_terminal e then begin
+            (* the dummy axiom is only used when the regular axiom is terminal *)
+            let da = {pf=[];e=Nonterminal("dummy_axiom");sf=[]} in
             (* derive epsilon *)
             if (e.pf=[e.e] && e.sf=[]) || (e.pf=[] && e.sf=[e.e]) then
                 da@@@[da--->[]]
@@ -246,4 +257,88 @@ let quotient_mem (g: grammar) (graph_channel: out_channel option) (*(verbose: bo
             let nb_iter = quotient_symbols 0 [e] in
             Log.L.info (fun m -> m "Nb iter: %d, memory size: %d" nb_iter (Hashtbl.length mem));
             grammar_of_mem e
+        end
+
+(* all nonterminal must be the left-hand side of a rule *)
+let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: element option) (axiom : ext_element) : part option =
+    Random.self_init ();
+
+    let compare_rule (r1: rule) (r2: rule) : int =
+        let diff = List.compare_lengths (List.filter is_non_terminal r1.right_part) (List.filter is_non_terminal r2.right_part) in
+        if diff <> 0 then diff
+        else begin
+            let diff2 = List.compare_lengths r1.right_part r2.right_part in
+            if diff2 <> 0 then diff2
+            else (Hashtbl.hash r2.right_part) - (Hashtbl.hash r1.right_part) (* to be deterministic we want to compare any couple *)
+        end in
+
+    (* tail-recursive *)
+    let rec fuzzer_minimize (goal_rules: ext_rule list) (word_prefix: element list) (sentential_suffix: ext_element list) : element list =
+        match sentential_suffix, goal_rules with
+        (* verify the sentential form length *)
+        | l,_ when List.compare_length_with l 1000000 > 0 -> failwith "Fuzzing failure: word too long"
+        (* no more suffix. All goal rules should have been used. *)
+        | [],_ -> assert (goal_rules = []); List.rev word_prefix
+        (* the suffix starts with a terminal *)
+        | t::q,_ when is_ext_element_terminal t -> (fuzzer_minimize [@tailcall]) goal_rules (t.e::word_prefix) q
+        (* the suffix starts with a goal rule *)
+        | t::q,r::q2 when r.ext_left_symbol=t -> (fuzzer_minimize [@tailcall]) q2 word_prefix (r.ext_right_part@q)
+        (* do we have a specific request for the start of the suffix ? *)
+        | {pf=[];e=t;sf=[]}::q,_ when Option.map (fun v -> Hashtbl.mem v t) values = Some true ->
+                (fuzzer_minimize [@tailcall]) goal_rules ((Terminal (Hashtbl.find (Option.get values) t))::word_prefix) q
+        (* do we have a words saved for the start of the suffix ? *)
+        | t::q,_ when Hashtbl.mem words t -> (fuzzer_minimize [@tailcall]) goal_rules ((Hashtbl.find words t)@word_prefix) q
+        (* apply the best rule *)
+        | t::q,_ -> (fuzzer_minimize [@tailcall]) goal_rules word_prefix ((Hashtbl.find best_rule t)@q) in
+
+    (* not tail-recursive ! but the max depth is controlled *)
+    let rec fuzzer_explode_aux (depth: int) (e: ext_element) : ext_element list =
+        if e.pf=[] && e.sf=[] && Option.map (fun v -> Hashtbl.mem v e.e) values = Some true then begin
+            let all_bindings = Hashtbl.find_all (Option.get values) e.e in
+            [ext_element_of_element (Terminal (List.nth all_bindings (Random.int (List.length all_bindings))))]
+        end else if is_ext_element_terminal e then
+            [e]
+        else if depth >= max_depth then begin
+(*            update_best_rule e g.rules;*)
+            [e]
+        end else begin
+            let possible_rules = List.map (fun p -> e ---> p) (Hashtbl.find mem e) in
+            let r = List.nth possible_rules (Random.int (List.length possible_rules)) in (* random rule *)
+            let parts = List.map (fuzzer_explode_aux (depth + 1)) r.ext_right_part in
+            List.concat parts
+        end in
+
+    let fuzzer_explode (depth: int) (e: ext_element) : element list =
+        fuzzer_minimize [] [] (fuzzer_explode_aux depth e) in
+
+    let rec has_new (seen: element list) (p: element list) : bool = match p with
+        | [] -> false
+        | t::_ when not (List.mem t seen) -> true
+        | _::q -> (has_new [@tailcall]) seen q in
+
+    let rec find_path_to_goal_aux (seen: element list) (queue : (part * rule list) list) : rule list =
+        assert (goal <> None);
+        match queue with
+        | [] -> assert false (* we know there is a path since the goal is reachable ! *)
+        | (form,path)::_ when List.mem (Option.get goal) form -> List.rev path
+        | (form,_)::q when not (has_new seen form) -> (find_path_to_goal_aux [@tailcall]) seen q
+        | (form,path)::q -> let new_items = List.map (fun (r,p) -> (p,r::path)) (build_derivation g form) in
+            (find_path_to_goal_aux [@tailcall]) (List.sort_uniq compare (form@seen)) (q@new_items) in
+
+    let find_path_to_goal () : rule list =
+        let l = find_path_to_goal_aux [] [([g.axiom],[])] in
+        l |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare |> List.iter (fun e -> update_best_rule e g.rules);
+        l
+        (* we update the best rules for all the rhs of the rules towards the goal *)
+    in
+
+    update_best_rule g.axiom g.rules;
+    if not (Hashtbl.mem best_rule g.axiom) then None
+    else
+        if Option.is_some goal && is_reachable g (Option.get goal) g.axiom then begin
+            Log.L.debug (fun m -> m "Fuzzing with goal");
+            Some (fuzzer_minimize (find_path_to_goal ()) [] [g.axiom])
+        end else begin
+            Log.L.debug (fun m -> m "Fuzzing");
+            Some (fuzzer_explode 20 g.axiom)
         end
