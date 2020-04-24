@@ -2,7 +2,6 @@ let ()=
     let grammar = ref None
     and prefix = ref None
     and suffix = ref None
-    and goal = ref None
     and injg_fname = ref None
     and qgraph_fname = ref None
     and axiom = ref None in
@@ -12,7 +11,6 @@ let ()=
         ("-pf",         Arg.String (fun s -> prefix := Some (Poirot.read_tokens s)),     "Prefix of the request");
         ("-sf",         Arg.String (fun s -> suffix := Some (Poirot.read_tokens s)),     "Suffix of the request");
         ("-axiom",      Arg.String (fun s -> axiom := Some (Poirot.read_token s)),     "Axiom of the request");
-        ("-goal",       Arg.String (fun s -> goal := Some (Poirot.read_token s)),     "Terminal or nonterminal to reach");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph")
     ] in
@@ -26,10 +24,10 @@ let ()=
         and prefix = Option.get !prefix
         and suffix = Option.get !suffix in
 
-        let inj_g = Poirot.quotient ~qgraph_fname:!qgraph_fname grammar prefix suffix in
+        let inj_g,word = Poirot.quotient ~qgraph_fname:!qgraph_fname grammar prefix suffix in
         print_endline (Poirot.string_of_grammar inj_g);
         Option.iter (fun fname -> Poirot.export_antlr4 fname inj_g) !injg_fname;
-        match Poirot.fuzzer ~complexity:0 ~goal:!goal inj_g with
+        match word with
         | None -> print_endline "No injection"
         | Some inj ->  print_endline ("Injection: "^inj)
     end else print_endline usage

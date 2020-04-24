@@ -12,7 +12,7 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) : ext_grammar option =
     Log.L.info (fun m -> m "Clean grammar…");
     let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
-    let quotient = Quotient.quotient_mem g qgraph_channel
+    let quotient = Quotient.quotient_mem g (Some goal) None qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (ext_element, int) Hashtbl.t =
         try Marshal.from_channel (open_in_bin h_fname)
@@ -53,8 +53,8 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
         match Hashtbl.find_opt reachable e with
         | Some b -> b
         | None -> let g_local = match par with
-            | Some p -> make_non_trivial_grammar (quotient e) (ext_element_of_element p)
-            | None -> quotient e in
+            | Some p -> make_non_trivial_grammar (fst (quotient e)) (ext_element_of_element p)
+            | None -> fst (quotient e) in
             let b = is_reachable (grammar_of_ext_grammar g_local) goal (full_element_of_ext_element e) in
             Hashtbl.add reachable e b; b in
 
@@ -142,7 +142,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
                 (* compute the non-trivial grammar and avoid some characters *)
-                let nt_inj_g = if origin=INDUCTION then Clean.clean (make_non_trivial_grammar (quotient e) par) else quotient e in
+                let nt_inj_g = if origin=INDUCTION then Clean.clean (make_non_trivial_grammar (fst (quotient e)) par) else fst (quotient e) in
                 (* Grammar_io.export_bnf "out.bnf" nt_inj_g; *)
                 (* call the fuzzer/oracle with this grammar *)
                 let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle in
