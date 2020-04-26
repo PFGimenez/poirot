@@ -9,10 +9,15 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) : ext_grammar option =
+let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) : ext_grammar option =
     Log.L.info (fun m -> m "Clean grammar…");
     let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
-    let quotient = Quotient.quotient_mem g (Some goal) None qgraph_channel
+
+    let g_quotient = Grammar.add_comment g "--" in
+    let g = g_quotient.axiom @@ ((g_quotient.axiom --> [g.axiom])::g.rules) in
+    print_endline "Inference grammar:";
+    print_endline (string_of_grammar g);
+    let quotient = Quotient.quotient_mem g_quotient (Some goal) None qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (ext_element, int) Hashtbl.t =
         try Marshal.from_channel (open_in_bin h_fname)
@@ -137,15 +142,19 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
             (* now it is visited *)
             Hashtbl.add closedset e ();
             (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
+            (* TODO: pose problème avec faut axiome de comment *)
             if Hashtbl.find uniq_rule e.e && g_val < max_depth then begin
                 Log.L.info (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
+                let nt_inj_g,word = quotient e in
+                print_endline ("Fuzzed word: "^(string_of_word (Option.get word)));
                 (* compute the non-trivial grammar and avoid some characters *)
-                let nt_inj_g = if origin=INDUCTION then Clean.clean (make_non_trivial_grammar (fst (quotient e)) par) else fst (quotient e) in
+(*                let nt_inj_g = if origin=INDUCTION then Clean.clean (make_non_trivial_grammar (fst (quotient e)) par) else fst (quotient e) in*u)
                 (* Grammar_io.export_bnf "out.bnf" nt_inj_g; *)
                 (* call the fuzzer/oracle with this grammar *)
-                let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle in
+                let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle ini*)
+                let status = oracle (Option.map string_of_word word) in
                 if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
                     Log.L.info (fun m -> m "Invalid");
                     set_node_color_in_graph e "crimson";
@@ -171,7 +180,7 @@ let search (fuzzer_oracle: grammar -> Oracle.oracle_status) (unclean_g: grammar)
         g.rules |> List.filter (fun r -> List.length r.right_part = 0) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in
     let inj = match start with
         | Some l -> l
-        | None -> get_all_symbols g |> List.filter (fun e -> e@@g.rules |> fuzzer_oracle |> (=) Oracle.No_error) in
+        | None -> failwith "nope" (*get_all_symbols g |> List.filter (fun e -> e@@g.rules |> fuzzer_oracle |> (=) Oracle.No_error)*) in
     let inj = match List.mem (Terminal "") inj with
         | true -> (get_epsilon_possible_symbols unclean_g) @ (List.filter ((<>) (Terminal "")) inj)
         | false -> inj in

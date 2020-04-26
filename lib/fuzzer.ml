@@ -60,7 +60,7 @@ let fuzzer (max_depth: int) (values: (element, string) Hashtbl.t option) (goal: 
         else begin
             let usable_rules = List.filter (fun r -> List.for_all (fun s -> is_terminal s || Hashtbl.mem best_rule s) r.right_part) original_rules in
             List.iter memorize_best_rule (List.sort compare_rule usable_rules);
-            if List.compare_lengths usable_rules original_rules = 0 then (); (* necessary is unreachable *)
+            if usable_rules = [] then (); (* necessary is unreachable *)
             (update_best_rule [@tailcall]) necessary (List.filter (fun r -> not (Hashtbl.mem best_rule r.left_symbol)) original_rules)
         end in
 

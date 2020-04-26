@@ -11,12 +11,9 @@ type oracle_status = Oracle.oracle_status
 
 
 let search ?(subst: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) (oracle: string option -> oracle_status) (g: grammar) (goal: element) (start: element list) : grammar option =
-    let fuzzer_oracle () : (grammar -> Oracle.oracle_status) =
-        fun g -> g |> Fuzzer.fuzzer 0 subst (Some goal) forbidden_chars |> Option.map Grammar.string_of_word |> oracle in
-
     let qgraph_channel = Option.map open_out qgraph_fname in
     let h_fname = ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^".prt") in
-    Option.map Grammar.grammar_of_ext_grammar (Inference.search (fuzzer_oracle ()) g goal (Some start) max_depth max_steps sgraph_fname qgraph_channel h_fname)
+    Option.map Grammar.grammar_of_ext_grammar (Inference.search oracle g goal (Some start) max_depth max_steps sgraph_fname qgraph_channel h_fname)
 
 let make_oracle_from_script ?(timeout: float option = Some 5.) (fname: string) = Oracle.oracle_mem_from_script timeout fname
 
