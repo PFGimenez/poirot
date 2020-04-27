@@ -11,12 +11,12 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 
 let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) : ext_grammar option =
     Log.L.info (fun m -> m "Clean grammar…");
-    let g = Clean.clean_grammar unclean_g in (* clean is necessary *)
+    let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
 
-    let g_quotient = Grammar.add_comment g "--" in
-    let g = g_quotient.axiom @@ ((g_quotient.axiom --> [g.axiom])::g.rules) in
-    print_endline "Inference grammar:";
-    print_endline (string_of_grammar g);
+    let g_quotient = Grammar.add_comment g_non_comment "--" in
+    let g = g_quotient.axiom @@ ((g_quotient.axiom --> [g_non_comment.axiom])::(g_quotient.axiom --> [g_non_comment.axiom])::g_non_comment.rules) in (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
+    (* print_endline "Inference grammar:"; *)
+    (* print_endline (string_of_grammar g); *)
     let quotient = Quotient.quotient_mem g_quotient (Some goal) None qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (ext_element, int) Hashtbl.t =
@@ -48,10 +48,13 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
     let split (e: ext_element) (original_rule: rule) : (ext_element * ext_element) list =
-        let rec split_aux (prefix : element list) (acc: (ext_element * ext_element) list) (rhs: part) : (ext_element * ext_element) list = match rhs with
+        let rec split_aux (prefix : element list) (acc: (ext_element * ext_element) list) (rhs: part) : (ext_element * ext_element) list =
+            (* print_endline ("Iter "^(string_of_part prefix)^" "^(string_of_int (List.length acc))^" "^(string_of_part rhs)); *)
+            match rhs with
         | [] -> acc
         | t::q when t=e.e -> (split_aux [@tailcall]) (t::prefix) (({pf=prefix;e=original_rule.left_symbol;sf=q}, {pf=e.pf@prefix;e=original_rule.left_symbol;sf=e.sf@q})::acc) q
         | t::q -> (split_aux [@tailcall]) (t::prefix) acc q in
+        (* print_endline ("split de "^(string_of_ext_element e)^" avec "^(string_of_rule original_rule)); *)
     split_aux [] [] original_rule.right_part in
 
     let is_reachable_mem (par: element option) (e: ext_element) : bool =
@@ -94,9 +97,11 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         | _ -> 1 in
 
     (* construct the new ext_elements (the neighborhood) *)
-    let build_ext_elements (e: ext_element) : (ext_element* ext_element) list =
+    let build_ext_elements (e: ext_element) : (ext_element * ext_element) list =
+        (* print_endline "Rules built ext elements"; *)
+        (* print_endline (string_of_grammar g); *)
         g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e) |> List.flatten in
-(*        List.iter (Grammar_io.add_edge_in_graph graph_channel "" e) new_elems;*)
+        (* print_endline ("Children: "^(string_of_ext_part (fst (List.split new_e)))); *)
 
     (* add new elements to the open set *)
     let add_in_openset (allow_derivation: bool) (g_val: int) (null_h: bool) (origin: node_origin) (par: ext_element) (openset: node list) : node list =
@@ -105,9 +110,13 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             if origin=INDUCTION then
                 par
                 |> build_ext_elements
+                (* |> List.map (fun e -> print_endline ("A:"^(string_of_ext_element (fst e)));e) *)
                 |> List.rev_map (fun (eh, e: ext_element * ext_element) : node -> {g_val;h_val=get_heuristic eh par.e;e=e;par=par;origin=INDUCTION})
+                (* |> List.map (fun x -> print_endline ("B:"^(string_of_ext_element (x.e)^" "^(string_of_int x.h_val)));x) *)
                 |> List.filter (fun {h_val;_} -> h_val <> inf)
+                (* |> List.map (fun x -> print_endline ("C:"^(string_of_ext_element (x.e)));x) *)
                 |> List.sort compare_with_score
+                (* |> List.map (fun x -> print_endline ("D:"^(string_of_ext_element (x.e)));x) *)
                 |> List.merge compare_with_score openset
             else openset in
         let openset =
@@ -142,11 +151,11 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             (* now it is visited *)
             Hashtbl.add closedset e ();
             (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
-            (* TODO: pose problème avec faut axiome de comment *)
-            if Hashtbl.find uniq_rule e.e && g_val < max_depth then begin
+            (* TODO: pose problème avec faux axiome de comment ? *)
+(*            if Hashtbl.find uniq_rule e.e && g_val < max_depth then begin
                 Log.L.info (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
-            end else begin
+            end else*) begin
                 let nt_inj_g,word = quotient e in
                 print_endline ("Fuzzed word: "^(string_of_word (Option.get word)));
                 (* compute the non-trivial grammar and avoid some characters *)
@@ -164,6 +173,9 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar nt_inj_g);*)
                     Some (Clean.clean nt_inj_g)
+                end else if step = max_steps then begin (* the end *)
+                    Log.L.info (fun m -> m "Steps limit reached");
+                    None
                 end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
                     Log.L.info (fun m -> m "Depth max");
                     set_node_color_in_graph e "orange";

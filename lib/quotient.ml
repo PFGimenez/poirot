@@ -53,16 +53,16 @@ let quotient_mem (g: grammar) (goal_elem: element option) (values: (element, str
             if usable_rules = [] then reached_sym (* the algorithm is done *)
             else begin
                 List.iter memorize_best_rule (List.sort compare_ext_rule usable_rules);
-                (update_words_and_useless_aux [@tailcall]) ((List.map lhs_of_ext_rule usable_rules)@reached_sym) (List.filter (fun r -> not (Hashtbl.mem words r.ext_left_symbol)) original_rules)
+                (update_words_and_useless_aux [@tailcall]) ((List.rev_map lhs_of_ext_rule usable_rules)@reached_sym) (List.filter (fun r -> not (Hashtbl.mem words r.ext_left_symbol)) original_rules)
             end in
         let reached = update_words_and_useless_aux [] original_rules in
         (* unreachable symbols are useless *)
-        original_rules |> List.map lhs_of_ext_rule |> List.filter (fun e -> not (List.mem e reached)) |> (*List.map (fun e -> print_endline ("Useless: "^(string_of_ext_element e));e) |>*) List.iter set_useless;
+        original_rules |> List.rev_map lhs_of_ext_rule |> List.filter (fun e -> not (List.mem e reached)) |> (*List.map (fun e -> print_endline ("Useless: "^(string_of_ext_element e));e) |>*) List.iter set_useless;
         reached in
 
     (* Get the set of rules of a list of ext_element. No reverse *)
     let get_all_rules (elist: ext_element list) : ext_rule list =
-        elist |> List.map (fun e -> List.map (fun rhs -> e ---> rhs) (Hashtbl.find mem e)) |> List.concat in
+        elist |> List.rev_map (fun e -> List.rev_map (fun rhs -> e ---> rhs) (Hashtbl.find mem e)) |> List.concat in
 
     (* construct a grammar, given an axiom, from the memory *)
     let grammar_of_mem (axiom : ext_element) : ext_grammar =
@@ -181,7 +181,7 @@ let quotient_mem (g: grammar) (goal_elem: element option) (values: (element, str
                     assert (List.for_all is_processed prev_lhs_to_quotient);
                     (*List.iter (fun e -> print_endline (string_of_ext_element e)) prev_lhs_to_quotient;*)
                     if Option.is_some graph_channel then begin
-                        let new_elems = List.map (fun {pf;e;sf} -> {pf=prefix::pf;e=e;sf=sf}) prev_lhs_to_quotient in
+                        let new_elems = List.rev_map (fun {pf;e;sf} -> {pf=prefix::pf;e=e;sf=sf}) prev_lhs_to_quotient in
                         List.iter (fun e -> Grammar_io.add_edge_in_graph graph_channel "" new_lhs (reverse_ext_elem sd e)) new_elems;
                     end;
                     (*List.iter (fun p -> print_endline (string_of_ext_rule (new_lhs ---> p))) (Hashtbl.find mem new_lhs);*)
@@ -271,7 +271,8 @@ let quotient_mem (g: grammar) (goal_elem: element option) (values: (element, str
         (* do we have a words saved for the start of the suffix ? *)
         | t::q,_ when Hashtbl.mem words t -> (fuzzer_minimize [@tailcall]) goal_rules ((List.rev (Hashtbl.find words t))@word_prefix) q
         (* apply the best rule *)
-        | t::q,_ -> failwith ("No words?? "^(string_of_ext_element t)) (*;(fuzzer_minimize [@tailcall]) goal_rules word_prefix ((Hashtbl.find best_rule t)@q)*) in
+        | _ -> failwith "No words ?" in
+(*        | t::q,_ -> failwith ("No words?? "^(string_of_ext_element t)) (*;(fuzzer_minimize [@tailcall]) goal_rules word_prefix ((Hashtbl.find best_rule t)@q)*) in*)
 
     let rec has_new (seen: ext_element list) (p: ext_element list) : bool = match p with
         | [] -> false
