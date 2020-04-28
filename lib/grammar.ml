@@ -92,11 +92,12 @@ let is_reachable (g: grammar) (s: element) (start: element) : bool =
 let add_comment (g: grammar) (s: string) : grammar =
     let new_axiom = Nonterminal "poirot_axiom_for_comment"
     and new_nterm = Nonterminal "poirot_nonterminal_comment" in
-    let new_rules = List.map (fun e -> new_nterm --> [e;Terminal s;new_nterm]) (get_all_symbols g) in
-    let new_rules = (new_axiom --> [g.axiom])::(new_axiom --> [g.axiom; new_nterm])::(new_nterm --> [])::(new_rules@g.rules) in
+    let new_rules = List.map (fun e -> new_nterm --> [e;new_nterm]) (get_all_symbols g) in
+    let new_rules = (new_axiom --> [g.axiom])::(new_axiom --> [g.axiom; Terminal s; new_nterm])::(new_nterm --> [])::(new_rules@g.rules) in
     new_axiom@@new_rules
 
 (* tail-recursive *)
+(* TODO: inutilisé ? *)
 (* build all the possible one-step derivation of part p in the grammar g *)
 let build_derivation (g: grammar) (p: part) : (rule * part) list =
     let rec build_derivation_aux (sofar: part) (acc: (rule * part) list) (p: part) : (rule * part) list = match p with

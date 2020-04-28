@@ -9,15 +9,15 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) : ext_grammar option =
+let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) : (ext_grammar * string) option =
     Log.L.info (fun m -> m "Clean grammar…");
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
 
-    let g_quotient = Grammar.add_comment g_non_comment "--" in
-    let g = g_quotient.axiom @@ ((g_quotient.axiom --> [g_non_comment.axiom])::(g_quotient.axiom --> [g_non_comment.axiom])::g_non_comment.rules) in (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
+    let g_comment = Grammar.add_comment g_non_comment "--" in
+    let g = g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules) in (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
     (* print_endline "Inference grammar:"; *)
     (* print_endline (string_of_grammar g); *)
-    let quotient = Quotient.quotient_mem g_quotient (Some goal) None qgraph_channel
+    let quotient = Quotient.quotient_mem g (Some goal) None qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (ext_element, int) Hashtbl.t =
         try Marshal.from_channel (open_in_bin h_fname)
@@ -133,7 +133,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         openset in
 
     (* core algorithm : an A* algorithm *)
-    let rec search_aux (closedset: (ext_element, unit) Hashtbl.t) (step: int) (openset: node list) : ext_grammar option = match openset with
+    let rec search_aux (closedset: (ext_element, unit) Hashtbl.t) (step: int) (openset: node list) : (ext_grammar * string) option = match openset with
     | [] -> None (* openset is empty : there is no way *)
     | {g_val;h_val;e;par;origin}::q ->
         Log.L.info (fun m -> m "Search %d (queue: %d): %s" step (List.length q) (string_of_ext_element e));
@@ -157,7 +157,8 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else*) begin
                 let nt_inj_g,word = quotient e in
-                print_endline ("Fuzzed word: "^(string_of_word (Option.get word)));
+                let word_str = string_of_word (Option.get word) in (* there is always a word as the trivial injection always works *)
+                print_endline ("Fuzzed word: "^word_str);
                 (* compute the non-trivial grammar and avoid some characters *)
 (*                let nt_inj_g = if origin=INDUCTION then Clean.clean (make_non_trivial_grammar (fst (quotient e)) par) else fst (quotient e) in*u)
                 (* Grammar_io.export_bnf "out.bnf" nt_inj_g; *)
@@ -172,7 +173,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar nt_inj_g);*)
-                    Some (Clean.clean nt_inj_g)
+                    Some (Clean.clean nt_inj_g, word_str)
                 end else if step = max_steps then begin (* the end *)
                     Log.L.info (fun m -> m "Steps limit reached");
                     None
@@ -203,7 +204,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         let result = find_start g goal inj in
         if result <> None then begin
             Log.L.info (fun m -> m "Injection directly found!");
-            Option.map (fun e -> ext_grammar_of_grammar (e@@g.rules)) result
+            Some (ext_grammar_of_grammar ((Option.get result)@@g.rules), "") (* TODO word *)
         end
         else begin
             (* the injection token can't reach the goal *)

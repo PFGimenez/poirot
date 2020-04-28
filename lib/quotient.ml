@@ -25,7 +25,11 @@ let memorize_best_rule (r: ext_rule) : unit =
         (* all the prerequisite for computing the word are already computed ! *)
     end
 
-let quotient_mem (g: grammar) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) (*(verbose: bool)*): ext_element -> ext_grammar * (part option)  =
+let quotient_mem (g_initial: grammar) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) (*(verbose: bool)*): ext_element -> ext_grammar * (part option)  =
+
+    let g = Grammar.add_comment g_initial "--" in
+    let g_initial = g.axiom @@ ((g.axiom --> [g_initial.axiom])::(g.axiom --> [g_initial.axiom])::g_initial.rules) in (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
+
     (* the grammar must be clean ! *)
     let ext_g : ext_grammar = Clean.clean (ext_grammar_of_grammar g) in
     let goal = Option.map ext_element_of_element goal_elem in
@@ -145,8 +149,13 @@ let quotient_mem (g: grammar) (goal_elem: element option) (values: (element, str
 (*    List.iter (fun r -> add_rule_in_mem Left r.ext_left_symbol r.ext_right_part) ext_g.ext_rules;*)
     replace_rules_in_mem ext_g.ext_rules;
     ignore (update_words_and_useless ext_g.ext_rules);
+
     (* the base grammar is usable *)
 (*    ext_g.ext_rules |> List.rev_map (fun r -> r.ext_left_symbol::r.ext_right_part) |> List.flatten |> List.iter (fun e -> Hashtbl.add status e Processed);*)
+    let injg = grammar_of_mem {pf=[];e=Nonterminal "poirot_axiom_for_comment";sf=[]} in
+    print_endline "Grammar 3:";
+    print_endline (string_of_ext_grammar injg);
+
 
     (* apply a left quotient of a single rule with a prefix that is a single element *)
     let quotient_by_one_element (sd: side) (pf: element) (new_lhs: ext_element) (r: ext_part) : ext_element option =
@@ -285,19 +294,19 @@ let quotient_mem (g: grammar) (goal_elem: element option) (values: (element, str
         let rec build_derivation_aux (sofar: ext_part) (acc: (ext_rule * ext_part) list) (p: ext_part) : (ext_rule * ext_part) list = match p with
             | [] -> acc
             | t::q when is_ext_element_terminal t -> (build_derivation_aux [@tailcall]) (t::sofar) acc q
-            | t::q-> let new_parts = Hashtbl.find mem t |> List.rev_map (fun rhs -> (t--->rhs),(List.rev sofar)@rhs@q) in
+            | t::q-> let rhs = match t with
+                | {pf;e;sf} when e=(Nonterminal "poirot_axiom_for_comment") -> [[{pf;e=g_initial.axiom;sf=[]}]]
+                | _ -> Hashtbl.find mem t in
+                let new_parts = rhs |> List.rev_map (fun rhs -> (t--->rhs),(List.rev sofar)@rhs@q) in
 (*                    let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in*)
                 (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
         build_derivation_aux [] [] p in
 
-    (* get a derivation of ext_element with the "biggest" rule *)
-    let get_first_derivation (e: ext_element) : ext_element list =
-        (List.hd (List.sort compare_ext_rule (get_all_rules [e]))).ext_right_part in
-
+    (* find a path (a list of rule) to produce, and an empty list if there is no path *)
     let rec find_path_to_goal_aux (seen: ext_element list) (queue : (ext_part * ext_rule list) list) : ext_rule list =
         assert (goal <> None);
         match queue with
-        | [] -> assert false (* we know there is a path since the goal is reachable ! *)
+        | [] -> [] (* no path *)
         | (form,path)::_ when List.mem (Option.get goal) form -> List.rev path
         | (form,_)::q when not (has_new seen form) -> (find_path_to_goal_aux [@tailcall]) seen q
         | (form,path)::q -> let new_items = List.map (fun (r,p) -> (p,r::path)) (build_derivation form) in
@@ -307,20 +316,9 @@ let quotient_mem (g: grammar) (goal_elem: element option) (values: (element, str
         find_path_to_goal_aux [] [([axiom],[])]
     in
 
-    let seen : (ext_element,unit) Hashtbl.t = Hashtbl.create 500 in
-
-    (* is the element s reachable in the grammar g from the element start ? *)
-    let is_reachable (s: ext_element) (start: ext_element) : bool =
-        let rec is_reachable_aux (queue: ext_element list) : bool = match queue with
-            | [] -> false
-            | t::_ when t=s -> true
-            | t::q when (is_ext_element_terminal t || Hashtbl.mem seen t) -> (is_reachable_aux [@tailcall]) q
-            | t::q ->
-                    let new_elems = List.concat (Hashtbl.find mem t) in
-                    Hashtbl.add seen t ();
-                    (is_reachable_aux [@tailcall]) (q@new_elems) in
-        Hashtbl.clear seen;
-        is_reachable_aux [start] in
+    (* get a derivation of ext_element with the "biggest" rule *)
+    let get_first_derivation (e: ext_element) : ext_element list =
+        (List.hd (List.sort compare_ext_rule (get_all_rules [e]))).ext_right_part in
 
     fun (e: ext_element) : (ext_grammar * (part option)) ->
         (* the case when e is terminal is handled separately *)
@@ -344,12 +342,10 @@ let quotient_mem (g: grammar) (goal_elem: element option) (values: (element, str
             (* print_endline (string_of_ext_grammar injg); *)
 
             if is_useless e then (injg,None)
-            else
-                if Option.is_some goal && is_reachable (Option.get goal) e then begin
-                    Log.L.debug (fun m -> m "Fuzzing with goal");
-                    (injg, Some (fuzzer_minimize (find_path_to_goal e) [] [e]))
-                end else begin
-                    Log.L.debug (fun m -> m "Fuzzing");
-                    (injg, Some (fuzzer_minimize [] [] (get_first_derivation e)))
-                end
+            else begin
+                Log.L.debug (fun m -> m "Fuzzing");
+                match find_path_to_goal e with
+                | [] -> (injg, Some (fuzzer_minimize [] [] (get_first_derivation e)))
+                | l -> (injg, Some (fuzzer_minimize (find_path_to_goal e) [] [e]))
+            end
         end

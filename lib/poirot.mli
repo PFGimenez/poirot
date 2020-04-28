@@ -26,7 +26,7 @@ type oracle_status
  @param sgraph_fname (optional, for debug) export the search graph in graphviz dot format.
  @param qgraph_fname (optional, for debug) export the quotient graph in graphviz dot format.
  *)
-val search : ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?max_steps:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> (string option -> oracle_status) -> grammar -> element -> element list -> grammar option
+val search : ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?max_steps:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> (string option -> oracle_status) -> grammar -> element -> element list -> (grammar * string) option
 
 (** [quotient g left_quotient right_quotient] returns the grammar [g] after a left quotient by [left_quotient] and a right quotient by [right_quotient], as well as an word of this language. [left_quotient] and [right_quotient] can contain nonterminals or be empty. *)
 val quotient : ?qgraph_fname: string option -> grammar -> element list -> element list -> grammar * (string option)
