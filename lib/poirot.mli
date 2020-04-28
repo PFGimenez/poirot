@@ -31,9 +31,6 @@ val search : ?oneline_comment: string option -> ?subst:(element,string) Hashtbl.
 (** [quotient g left_quotient right_quotient] returns the grammar [g] after a left quotient by [left_quotient] and a right quotient by [right_quotient], as well as an word of this language. [left_quotient] and [right_quotient] can contain nonterminals or be empty. *)
 val quotient : ?qgraph_fname: string option -> grammar -> element list -> element list -> grammar * (string option)
 
-(** [fuzzer ~complexity:10 ~goal:e g] returns a word from [g]. If [complexity] is high, longer words should be generated. If [complexity = 0], the returned word is deterministic (always the same) and should be short. If a goal is specified, then it will be included in the generated word. Beware: this is a primitive fuzzer. *)
-val fuzzer : ?subst:(element,string) Hashtbl.t option -> ?forbidden_chars: char list -> ?complexity:int -> ?goal:element option -> grammar -> string option
-
 (** {1 Oracle functions} *)
 
 (** [make_oracle_from_script filename] returns an oracle based on the script [filename]. The script must return error code 0 if the injection is lexically correct, 1 otherwise. *)

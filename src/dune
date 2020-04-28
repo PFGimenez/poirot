@@ -11,12 +11,6 @@
     (libraries poirot))
 
 (executable
-    (name fuzzer_poirot)
-    (public_name fuzzer_poirot)
-    (modules fuzzer_poirot)
-    (libraries poirot logs.fmt))
-
-(executable
     (name bnf2antlr4)
     (public_name bnf2antlr4)
     (modules bnf2antlr4)

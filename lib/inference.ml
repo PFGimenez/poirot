@@ -26,6 +26,17 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         try Marshal.from_channel (open_in_bin h_fname)
         with _ -> Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
     Log.L.info (fun m -> m "Imported heuristic values from %s" h_fname);
+
+    (* tail-recursive *)
+    (* build all the possible one-step derivation of part p in the grammar g *)
+    let build_derivation (g: grammar) (p: part) : (rule * part) list =
+        let rec build_derivation_aux (sofar: part) (acc: (rule * part) list) (p: part) : (rule * part) list = match p with
+            | [] -> acc
+            | (Terminal _ as t)::q -> (build_derivation_aux [@tailcall]) (t::sofar) acc q
+            | (Nonterminal _ as t)::q-> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in
+                (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
+        build_derivation_aux [] [] p in
+
     (*if verbose then (Hashtbl.iter (fun k v -> print_endline ((string_of_ext_element k)^": "^(string_of_int v))) heuristic);*)
     let reachable : (ext_element, bool) Hashtbl.t = Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
     let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in

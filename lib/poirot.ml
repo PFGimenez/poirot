@@ -31,9 +31,6 @@ let quotient ?(qgraph_fname: string option = None) (g: grammar) (prefix: element
     Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
     (g2,Option.map Grammar.string_of_part inj)
 
-let fuzzer ?(subst: (element,string) Hashtbl.t option = None) ?(forbidden_chars: char list = []) ?(complexity: int = 10) ?(goal: element option = None) (g: grammar) : string option =
-    Option.map Grammar.string_of_word (Fuzzer.fuzzer complexity subst goal forbidden_chars g)
-
 let apply_and_simplify (simplify: bool) (g: grammar) (f: grammar -> grammar) : grammar =
     if simplify then Clean.simplify (f g) else (f g)
 

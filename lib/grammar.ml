@@ -96,17 +96,6 @@ let add_comment (g: grammar) (s: string) : grammar =
     let new_rules = (new_axiom --> [g.axiom])::(new_axiom --> [g.axiom; Terminal s; new_nterm])::(new_nterm --> [])::(new_rules@g.rules) in
     new_axiom@@new_rules
 
-(* tail-recursive *)
-(* TODO: inutilisé ? *)
-(* build all the possible one-step derivation of part p in the grammar g *)
-let build_derivation (g: grammar) (p: part) : (rule * part) list =
-    let rec build_derivation_aux (sofar: part) (acc: (rule * part) list) (p: part) : (rule * part) list = match p with
-        | [] -> acc
-        | (Terminal _ as t)::q -> (build_derivation_aux [@tailcall]) (t::sofar) acc q
-        | (Nonterminal _ as t)::q-> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in
-            (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
-    build_derivation_aux [] [] p
-
 (* get the list of token that can directly produce "axiom" *)
 let symbols_from_parents (g: grammar) (axiom : element) : element list =
     g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare
