@@ -12,6 +12,7 @@ let ()=
     and subst = ref None
     and goal = ref None
     and start = ref None
+    and oneline_comment = ref None
     and lowercase = ref false
     and uppercase = ref false
     and simplify = ref false
@@ -37,6 +38,7 @@ let ()=
         ("-oracle_timeout",   Arg.Set_float oracle_timeout,    "Set the timeout to oracle calls (in seconds, -1 for no timeout)");
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
+        ("-oneline_comment",     Arg.String (fun s -> oneline_comment := Some s),    "The string that starts one-line comment");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
         ("-lowercase",  Arg.Set lowercase,     "Convert all terminals to lowercase");
         ("-uppercase",  Arg.Set uppercase,     "Convert all terminals to uppercase");
@@ -63,8 +65,8 @@ let ()=
 
         print_endline "Start searching…";
         let s = Option.map Poirot.read_subst !subst in
-        match (Poirot.search ~subst:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle grammar goal start, !injg_fname) with
+        match (Poirot.search ~oneline_comment:!oneline_comment ~subst:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle grammar goal start, !injg_fname) with
         | Some (gram, word), Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^word)
-        | Some (gram, word), _ -> print_endline ("Injection: "^word)
+        | Some (_, word), _ -> print_endline ("Injection: "^word)
         | None, _ -> print_endline "No grammar found";
     else print_endline usage

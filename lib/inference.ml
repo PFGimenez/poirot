@@ -9,15 +9,18 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) : (ext_grammar * string) option =
+let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (oneline_comment: string option) (subst: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) (forbidden: char list) : (ext_grammar * string) option =
     Log.L.info (fun m -> m "Clean grammar…");
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
 
-    let g_comment = Grammar.add_comment g_non_comment "--" in
-    let g = g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules) in (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
+    let g = match oneline_comment with
+    | Some s -> let g_comment = Grammar.add_comment g_non_comment s in
+                g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules) (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
+    | None -> g_non_comment in
+
     (* print_endline "Inference grammar:"; *)
     (* print_endline (string_of_grammar g); *)
-    let quotient = Quotient.quotient_mem g (Some goal) None qgraph_channel
+    let quotient = Quotient.quotient_mem g forbidden subst (Some goal) None qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (ext_element, int) Hashtbl.t =
         try Marshal.from_channel (open_in_bin h_fname)
@@ -152,18 +155,15 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             Hashtbl.add closedset e ();
             (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
             (* TODO: pose problème avec faux axiome de comment ? *)
-(*            if Hashtbl.find uniq_rule e.e && g_val < max_depth then begin
+            if Hashtbl.find uniq_rule e.e && g_val < max_depth then begin
                 Log.L.info (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
-            end else*) begin
+            end else begin
                 let nt_inj_g,word = quotient e in
                 let word_str = string_of_word (Option.get word) in (* there is always a word as the trivial injection always works *)
-                print_endline ("Fuzzed word: "^word_str);
-                (* compute the non-trivial grammar and avoid some characters *)
-(*                let nt_inj_g = if origin=INDUCTION then Clean.clean (make_non_trivial_grammar (fst (quotient e)) par) else fst (quotient e) in*u)
+                (* print_endline ("Fuzzed word: "^word_str); *)
                 (* Grammar_io.export_bnf "out.bnf" nt_inj_g; *)
                 (* call the fuzzer/oracle with this grammar *)
-                let status = nt_inj_g |> grammar_of_ext_grammar |> fuzzer_oracle ini*)
                 let status = oracle (Option.map string_of_word word) in
                 if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
                     Log.L.info (fun m -> m "Invalid");

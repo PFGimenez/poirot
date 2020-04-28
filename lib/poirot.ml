@@ -10,10 +10,10 @@ type oracle_status = Oracle.oracle_status
 *)
 
 
-let search ?(subst: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) (oracle: string option -> oracle_status) (g: grammar) (goal: element) (start: element list) : (grammar * string) option =
+let search ?(oneline_comment: string option = None) ?(subst: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) (oracle: string option -> oracle_status) (g: grammar) (goal: element) (start: element list) : (grammar * string) option =
     let qgraph_channel = Option.map open_out qgraph_fname in
     let h_fname = ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^".prt") in
-    match Inference.search oracle g goal (Some start) max_depth max_steps sgraph_fname qgraph_channel h_fname with
+    match Inference.search oracle g goal (Some start) oneline_comment subst max_depth max_steps sgraph_fname qgraph_channel h_fname forbidden_chars with
     | None -> None
     | Some (g,w) -> Some ((Grammar.grammar_of_ext_grammar g), w)
 
@@ -26,7 +26,7 @@ let read_subst : string -> (element,string) Hashtbl.t = Grammar_io.read_subst
 let quotient ?(qgraph_fname: string option = None) (g: grammar) (prefix: element list) (suffix: element list) : (grammar * string option) =
     let qgraph_channel = Option.map open_out qgraph_fname in
     Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
-    let g,inj = Quotient.quotient_mem (Clean.clean_grammar g) None None qgraph_channel {pf=List.rev prefix;e=g.axiom;sf=suffix} in
+    let g,inj = Quotient.quotient_mem (Clean.clean_grammar g) [] None None None qgraph_channel {pf=List.rev prefix;e=g.axiom;sf=suffix} in
     let g2 = Grammar.grammar_of_ext_grammar (Clean.clean (g)) in
     Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
     (g2,Option.map Grammar.string_of_part inj)

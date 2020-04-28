@@ -17,15 +17,7 @@ let compare_ext_rule (r2: ext_rule) (r1: ext_rule) : int =
         else (Hashtbl.hash r2.ext_right_part) - (Hashtbl.hash r1.ext_right_part) (* to be deterministic we want to compare any couple *)
     end
 
-let memorize_best_rule (r: ext_rule) : unit =
-    if not (Hashtbl.mem words r.ext_left_symbol) then begin
-(*        Hashtbl.add best_rule r.ext_left_symbol r.ext_right_part;*)
-        (* the word is reserved so we can add it easily to the reversed prefix *)
-        r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else Hashtbl.find words e) |> List.concat |> (*(fun p -> print_endline ((string_of_ext_element r.ext_left_symbol)^": "^(string_of_word p));*) Hashtbl.add words r.ext_left_symbol
-        (* all the prerequisite for computing the word are already computed ! *)
-    end
-
-let quotient_mem (g_initial: grammar) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) (*(verbose: bool)*): ext_element -> ext_grammar * (part option)  =
+let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) (*(verbose: bool)*): ext_element -> ext_grammar * (part option)  =
 
     let g = Grammar.add_comment g_initial "--" in
     let g_initial = g.axiom @@ ((g.axiom --> [g_initial.axiom])::(g.axiom --> [g_initial.axiom])::g_initial.rules) in (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
@@ -50,13 +42,28 @@ let quotient_mem (g_initial: grammar) (goal_elem: element option) (values: (elem
 
     let set_color (c: string) (e: ext_element) : unit = Grammar_io.set_node_color_in_graph graph_channel e c in
 
+    let is_allowed (e: ext_element): bool = match e with
+        | {e=Terminal s;_} -> not (List.exists (String.contains s) forbidden)
+        | _ -> true in
+(*    let allowed_rules : ext_part list -> ext_part list = List.filter (List.for_all is_allowed) in*)
+
+    let update_words (r: ext_rule) : unit =
+        let lhs = r.ext_left_symbol in
+        if not (Hashtbl.mem words lhs) then begin
+            let w = match subst with
+                | Some hashtbl when lhs.pf=[] && lhs.sf=[] && Hashtbl.mem hashtbl lhs.e -> [Terminal (Hashtbl.find hashtbl lhs.e)]
+                | _ -> r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else Hashtbl.find words e) |> List.concat in (* all the prerequisite for computing the word are already computed ! *)
+            Hashtbl.add words lhs w
+        end in
+
+
     (* based on level decomposition *)
     let update_words_and_useless (original_rules: ext_rule list) : ext_element list =
         let rec update_words_and_useless_aux (reached_sym: ext_element list) (original_rules: ext_rule list) : ext_element list =
-            let usable_rules = List.filter (fun r -> List.for_all (fun s -> is_ext_element_terminal s || Hashtbl.mem words s) r.ext_right_part) original_rules in
+            let usable_rules = List.filter (fun r -> List.for_all (fun s -> (is_ext_element_terminal s || Hashtbl.mem words s) && is_allowed s) r.ext_right_part) original_rules in
             if usable_rules = [] then reached_sym (* the algorithm is done *)
             else begin
-                List.iter memorize_best_rule (List.sort compare_ext_rule usable_rules);
+                List.iter update_words (List.sort compare_ext_rule usable_rules);
                 (update_words_and_useless_aux [@tailcall]) ((List.rev_map lhs_of_ext_rule usable_rules)@reached_sym) (List.filter (fun r -> not (Hashtbl.mem words r.ext_left_symbol)) original_rules)
             end in
         let reached = update_words_and_useless_aux [] original_rules in
@@ -152,10 +159,6 @@ let quotient_mem (g_initial: grammar) (goal_elem: element option) (values: (elem
 
     (* the base grammar is usable *)
 (*    ext_g.ext_rules |> List.rev_map (fun r -> r.ext_left_symbol::r.ext_right_part) |> List.flatten |> List.iter (fun e -> Hashtbl.add status e Processed);*)
-    let injg = grammar_of_mem {pf=[];e=Nonterminal "poirot_axiom_for_comment";sf=[]} in
-    print_endline "Grammar 3:";
-    print_endline (string_of_ext_grammar injg);
-
 
     (* apply a left quotient of a single rule with a prefix that is a single element *)
     let quotient_by_one_element (sd: side) (pf: element) (new_lhs: ext_element) (r: ext_part) : ext_element option =
@@ -295,7 +298,7 @@ let quotient_mem (g_initial: grammar) (goal_elem: element option) (values: (elem
             | [] -> acc
             | t::q when is_ext_element_terminal t -> (build_derivation_aux [@tailcall]) (t::sofar) acc q
             | t::q-> let rhs = match t with
-                | {pf;e;sf} when e=(Nonterminal "poirot_axiom_for_comment") -> [[{pf;e=g_initial.axiom;sf=[]}]]
+                | {pf;e;_} when e=(Nonterminal "poirot_axiom_for_comment") -> [[{pf;e=g_initial.axiom;sf=[]}]]
                 | _ -> Hashtbl.find mem t in
                 let new_parts = rhs |> List.rev_map (fun rhs -> (t--->rhs),(List.rev sofar)@rhs@q) in
 (*                    let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in*)
@@ -346,6 +349,6 @@ let quotient_mem (g_initial: grammar) (goal_elem: element option) (values: (elem
                 Log.L.debug (fun m -> m "Fuzzing");
                 match find_path_to_goal e with
                 | [] -> (injg, Some (fuzzer_minimize [] [] (get_first_derivation e)))
-                | l -> (injg, Some (fuzzer_minimize (find_path_to_goal e) [] [e]))
+                | l -> (injg, Some (fuzzer_minimize l [] [e]))
             end
         end
