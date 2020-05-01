@@ -41,13 +41,13 @@ let handle_option (oracle : string -> oracle_status): string option -> oracle_st
     | Some inj -> oracle inj
 
 (* construct an oracle from a script *)
-let oracle_from_script (timeout: int option) (fname: string) (inj: string) : oracle_status =
+let oracle_from_script (timeout: float option) (fname: string) (inj: string) : oracle_status =
     let escape_char (c: char) : string = match c with
         | '\'' -> "'\"'\"'" (* in single quote string, only ' must be escaped *)
         | _ -> String.make 1 c in
     let esc_inj = (string_of_list "" "" escape_char (List.init (String.length inj) (String.get inj))) in
     let prefix = match timeout with
-        | Some n -> "timeout "^(string_of_int n)^" "
+        | Some n -> "timeout "^(string_of_float n)^" "
         | None -> "" in
     let cmd = match Logs.Src.level Log.poirotsrc with
         | Some Logs.Debug -> fname^" \'"^esc_inj^"\'"
@@ -62,4 +62,4 @@ let oracle_from_script (timeout: int option) (fname: string) (inj: string) : ora
 let oracle_mem (oracle: string -> oracle_status) : (string option -> oracle_status) = handle_option (oracle_mem oracle)
 
 (* construct an oracle from a script *)
-let oracle_mem_from_script (timeout: int option) (fname: string) : (string option -> oracle_status) = oracle_mem (oracle_from_script timeout fname)
+let oracle_mem_from_script (timeout: float option) (fname: string) : (string option -> oracle_status) = oracle_mem (oracle_from_script timeout fname)

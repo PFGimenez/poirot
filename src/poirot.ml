@@ -6,7 +6,7 @@ let ()=
     and injg_fname = ref None
     and max_depth = ref 10
     and max_steps = ref 1000
-    and oracle_timeout = ref (-1)
+    and oracle_timeout = ref (-1.)
     and grammar = ref None
     and oracle_fname = ref None
     and subst = ref None
@@ -34,7 +34,7 @@ let ()=
         ("-subst",      Arg.String (fun s -> subst := Some s),     "Filename of the substitutions configuration file");
         ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
         ("-maxsteps",   Arg.Set_int max_steps,    "Set the max steps search (default: "^(string_of_int !max_steps)^")");
-        ("-oracle_timeout",   Arg.Set_int oracle_timeout,    "Set the timeout to oracle calls (in seconds, -1 for no timeout)");
+        ("-oracle_timeout",   Arg.Set_float oracle_timeout,    "Set the timeout to oracle calls (in seconds, -1 for no timeout)");
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
@@ -48,8 +48,8 @@ let ()=
 
     if !grammar <> None && !oracle_fname <> None && !goal <> None  && !start <> None then
         let timeout = match !oracle_timeout with
-            | -1 -> None
-            | n when n > 0 -> Some n
+            | -1. -> None
+            | n when n > 0. -> Some n
             | _ -> failwith "Negative timeout !" in
         let grammar = Option.get !grammar
         and goal = Option.get !goal

@@ -37,7 +37,7 @@ val fuzzer : ?subst:(element,string) Hashtbl.t option -> ?forbidden_chars: char 
 (** {1 Oracle functions} *)
 
 (** [make_oracle_from_script filename] returns an oracle based on the script [filename]. The script must return error code 0 if the injection is lexically correct, 1 otherwise. *)
-val make_oracle_from_script : ?timeout: int option -> string -> (string option -> oracle_status)
+val make_oracle_from_script : ?timeout: float option -> string -> (string option -> oracle_status)
 
 (** [make_oracle_from_fun f] returns an oracle based on the function [f]. The function must return 0 if the injection is lexically correct, 1 otherwise. *)
 val make_oracle_from_fun : (string -> int) -> (string option -> oracle_status)
