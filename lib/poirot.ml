@@ -18,7 +18,7 @@ let search ?(subst: (element,string) Hashtbl.t option = None) ?(max_depth: int =
     let h_fname = ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^".prt") in
     Option.map Grammar.grammar_of_ext_grammar (Inference.search (fuzzer_oracle ()) g goal (Some start) max_depth max_steps sgraph_fname qgraph_channel h_fname)
 
-let make_oracle_from_script (fname: string) = Oracle.oracle_mem_from_script fname
+let make_oracle_from_script ?(timeout: int option = Some 5) (fname: string) = Oracle.oracle_mem_from_script timeout fname
 
 let make_oracle_from_fun (f: string -> int) = Oracle.oracle_mem (fun s -> Oracle.oracle_status_of_int (f s))
 

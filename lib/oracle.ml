@@ -16,6 +16,7 @@ let string_of_oracle_status (s: oracle_status) : string = match s with
 
 let oracle_status_of_int : int -> oracle_status = function
     | 0 -> No_error
+    | 124 -> Syntax_error (* timeout *)
     | 180 -> Syntax_error
 (*    | 181 -> Semantic_error*)
     | n -> Log.L.err (fun m -> m "Oracle failure: %d" n); raise Sys.Break
@@ -40,16 +41,19 @@ let handle_option (oracle : string -> oracle_status): string option -> oracle_st
     | Some inj -> oracle inj
 
 (* construct an oracle from a script *)
-let oracle_from_script (fname: string) (inj: string) : oracle_status =
+let oracle_from_script (timeout: int option) (fname: string) (inj: string) : oracle_status =
     let escape_char (c: char) : string = match c with
         | '\'' -> "'\"'\"'" (* in single quote string, only ' must be escaped *)
         | _ -> String.make 1 c in
     let esc_inj = (string_of_list "" "" escape_char (List.init (String.length inj) (String.get inj))) in
+    let prefix = match timeout with
+        | Some n -> "timeout "^(string_of_int n)^" "
+        | None -> "" in
     let cmd = match Logs.Src.level Log.poirotsrc with
         | Some Logs.Debug -> fname^" \'"^esc_inj^"\'"
         | _ -> fname^" \'"^esc_inj^"\' >/dev/null 2>&1" in
     Log.L.debug (fun m -> m "Call to oracle: %s." cmd);
-    let error_code = Sys.command cmd in
+    let error_code = Sys.command (prefix^cmd) in
     let answer = oracle_status_of_int error_code in
     Log.L.info (fun m -> m "Oracle answer to %s: %s" inj (string_of_oracle_status answer));
     answer
@@ -58,4 +62,4 @@ let oracle_from_script (fname: string) (inj: string) : oracle_status =
 let oracle_mem (oracle: string -> oracle_status) : (string option -> oracle_status) = handle_option (oracle_mem oracle)
 
 (* construct an oracle from a script *)
-let oracle_mem_from_script (fname: string) : (string option -> oracle_status) = oracle_mem (oracle_from_script fname)
+let oracle_mem_from_script (timeout: int option) (fname: string) : (string option -> oracle_status) = oracle_mem (oracle_from_script timeout fname)
