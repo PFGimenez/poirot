@@ -61,6 +61,7 @@ Here is the list of the options of `poirot`:
 - `-uppercase` Convert all terminals to uppercase.
 - `-simplify` If used with -lowercase or -uppercase, simplify the grammar.
 - `-verbose_lvl` Choose Poirot verbosity: debug, info, warning or error.
+- `-v` Print the version of Poirot.
 
 ## Substitution file
 
