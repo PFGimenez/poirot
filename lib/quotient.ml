@@ -219,8 +219,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
                     (*(print_endline " Already known";*) (quotient_symbols [@tailcall]) (nb_iter + 1) q
             else begin
                 let (base_lhs,sd,qu) = match lhs.pf,lhs.sf with
-                | [],[] -> assert false (* impossible : case verified just before *)
-                | ((tpf::qpf) as pf),sf when List.compare_lengths pf sf >= 0 -> ({pf=qpf;e=lhs.e;sf=sf},Left,tpf)
+                | ((tpf::qpf) as pf),sf when List.compare_lengths pf sf >= 0 -> ({pf=qpf;e=lhs.e;sf=sf},Left,tpf) (* we decompose the longest -fix *)
                 | _,[] -> assert false (* impossible because of the previous case *)
                 | pf,(tsf::qsf) -> ({pf=pf;e=lhs.e;sf=qsf},Right,tsf) in
                 if is_useless base_lhs then begin

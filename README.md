@@ -46,15 +46,31 @@ You can experiment with the more complex grammar `parenthesis` as well. Run:
 
 It will generate the injection `a])]])b([[([a`.
 
-## Injection grammar of white-box systems
+## Parameters
 
-If you know the query (i.e. the prefix and the suffix surrounding the injection point), you can directly use Poirot to get the grammar of the injection with the `quotient` function, export it to an ANTLR4 grammar, or ask directly Poirot to generate an injection containing some symbol by using the `fuzzer` function. White-box fuzzing is of course greatly faster than black-box fuzzing.
+Here is the list of the options of `poirot`:
 
-For example, you can run:
+- `-avoid` List of characters to avoid, if for example some characters are filtered.
+- `-subst` Filename of the substitutions configuration file (more information in the next section).
+- `-maxdepth` Set the max depth search (default: 10).
+- `-maxsteps` Set the max steps search (default: 1000).
+- `-sgraph` Save the search graph in dot format.
+- `-oneline_comment` The string that starts one-line comment. For example, use `-oneline_comment "--"` for SQL grammars.
+- `-injg` Export the injection grammar in ANTLR4 format.
+- `-lowercase` Convert all terminals to lowercase.
+- `-uppercase` Convert all terminals to uppercase.
+- `-simplify` If used with -lowercase or -uppercase, simplify the grammar.
+- `-verbose_lvl` Choose Poirot verbosity: debug, info, warning or error.
 
-    quotient_poirot -grammar bnf_grammars/toy/msg_exec.bnf -pf "'msg ' 'key' ' = '" -sf "' & ' 'key' ' = ' 'value'" -goal "Exe"
+## Substitution file
 
-It will generate the injection `value ; exec cmd ; msg key = value`.
+Substitution file are a way to add semantics to Poirot. It is a simple text file that associate string to nonterminal symbols so Poirot can use them during fuzzing. An example:
+
+```
+<column_name>=login
+<database_name>=db
+<table_name>=users
+```
 
 # Use the library in your own project
 

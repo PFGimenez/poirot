@@ -170,21 +170,23 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 Log.L.info (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
-                let nt_inj_g,word = quotient e in
+                let inj_g,word = quotient e in
+                (* print_endline "Grammar:"; *)
+                (* print_endline (string_of_ext_grammar inj_g); *)
                 let word_str = string_of_word (Option.get word) in (* there is always a word as the trivial injection always works *)
                 (* print_endline ("Fuzzed word: "^word_str); *)
-                (* Grammar_io.export_bnf "out.bnf" nt_inj_g; *)
+                (* Grammar_io.export_bnf "out.bnf" inj_g; *)
                 (* call the fuzzer/oracle with this grammar *)
                 let status = oracle (Option.map string_of_word word) in
                 if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
                     Log.L.info (fun m -> m "Invalid");
                     set_node_color_in_graph e "crimson";
                     (search_aux [@tailcall]) closedset (step + 1) q
-                end else if is_reachable (grammar_of_ext_grammar nt_inj_g) goal (full_element_of_ext_element nt_inj_g.ext_axiom) then begin (* the goal has been found ! *)
+                end else if is_reachable (grammar_of_ext_grammar inj_g) goal (full_element_of_ext_element inj_g.ext_axiom) then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
-    (*                if verbose then print_endline (string_of_ext_grammar nt_inj_g);*)
-                    Some (Clean.clean nt_inj_g, word_str)
+    (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)
+                    Some (Clean.clean inj_g, word_str)
                 end else if step = max_steps then begin (* the end *)
                     Log.L.info (fun m -> m "Steps limit reached");
                     None
