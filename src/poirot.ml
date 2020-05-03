@@ -1,5 +1,7 @@
 let explode s = List.init (String.length s) (String.get s)
 
+let version = "0.4"
+
 let ()=
     let graph_fname = ref None
     and qgraph_fname = ref None
@@ -44,10 +46,9 @@ let ()=
         ("-uppercase",  Arg.Set uppercase,     "Convert all terminals to uppercase");
         ("-simplify",   Arg.Set simplify,     "If used with -lowercase or -uppercase, simplify the grammar");
         ("-verbose_lvl",    Arg.String(set_verbose_lvl),     "Choose Poirot verbosity: debug, info, warning or error");
-        ("-v",    Arg.Unit (fun () -> print_endline "Poirot v0.4"),     "Show Poirot version")
+        ("-v",    Arg.Unit (fun () -> print_endline ("Poirot v"^version)),     "Show Poirot version")
     ] in
-    let usage = "Error: grammar, goal, start and oracle are necessary" in
-    Arg.parse speclist ignore usage;
+    Arg.parse speclist ignore ("Poirot v"^version);
 
     if !grammar <> None && !oracle_fname <> None && !goal <> None  && !start <> None then
         let timeout = match !oracle_timeout with
@@ -70,4 +71,4 @@ let ()=
         | Some (gram, word), Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^word)
         | Some (_, word), _ -> print_endline ("Injection: "^word)
         | None, _ -> print_endline "No grammar found";
-    else print_endline usage
+    else print_endline "Error: grammar, goal, start and oracle are necessary"
