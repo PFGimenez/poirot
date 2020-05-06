@@ -17,17 +17,17 @@ let make_oracle_from_fun (f: string -> int) = Oracle.oracle_mem (fun s -> Oracle
 
 let read_subst : string -> (element,string) Hashtbl.t = Grammar_io.read_subst
 
-let quotient ?(qgraph_fname: string option = None) (grammar_fname: string) (prefix: string) (suffix: string) (goal: element option) : (grammar * string option) =
+let quotient ?(oneline_comment: string option = None) ?(qgraph_fname: string option = None) (grammar_fname: string) (prefix: string) (suffix: string) (goal: element option) : (grammar * string option * bool) =
     let g = Grammar_io.read_bnf_grammar true grammar_fname in
     let explode s = List.init (String.length s) (fun i -> Grammar.Terminal (String.make 1 (String.get s i))) in
     let prefix = explode prefix
     and suffix = explode suffix in
     let qgraph_channel = Option.map open_out qgraph_fname in
     Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
-    let g,inj = Quotient.quotient_mem g [] None goal None qgraph_channel true {pf=List.rev prefix;e=g.axiom;sf=suffix} in
+    let g,inj,goal_reached = Quotient.quotient_mem g [] None goal None oneline_comment qgraph_channel true {pf=List.rev prefix;e=g.axiom;sf=suffix} in
     let g2 = Grammar.grammar_of_ext_grammar (Clean.clean g) in
     Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
-    (g2,Option.map Grammar.string_of_word inj)
+    (g2,Option.map Grammar.string_of_word inj,goal_reached)
 
 let apply_and_simplify (simplify: bool) (g: grammar) (f: grammar -> grammar) : grammar =
     if simplify then Clean.simplify (f g) else (f g)

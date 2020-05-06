@@ -31,8 +31,8 @@ val version : string
  *)
 val search : ?oneline_comment: string option -> ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?max_steps:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> (string option -> oracle_status) -> grammar -> element -> element list -> (grammar * string) option
 
-(** [quotient g_fname left_quotient right_quotient goal] returns the grammar in file [g_fname] after a left quotient by [left_quotient] and a right quotient by [right_quotient], as well as an word of this language. The word will contain the goal (if possible) if it is not None. The grammar must be in BNF format *)
-val quotient : ?qgraph_fname: string option -> string -> string -> string -> element option -> grammar * (string option)
+(** [quotient g_fname left_quotient right_quotient goal] returns the grammar in file [g_fname] after a left quotient by [left_quotient] and a right quotient by [right_quotient], as well as an word of this language. The word will contain the goal (if possible) if it is not None. The boolean returned tells whether the goal has been reached. The grammar must be in BNF format *)
+val quotient : ?oneline_comment: string option -> ?qgraph_fname: string option -> string -> string -> string -> element option -> grammar * (string option) * bool
 
 (** {1 Oracle functions} *)
 

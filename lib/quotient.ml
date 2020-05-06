@@ -13,14 +13,16 @@ let compare_ext_rule (r2: ext_rule) (r1: ext_rule) : int =
 
 let call_time = ref 0.
 
-let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) : bool -> ext_element -> ext_grammar * (part option)  =
+let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (oneline_comment: string option) (graph_channel: out_channel option) : bool -> ext_element -> ext_grammar * (part option) * bool  =
 
     let words : (ext_element, part) Hashtbl.t = Hashtbl.create 10000 in
     (* all the computed rules *)
     let mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 10000 in
 
-    let g = Grammar.add_comment g_initial "--" in
-    let g_initial = g.axiom @@ ((g.axiom --> [g_initial.axiom])::(g.axiom --> [g_initial.axiom])::g_initial.rules) in (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
+    let g_initial = match oneline_comment with
+        | None -> g_initial
+        | Some s -> let g = Grammar.add_comment g_initial s in
+                        g.axiom @@ ((g.axiom --> [g_initial.axiom])::(g.axiom --> [g_initial.axiom])::g_initial.rules) in (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
 
     let goal = Option.map ext_element_of_element goal_elem in
 
@@ -148,7 +150,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
         else new_rules in
 
     (* the grammar must be epsilon-free ! *)
-    let g_rules = remove_pf_sf_epsilon (List.sort_uniq compare (ext_grammar_of_grammar g).ext_rules) in
+    let g_rules = remove_pf_sf_epsilon (List.sort_uniq compare (ext_grammar_of_grammar g_initial).ext_rules) in
 
     (* we add the rules of the base grammar *)
     replace_rules_in_mem g_rules;
@@ -312,20 +314,20 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
     let get_first_derivation (e: ext_element) : ext_element list =
         (List.hd (List.sort compare_ext_rule (get_all_rules [e]))).ext_right_part in
 
-    fun (verbose: bool) (e: ext_element) : (ext_grammar * (part option)) ->
+    fun (verbose: bool) (e: ext_element) : (ext_grammar * (part option) * bool) ->
         (* the case when e is terminal is handled separately *)
         if is_ext_element_terminal e then begin
             (* the dummy axiom is only used when the regular axiom is terminal *)
             let da = {pf=[];e=Nonterminal("dummy_axiom");sf=[]} in
             (* derive epsilon *)
             if (e.pf=[e.e] && e.sf=[]) || (e.pf=[] && e.sf=[e.e]) then
-                (da@@@[da--->[]], Some [])
+                (da@@@[da--->[]], Some [], false)
             (* derive this terminal *)
             else if e.pf=[] && e.sf=[] then
-                (da@@@[da--->[e]], Some [e.e])
+                (da@@@[da--->[e]], Some [e.e], false)
             (* empty language *)
             else
-                (da@@@[], None)
+                (da@@@[], None, false)
         end else begin
             let start_time = Sys.time () in
             let nb_iter = quotient_symbols 0 [e] in
@@ -334,11 +336,11 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
             (* print_endline "Fuzzing with grammar:"; *)
             (* print_endline (string_of_ext_grammar injg); *)
 
-            if is_useless e then (injg,None)
+            if is_useless e then (injg,None,false)
             else begin
                 let out = match find_path_to_goal e with
-                | [] -> (injg, Some (fuzzer_minimize [] [] (get_first_derivation e)))
-                | l -> if verbose then Log.L.debug (fun m -> m "Fuzzing with goal"); (injg, Some (fuzzer_minimize l [] [e])) in
+                | [] -> (injg, Some (fuzzer_minimize [] [] (get_first_derivation e)), false)
+                | l -> if verbose then Log.L.debug (fun m -> m "Fuzzing with goal"); (injg, Some (fuzzer_minimize l [] [e]), true) in
                 call_time := !call_time +. (Sys.time () -. start_time);
                 out
             end

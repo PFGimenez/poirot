@@ -20,7 +20,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
 
     (* print_endline "Inference grammar:"; *)
     (* print_endline (string_of_grammar g); *)
-    let quotient = Quotient.quotient_mem g forbidden subst (Some goal) None qgraph_channel
+    let quotient = Quotient.quotient_mem g forbidden subst (Some goal) None oneline_comment qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (ext_element, int) Hashtbl.t =
         try let out = Marshal.from_channel (open_in_bin h_fname) in Log.L.info (fun m -> m "Imported heuristic values from %s" h_fname); out
@@ -74,8 +74,9 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         match Hashtbl.find_opt reachable e with
         | Some b -> b
         | None -> let g_local = match par with
-            | Some p -> make_non_trivial_grammar (fst (quotient false e)) (ext_element_of_element p)
-            | None -> fst (quotient false e) in
+            | Some p -> let g_inj,_,_ = quotient false e in
+                    make_non_trivial_grammar g_inj (ext_element_of_element p)
+            | None -> let g_inj,_,_ = (quotient false e) in g_inj in
             let b = is_reachable (grammar_of_ext_grammar g_local) goal (full_element_of_ext_element e) in
             Hashtbl.add reachable e b; b in
 
@@ -169,7 +170,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 Log.L.debug (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
-                let inj_g,word = quotient true e in
+                let inj_g,word,goal_reached = quotient true e in
                 (* print_endline "Grammar:"; *)
                 (* print_endline (string_of_ext_grammar inj_g); *)
                 let word_str = string_of_word (Option.get word) in (* there is always a word as the trivial injection always works *)
@@ -182,6 +183,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                     set_node_color_in_graph e "crimson";
                     (search_aux [@tailcall]) closedset (step + 1) q
                 end else if is_reachable (grammar_of_ext_grammar inj_g) goal (full_element_of_ext_element inj_g.ext_axiom) then begin (* the goal has been found ! *)
+                    assert goal_reached;
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)
@@ -220,7 +222,8 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         let result = find_start g goal inj in
         if result <> None then begin
             Log.L.info (fun m -> m "Injection directly found!");
-            let g,w = (quotient true (ext_element_of_element (Option.get result))) in
+            let g,w,goal_reached = (quotient true (ext_element_of_element (Option.get result))) in
+            assert goal_reached;
             Some (g, string_of_word (Option.get w))
         end
         else begin
