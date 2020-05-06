@@ -24,7 +24,6 @@ let ()=
         and grammar_fname = Option.get !grammar_fname in
 
         let inj_g,word,reached = Poirot.quotient ~oneline_comment:!oneline_comment ~qgraph_fname:!qgraph_fname grammar_fname prefix suffix !goal in
-        print_endline (Poirot.string_of_grammar inj_g);
         Option.iter (fun fname -> print_endline ("Injection grammar saved into "^(fname)^".g4"); Poirot.export_antlr4 fname inj_g) !injg_fname;
         match word with
         | None -> print_endline "No injection"

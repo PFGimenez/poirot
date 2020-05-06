@@ -13,16 +13,11 @@ let compare_ext_rule (r2: ext_rule) (r1: ext_rule) : int =
 
 let call_time = ref 0.
 
-let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (oneline_comment: string option) (graph_channel: out_channel option) : bool -> ext_element -> ext_grammar * (part option) * bool  =
+let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) : bool -> ext_element -> ext_grammar * (part option) * bool  =
 
     let words : (ext_element, part) Hashtbl.t = Hashtbl.create 10000 in
     (* all the computed rules *)
     let mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 10000 in
-
-    let g_initial = match oneline_comment with
-        | None -> g_initial
-        | Some s -> let g = Grammar.add_comment g_initial s in
-                        g.axiom @@ ((g.axiom --> [g_initial.axiom])::(g.axiom --> [g_initial.axiom])::g_initial.rules) in (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
 
     let goal = Option.map ext_element_of_element goal_elem in
 
@@ -286,10 +281,9 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
         (* tail-recursive *)
         let rec build_derivation_aux (sofar: ext_part) (acc: (ext_rule * ext_part) list) (p: ext_part) : (ext_rule * ext_part) list = match p with
             | [] -> acc
-            | t::q when is_ext_element_terminal t -> (build_derivation_aux [@tailcall]) (t::sofar) acc q
-            | t::q-> let rhs = match t with
-                | {pf;e;_} when e=(Nonterminal "poirot_axiom_for_comment") -> [[{pf;e=g_initial.axiom;sf=[]}]]
-                | _ -> Hashtbl.find mem t in
+            | t::q when is_ext_element_terminal t || t.e = Nonterminal "poirot_nonterminal_comment" ->
+                    (build_derivation_aux [@tailcall]) (t::sofar) acc q
+            | t::q-> let rhs = Hashtbl.find mem t in
                 let new_parts = rhs |> List.rev_map (fun rhs -> (t--->rhs),(List.rev sofar)@rhs@q) in
 (*                    let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in*)
                 (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in

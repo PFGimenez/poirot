@@ -13,14 +13,14 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
     Log.L.info (fun m -> m "Clean grammar…");
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
 
-    let g = match oneline_comment with
+    let g,g_quotient = match oneline_comment with
     | Some s -> let g_comment = Grammar.add_comment g_non_comment s in
-                g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules) (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
-    | None -> g_non_comment in
+                (g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules),g_comment) (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
+    | None -> (g_non_comment,g_non_comment) in
 
     (* print_endline "Inference grammar:"; *)
     (* print_endline (string_of_grammar g); *)
-    let quotient = Quotient.quotient_mem g forbidden subst (Some goal) None oneline_comment qgraph_channel
+    let quotient = Quotient.quotient_mem g_quotient forbidden subst (Some goal) None qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (ext_element, int) Hashtbl.t =
         try let out = Marshal.from_channel (open_in_bin h_fname) in Log.L.info (fun m -> m "Imported heuristic values from %s" h_fname); out
@@ -182,8 +182,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                     Log.L.debug (fun m -> m "Invalid");
                     set_node_color_in_graph e "crimson";
                     (search_aux [@tailcall]) closedset (step + 1) q
-                end else if is_reachable (grammar_of_ext_grammar inj_g) goal (full_element_of_ext_element inj_g.ext_axiom) then begin (* the goal has been found ! *)
-                    assert goal_reached;
+                end else if goal_reached then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)
