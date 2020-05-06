@@ -64,24 +64,12 @@ let export_antlr4 (fname: string) (g: grammar) : unit =
     (* all the non-terminals are written in lowercase to have parser rule and not lexer rule *)
 
     let export_antlr4_char_nonterminal (c: char) : string = match c with
-        | '\'' -> "\\'"
-        | '\\' -> "\\"
-        | '1' -> "one"
-        | '2' -> "two"
-        | '3' -> "three"
-        | '4' -> "four"
-        | '5' -> "five"
-        | '6' -> "six"
-        | '7' -> "seven"
-        | '8' -> "eight"
-        | '9' -> "nine"
-        | '0' -> "zero"
-        | '?' -> "questionmark"
-        | '*' -> "star"
-        | '+' -> "plus"
-        | '-' -> "minus"
-        | '(' -> "leftpar"
-        | ')' -> "rightpar"
+        | '\'' -> "singlequote" | '\\' -> "antislash" | '"' -> "doublequote"
+        | '%' -> "percent" | '&' -> "and" | '|' -> "or" | '=' -> "equal" | '*' -> "star" | '+' -> "plus" | '-' -> "minus" | '/' -> "slash" | "#" -> "number" | "$" -> "dollar"
+        | '1' -> "one" | '2' -> "two" | '3' -> "three" | '4' -> "four" | '5' -> "five" | '6' -> "six" | '7' -> "seven" | '8' -> "eight" | '9' -> "nine" | '0' -> "zero"
+        | '?' -> "questionmark" | '!' -> "exclammark" | ',' -> "comma" | ';' -> "semicolon" | ':' -> "colon" | '.' -> "point" | '(' -> "leftpar" | ')' -> "rightpar" | '[' -> "leftbra" | ']' -> "rightbra" | '{' -> "leftcurl" | '}' -> "rightcurl" | '>' -> "bigger" | '<' -> "smaller"
+        | ' ' -> "ws" | '\t' -> "tab"
+        | '@' -> "at" | '~' -> "tilda" | '^' -> "caret"
         | _ -> String.make 1 c in
 
     let export_antlr4_char_terminal (c: char) : string = match c with

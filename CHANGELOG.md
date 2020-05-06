@@ -2,6 +2,7 @@
 - Fuzzer and quotient rewrite
 - Oracle timeout
 - Time and oracle call statistics
+- ANTLR4 export more stable
 
 # v0.3
 - Dune installs `poirot` and `bnf2antlr4`
