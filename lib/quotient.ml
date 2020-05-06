@@ -336,6 +336,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
             else begin
                 let out = match find_path_to_goal e with
                 | [] -> (injg, Some (fuzzer_minimize [] [] (get_first_derivation e)))
+                | l -> Log.L.debug (fun m -> m "Fuzzing with goal"); (injg, Some (fuzzer_minimize l [] [e])) in
                 call_time := !call_time +. (Sys.time () -. start_time);
                 out
             end
