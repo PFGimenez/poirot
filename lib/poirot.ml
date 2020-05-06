@@ -2,6 +2,7 @@ type grammar = Grammar.grammar
 type element = Grammar.element
 type oracle_status = Oracle.oracle_status
 
+let version = "0.4"
 
 let search ?(oneline_comment: string option = None) ?(subst: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) (oracle: string option -> oracle_status) (g: grammar) (goal: element) (start: element list) : (grammar * string) option =
     let qgraph_channel = Option.map open_out qgraph_fname in
@@ -16,13 +17,17 @@ let make_oracle_from_fun (f: string -> int) = Oracle.oracle_mem (fun s -> Oracle
 
 let read_subst : string -> (element,string) Hashtbl.t = Grammar_io.read_subst
 
-let quotient ?(qgraph_fname: string option = None) (g: grammar) (prefix: element list) (suffix: element list) : (grammar * string option) =
+let quotient ?(qgraph_fname: string option = None) (grammar_fname: string) (prefix: string) (suffix: string) (goal: element option) : (grammar * string option) =
+    let g = Grammar_io.read_bnf_grammar true grammar_fname in
+    let explode s = List.init (String.length s) (fun i -> Grammar.Terminal (String.make 1 (String.get s i))) in
+    let prefix = explode prefix
+    and suffix = explode suffix in
     let qgraph_channel = Option.map open_out qgraph_fname in
     Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
-    let g,inj = Quotient.quotient_mem g [] None None None qgraph_channel true {pf=List.rev prefix;e=g.axiom;sf=suffix} in
+    let g,inj = Quotient.quotient_mem g [] None goal None qgraph_channel true {pf=List.rev prefix;e=g.axiom;sf=suffix} in
     let g2 = Grammar.grammar_of_ext_grammar (Clean.clean g) in
     Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
-    (g2,Option.map Grammar.string_of_part inj)
+    (g2,Option.map Grammar.string_of_word inj)
 
 let apply_and_simplify (simplify: bool) (g: grammar) (f: grammar -> grammar) : grammar =
     if simplify then Clean.simplify (f g) else (f g)

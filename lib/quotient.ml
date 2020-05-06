@@ -304,7 +304,8 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
             (find_path_to_goal_aux [@tailcall]) (List.sort_uniq compare (form@seen)) (q@new_items) in
 
     let find_path_to_goal (axiom : ext_element) : ext_rule list =
-        find_path_to_goal_aux [] [([axiom],[])]
+        if goal = None then []
+        else find_path_to_goal_aux [] [([axiom],[])]
     in
 
     (* get a derivation of ext_element with the "biggest" rule *)

@@ -3,6 +3,7 @@
 - Oracle timeout
 - Time and oracle call statistics
 - ANTLR4 export more stable
+- Dune installs `quotient_poirot`
 
 # v0.3
 - Dune installs `poirot` and `bnf2antlr4`

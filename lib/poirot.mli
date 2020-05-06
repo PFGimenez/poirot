@@ -12,6 +12,9 @@ type element
 (** A variant type describing the oracle status *)
 type oracle_status
 
+(** The current version of Poirot *)
+val version : string
+
 (** {1 Main functions} *)
 
 (** [search oracle g goal start] returns the grammar of injection from the base grammar [g] according to the oracle [oracle], starting from the trivial injection [start].
@@ -28,8 +31,8 @@ type oracle_status
  *)
 val search : ?oneline_comment: string option -> ?subst:(element,string) Hashtbl.t option -> ?max_depth:int -> ?max_steps:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> (string option -> oracle_status) -> grammar -> element -> element list -> (grammar * string) option
 
-(** [quotient g left_quotient right_quotient] returns the grammar [g] after a left quotient by [left_quotient] and a right quotient by [right_quotient], as well as an word of this language. [left_quotient] and [right_quotient] can contain nonterminals or be empty. *)
-val quotient : ?qgraph_fname: string option -> grammar -> element list -> element list -> grammar * (string option)
+(** [quotient g_fname left_quotient right_quotient goal] returns the grammar in file [g_fname] after a left quotient by [left_quotient] and a right quotient by [right_quotient], as well as an word of this language. The word will contain the goal (if possible) if it is not None. The grammar must be in BNF format *)
+val quotient : ?qgraph_fname: string option -> string -> string -> string -> element option -> grammar * (string option)
 
 (** {1 Oracle functions} *)
 

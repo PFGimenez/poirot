@@ -46,7 +46,7 @@ You can experiment with the more complex grammar `parenthesis` as well. Run:
 
 It will generate the injection `a])]])b([[([a`.
 
-## Parameters
+### Parameters
 
 Here is the list of the options of `poirot`:
 
@@ -63,7 +63,7 @@ Here is the list of the options of `poirot`:
 - `-verbose_lvl` Choose Poirot verbosity: debug, info, warning or error.
 - `-v` Print the version of Poirot.
 
-## Substitution file
+### Substitution file
 
 Substitution file are a way to add semantics to Poirot. It is a simple text file that associate string to nonterminal symbols so Poirot can use them during fuzzing. An example:
 
@@ -72,6 +72,16 @@ Substitution file are a way to add semantics to Poirot. It is a simple text file
 <database_name>=db
 <table_name>=users
 ```
+
+## Injection grammar of white-box systems
+
+If you know the query (i.e. the prefix and the suffix surrounding the injection point), you can directly use Poirot to get the grammar of the injection with the `quotient` function (and possibly export it to an ANTLR4 grammar) along with an injection. White-box fuzzing is of course greatly faster than black-box fuzzing.
+
+For example, you can run:
+
+    quotient_poirot -grammar bnf_grammars/toy/msg_exec.bnf -pf "msg key = " -sf " & key = value" -goal "Exe"
+
+It will generate the injection `value ; exec cmd ; msg key = value`.
 
 # Use the library in your own project
 

@@ -6,6 +6,7 @@
 
 (executable
     (name quotient_poirot)
+    (public_name quotient_poirot)
     (modules quotient_poirot)
     (libraries poirot))
 
