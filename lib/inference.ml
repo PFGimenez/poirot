@@ -10,7 +10,6 @@ type node_origin = DERIVATION | INDUCTION
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
 let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (subst: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) (forbidden: char list) : (ext_grammar * string) option =
-    Log.L.info (fun m -> m "Clean grammar…");
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
 
     let g,g_quotient = match oneline_comment with
@@ -161,7 +160,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             Log.L.info (fun m -> m "Visited");
             (search_aux [@tailcall]) closedset (step + 1) q
         end else begin
-            Grammar_io.set_node_attr graph_channel ("[label=\""^(string_of_ext_element e)^"\nstep="^(string_of_int step)^" g="^(string_of_int g_val)^" h="^(string_of_int h_val)^"\"]") e;
+            Grammar_io.set_node_attr graph_channel ("[label=\""^(Grammar_io.export_ext_element e)^"\nstep="^(string_of_int step)^" g="^(string_of_int g_val)^" h="^(string_of_int h_val)^"\"]") e;
             Grammar_io.add_edge_in_graph graph_channel (if origin=INDUCTION then "" else "penwidth=3") par e;
             (* now it is visited *)
             Hashtbl.add closedset e ();
@@ -212,6 +211,14 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         Log.L.info (fun m -> m "Search duration: %.2fs (Inference: %.2fs, quotient: %.2fs, oracle: %.2fs)." total_duration (total_duration -. !Quotient.call_time -. !Oracle.call_time) (!Quotient.call_time) !Oracle.call_time);
         Log.L.info (fun m -> m "%d calls to oracle." !Oracle.call_nb) in
 
+    let finalize () =
+        print_end_time ();
+        (* close the dot files *)
+        Option.iter (fun ch -> Log.L.info (fun m -> m "Save search graph."); output_string ch "}"; close_out ch) graph_channel;
+        Option.iter (fun ch -> Log.L.info (fun m -> m "Save quotient graph."); output_string ch "}"; close_out ch) qgraph_channel; 
+        Log.L.info (fun m -> m "Save heuristic values into %s" h_fname);
+        Marshal.to_channel (open_out_bin h_fname) heuristic [] in
+
     let inj = start in
 
     (* get the possible injections tokens *)
@@ -240,19 +247,12 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             try
                 Sys.catch_break true;
                 let result = search_aux (Hashtbl.create 1000) 1 openset (* search *) in
-                (* close the dot files *)
-                print_end_time ();
-                Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
-                Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
-                Marshal.to_channel (open_out_bin h_fname) heuristic [];
+                finalize ();
                 Sys.catch_break false;
                 result
             with Sys.Break ->
                 (* in case of Crtl+C : save the work *)
-                print_end_time ();
-                Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
-                Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
-                Marshal.to_channel (open_out_bin h_fname) heuristic [];
+                finalize ();
                 raise Sys.Break
         end
     end

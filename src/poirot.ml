@@ -17,7 +17,7 @@ let ()=
     and lowercase = ref false
     and uppercase = ref false
     and simplify = ref false
-    and verbose_lvl = ref (Some Logs.Error)
+    and verbose_lvl = ref (Some Logs.Info)
     and avoid = ref "" in
 
     let set_verbose_lvl (s: string) =
