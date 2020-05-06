@@ -16,7 +16,7 @@ let string_of_oracle_status (s: oracle_status) : string = match s with
 
 let oracle_status_of_int : int -> oracle_status = function
     | 0 -> No_error
-    | 124 -> Syntax_error (* timeout *)
+    | 124 -> Log.L.warn (fun m -> m "Oracle timeout!"); Syntax_error (* timeout *)
     | 180 -> Syntax_error
 (*    | 181 -> Semantic_error*)
     | n -> Log.L.err (fun m -> m "Oracle failure: %d" n); raise Sys.Break

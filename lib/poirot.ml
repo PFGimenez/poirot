@@ -2,13 +2,6 @@ type grammar = Grammar.grammar
 type element = Grammar.element
 type oracle_status = Oracle.oracle_status
 
-(*let search_with_fuzzer_script ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) (fuzzer: grammar -> oracle_status) (g: grammar) (goal: element) (start: element list) : grammar option =
-
-    let qgraph_channel = Option.map open_out qgraph_fname in
-    let h_fname = ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^".prt") in
-    Option.map Grammar.grammar_of_ext_grammar (Inference.search fuzzer g goal (Some start) max_depth max_steps forbidden_chars sgraph_fname qgraph_channel h_fname)
-*)
-
 
 let search ?(oneline_comment: string option = None) ?(subst: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) (oracle: string option -> oracle_status) (g: grammar) (goal: element) (start: element list) : (grammar * string) option =
     let qgraph_channel = Option.map open_out qgraph_fname in
