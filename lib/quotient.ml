@@ -22,8 +22,6 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
     let g = Grammar.add_comment g_initial "--" in
     let g_initial = g.axiom @@ ((g.axiom --> [g_initial.axiom])::(g.axiom --> [g_initial.axiom])::g_initial.rules) in (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
 
-    (* the grammar must be clean ! *)
-    let ext_g : ext_grammar = Clean.clean (ext_grammar_of_grammar g) in
     let goal = Option.map ext_element_of_element goal_elem in
 
     let rec get_reachable_symbols (slist : ext_element list) : ext_element list =
@@ -149,9 +147,12 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
         if new_rules <> rlist then (remove_pf_sf_epsilon [@tailcall]) new_rules
         else new_rules in
 
+    (* the grammar must be epsilon-free ! *)
+    let g_rules = remove_pf_sf_epsilon (List.sort_uniq compare (ext_grammar_of_grammar g).ext_rules) in
+
     (* we add the rules of the base grammar *)
-    replace_rules_in_mem ext_g.ext_rules;
-    ignore (update_words_and_useless ext_g.ext_rules);
+    replace_rules_in_mem g_rules;
+    ignore (update_words_and_useless g_rules);
 
     (* apply a left quotient of a single rule with a prefix that is a single element *)
     let quotient_by_one_element (sd: side) (pf: element) (new_lhs: ext_element) (r: ext_part) : ext_element option =

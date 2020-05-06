@@ -65,7 +65,7 @@ let export_antlr4 (fname: string) (g: grammar) : unit =
 
     let export_antlr4_char_nonterminal (c: char) : string = match c with
         | '\'' -> "singlequote" | '\\' -> "antislash" | '"' -> "doublequote"
-        | '%' -> "percent" | '&' -> "and" | '|' -> "or" | '=' -> "equal" | '*' -> "star" | '+' -> "plus" | '-' -> "minus" | '/' -> "slash" | "#" -> "number" | "$" -> "dollar"
+        | '%' -> "percent" | '&' -> "and" | '|' -> "or" | '=' -> "equal" | '*' -> "star" | '+' -> "plus" | '-' -> "minus" | '/' -> "slash" | '#' -> "number" | '$' -> "dollar"
         | '1' -> "one" | '2' -> "two" | '3' -> "three" | '4' -> "four" | '5' -> "five" | '6' -> "six" | '7' -> "seven" | '8' -> "eight" | '9' -> "nine" | '0' -> "zero"
         | '?' -> "questionmark" | '!' -> "exclammark" | ',' -> "comma" | ';' -> "semicolon" | ':' -> "colon" | '.' -> "point" | '(' -> "leftpar" | ')' -> "rightpar" | '[' -> "leftbra" | ']' -> "rightbra" | '{' -> "leftcurl" | '}' -> "rightcurl" | '>' -> "bigger" | '<' -> "smaller"
         | ' ' -> "ws" | '\t' -> "tab"
