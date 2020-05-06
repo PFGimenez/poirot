@@ -23,9 +23,8 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
     let quotient = Quotient.quotient_mem g forbidden subst (Some goal) None qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (ext_element, int) Hashtbl.t =
-        try Marshal.from_channel (open_in_bin h_fname)
-        with _ -> Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
-    Log.L.info (fun m -> m "Imported heuristic values from %s" h_fname);
+        try let out = Marshal.from_channel (open_in_bin h_fname) in Log.L.info (fun m -> m "Imported heuristic values from %s" h_fname); out
+        with _ -> Log.L.info (fun m -> m "New heuristic file: %s" h_fname); Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
 
     (* tail-recursive *)
     (* build all the possible one-step derivation of part p in the grammar g *)
@@ -75,8 +74,8 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         match Hashtbl.find_opt reachable e with
         | Some b -> b
         | None -> let g_local = match par with
-            | Some p -> make_non_trivial_grammar (fst (quotient e)) (ext_element_of_element p)
-            | None -> fst (quotient e) in
+            | Some p -> make_non_trivial_grammar (fst (quotient false e)) (ext_element_of_element p)
+            | None -> fst (quotient false e) in
             let b = is_reachable (grammar_of_ext_grammar g_local) goal (full_element_of_ext_element e) in
             Hashtbl.add reachable e b; b in
 
@@ -170,7 +169,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 Log.L.debug (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
-                let inj_g,word = quotient e in
+                let inj_g,word = quotient true e in
                 (* print_endline "Grammar:"; *)
                 (* print_endline (string_of_ext_grammar inj_g); *)
                 let word_str = string_of_word (Option.get word) in (* there is always a word as the trivial injection always works *)
@@ -221,7 +220,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         let result = find_start g goal inj in
         if result <> None then begin
             Log.L.info (fun m -> m "Injection directly found!");
-            let g,w = (quotient (ext_element_of_element (Option.get result))) in
+            let g,w = (quotient true (ext_element_of_element (Option.get result))) in
             Some (g, string_of_word (Option.get w))
         end
         else begin
@@ -234,7 +233,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
 
             let ext_inj = List.rev_map ext_element_of_element inj in
             List.iter (set_init_node) ext_inj;
-            Log.L.info (fun m -> m "Computing some heuristic values…");
+            Log.L.debug (fun m -> m "Computing some heuristic values…");
             let openset = List.fold_right (add_in_openset true 1 false INDUCTION) ext_inj [] in (* injection tokens won't be derived *)
             try
                 Sys.catch_break true;

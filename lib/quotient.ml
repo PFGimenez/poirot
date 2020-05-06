@@ -13,7 +13,7 @@ let compare_ext_rule (r2: ext_rule) (r1: ext_rule) : int =
 
 let call_time = ref 0.
 
-let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) : ext_element -> ext_grammar * (part option)  =
+let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) : bool -> ext_element -> ext_grammar * (part option)  =
 
     let words : (ext_element, part) Hashtbl.t = Hashtbl.create 10000 in
     (* all the computed rules *)
@@ -311,7 +311,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
     let get_first_derivation (e: ext_element) : ext_element list =
         (List.hd (List.sort compare_ext_rule (get_all_rules [e]))).ext_right_part in
 
-    fun (e: ext_element) : (ext_grammar * (part option)) ->
+    fun (verbose: bool) (e: ext_element) : (ext_grammar * (part option)) ->
         (* the case when e is terminal is handled separately *)
         if is_ext_element_terminal e then begin
             (* the dummy axiom is only used when the regular axiom is terminal *)
@@ -328,7 +328,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
         end else begin
             let start_time = Sys.time () in
             let nb_iter = quotient_symbols 0 [e] in
-            Log.L.debug (fun m -> m "Quotient : %d iterations. Memory size: %d" nb_iter (Hashtbl.length mem));
+            if verbose then Log.L.debug (fun m -> m "Quotient : %d iterations. Memory size: %d" nb_iter (Hashtbl.length mem));
             let injg = grammar_of_mem e in
             (* print_endline "Fuzzing with grammar:"; *)
             (* print_endline (string_of_ext_grammar injg); *)
@@ -337,7 +337,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
             else begin
                 let out = match find_path_to_goal e with
                 | [] -> (injg, Some (fuzzer_minimize [] [] (get_first_derivation e)))
-                | l -> Log.L.debug (fun m -> m "Fuzzing with goal"); (injg, Some (fuzzer_minimize l [] [e])) in
+                | l -> if verbose then Log.L.debug (fun m -> m "Fuzzing with goal"); (injg, Some (fuzzer_minimize l [] [e])) in
                 call_time := !call_time +. (Sys.time () -. start_time);
                 out
             end
