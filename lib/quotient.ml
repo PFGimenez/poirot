@@ -11,7 +11,10 @@ let compare_ext_rule (r2: ext_rule) (r1: ext_rule) : int =
         else (Hashtbl.hash r2.ext_right_part) - (Hashtbl.hash r1.ext_right_part) (* to be deterministic we want to compare any couple *)
     end
 
+let call_time = ref 0.
+
 let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) : ext_element -> ext_grammar * (part option)  =
+
     let words : (ext_element, part) Hashtbl.t = Hashtbl.create 10000 in
     (* all the computed rules *)
     let mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 10000 in
@@ -322,6 +325,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
             else
                 (da@@@[], None)
         end else begin
+            let start_time = Sys.time () in
             let nb_iter = quotient_symbols 0 [e] in
             Log.L.info (fun m -> m "Nb iter: %d, memory size: %d" nb_iter (Hashtbl.length mem));
             let injg = grammar_of_mem e in
@@ -331,8 +335,10 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
             if is_useless e then (injg,None)
             else begin
                 Log.L.debug (fun m -> m "Fuzzing");
-                match find_path_to_goal e with
+                let out = match find_path_to_goal e with
                 | [] -> (injg, Some (fuzzer_minimize [] [] (get_first_derivation e)))
-                | l -> (injg, Some (fuzzer_minimize l [] [e]))
+                | l -> (injg, Some (fuzzer_minimize l [] [e])) in
+                call_time := !call_time +. (Sys.time () -. start_time);
+                out
             end
         end

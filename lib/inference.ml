@@ -147,6 +147,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         openset in
 
     (* core algorithm : an A* algorithm *)
+    (* tail recursive *)
     let rec search_aux (closedset: (ext_element, unit) Hashtbl.t) (step: int) (openset: node list) : (ext_grammar * string) option = match openset with
     | [] -> None (* openset is empty : there is no way *)
     | {g_val;h_val;e;par;origin}::q ->
@@ -202,6 +203,14 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             end
         end in
 
+    let start_time = Sys.time () in
+    Oracle.call_time := 0.;
+    Quotient.call_time := 0.;
+
+    let print_end_time () =
+        let total_duration = Sys.time () -. start_time in
+        Log.L.info (fun m -> m "Total search time: %.2fs (Inference: %.2fs, quotient: %.2fs, oracle: %.2fs)" total_duration (total_duration -. !Quotient.call_time -. !Oracle.call_time) (!Quotient.call_time) (!Oracle.call_time)) in
+
     let inj = start in
 
     (* get the possible injections tokens *)
@@ -230,6 +239,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 Sys.catch_break true;
                 let result = search_aux (Hashtbl.create 1000) 1 openset (* search *) in
                 (* close the dot files *)
+                print_end_time ();
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
                 Marshal.to_channel (open_out_bin h_fname) heuristic [];
@@ -237,6 +247,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 result
             with Sys.Break ->
                 (* in case of Crtl+C : save the work *)
+                print_end_time ();
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) graph_channel;
                 Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
                 Marshal.to_channel (open_out_bin h_fname) heuristic [];

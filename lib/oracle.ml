@@ -8,6 +8,8 @@ open Grammar
  *)
 type oracle_status = Syntax_error | (*Semantic_error |*) No_error | Grammar_error
 
+let call_time = ref 0.
+
 let string_of_oracle_status (s: oracle_status) : string = match s with
     | Syntax_error -> "Syntax error"
 (*    | Semantic_error -> "Semantic error"*)
@@ -53,7 +55,12 @@ let oracle_from_script (timeout: float option) (fname: string) (inj: string) : o
         | Some Logs.Debug -> fname^" \'"^esc_inj^"\'"
         | _ -> fname^" \'"^esc_inj^"\' >/dev/null 2>&1" in
     Log.L.debug (fun m -> m "Call to oracle: %s." cmd);
+
+    let start_time = Sys.time () in
+
     let error_code = Sys.command (prefix^cmd) in
+    call_time := !call_time +. (Sys.time () -. start_time);
+
     let answer = oracle_status_of_int error_code in
     Log.L.info (fun m -> m "Oracle answer to %s: %s" inj (string_of_oracle_status answer));
     answer
