@@ -327,17 +327,15 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
         end else begin
             let start_time = Sys.time () in
             let nb_iter = quotient_symbols 0 [e] in
-            Log.L.info (fun m -> m "Nb iter: %d, memory size: %d" nb_iter (Hashtbl.length mem));
+            Log.L.debug (fun m -> m "Quotient : %d iterations. Memory size: %d" nb_iter (Hashtbl.length mem));
             let injg = grammar_of_mem e in
             (* print_endline "Fuzzing with grammar:"; *)
             (* print_endline (string_of_ext_grammar injg); *)
 
             if is_useless e then (injg,None)
             else begin
-                Log.L.debug (fun m -> m "Fuzzing");
                 let out = match find_path_to_goal e with
                 | [] -> (injg, Some (fuzzer_minimize [] [] (get_first_derivation e)))
-                | l -> (injg, Some (fuzzer_minimize l [] [e])) in
                 call_time := !call_time +. (Sys.time () -. start_time);
                 out
             end

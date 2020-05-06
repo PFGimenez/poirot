@@ -167,7 +167,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             Hashtbl.add closedset e ();
             (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
             if Hashtbl.find uniq_rule e.e && g_val < max_depth then begin
-                Log.L.info (fun m -> m "Explore uniq");
+                Log.L.debug (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
                 let inj_g,word = quotient e in
@@ -179,7 +179,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 (* call the fuzzer/oracle with this grammar *)
                 let status = oracle (Option.map string_of_word word) in
                 if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
-                    Log.L.info (fun m -> m "Invalid");
+                    Log.L.debug (fun m -> m "Invalid");
                     set_node_color_in_graph e "crimson";
                     (search_aux [@tailcall]) closedset (step + 1) q
                 end else if is_reachable (grammar_of_ext_grammar inj_g) goal (full_element_of_ext_element inj_g.ext_axiom) then begin (* the goal has been found ! *)
@@ -191,13 +191,13 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                     Log.L.info (fun m -> m "Steps limit reached");
                     None
                 end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
-                    Log.L.info (fun m -> m "Depth max");
+                    Log.L.debug (fun m -> m "Depth max");
                     set_node_color_in_graph e "orange";
                     (search_aux [@tailcall]) closedset (step + 1) q
                 end else begin (* we explore in this direction *)
                     (* get the rules e -> ... to verify if e is testable or not *)
                     if status = Grammar_error then set_node_color_in_graph e "grey";
-                    Log.L.info (fun m -> m "Explore");
+                    Log.L.debug (fun m -> m "Explore");
                     (search_aux [@tailcall]) closedset (step + 1) (add_in_openset true (g_val + 1) (h_val = 0) origin e q)
                 end
             end
@@ -209,7 +209,8 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
 
     let print_end_time () =
         let total_duration = Sys.time () -. start_time in
-        Log.L.info (fun m -> m "Total search time: %.2fs (Inference: %.2fs, quotient: %.2fs, oracle: %.2fs)" total_duration (total_duration -. !Quotient.call_time -. !Oracle.call_time) (!Quotient.call_time) (!Oracle.call_time)) in
+        Log.L.info (fun m -> m "Search duration: %.2fs (Inference: %.2fs, quotient: %.2fs, oracle: %.2fs)." total_duration (total_duration -. !Quotient.call_time -. !Oracle.call_time) (!Quotient.call_time) !Oracle.call_time);
+        Log.L.info (fun m -> m "%d calls to oracle." !Oracle.call_nb) in
 
     let inj = start in
 

@@ -1,6 +1,7 @@
 # v0.4
 - Fuzzer and quotient rewrite
 - Oracle timeout
+- Time and oracle call statistics
 
 # v0.3
 - Dune installs `poirot` and `bnf2antlr4`

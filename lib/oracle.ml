@@ -8,7 +8,7 @@ open Grammar
  *)
 type oracle_status = Syntax_error | (*Semantic_error |*) No_error | Grammar_error
 
-let call_time = ref 0.
+let call_time = ref 0. and call_nb = ref 0
 
 let string_of_oracle_status (s: oracle_status) : string = match s with
     | Syntax_error -> "Syntax error"
@@ -24,15 +24,18 @@ let oracle_status_of_int : int -> oracle_status = function
     | n -> Log.L.err (fun m -> m "Oracle failure: %d" n); raise Sys.Break
 
 (* add memoization to an oracle *)
-let oracle_mem (o: string -> oracle_status) : string -> oracle_status =
+let oracle_mem_no_option (o: string -> oracle_status) : string -> oracle_status =
     let mem : (string, oracle_status) Hashtbl.t = Hashtbl.create 1000 in
     fun (inj: string): oracle_status ->
         if Hashtbl.mem mem inj then begin
-            Log.L.debug (fun m -> m "Memoization: %s" inj);
+            Log.L.debug (fun m -> m "Oracle memoization: %s" inj);
             Hashtbl.find mem inj
         end else begin
+            let start_time = Sys.time () in
+            call_nb := !call_nb + 1;
             let answer = o inj in
             Hashtbl.add mem inj answer;
+            call_time := !call_time +. (Sys.time () -. start_time);
             (*if verbose then print_endline ((string_of_int (Hashtbl.length mem))^"th call to oracle: "^inj^" ("^(string_of_oracle_status answer)^")");*)
             answer
         end
@@ -55,18 +58,13 @@ let oracle_from_script (timeout: float option) (fname: string) (inj: string) : o
         | Some Logs.Debug -> fname^" \'"^esc_inj^"\'"
         | _ -> fname^" \'"^esc_inj^"\' >/dev/null 2>&1" in
     Log.L.debug (fun m -> m "Call to oracle: %s." cmd);
-
-    let start_time = Sys.time () in
-
     let error_code = Sys.command (prefix^cmd) in
-    call_time := !call_time +. (Sys.time () -. start_time);
-
     let answer = oracle_status_of_int error_code in
     Log.L.info (fun m -> m "Oracle answer to %s: %s" inj (string_of_oracle_status answer));
     answer
 
 (* construct an oracle from a function *)
-let oracle_mem (oracle: string -> oracle_status) : (string option -> oracle_status) = handle_option (oracle_mem oracle)
+let oracle_mem (oracle: string -> oracle_status) : (string option -> oracle_status) = handle_option (oracle_mem_no_option oracle)
 
 (* construct an oracle from a script *)
 let oracle_mem_from_script (timeout: float option) (fname: string) : (string option -> oracle_status) = oracle_mem (oracle_from_script timeout fname)
