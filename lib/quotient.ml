@@ -2,12 +2,6 @@ open Grammar
 
 type side = Left | Right
 
-(*let best_rule : (ext_element, ext_part) Hashtbl.t = Hashtbl.create 10000*)
-let words : (ext_element, part) Hashtbl.t = Hashtbl.create 10000
-
-(* all the computed rules *)
-let mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 10000
-
 let compare_ext_rule (r2: ext_rule) (r1: ext_rule) : int =
     let diff = List.compare_lengths (List.filter is_ext_element_non_terminal r1.ext_right_part) (List.filter is_ext_element_non_terminal r2.ext_right_part) in
     if diff <> 0 then diff
@@ -17,7 +11,10 @@ let compare_ext_rule (r2: ext_rule) (r1: ext_rule) : int =
         else (Hashtbl.hash r2.ext_right_part) - (Hashtbl.hash r1.ext_right_part) (* to be deterministic we want to compare any couple *)
     end
 
-let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) (*(verbose: bool)*): ext_element -> ext_grammar * (part option)  =
+let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) : ext_element -> ext_grammar * (part option)  =
+    let words : (ext_element, part) Hashtbl.t = Hashtbl.create 10000 in
+    (* all the computed rules *)
+    let mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 10000 in
 
     let g = Grammar.add_comment g_initial "--" in
     let g_initial = g.axiom @@ ((g.axiom --> [g_initial.axiom])::(g.axiom --> [g_initial.axiom])::g_initial.rules) in (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
@@ -149,16 +146,9 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
         if new_rules <> rlist then (remove_pf_sf_epsilon [@tailcall]) new_rules
         else new_rules in
 
-    (* we add the rules A -> A so A_[A|] can derive epsilon *)
-    (*ext_g.ext_rules |> List.rev_map lhs_of_ext_rule |> List.sort_uniq compare |> List.iter (fun e -> add_rule_in_mem Left e [e]);*)
-
     (* we add the rules of the base grammar *)
-(*    List.iter (fun r -> add_rule_in_mem Left r.ext_left_symbol r.ext_right_part) ext_g.ext_rules;*)
     replace_rules_in_mem ext_g.ext_rules;
     ignore (update_words_and_useless ext_g.ext_rules);
-
-    (* the base grammar is usable *)
-(*    ext_g.ext_rules |> List.rev_map (fun r -> r.ext_left_symbol::r.ext_right_part) |> List.flatten |> List.iter (fun e -> Hashtbl.add status e Processed);*)
 
     (* apply a left quotient of a single rule with a prefix that is a single element *)
     let quotient_by_one_element (sd: side) (pf: element) (new_lhs: ext_element) (r: ext_part) : ext_element option =
@@ -236,11 +226,6 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
                     (* print_endline "  Compute"; *)
                     let new_elist = quotient_by_one_element_mem sd qu [base_lhs] [] in
 
-                    (* TODO: retirer ceux qui ne produisent rien (symboles inutiles) avec une décomposition en niveau. Il suffit de le faire avec les nouvelles règles car tous les autres symboles déjà connus sont utiles *)
-
-
-                    (* print_endline "Before epsilon-free"; *)
-                    (* List.iter (fun new_lhs -> List.iter (fun p -> print_endline (string_of_ext_rule (new_lhs ---> p))) (Hashtbl.find mem new_lhs)) new_elist; *)
                     (* make the grammar epsilon-free. Only the new rules are concerned *)
                     new_elist |> get_all_rules (* get the new elements *)
 (*                        |> List.map (fun r -> print_endline ("A: "^(string_of_ext_rule r)); r)*)

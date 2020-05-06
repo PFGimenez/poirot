@@ -9,7 +9,7 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list option) (oneline_comment: string option) (subst: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) (forbidden: char list) : (ext_grammar * string) option =
+let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (subst: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) (forbidden: char list) : (ext_grammar * string) option =
     Log.L.info (fun m -> m "Clean grammar…");
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
 
@@ -165,7 +165,6 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             (* now it is visited *)
             Hashtbl.add closedset e ();
             (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
-            (* TODO: pose problème avec faux axiome de comment ? *)
             if Hashtbl.find uniq_rule e.e && g_val < max_depth then begin
                 Log.L.info (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
@@ -202,22 +201,18 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 end
             end
         end in
-    let get_epsilon_possible_symbols (g : grammar) : element list =
-        g.rules |> List.filter (fun r -> List.length r.right_part = 0) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare in
-    let inj = match start with
-        | Some l -> l
-        | None -> failwith "nope" (*get_all_symbols g |> List.filter (fun e -> e@@g.rules |> fuzzer_oracle |> (=) Oracle.No_error)*) in
-    let inj = match List.mem (Terminal "") inj with
-        | true -> (get_epsilon_possible_symbols unclean_g) @ (List.filter ((<>) (Terminal "")) inj)
-        | false -> inj in
+
+    let inj = start in
+
     (* get the possible injections tokens *)
     if not (is_reachable_mem None (ext_element_of_element g.axiom)) then failwith "Unknown or unreachable goal" (* the goal is not reachable from the axiom ! *)
-    else if inj = [] then failwith "No trivial injection" (* no injection token found *)
+    else if inj = [] then failwith "No trivial injection token" (* no injection token found *)
     else begin
         let result = find_start g goal inj in
         if result <> None then begin
             Log.L.info (fun m -> m "Injection directly found!");
-            Some (ext_grammar_of_grammar ((Option.get result)@@g.rules), "") (* TODO word *)
+            let g,w = (quotient (ext_element_of_element (Option.get result))) in
+            Some (g, string_of_word (Option.get w))
         end
         else begin
             (* the injection token can't reach the goal *)
