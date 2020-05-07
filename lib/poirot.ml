@@ -4,9 +4,9 @@ type oracle_status = Oracle.oracle_status
 
 let version = "0.4"
 
-let search ?(oneline_comment: string option = None) ?(subst: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) (oracle: string option -> oracle_status) (g: grammar) (goal: element) (start: element list) : (grammar * string) option =
+let search ?(oneline_comment: string option = None) ?(subst: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) ?(save_h: bool = true) (oracle: string option -> oracle_status) (g: grammar) (goal: element) (start: element list) : (grammar * string) option =
     let qgraph_channel = Option.map open_out qgraph_fname in
-    let h_fname = ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^".prt") in
+    let h_fname = if save_h then Some ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^".prt") else None in
     match Inference.search oracle g goal start oneline_comment subst max_depth max_steps sgraph_fname qgraph_channel h_fname forbidden_chars with
     | None -> None
     | Some (g,w) -> Some ((Grammar.grammar_of_ext_grammar g), w)

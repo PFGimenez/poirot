@@ -4,6 +4,7 @@ let explode s = List.init (String.length s) (String.get s)
 let ()=
     let graph_fname = ref None
     and qgraph_fname = ref None
+    and save_h = ref true
     and injg_fname = ref None
     and max_depth = ref 10
     and max_steps = ref 1000
@@ -28,7 +29,7 @@ let ()=
             verbose_lvl := Result.get_ok r in
 
     let speclist = [
-        ("-grammar",    Arg.String (fun s -> print_endline "Loading grammar…"; grammar := Some (Poirot.read_bnf_grammar s)),     "Target grammar");
+        ("-grammar",    Arg.String (fun s -> grammar := Some (Poirot.read_bnf_grammar s)),     "Target grammar");
         ("-goal",       Arg.String (fun s -> goal := Some (Poirot.read_token s)),     "Terminal or nonterminal to reach");
         ("-oracle",     Arg.String (fun s -> oracle_fname := Some s),     "Oracle script filename");
         ("-start",      Arg.String (fun s -> start := Some (Poirot.read_tokens s)),     "A valid injection, either terminal or nonterminal");
@@ -39,6 +40,7 @@ let ()=
         ("-oracle_timeout",   Arg.Set_float oracle_timeout,    "Set the timeout to oracle calls (in seconds, -1 for no timeout)");
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
+        ("-nosave_h",     Arg.Clear save_h,    "Disable the heuristics save");
         ("-oneline_comment",     Arg.String (fun s -> oneline_comment := Some s),    "The string that starts one-line comment");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
         ("-lowercase",  Arg.Set lowercase,     "Convert all terminals to lowercase");
@@ -64,9 +66,8 @@ let ()=
         Poirot.set_log_level !verbose_lvl;
         Poirot.set_reporter (Logs_fmt.reporter ());
 
-        print_endline "Start searching…";
         let s = Option.map Poirot.read_subst !subst in
-        match (Poirot.search ~oneline_comment:!oneline_comment ~subst:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname oracle grammar goal start, !injg_fname) with
+        match (Poirot.search ~oneline_comment:!oneline_comment ~subst:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_h:!save_h oracle grammar goal start, !injg_fname) with
         | Some (gram, word), Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^word)
         | Some (_, word), _ -> print_endline ("Injection: "^word)
         | None, _ -> print_endline "No grammar found";

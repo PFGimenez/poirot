@@ -9,7 +9,7 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (subst: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string) (forbidden: char list) : (ext_grammar * string) option =
+let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (subst: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
 
     let g,g_quotient = match oneline_comment with
@@ -21,9 +21,12 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
     (* print_endline (string_of_grammar g); *)
     let quotient = Quotient.quotient_mem g_quotient forbidden subst (Some goal) None qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
-    let heuristic : (ext_element, int) Hashtbl.t =
-        try let out = Marshal.from_channel (open_in_bin h_fname) in Log.L.info (fun m -> m "Imported heuristic values from %s" h_fname); out
-        with _ -> Log.L.info (fun m -> m "New heuristic file: %s" h_fname); Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
+    let heuristic : (ext_element, int) Hashtbl.t = match h_fname with
+        | Some fname -> begin
+                            try let out = Marshal.from_channel (open_in_bin fname) in Log.L.info (fun m -> m "Imported heuristic values from %s" fname); out
+                            with _ -> Log.L.info (fun m -> m "New heuristic file: %s" fname); Hashtbl.create ((List.length g.rules)*(List.length all_sym))
+                        end
+        | None -> Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
 
     (* tail-recursive *)
     (* build all the possible one-step derivation of part p in the grammar g *)
@@ -55,7 +58,6 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         let e = g.ext_axiom in
         let dummy_axiom : ext_element = {e=Nonterminal ((string_of_element e.e)^"_dummy_axiom"); pf=e.pf; sf=e.sf} in
         let new_rules = g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = e && r.ext_right_part <> [par]) |> List.map (fun r -> dummy_axiom ---> r.ext_right_part) in
-        
         dummy_axiom @@@ (new_rules @ g.ext_rules) in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
@@ -215,9 +217,10 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         print_end_time ();
         (* close the dot files *)
         Option.iter (fun ch -> Log.L.info (fun m -> m "Save search graph."); output_string ch "}"; close_out ch) graph_channel;
-        Option.iter (fun ch -> Log.L.info (fun m -> m "Save quotient graph."); output_string ch "}"; close_out ch) qgraph_channel; 
-        Log.L.info (fun m -> m "Save heuristic values into %s" h_fname);
-        Marshal.to_channel (open_out_bin h_fname) heuristic [] in
+        Option.iter (fun ch -> Log.L.info (fun m -> m "Save quotient graph."); output_string ch "}"; close_out ch) qgraph_channel;
+        match h_fname with
+        | Some fname -> Log.L.info (fun m -> m "Save heuristic values into %s" fname); Marshal.to_channel (open_out_bin fname) heuristic []
+        | None -> () in
 
     let inj = start in
 
