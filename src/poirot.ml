@@ -9,6 +9,7 @@ let ()=
     and max_depth = ref 10
     and max_steps = ref 1000
     and oracle_timeout = ref (-1.)
+    and oracle_wait = ref (-1.)
     and grammar = ref None
     and oracle_fname = ref None
     and subst = ref None
@@ -38,6 +39,7 @@ let ()=
         ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
         ("-maxsteps",   Arg.Set_int max_steps,    "Set the max steps search (default: "^(string_of_int !max_steps)^")");
         ("-oracle_timeout",   Arg.Set_float oracle_timeout,    "Set the timeout to oracle calls (in seconds, -1 for no timeout)");
+        ("-oracle_interval",   Arg.Set_float oracle_wait,    "Set the minimal duration between two oracle calls (in seconds, -1 for no wait)");
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
         ("-nosave_h",     Arg.Clear save_h,    "Disable the heuristics save");
@@ -55,11 +57,16 @@ let ()=
         let timeout = match !oracle_timeout with
             | -1. -> None
             | n when n > 0. -> Some n
-            | _ -> failwith "Negative timeout !" in
+            | _ -> failwith "Negative timeout!" in
+        let wait = match !oracle_wait with
+            | -1. -> None
+            | n when n > 0. -> Some n
+            | _ -> failwith "Negative interval!" in
+
         let grammar = Option.get !grammar
         and goal = Option.get !goal
         and start = Option.get !start
-        and oracle = Poirot.make_oracle_from_script ~timeout:timeout (Option.get !oracle_fname) in
+        and oracle = Poirot.make_oracle_from_script ~interval:wait ~timeout:timeout (Option.get !oracle_fname) in
 
         let grammar = if !lowercase then Poirot.to_lowercase ~simplify:!simplify grammar else (if !uppercase then Poirot.to_uppercase ~simplify:!simplify grammar else grammar) in
 

@@ -11,7 +11,7 @@ let search ?(oneline_comment: string option = None) ?(subst: (element,string) Ha
     | None -> None
     | Some (g,w) -> Some ((Grammar.grammar_of_ext_grammar g), w)
 
-let make_oracle_from_script ?(timeout: float option = Some 5.) (fname: string) = Oracle.oracle_mem_from_script timeout fname
+let make_oracle_from_script ?(interval: float option = None) ?(timeout: float option = Some 5.) (fname: string) = Oracle.oracle_mem_from_script interval timeout fname
 
 let make_oracle_from_fun (f: string -> int) = Oracle.oracle_mem (fun s -> Oracle.oracle_status_of_int (f s))
 

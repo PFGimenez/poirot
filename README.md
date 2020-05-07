@@ -46,6 +46,8 @@ You can experiment with the more complex grammar `parenthesis` as well. Run:
 
 It will generate the injection `a])]])b([[([a`.
 
+Goal and start tokens can be either a terminal or a nonterminal symbol. Terminal symbols should be surrounded by single-quote: `'terminal'`.
+
 ### Parameters
 
 Here is the list of the options of `poirot`:
@@ -54,7 +56,8 @@ Here is the list of the options of `poirot`:
 - `-subst` Filename of the substitutions configuration file (more information in the next section).
 - `-maxdepth` Set the max depth search (default: 10).
 - `-maxsteps` Set the max steps search (default: 1000).
-- `-oracle_timeout` Set the timeout to oracle calls (in seconds, -1 for no timeout)
+- `-oracle_timeout` Set the timeout to oracle calls (in seconds, -1 for no timeout).
+- `-oracle_interval` Set the minimal duration between two oracle calls (in seconds, -1 for no wait).
 - `-sgraph` Save the search graph in dot format.
 - `-nosave_h` Disable the heuristics save.
 - `-oneline_comment` The string that starts one-line comment. For example, use `-oneline_comment "--"` for SQL grammars.
