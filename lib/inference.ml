@@ -27,6 +27,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                             with _ -> Log.L.info (fun m -> m "New heuristic file: %s" fname); Hashtbl.create ((List.length g.rules)*(List.length all_sym))
                         end
         | None -> Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
+    let initial_heuristic_length = Hashtbl.length heuristic in
 
     (* tail-recursive *)
     (* build all the possible one-step derivation of part p in the grammar g *)
@@ -219,8 +220,8 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         Option.iter (fun ch -> Log.L.info (fun m -> m "Save search graph."); output_string ch "}"; close_out ch) graph_channel;
         Option.iter (fun ch -> Log.L.info (fun m -> m "Save quotient graph."); output_string ch "}"; close_out ch) qgraph_channel;
         match h_fname with
-        | Some fname -> Log.L.info (fun m -> m "Save heuristic values into %s" fname); Marshal.to_channel (open_out_bin fname) heuristic []
-        | None -> () in
+        | Some fname when Hashtbl.length heuristic > initial_heuristic_length -> Log.L.info (fun m -> m "Save heuristic values into %s" fname); Marshal.to_channel (open_out_bin fname) heuristic []
+        | _ -> () in
 
     let inj = start in
 
