@@ -50,22 +50,24 @@ It will generate the injection `a])]])b([[([a`.
 
 Here is the list of the options of `poirot`:
 
-- `-avoid` List of characters to avoid, if for example some characters are filtered.
+- `-avoid` List of characters to avoid (if for example some characters are filtered).
 - `-subst` Filename of the substitutions configuration file (more information in the next section).
 - `-maxdepth` Set the max depth search (default: 10).
 - `-maxsteps` Set the max steps search (default: 1000).
+- `-oracle_timeout` Set the timeout to oracle calls (in seconds, -1 for no timeout)
 - `-sgraph` Save the search graph in dot format.
+- `-nosave_h` Disable the heuristics save.
 - `-oneline_comment` The string that starts one-line comment. For example, use `-oneline_comment "--"` for SQL grammars.
-- `-injg` Export the injection grammar in ANTLR4 format.
+- `-injg` Export the injection grammar in ANTLR4 format (you don't need to specify the .g4 extension).
 - `-lowercase` Convert all terminals to lowercase.
 - `-uppercase` Convert all terminals to uppercase.
 - `-simplify` If used with -lowercase or -uppercase, simplify the grammar.
-- `-verbose_lvl` Choose Poirot verbosity: debug, info, warning or error.
+- `-verbose_lvl` Choose Poirot verbosity: debug, info, warning or error. "Info" by default.
 - `-v` Print the version of Poirot.
 
 ### Substitution file
 
-Substitution file are a way to add semantics to Poirot. It is a simple text file that associate string to nonterminal symbols so Poirot can use them during fuzzing. An example:
+Using a substitution file is a way to add semantics to Poirot. It is a simple text file that associate string to nonterminal symbols so Poirot can use them during fuzzing. An example:
 
 ```
 <column_name>=login

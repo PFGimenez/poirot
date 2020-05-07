@@ -204,13 +204,13 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             end
         end in
 
-    let start_time = Sys.time () in
+    let start_time = Unix.gettimeofday () in
     Oracle.call_time := 0.;
     Quotient.call_time := 0.;
 
     let print_end_time () =
-        let total_duration = Sys.time () -. start_time in
-        Log.L.info (fun m -> m "Search duration: %.2fs (Inference: %.2fs, quotient: %.2fs, oracle: %.2fs)." total_duration (total_duration -. !Quotient.call_time -. !Oracle.call_time) (!Quotient.call_time) !Oracle.call_time);
+        let total_duration = Unix.gettimeofday () -. start_time in
+        Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, quotient: %.2fs, oracle: %.2fs)." total_duration (total_duration -. !Quotient.call_time -. !Oracle.call_time) (!Quotient.call_time) !Oracle.call_time);
         Log.L.info (fun m -> m "%d calls to oracle." !Oracle.call_nb) in
 
     let finalize () =

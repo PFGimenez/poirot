@@ -31,11 +31,11 @@ let oracle_mem_no_option (o: string -> oracle_status) : string -> oracle_status 
             Log.L.debug (fun m -> m "Oracle memoization: %s" inj);
             Hashtbl.find mem inj
         end else begin
-            let start_time = Sys.time () in
+            let start_time = Unix.gettimeofday () in
             call_nb := !call_nb + 1;
             let answer = o inj in
             Hashtbl.add mem inj answer;
-            call_time := !call_time +. (Sys.time () -. start_time);
+            call_time := !call_time +. (Unix.gettimeofday () -. start_time);
             (*if verbose then print_endline ((string_of_int (Hashtbl.length mem))^"th call to oracle: "^inj^" ("^(string_of_oracle_status answer)^")");*)
             answer
         end

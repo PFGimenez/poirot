@@ -323,7 +323,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
             else
                 (da@@@[], None, false)
         end else begin
-            let start_time = Sys.time () in
+            let start_time = Unix.gettimeofday () in
             let nb_iter = quotient_symbols 0 [e] in
             if verbose then Log.L.debug (fun m -> m "Quotient : %d iterations. Memory size: %d" nb_iter (Hashtbl.length mem));
             let injg = grammar_of_mem e in
@@ -335,7 +335,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
                 let out = match find_path_to_goal e with
                 | [] -> (injg, Some (fuzzer_minimize [] [] (get_first_derivation e)), false)
                 | l -> if verbose then Log.L.debug (fun m -> m "Fuzzing with goal"); (injg, Some (fuzzer_minimize l [] [e]), true) in
-                call_time := !call_time +. (Sys.time () -. start_time);
+                call_time := !call_time +. (Unix.gettimeofday () -. start_time);
                 out
             end
         end
