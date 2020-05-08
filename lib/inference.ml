@@ -12,6 +12,7 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
 
+    (* add the oneline comment if requested *)
     let g,g_quotient = match oneline_comment with
     | Some s -> let g_comment = Grammar.add_comment g_non_comment s in
                 (g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules),g_comment) (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
@@ -19,14 +20,19 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
 
     (* print_endline "Inference grammar:"; *)
     (* print_endline (string_of_grammar g); *)
+    (* initialize the quotient *)
     let quotient = Quotient.quotient_mem g_quotient forbidden dict (Some goal) None qgraph_channel
-    and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
+    and all_sym = get_all_symbols g in
+
+    (* load the heuristic *)
     let heuristic : (ext_element, int) Hashtbl.t = match h_fname with
         | Some fname -> begin
                             try let out = Marshal.from_channel (open_in_bin fname) in Log.L.info (fun m -> m "Imported heuristic values from %s" fname); out
                             with _ -> Log.L.info (fun m -> m "New heuristic file: %s" fname); Hashtbl.create ((List.length g.rules)*(List.length all_sym))
                         end
         | None -> Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
+
+    (* used to know if the heuristic file need to be updated *)
     let initial_heuristic_length = Hashtbl.length heuristic in
 
     (* tail-recursive *)
@@ -41,11 +47,15 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
 
     (*if verbose then (Hashtbl.iter (fun k v -> print_endline ((string_of_ext_element k)^": "^(string_of_int v))) heuristic);*)
     let reachable : (ext_element, bool) Hashtbl.t = Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
+    (* element that are the lhs of a single rule *)
     let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+    (* used in the heuristic computation *)
     let seen_hashtbl : (ext_element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in
 
+    (* populate the uniq_rule hashtable *)
     List.iter (fun e -> Hashtbl.add uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) g.rules) 1) == 0)) all_sym;
 
+    (* open the search graph file if requested *)
     let graph_channel = Option.map open_out graph_fname in
 
     let set_init_node : ext_element -> unit =
@@ -55,10 +65,11 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         Grammar_io.set_node_color_in_graph graph_channel in
 
      (* compute the non-trivial grammar. To do that, just add a new axiom with the same rules as the normal axiom EXCEPT the trivial rule (the rule that leads to the parent grammar) *)
+    (* TODO: virer ? *)
     let make_non_trivial_grammar (g: ext_grammar) (par: ext_element) : ext_grammar =
         let e = g.ext_axiom in
         let dummy_axiom : ext_element = {e=Nonterminal ((string_of_element e.e)^"_dummy_axiom"); pf=e.pf; sf=e.sf} in
-        let new_rules = g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = e && r.ext_right_part <> [par]) |> List.map (fun r -> dummy_axiom ---> r.ext_right_part) in
+        let new_rules = g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = e && r.ext_right_part <> [par]) |> List.rev_map (fun r -> dummy_axiom ---> r.ext_right_part) in
         dummy_axiom @@@ (new_rules @ g.ext_rules) in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
@@ -168,7 +179,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             (* now it is visited *)
             Hashtbl.add closedset e ();
             (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
-            if Hashtbl.find uniq_rule e.e && g_val < max_depth then begin
+            if Hashtbl.find uniq_rule e.e && g_val < max_depth && step < max_steps then begin
                 Log.L.debug (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
@@ -180,11 +191,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 (* Grammar_io.export_bnf "out.bnf" inj_g; *)
                 (* call the fuzzer/oracle with this grammar *)
                 let status = oracle (Option.map string_of_word word) in
-                if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
-                    Log.L.debug (fun m -> m "Invalid");
-                    set_node_color_in_graph e "crimson";
-                    (search_aux [@tailcall]) closedset (step + 1) q
-                end else if goal_reached then begin (* the goal has been found ! *)
+                if goal_reached then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)
@@ -192,6 +199,10 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 end else if step = max_steps then begin (* the end *)
                     Log.L.info (fun m -> m "Steps limit reached");
                     None
+                end else if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
+                    Log.L.debug (fun m -> m "Invalid");
+                    set_node_color_in_graph e "crimson";
+                    (search_aux [@tailcall]) closedset (step + 1) q
                 end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
                     Log.L.debug (fun m -> m "Depth max");
                     set_node_color_in_graph e "orange";
@@ -205,21 +216,23 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             end
         end in
 
+    (* initialize the call times *)
     let start_time = Unix.gettimeofday () in
     Oracle.call_time := 0.;
     Oracle.idle_time := 0.;
     Quotient.call_time := 0.;
 
-    let print_end_time () =
+    let finalize () =
+        (* print the statistics *)
         let total_duration = Unix.gettimeofday () -. start_time in
         Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, quotient: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. !Quotient.call_time -. !Oracle.call_time -. !Oracle.idle_time) !Quotient.call_time !Oracle.call_time !Oracle.idle_time);
-        Log.L.info (fun m -> m "%d calls to oracle." !Oracle.call_nb) in
+        Log.L.info (fun m -> m "%d calls to oracle." !Oracle.call_nb);
 
-    let finalize () =
-        print_end_time ();
         (* close the dot files *)
         Option.iter (fun ch -> Log.L.info (fun m -> m "Save search graph."); output_string ch "}"; close_out ch) graph_channel;
         Option.iter (fun ch -> Log.L.info (fun m -> m "Save quotient graph."); output_string ch "}"; close_out ch) qgraph_channel;
+
+        (* save the heuristics if necessary *)
         match h_fname with
             | Some fname when Hashtbl.length heuristic > initial_heuristic_length -> Log.L.info (fun m -> m "Save heuristic values into %s" fname); Marshal.to_channel (open_out_bin fname) heuristic []
             | _ -> () in
