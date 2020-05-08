@@ -11,7 +11,7 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 
 let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
-
+    let closedset: (ext_element, unit) Hashtbl.t = Hashtbl.create 10000 in
     (* add the oneline comment if requested *)
     let g,g_quotient = match oneline_comment with
     | Some s -> let g_comment = Grammar.add_comment g_non_comment s in
@@ -161,10 +161,9 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
 
     (* core algorithm : an A* algorithm *)
     (* tail recursive *)
-    let rec search_aux (closedset: (ext_element, unit) Hashtbl.t) (step: int) (openset: node list) : (ext_grammar * string) option = match openset with
+    let rec search_aux (step: int) (openset: node list) : (ext_grammar * string) option = match openset with
     | [] -> None (* openset is empty : there is no way *)
     | {g_val;h_val;e;par;origin}::q ->
-        Log.L.info (fun m -> m "Search %d (queue: %d): %s" step (List.length q) (string_of_ext_element e));
         assert (g_val <= max_depth);
         if step > max_steps then begin
             Log.L.info (fun m -> m "Steps limit reached");
@@ -172,8 +171,9 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         (* verify whether e has already been visited *)
         end else if Hashtbl.mem closedset e then begin
             Log.L.info (fun m -> m "Visited");
-            (search_aux [@tailcall]) closedset (step + 1) q
+            (search_aux [@tailcall]) step q
         end else begin
+            Log.L.info (fun m -> m "Search %d (queue: %d): %s" step (List.length q) (string_of_ext_element e));
             Grammar_io.set_node_attr graph_channel ("[label=\""^(Grammar_io.export_ext_element e)^"\nstep="^(string_of_int step)^" g="^(string_of_int g_val)^" h="^(string_of_int h_val)^"\"]") e;
             Grammar_io.add_edge_in_graph graph_channel (if origin=INDUCTION then "" else "penwidth=3") par e;
             (* now it is visited *)
@@ -181,7 +181,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
             if Hashtbl.find uniq_rule e.e && g_val < max_depth && step < max_steps then begin
                 Log.L.debug (fun m -> m "Explore uniq");
-                (search_aux [@tailcall]) closedset (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
+                (search_aux [@tailcall]) (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
                 let inj_g,word,goal_reached = quotient true e in
                 (* print_endline "Grammar:"; *)
@@ -202,16 +202,16 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 end else if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
                     Log.L.debug (fun m -> m "Invalid");
                     set_node_color_in_graph e "crimson";
-                    (search_aux [@tailcall]) closedset (step + 1) q
+                    (search_aux [@tailcall]) (step + 1) q
                 end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
                     Log.L.debug (fun m -> m "Depth max");
                     set_node_color_in_graph e "orange";
-                    (search_aux [@tailcall]) closedset (step + 1) q
+                    (search_aux [@tailcall]) (step + 1) q
                 end else begin (* we explore in this direction *)
                     (* get the rules e -> ... to verify if e is testable or not *)
                     if status = Grammar_error then set_node_color_in_graph e "grey";
                     Log.L.debug (fun m -> m "Explore");
-                    (search_aux [@tailcall]) closedset (step + 1) (add_in_openset true (g_val + 1) (h_val = 0) origin e q)
+                    (search_aux [@tailcall]) (step + 1) (add_in_openset true (g_val + 1) (h_val = 0) origin e q)
                 end
             end
         end in
@@ -264,7 +264,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             let openset = List.fold_right (add_in_openset true 1 false INDUCTION) ext_inj [] in (* injection tokens won't be derived *)
             try
                 Sys.catch_break true;
-                let result = search_aux (Hashtbl.create 1000) 1 openset (* search *) in
+                let result = search_aux 1 openset (* search *) in
                 finalize ();
                 Sys.catch_break false;
                 result
