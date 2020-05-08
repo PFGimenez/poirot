@@ -60,6 +60,7 @@ Here is the list of the options of `poirot`:
 - `-oracle_interval` Set the minimal duration between two oracle calls (in seconds, -1 for no wait).
 - `-sgraph` Save the search graph in dot format.
 - `-nosave_h` Disable the heuristics save.
+- `-nosave_oracle` Disable the oracle calls save.
 - `-oneline_comment` The string that starts one-line comment. For example, use `-oneline_comment "--"` for SQL grammars.
 - `-injg` Export the injection grammar in ANTLR4 format (you don't need to specify the .g4 extension).
 - `-lowercase` Convert all terminals to lowercase.
