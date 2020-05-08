@@ -53,7 +53,7 @@ Goal and start tokens can be either a terminal or a nonterminal symbol. Terminal
 Here is the list of the options of `poirot`:
 
 - `-avoid` List of characters to avoid (if for example some characters are filtered).
-- `-subst` Filename of the substitutions configuration file (more information in the next section).
+- `-dict` Filename of the semantics dictionary (more information in the next section).
 - `-maxdepth` Set the max depth search (default: 10).
 - `-maxsteps` Set the max steps search (default: 1000).
 - `-oracle_timeout` Set the timeout to oracle calls (in seconds, -1 for no timeout).
@@ -68,9 +68,9 @@ Here is the list of the options of `poirot`:
 - `-verbose_lvl` Choose Poirot verbosity: debug, info, warning or error. "Info" by default.
 - `-v` Print the version of Poirot.
 
-### Substitution file
+### Semantics dictionary
 
-Using a substitution file is a way to add semantics to Poirot. It is a simple text file that associate string to nonterminal symbols so Poirot can use them during fuzzing. An example:
+Using a semantics dictionary is a way to add semantics to Poirot. It is a simple text file that associate string to nonterminal symbols so Poirot can use them during fuzzing. An example:
 
 ```
 <column_name>=login

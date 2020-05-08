@@ -7,12 +7,12 @@ let ()=
     and save_h = ref true
     and injg_fname = ref None
     and max_depth = ref 10
-    and max_steps = ref 1000
+    and max_steps = ref 10000
     and oracle_timeout = ref (-1.)
     and oracle_wait = ref (-1.)
     and grammar = ref None
     and oracle_fname = ref None
-    and subst = ref None
+    and dict = ref None
     and goal = ref None
     and start = ref None
     and oneline_comment = ref None
@@ -35,7 +35,7 @@ let ()=
         ("-oracle",     Arg.String (fun s -> oracle_fname := Some s),     "Oracle script filename");
         ("-start",      Arg.String (fun s -> start := Some (Poirot.read_tokens s)),     "A valid injection, either terminal or nonterminal");
         ("-avoid",      Arg.Set_string avoid,     "List of characters to avoid");
-        ("-subst",      Arg.String (fun s -> subst := Some s),     "Filename of the substitutions configuration file");
+        ("-dict",      Arg.String (fun s -> dict := Some s),     "Filename of the semantics dictionary");
         ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
         ("-maxsteps",   Arg.Set_int max_steps,    "Set the max steps search (default: "^(string_of_int !max_steps)^")");
         ("-oracle_timeout",   Arg.Set_float oracle_timeout,    "Set the timeout to oracle calls (in seconds, -1 for no timeout)");
@@ -73,8 +73,8 @@ let ()=
         Poirot.set_log_level !verbose_lvl;
         Poirot.set_reporter (Logs_fmt.reporter ());
 
-        let s = Option.map Poirot.read_subst !subst in
-        match (Poirot.search ~oneline_comment:!oneline_comment ~subst:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_h:!save_h oracle grammar goal start, !injg_fname) with
+        let s = Option.map Poirot.read_dict !dict in
+        match (Poirot.search ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_h:!save_h oracle grammar goal start, !injg_fname) with
         | Some (gram, word), Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^word)
         | Some (_, word), _ -> print_endline ("Injection: "^word)
         | None, _ -> print_endline "No grammar found";

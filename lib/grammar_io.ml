@@ -39,13 +39,13 @@ let read_token (unravel: bool) (str : string) : element =
         | _ -> Terminal e)
     | _ -> failwith "No token!"
 
-(* read a substitution file *)
-let read_subst (fname: string) : (element,string) Hashtbl.t =
-    let rec read_subst_tokens lexbuf : (element * string) list =
+(* read a semantics dictionary file *)
+let read_dict (fname: string) : (element,string) Hashtbl.t =
+    let rec read_dict_tokens lexbuf : (element * string) list =
         match (Lexerconf.token lexbuf : Lexerconf.token) with
-        | LINE (e,s) -> (e,s)::(read_subst_tokens lexbuf)
+        | LINE (e,s) -> (e,s)::(read_dict_tokens lexbuf)
         | EOF -> [] in
-    let l = read_subst_tokens (Lexing.from_channel (open_in fname)) in
+    let l = read_dict_tokens (Lexing.from_channel (open_in fname)) in
     let table = Hashtbl.create (List.length l) in
     List.iter (fun (e,s) -> Hashtbl.add table e s) l;
     table

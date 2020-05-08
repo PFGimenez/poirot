@@ -57,7 +57,7 @@ let oracle_from_script (interval: float option) (timeout: float option) (fname: 
         let sleep = Option.get interval -. (Unix.gettimeofday () -. !last_oracle_call) in
         last_oracle_call := Unix.gettimeofday ();
         if sleep > 0. then begin
-            Log.L.debug (fun m -> m "Wait %.2fs before oracle call" sleep);
+            Log.L.info (fun m -> m "Wait %.2fs before oracle call" sleep);
             idle_time := !idle_time +. sleep;
             Unix.sleepf sleep
         end

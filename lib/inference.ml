@@ -9,7 +9,7 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (subst: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
+let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
 
     let g,g_quotient = match oneline_comment with
@@ -19,7 +19,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
 
     (* print_endline "Inference grammar:"; *)
     (* print_endline (string_of_grammar g); *)
-    let quotient = Quotient.quotient_mem g_quotient forbidden subst (Some goal) None qgraph_channel
+    let quotient = Quotient.quotient_mem g_quotient forbidden dict (Some goal) None qgraph_channel
     and all_sym = g.rules |> List.rev_map (fun r -> r.left_symbol::r.right_part) |> List.flatten |> List.sort_uniq compare in
     let heuristic : (ext_element, int) Hashtbl.t = match h_fname with
         | Some fname -> begin

@@ -2,6 +2,7 @@ open Grammar
 
 type side = Left | Right
 
+(* compare the ext_rules. Sorting with this comparison puts the "biggest" rules at the beginning. *)
 let compare_ext_rule (r2: ext_rule) (r1: ext_rule) : int =
     let diff = List.compare_lengths (List.filter is_ext_element_non_terminal r1.ext_right_part) (List.filter is_ext_element_non_terminal r2.ext_right_part) in
     if diff <> 0 then diff
@@ -11,11 +12,14 @@ let compare_ext_rule (r2: ext_rule) (r1: ext_rule) : int =
         else (Hashtbl.hash r2.ext_right_part) - (Hashtbl.hash r1.ext_right_part) (* to be deterministic we want to compare any couple *)
     end
 
+(* the total duration *)
 let call_time = ref 0.
 
-let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) : bool -> ext_element -> ext_grammar * (part option) * bool  =
+let quotient_mem (g_initial: grammar) (forbidden: char list) (dict: (element,string) Hashtbl.t option) (goal_elem: element option) (values: (element, string) Hashtbl.t option) (graph_channel: out_channel option) : bool -> ext_element -> ext_grammar * (part option) * bool  =
 
+    (* the memorized word for each symbol *)
     let words : (ext_element, part) Hashtbl.t = Hashtbl.create 10000 in
+
     (* all the computed rules *)
     let mem : (ext_element, ext_part list) Hashtbl.t = Hashtbl.create 10000 in
 
@@ -40,12 +44,11 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
     let is_allowed (e: ext_element): bool = match e with
         | {e=Terminal s;_} -> not (List.exists (String.contains s) forbidden)
         | _ -> true in
-(*    let allowed_rules : ext_part list -> ext_part list = List.filter (List.for_all is_allowed) in*)
 
     let update_words (r: ext_rule) : unit =
         let lhs = r.ext_left_symbol in
         if not (Hashtbl.mem words lhs) then begin
-            let w = match subst with
+            let w = match dict with
                 | Some hashtbl when lhs.pf=[] && lhs.sf=[] && Hashtbl.mem hashtbl lhs.e -> [Terminal (Hashtbl.find hashtbl lhs.e)]
                 | _ -> r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else Hashtbl.find words e) |> List.concat in (* all the prerequisite for computing the word are already computed ! *)
             Hashtbl.add words lhs w
@@ -267,9 +270,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
                 (fuzzer_minimize [@tailcall]) goal_rules ((Terminal (Hashtbl.find (Option.get values) t))::word_prefix) q
         (* do we have a words saved for the start of the suffix ? *)
         | t::q,_ when Hashtbl.mem words t -> (fuzzer_minimize [@tailcall]) goal_rules ((List.rev (Hashtbl.find words t))@word_prefix) q
-        (* apply the best rule *)
-        | _ -> failwith "No words ?" in
-(*        | t::q,_ -> failwith ("No words?? "^(string_of_ext_element t)) (*;(fuzzer_minimize [@tailcall]) goal_rules word_prefix ((Hashtbl.find best_rule t)@q)*) in*)
+        | _ -> failwith "No words?" in
 
     let rec has_new (seen: ext_element list) (p: ext_element list) : bool = match p with
         | [] -> false
@@ -282,7 +283,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (subst: (element,st
         let rec build_derivation_aux (sofar: ext_part) (acc: (ext_rule * ext_part) list) (p: ext_part) : (ext_rule * ext_part) list = match p with
             | [] -> acc
             | t::q when is_ext_element_terminal t || t.e = Nonterminal "poirot_nonterminal_comment" ->
-                    (build_derivation_aux [@tailcall]) (t::sofar) acc q
+                    (build_derivation_aux [@tailcall]) (t::sofar) acc q (* don't search in the oneline comment to find the goal *)
             | t::q-> let rhs = Hashtbl.find mem t in
                 let new_parts = rhs |> List.rev_map (fun rhs -> (t--->rhs),(List.rev sofar)@rhs@q) in
 (*                    let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in*)

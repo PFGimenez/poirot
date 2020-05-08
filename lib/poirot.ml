@@ -4,10 +4,10 @@ type oracle_status = Oracle.oracle_status
 
 let version = "0.4"
 
-let search ?(oneline_comment: string option = None) ?(subst: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) ?(save_h: bool = true) (oracle: string option -> oracle_status) (g: grammar) (goal: element) (start: element list) : (grammar * string) option =
+let search ?(oneline_comment: string option = None) ?(dict: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) ?(save_h: bool = true) (oracle: string option -> oracle_status) (g: grammar) (goal: element) (start: element list) : (grammar * string) option =
     let qgraph_channel = Option.map open_out qgraph_fname in
     let h_fname = if save_h then Some ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^".prt") else None in
-    match Inference.search oracle g goal start oneline_comment subst max_depth max_steps sgraph_fname qgraph_channel h_fname forbidden_chars with
+    match Inference.search oracle g goal start oneline_comment dict max_depth max_steps sgraph_fname qgraph_channel h_fname forbidden_chars with
     | None -> None
     | Some (g,w) -> Some ((Grammar.grammar_of_ext_grammar g), w)
 
@@ -15,7 +15,7 @@ let make_oracle_from_script ?(interval: float option = None) ?(timeout: float op
 
 let make_oracle_from_fun (f: string -> int) = Oracle.oracle_mem (fun s -> Oracle.oracle_status_of_int (f s))
 
-let read_subst : string -> (element,string) Hashtbl.t = Grammar_io.read_subst
+let read_dict : string -> (element,string) Hashtbl.t = Grammar_io.read_dict
 
 let quotient ?(oneline_comment: string option = None) ?(qgraph_fname: string option = None) (grammar_fname: string) (prefix: string) (suffix: string) (goal: element option) : (grammar * string option * bool) =
     let g = Grammar_io.read_bnf_grammar true grammar_fname in
