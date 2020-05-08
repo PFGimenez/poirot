@@ -10,6 +10,11 @@ type oracle_status = Syntax_error | (*Semantic_error |*) No_error | Grammar_erro
 
 let call_time = ref 0. and idle_time = ref 0. and call_nb = ref 0 and last_oracle_call = ref 0.
 
+let mem : (string, oracle_status) Hashtbl.t = Hashtbl.create 1000
+
+let update_mem (hashtable: (string, oracle_status) Hashtbl.t) : unit =
+    Hashtbl.iter (fun k v -> Hashtbl.add mem k v) hashtable
+
 let string_of_oracle_status (s: oracle_status) : string = match s with
     | Syntax_error -> "Syntax error"
 (*    | Semantic_error -> "Semantic error"*)
@@ -25,7 +30,6 @@ let oracle_status_of_int : int -> oracle_status = function
 
 (* add memoization to an oracle *)
 let oracle_mem_no_option (o: string -> oracle_status) : string -> oracle_status =
-    let mem : (string, oracle_status) Hashtbl.t = Hashtbl.create 1000 in
     fun (inj: string): oracle_status ->
         if Hashtbl.mem mem inj then begin
             Log.L.debug (fun m -> m "Oracle memoization: %s" inj);

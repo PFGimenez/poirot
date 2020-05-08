@@ -10,6 +10,7 @@ let ()=
     and max_steps = ref 10000
     and oracle_timeout = ref (-1.)
     and oracle_wait = ref (-1.)
+    and oracle_save = ref true
     and grammar = ref None
     and oracle_fname = ref None
     and dict = ref None
@@ -43,6 +44,7 @@ let ()=
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
         ("-nosave_h",     Arg.Clear save_h,    "Disable the heuristics save");
+        ("-nosave_oracle",   Arg.Clear oracle_save,    "Disable the oracle calls save");
         ("-oneline_comment",     Arg.String (fun s -> oneline_comment := Some s),    "The string that starts one-line comment");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
         ("-lowercase",  Arg.Set lowercase,     "Convert all terminals to lowercase");
@@ -74,7 +76,7 @@ let ()=
         Poirot.set_reporter (Logs_fmt.reporter ());
 
         let s = Option.map Poirot.read_dict !dict in
-        match (Poirot.search ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_h:!save_h oracle grammar goal start, !injg_fname) with
+        match (Poirot.search ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_h:!save_h ~save_oracle:!oracle_save oracle grammar goal start, !injg_fname) with
         | Some (gram, word), Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^word)
         | Some (_, word), _ -> print_endline ("Injection: "^word)
         | None, _ -> print_endline "No grammar found";

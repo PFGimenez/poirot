@@ -6,6 +6,7 @@
 - Dune installs `quotient_poirot`
 - Heuristic save can be disabled
 - Can set a minimal interval between two oracle calls
+- By default, save the previous oracle calls
 
 # v0.3
 - Dune installs `poirot` and `bnf2antlr4`

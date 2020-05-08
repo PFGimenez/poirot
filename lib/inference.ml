@@ -9,9 +9,11 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
-    let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
+let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string option) (o_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
+
     let closedset: (ext_element, unit) Hashtbl.t = Hashtbl.create 10000 in
+
+    let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
     (* add the oneline comment if requested *)
     let g,g_quotient = match oneline_comment with
     | Some s -> let g_comment = Grammar.add_comment g_non_comment s in
@@ -32,8 +34,18 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                         end
         | None -> Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
 
-    (* used to know if the heuristic file need to be updated *)
+    (* load the oracle calls *)
+    let oracle_mem : (string, Oracle.oracle_status) Hashtbl.t option = match o_fname with
+        | Some fname -> begin
+                            try let out = Marshal.from_channel (open_in_bin fname) in Log.L.info (fun m -> m "Imported oracle calls from %s" fname); Some out
+                            with _ -> Log.L.info (fun m -> m "New oracle file: %s" fname); None
+                        end
+        | None -> None in
+    Option.iter Oracle.update_mem oracle_mem;
+
+    (* used to know if the heuristic file and oracle file need to be updated *)
     let initial_heuristic_length = Hashtbl.length heuristic in
+    let initial_oracle_length = Hashtbl.length Oracle.mem in
 
     (* tail-recursive *)
     (* build all the possible one-step derivation of part p in the grammar g *)
@@ -235,7 +247,13 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         (* save the heuristics if necessary *)
         match h_fname with
             | Some fname when Hashtbl.length heuristic > initial_heuristic_length -> Log.L.info (fun m -> m "Save heuristic values into %s" fname); Marshal.to_channel (open_out_bin fname) heuristic []
-            | _ -> () in
+            | _ -> ();
+
+        (* save the oracle answers if necessary *)
+        match o_fname with
+            | Some fname when Hashtbl.length Oracle.mem > initial_oracle_length -> Log.L.info (fun m -> m "Save oracle calls into %s" fname); Marshal.to_channel (open_out_bin fname) Oracle.mem []
+            | _ -> ()
+        in
 
     let inj = start in
 

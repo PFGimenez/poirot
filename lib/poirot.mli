@@ -29,17 +29,17 @@ val version : string
  @param sgraph_fname (optional, for debug) export the search graph in graphviz dot format.
  @param qgraph_fname (optional, for debug) export the quotient graph in graphviz dot format.
  *)
-val search : ?oneline_comment: string option -> ?dict:(element,string) Hashtbl.t option -> ?max_depth:int -> ?max_steps:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> ?save_h:bool -> (string option -> oracle_status) -> grammar -> element -> element list -> (grammar * string) option
+val search : ?oneline_comment: string option -> ?dict:(element,string) Hashtbl.t option -> ?max_depth:int -> ?max_steps:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> ?save_h:bool -> ?save_oracle: bool -> (string option -> oracle_status) -> grammar -> element -> element list -> (grammar * string) option
 
 (** [quotient g_fname left_quotient right_quotient goal] returns the grammar in file [g_fname] after a left quotient by [left_quotient] and a right quotient by [right_quotient], as well as an word of this language. The word will contain the goal (if possible) if it is not None. The boolean returned tells whether the goal has been reached. The grammar must be in BNF format *)
 val quotient : ?oneline_comment: string option -> ?qgraph_fname: string option -> string -> string -> string -> element option -> grammar * (string option) * bool
 
 (** {1 Oracle functions} *)
 
-(** [make_oracle_from_script filename] returns an oracle based on the script [filename]. The script must return error code 0 if the injection is lexically correct, 1 otherwise. *)
+(** [make_oracle_from_script filename] returns an oracle based on the script [filename]. The script must return error code 0 if the injection is lexically correct, 180 otherwise. *)
 val make_oracle_from_script : ?interval: float option -> ?timeout: float option -> string -> (string option -> oracle_status)
 
-(** [make_oracle_from_fun f] returns an oracle based on the function [f]. The function must return 0 if the injection is lexically correct, 1 otherwise. *)
+(** [make_oracle_from_fun f] returns an oracle based on the function [f]. The function must return 0 if the injection is lexically correct, 180 otherwise. *)
 val make_oracle_from_fun : (string -> int) -> (string option -> oracle_status)
 
 (** {1 Grammar manipulation functions} *)
