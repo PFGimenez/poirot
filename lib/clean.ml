@@ -136,8 +136,11 @@ let remove_trivial_rules (g: ext_grammar) : ext_grammar = (* remove the rules a 
     g.ext_axiom @@@ (List.filter (fun r -> not (is_ext_element_non_terminal r.ext_left_symbol) || r.ext_right_part <> [r.ext_left_symbol]
 ) g.ext_rules)
 
+let clean_once (g : ext_grammar) : ext_rule list = (remove_epsilon_symbols (remove_trivial_rules (remove_unreachable_symbols (remove_useless_symbols g)))).ext_rules
+
 (* clean: remove epsilon, trivial rules, unreachable and useless symbols *)
-let clean (g : ext_grammar) : ext_grammar = (remove_epsilon_symbols (remove_trivial_rules (remove_unreachable_symbols (remove_useless_symbols g))))
+let clean : ext_grammar -> ext_grammar = iterate_until_convergence clean_once
+(* a simple pass may not be sufficiant : remove_epsilon can produce useless symbols if there are epsilon-only symbols *)
 
 
 (* clean classical grammar *)

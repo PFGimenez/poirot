@@ -159,7 +159,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (dict: (element,str
                     |> remove_pf_sf_epsilon Right
                     |> remove_pf_sf_epsilon Left in
 
-    (* we add the rules of the base grammar *)
+    (* we update the rules of the base grammar *)
     replace_rules_in_mem g_rules;
     ignore (update_words_and_useless g_rules);
 
