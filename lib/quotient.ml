@@ -130,25 +130,34 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (dict: (element,str
 
     (* call remove_epsilon with the rules and the reversed rules *)
     (* doesn't need to reverse as it applies to both sides *)
-    let rec remove_pf_sf_epsilon (rlist: ext_rule list): ext_rule list =
+    let rec remove_pf_sf_epsilon (sd: side) (rlist: ext_rule list): ext_rule list =
         (* the rules must be sorted to compare them to the new rules after epsilon-free *)
         assert ((List.sort_uniq compare rlist) = rlist);
-        let remove_pf_sf_epsilon_once (rlist: ext_rule list): ext_rule list =
+        let remove_sf_epsilon_once (rlist: ext_rule list): ext_rule list =
             rlist
-                    |> List.rev_map remove_epsilon (* remove epsilon at beginning *)
-                    |> List.flatten
                     |> List.rev_map (fun r -> r.ext_left_symbol ---> (List.rev r.ext_right_part))
                     |> List.rev_map remove_epsilon
                     |> List.flatten
                     |> List.rev_map (fun r -> r.ext_left_symbol ---> (List.rev r.ext_right_part)) (* remove epsilon at end *)
                     |> List.sort_uniq compare in
+
+        let remove_pf_epsilon_once (rlist: ext_rule list): ext_rule list =
+            rlist
+                    |> List.rev_map remove_epsilon (* remove epsilon at beginning *)
+                    |> List.flatten
+                    |> List.sort_uniq compare in
+
         replace_rules_in_mem rlist; (* replace in memory before the epsilon removing *)
-        let new_rules = List.sort_uniq compare (remove_pf_sf_epsilon_once rlist) in
-        if new_rules <> rlist then (remove_pf_sf_epsilon [@tailcall]) new_rules
+        let new_rules = List.sort_uniq compare (match sd with
+        | Left -> remove_pf_epsilon_once rlist
+        | Right -> remove_sf_epsilon_once rlist) in
+        if new_rules <> rlist then (remove_pf_sf_epsilon [@tailcall]) sd new_rules
         else new_rules in
 
     (* the grammar must be epsilon-free ! *)
-    let g_rules = remove_pf_sf_epsilon (List.sort_uniq compare (ext_grammar_of_grammar g_initial).ext_rules) in
+    let g_rules = List.sort_uniq compare (ext_grammar_of_grammar g_initial).ext_rules
+                    |> remove_pf_sf_epsilon Right
+                    |> remove_pf_sf_epsilon Left in
 
     (* we add the rules of the base grammar *)
     replace_rules_in_mem g_rules;
@@ -238,7 +247,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (dict: (element,str
 (*                        |> List.map (fun r -> print_endline ("B: "^(string_of_ext_rule r)); r)*)
                         |> List.filter (fun r -> List.for_all (fun e -> not (is_useless e)) r.ext_right_part) (* remove rules with useless symbols *)
                         |> List.sort_uniq compare
-                        |> remove_pf_sf_epsilon (* make epsilon-free *)
+                        |> remove_pf_sf_epsilon sd (* make epsilon-free *)
                         |> replace_rules_in_mem;
 
                     (* print_endline "Finally"; *)
@@ -297,7 +306,7 @@ let quotient_mem (g_initial: grammar) (forbidden: char list) (dict: (element,str
         | [] -> [] (* no path *)
         | (form,path)::_ when List.mem (Option.get goal) form -> List.rev path
         | (form,_)::q when not (has_new seen form) -> (find_path_to_goal_aux [@tailcall]) seen q
-        | (form,path)::q -> let new_items = List.map (fun (r,p) -> (p,r::path)) (build_derivation form) in
+        | (form,path)::q -> let new_items = List.rev_map (fun (r,p) -> (p,r::path)) (build_derivation form) in
             (find_path_to_goal_aux [@tailcall]) (List.sort_uniq compare (form@seen)) (q@new_items) in
 
     let find_path_to_goal (axiom : ext_element) : ext_rule list =
