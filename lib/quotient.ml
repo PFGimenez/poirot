@@ -328,13 +328,20 @@ let get_injection (quo: t) (e: ext_element) (goal: element option) : (part optio
         out
     end
 
-    (* TODO: couper en deux le mot *)
+(* tail-recursive *)
+let rec split_list (l: element list) (middle_index: int) (aux: element list) : (element list) * (element list) =
+    match middle_index,l with
+    | n,[] when n>0 -> (List.rev aux, [])
+    | n,_ when n<=0 -> (List.rev aux, l)
+    | n,t::q -> assert (n>0); (split_list [@tailcall]) q (n-1) (t::aux)
+    | _,[] -> assert false (* previous pattern is exhaustive *)
+
 let is_in_language (quo: t) (axiom: ext_element) (word: part) : bool =
-    (* the word is put in the shortest part *)
-    let e = match List.compare_lengths axiom.pf axiom.sf >= 0 with
-        | true -> {pf=axiom.pf;e=axiom.e;sf=word@axiom.sf}
-        | _ -> {pf=(List.rev word)@axiom.pf;e=axiom.e;sf=axiom.sf} in
+    let l1,l2 = split_list word ((List.length (word) + List.length axiom.sf - List.length axiom.pf)/2) [] in
+    (* we balance in the prefix and the suffix *)
+    let e = {pf=(List.rev l1)@axiom.pf;e=axiom.e;sf=l2@axiom.sf} in
     quotient_symbols quo [e];
+    (* print_endline (string_of_word word); *)
     (* print_endline ((string_of_ext_element e)^" "^(string_of_ext_rules (get_all_rules quo [e]))); *)
     (* print_endline (string_of_bool (can_epsilon quo e)); *)
     can_epsilon quo e
