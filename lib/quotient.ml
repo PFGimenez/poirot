@@ -19,59 +19,59 @@ let compare_ext_rule (r2: ext_rule) (r1: ext_rule) : int =
         else (Hashtbl.hash r2.ext_right_part) - (Hashtbl.hash r1.ext_right_part) (* to be deterministic we want to compare any couple *)
     end
 
-let rec get_reachable_symbols (q: t) (slist : ext_element list) : ext_element list =
-    let get_reachable_symbols_once (slist : ext_element list) : ext_element list = slist |> List.rev_map (Hashtbl.find q.mem) |> List.concat |> List.cons slist |> List.concat |> List.sort_uniq compare |> List.filter is_ext_element_non_terminal in
+let rec get_reachable_symbols (quo: t) (slist : ext_element list) : ext_element list =
+    let get_reachable_symbols_once (slist : ext_element list) : ext_element list = slist |> List.rev_map (Hashtbl.find quo.mem) |> List.concat |> List.cons slist |> List.concat |> List.sort_uniq compare |> List.filter is_ext_element_non_terminal in
     let slist2 = get_reachable_symbols_once slist in
-    if List.compare_lengths slist slist2 = 0 then slist else (get_reachable_symbols [@tailcall]) q slist2
+    if List.compare_lengths slist slist2 = 0 then slist else (get_reachable_symbols [@tailcall]) quo slist2
 
-let is_processed (q: t) (e: ext_element) : bool = Hashtbl.mem q.mem e
+let is_processed (quo: t) (e: ext_element) : bool = Hashtbl.mem quo.mem e
 
 (* is the element useless, i.e. it is processed but is not bound to any rule *)
-let is_useless (q: t) (e: ext_element) : bool = Hashtbl.find_opt q.mem e = Some []
+let is_useless (quo: t) (e: ext_element) : bool = Hashtbl.find_opt quo.mem e = Some []
 
-let set_useless (q: t) (e: ext_element) : unit = Hashtbl.replace q.mem e []
+let set_useless (quo: t) (e: ext_element) : unit = Hashtbl.replace quo.mem e []
 
-let initialize_mem (q: t) (e: ext_element) : unit = assert (not (is_processed q e)); Hashtbl.replace q.mem e []
+let initialize_mem (quo: t) (e: ext_element) : unit = assert (not (is_processed quo e)); Hashtbl.replace quo.mem e []
 
-let set_color (q: t) (c: string) (e: ext_element) : unit = Grammar_io.set_node_color_in_graph q.graph_channel e c
+let set_color (quo: t) (c: string) (e: ext_element) : unit = Grammar_io.set_node_color_in_graph quo.graph_channel e c
 
-let is_allowed (q: t) (e: ext_element): bool = match e with
-    | {e=Terminal s;_} -> not (List.exists (String.contains s) q.forbidden)
+let is_allowed (quo: t) (e: ext_element): bool = match e with
+    | {e=Terminal s;_} -> not (List.exists (String.contains s) quo.forbidden)
     | _ -> true
 
-let update_words (q: t) (r: ext_rule) : unit =
+let update_words (quo: t) (r: ext_rule) : unit =
     let lhs = r.ext_left_symbol in
-    if not (Hashtbl.mem q.words lhs) then begin
-        let w = match q.dict with
+    if not (Hashtbl.mem quo.words lhs) then begin
+        let w = match quo.dict with
             | Some hashtbl when lhs.pf=[] && lhs.sf=[] && Hashtbl.mem hashtbl lhs.e -> [Terminal (Hashtbl.find hashtbl lhs.e)]
-            | _ -> r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else Hashtbl.find q.words e) |> List.concat in (* all the prerequisite for computing the word are already computed ! *)
-        Hashtbl.add q.words lhs w
+            | _ -> r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else Hashtbl.find quo.words e) |> List.concat in (* all the prerequisite for computing the word are already computed ! *)
+        Hashtbl.add quo.words lhs w
     end
 
 
 (* based on level decomposition *)
-let update_words_and_useless (q: t) (original_rules: ext_rule list) : ext_element list =
+let update_words_and_useless (quo: t) (original_rules: ext_rule list) : ext_element list =
     let rec update_words_and_useless_aux (reached_sym: ext_element list) (original_rules: ext_rule list) : ext_element list =
-        let usable_rules = List.filter (fun r -> List.for_all (fun s -> (is_ext_element_terminal s || Hashtbl.mem q.words s) && is_allowed q s) r.ext_right_part) original_rules in
+        let usable_rules = List.filter (fun r -> List.for_all (fun s -> (is_ext_element_terminal s || Hashtbl.mem quo.words s) && is_allowed quo s) r.ext_right_part) original_rules in
         if usable_rules = [] then reached_sym (* the algorithm is done *)
         else begin
-            List.iter (update_words q) (List.sort compare_ext_rule usable_rules);
-            (update_words_and_useless_aux [@tailcall]) ((List.rev_map lhs_of_ext_rule usable_rules)@reached_sym) (List.filter (fun r -> not (Hashtbl.mem q.words r.ext_left_symbol)) original_rules)
+            List.iter (update_words quo) (List.sort compare_ext_rule usable_rules);
+            (update_words_and_useless_aux [@tailcall]) ((List.rev_map lhs_of_ext_rule usable_rules)@reached_sym) (List.filter (fun r -> not (Hashtbl.mem quo.words r.ext_left_symbol)) original_rules)
         end in
     let reached = update_words_and_useless_aux [] original_rules in
     (* unreachable symbols are useless *)
-    original_rules |> List.rev_map lhs_of_ext_rule |> List.filter (fun e -> not (List.mem e reached)) |> (*List.map (fun e -> print_endline ("Useless: "^(string_of_ext_element e));e) |>*) List.iter (set_useless q);
+    original_rules |> List.rev_map lhs_of_ext_rule |> List.filter (fun e -> not (List.mem e reached)) |> (*List.map (fun e -> print_endline ("Useless: "^(string_of_ext_element e));e) |>*) List.iter (set_useless quo);
     reached
 
 (* Get the set of rules of a list of ext_element. No reverse *)
-let get_all_rules (q: t) (elist: ext_element list) : ext_rule list =
-    elist |> List.rev_map (fun e -> List.rev_map (fun rhs -> e ---> rhs) (Hashtbl.find q.mem e)) |> List.concat
+let get_all_rules (quo: t) (elist: ext_element list) : ext_rule list =
+    elist |> List.rev_map (fun e -> List.rev_map (fun rhs -> e ---> rhs) (Hashtbl.find quo.mem e)) |> List.concat
 
 (* construct a grammar, given an axiom, from the memory *)
-let grammar_of_mem (q: t) (axiom : ext_element) : ext_grammar =
+let grammar_of_mem (quo: t) (axiom : ext_element) : ext_grammar =
     assert (is_ext_element_non_terminal axiom);
-    let rules_of_element : ext_element -> ext_rule list = fun e -> (Hashtbl.find q.mem e |> List.rev_map ((--->) e)) in
-    let rules = get_reachable_symbols q [axiom] |> List.rev_map rules_of_element |> List.concat in
+    let rules_of_element : ext_element -> ext_rule list = fun e -> (Hashtbl.find quo.mem e |> List.rev_map ((--->) e)) in
+    let rules = get_reachable_symbols quo [axiom] |> List.rev_map rules_of_element |> List.concat in
     axiom @@@ rules
 
 (* reverse an extended element depending of the reverse variable *)
@@ -85,87 +85,87 @@ let reverse_rule (sd: side) (r: ext_part) : ext_part = match sd with
     | Left -> r
 
 (* get the rules from mem, reversing them if necessary *)
-let get_rules (q: t) (sd: side) (lhs: ext_element) : ext_part list =
-    Hashtbl.find q.mem lhs |> List.rev_map (reverse_rule sd)
+let get_rules (quo: t) (sd: side) (lhs: ext_element) : ext_part list =
+    Hashtbl.find quo.mem lhs |> List.rev_map (reverse_rule sd)
 
 (* memorize rules, reversing them if necessary *)
-let add_rules_in_mem (q: t) (sd: side) (lhs: ext_element) (rlist: ext_part list) : unit =
+let add_rules_in_mem (quo: t) (sd: side) (lhs: ext_element) (rlist: ext_part list) : unit =
     (* print_endline ("Add "^(string_of_ext_element lhs)^(if sd=Right then "right" else "left")); *)
     let rev_new_rules = List.rev_map (reverse_rule sd) rlist in
     (* List.iter (fun p -> print_endline (string_of_ext_rule (lhs ---> p))) rev_new_rules; *)
     match rlist with
         | [] -> ()
-        | _ -> let prev_rules = Hashtbl.find_opt q.mem lhs in
-            if prev_rules = None then Hashtbl.add q.mem lhs rev_new_rules
-            else Hashtbl.replace q.mem lhs (rev_new_rules@(Option.get prev_rules))
+        | _ -> let prev_rules = Hashtbl.find_opt quo.mem lhs in
+            if prev_rules = None then Hashtbl.add quo.mem lhs rev_new_rules
+            else Hashtbl.replace quo.mem lhs (rev_new_rules@(Option.get prev_rules))
 
 (* memorize a rule, reversing them if necessary *)
-let add_rule_in_mem (q: t) (sd: side) (lhs: ext_element) (r: ext_part) : unit = add_rules_in_mem q sd lhs [r]
+let add_rule_in_mem (quo: t) (sd: side) (lhs: ext_element) (r: ext_part) : unit = add_rules_in_mem quo sd lhs [r]
 
 (* does e only derive epsilon ? *)
-let is_epsilon (q: t) (e: ext_element) : bool = List.for_all ((=) []) (Hashtbl.find q.mem e)
+let is_epsilon (quo: t) (e: ext_element) : bool = List.for_all ((=) []) (Hashtbl.find quo.mem e)
 
 (* can e derive epsilon ? *)
-let can_epsilon (q: t) (e: ext_element) : bool = List.exists ((=) []) (Hashtbl.find q.mem e)
+let can_epsilon (quo: t) (e: ext_element) : bool = List.exists ((=) []) (Hashtbl.find quo.mem e)
 
-let replace_rules_in_mem (q: t) (rlist: ext_rule list) : unit =
+let replace_rules_in_mem (quo: t) (rlist: ext_rule list) : unit =
     (* remove the previous rhs *)
-    List.iter (fun r -> Hashtbl.replace q.mem r.ext_left_symbol []) rlist;
+    List.iter (fun r -> Hashtbl.replace quo.mem r.ext_left_symbol []) rlist;
     (* add the new rules *)
-    List.iter (fun r -> add_rule_in_mem q Left r.ext_left_symbol r.ext_right_part) rlist
+    List.iter (fun r -> add_rule_in_mem quo Left r.ext_left_symbol r.ext_right_part) rlist
 
 (* create variants of a rule depending of whether the first element is or can be epsilon (and only the first element) *)
-let remove_epsilon (qu: t) (r: ext_rule) : ext_rule list = match r.ext_right_part with
+let remove_epsilon (quo: t) (r: ext_rule) : ext_rule list = match r.ext_right_part with
     | [] -> [r.ext_left_symbol ---> []]
     | (t::_) as l when is_ext_element_terminal t -> [r.ext_left_symbol ---> l] (* a terminal can't derive an epsilon *)
-    | t::q when is_epsilon qu t -> [r.ext_left_symbol ---> q] (* t always derive an epsilon: we remove it *)
-    | (t::q) as l when can_epsilon qu t -> [r.ext_left_symbol ---> l;r.ext_left_symbol ---> q] (* t can derive an epsilon: we add a new rule without it *)
+    | t::q when is_epsilon quo t -> [r.ext_left_symbol ---> q] (* t always derive an epsilon: we remove it *)
+    | (t::q) as l when can_epsilon quo t -> [r.ext_left_symbol ---> l;r.ext_left_symbol ---> q] (* t can derive an epsilon: we add a new rule without it *)
     | l -> [r.ext_left_symbol ---> l]
 
 (* call remove_epsilon with the rules and the reversed rules *)
 (* doesn't need to reverse as it applies to both sides *)
-let rec remove_pf_sf_epsilon (q: t) (sd: side) (rlist: ext_rule list): ext_rule list =
+let rec remove_pf_sf_epsilon (quo: t) (sd: side) (rlist: ext_rule list): ext_rule list =
     (* the rules must be sorted to compare them to the new rules after epsilon-free *)
     assert ((List.sort_uniq compare rlist) = rlist);
     let remove_sf_epsilon_once (rlist: ext_rule list): ext_rule list =
         rlist
                 |> List.rev_map (fun r -> r.ext_left_symbol ---> (List.rev r.ext_right_part))
-                |> List.rev_map (remove_epsilon q)
+                |> List.rev_map (remove_epsilon quo)
                 |> List.flatten
                 |> List.rev_map (fun r -> r.ext_left_symbol ---> (List.rev r.ext_right_part)) (* remove epsilon at end *)
                 |> List.sort_uniq compare in
 
     let remove_pf_epsilon_once (rlist: ext_rule list): ext_rule list =
         rlist
-                |> List.rev_map (remove_epsilon q) (* remove epsilon at beginning *)
+                |> List.rev_map (remove_epsilon quo) (* remove epsilon at beginning *)
                 |> List.flatten
                 |> List.sort_uniq compare in
 
-    replace_rules_in_mem q rlist; (* replace in memory before the epsilon removing *)
+    replace_rules_in_mem quo rlist; (* replace in memory before the epsilon removing *)
     let new_rules = List.sort_uniq compare (match sd with
     | Left -> remove_pf_epsilon_once rlist
     | Right -> remove_sf_epsilon_once rlist) in
-    if new_rules <> rlist then (remove_pf_sf_epsilon [@tailcall]) q sd new_rules
+    if new_rules <> rlist then (remove_pf_sf_epsilon [@tailcall]) quo sd new_rules
     else new_rules
 
 (* apply a left quotient of a single rule with a prefix that is a single element *)
-let quotient_by_one_element (qu: t) (sd: side) (pf: element) (new_lhs: ext_element) (r: ext_part) : ext_element option =
+let quotient_by_one_element (quo: t) (sd: side) (pf: element) (new_lhs: ext_element) (r: ext_part) : ext_element option =
     assert (is_non_terminal new_lhs.e);
     if new_lhs.e = pf && (new_lhs.pf@new_lhs.sf) = [pf] then
-        add_rule_in_mem qu sd new_lhs [];
+        add_rule_in_mem quo sd new_lhs [];
     match r with
     | [] -> None
     (* A -> aBC with prefix = a *)
-    | t::q when t.e=pf && is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); add_rule_in_mem qu sd new_lhs q; None
+    | t::q when t.e=pf && is_ext_element_terminal t -> assert (t.pf=[] && t.sf=[]); add_rule_in_mem quo sd new_lhs q; None
     (* A -> aBC with prefix != a *)
     | t::_ when is_ext_element_terminal t -> None
     (* A -> B_{D|}C *)
     | t::q -> let new_elem = {pf=pf::t.pf;e=t.e;sf=t.sf} in
-        add_rule_in_mem qu sd new_lhs (new_elem::q); Some t
+        add_rule_in_mem quo sd new_lhs (new_elem::q); Some t
 
 (* compute new rules with a new prefix *)
 (* tail recursive *)
-let rec quotient_by_one_element_mem (qu: t) (sd: side) (prefix: element) (lhs_list: ext_element list) (all_new_elems: ext_element list) : (ext_element list) =
+let rec quotient_by_one_element_mem (quo: t) (sd: side) (prefix: element) (lhs_list: ext_element list) (all_new_elems: ext_element list) : (ext_element list) =
     match lhs_list with
     | [] -> all_new_elems
     | prev_lhs::q ->
@@ -174,22 +174,22 @@ let rec quotient_by_one_element_mem (qu: t) (sd: side) (prefix: element) (lhs_li
                 | Right -> {pf=prev_lhs.pf;e=prev_lhs.e;sf=prefix::prev_lhs.sf}
                 | Left -> {pf=prefix::prev_lhs.pf;e=prev_lhs.e;sf=prev_lhs.sf} in
             (*print_endline ("New: "^(string_of_ext_element new_lhs));*)
-            if not (is_processed qu new_lhs) then begin
-                initialize_mem qu new_lhs;
-                let prev_lhs_to_quotient = get_rules qu sd prev_lhs |> List.filter_map (quotient_by_one_element qu sd prefix new_lhs) |> List.rev_map (reverse_ext_elem sd) |> List.sort_uniq compare in
+            if not (is_processed quo new_lhs) then begin
+                initialize_mem quo new_lhs;
+                let prev_lhs_to_quotient = get_rules quo sd prev_lhs |> List.filter_map (quotient_by_one_element quo sd prefix new_lhs) |> List.rev_map (reverse_ext_elem sd) |> List.sort_uniq compare in
                 (* all new lhs should have been already processed *)
-                assert (List.for_all (is_processed qu) prev_lhs_to_quotient);
+                assert (List.for_all (is_processed quo) prev_lhs_to_quotient);
                 (*List.iter (fun e -> print_endline (string_of_ext_element e)) prev_lhs_to_quotient;*)
-                if Option.is_some qu.graph_channel then begin
+                if Option.is_some quo.graph_channel then begin
                     let new_elems = List.rev_map (fun {pf;e;sf} -> {pf=prefix::pf;e=e;sf=sf}) prev_lhs_to_quotient in
-                    List.iter (fun e -> Grammar_io.add_edge_in_graph qu.graph_channel "" new_lhs (reverse_ext_elem sd e)) new_elems;
+                    List.iter (fun e -> Grammar_io.add_edge_in_graph quo.graph_channel "" new_lhs (reverse_ext_elem sd e)) new_elems;
                 end;
                 (*List.iter (fun p -> print_endline (string_of_ext_rule (new_lhs ---> p))) (Hashtbl.find mem new_lhs);*)
-                (quotient_by_one_element_mem [@tailcall]) qu sd prefix (prev_lhs_to_quotient@q) (new_lhs::all_new_elems)
+                (quotient_by_one_element_mem [@tailcall]) quo sd prefix (prev_lhs_to_quotient@q) (new_lhs::all_new_elems)
             end else
                 (*(print_endline "Already processed!";
                 print_endline (string_of_ext_rules (get_all_rules [new_lhs]));*)
-                (quotient_by_one_element_mem [@tailcall]) qu  sd prefix q all_new_elems;
+                (quotient_by_one_element_mem [@tailcall]) quo  sd prefix q all_new_elems;
         end
 
 (* compute the rules of a ext_element and do it recursively with all the prefix/suffix *)
@@ -350,7 +350,6 @@ let get_injection (quo: t) (e: ext_element) (goal: element option) : (part optio
             out
         end
     end
-
 
 let print_statistics (quo: t) : unit =
     Log.L.debug (fun m -> m "Quotient memory size: %d" (Hashtbl.length quo.mem))

@@ -237,6 +237,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
 
     let finalize () =
         (* print the statistics *)
+        Quotient.print_statistics quotient;
         let total_duration = Unix.gettimeofday () -. start_time in
         Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, quotient: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. Quotient.get_call_time quotient -. !Oracle.call_time -. !Oracle.idle_time) (Quotient.get_call_time quotient) !Oracle.call_time !Oracle.idle_time);
         Log.L.info (fun m -> m "%d calls to oracle." !Oracle.call_nb);
