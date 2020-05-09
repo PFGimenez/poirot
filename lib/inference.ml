@@ -11,12 +11,14 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 
 let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
 
+    let neg_oracle : part list ref = ref [] in
+
     let closedset: (ext_element, unit) Hashtbl.t = Hashtbl.create 10000 in
 
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
     (* add the oneline comment if requested *)
     let g = match oneline_comment with
-    | Some s -> let g_comment = Grammar.add_comment g_non_comment s in
+    | Some s -> let g_comment = add_comment g_non_comment s in
                 g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules) (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
     | None -> g_non_comment in
 
@@ -130,6 +132,12 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         end;
         Hashtbl.find heuristic eh in
 
+    (* tail-recursive *)
+    let rec verify_new_oracle_calls (e: ext_element) (oracle_calls: part list) : bool = match oracle_calls with
+        | [] -> true
+        | p::_ when Quotient.is_in_language quotient e p -> false
+        | _::q -> (verify_new_oracle_calls [@tailcall]) e q in
+
    (* compare for the open set sorting *)
     let compare_with_score (a: node) (b: node) : int = match a,b with
         | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
@@ -195,6 +203,11 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             if Hashtbl.find uniq_rule e.e && g_val < max_depth && step < max_steps then begin
                 Log.L.debug (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
+            (* if this language is invalidated by a new oracle call *)
+            end else if not (verify_new_oracle_calls e !neg_oracle) then begin
+                    Log.L.debug (fun m -> m "Invalid");
+                    set_node_color_in_graph e "crimson";
+                    (search_aux [@tailcall]) (step + 1) q
             end else begin
                 let word,goal_reached = Quotient.get_injection quotient e (Some goal) in
                 (* print_endline "Grammar:"; *)
@@ -207,6 +220,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 (* call the fuzzer/oracle with this grammar *)
                 (* TODO: changer oracle : ne peut pas prendre de None *)
                 let status = oracle (Option.map string_of_word word) in
+                if status = Syntax_error then neg_oracle := (Option.get word)::!neg_oracle;
                 if goal_reached then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";

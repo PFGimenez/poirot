@@ -1,5 +1,7 @@
 # v0.5
 - Rename `quotient_poirot` into `whitebox_poirot`
+- "is_in_language" feature
+- Inference uses previous oracle calls
 
 # v0.4
 - Fuzzer and quotient rewrite
