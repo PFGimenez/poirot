@@ -5,9 +5,9 @@
     (libraries poirot logs.fmt))
 
 (executable
-    (name quotient_poirot)
-    (public_name quotient_poirot)
-    (modules quotient_poirot)
+    (name whitebox_poirot)
+    (public_name whitebox_poirot)
+    (modules whitebox_poirot)
     (libraries poirot))
 
 (executable

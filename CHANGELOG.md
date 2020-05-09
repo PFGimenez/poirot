@@ -1,3 +1,6 @@
+# v0.5
+- Rename `quotient_poirot` into `whitebox_poirot`
+
 # v0.4
 - Fuzzer and quotient rewrite
 - Oracle timeout
@@ -19,7 +22,7 @@
 # v0.2
 - Heuristic serialization and memoization
 - Optimization of the A* openset ordering
-- Add the `make_oracle_from_…` functions.
+- Add the `make_oracle_from_…` functions
 - Rewrite the heuristic computation
 - Rewrite the fuzzer
 - The initial injection can be empty
