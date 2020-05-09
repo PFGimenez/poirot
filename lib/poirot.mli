@@ -42,6 +42,9 @@ val make_oracle_from_script : ?interval: float option -> ?timeout: float option 
 (** [make_oracle_from_fun f] returns an oracle based on the function [f]. The function must return 0 if the injection is lexically correct, 180 otherwise. *)
 val make_oracle_from_fun : (string -> int) -> (string option -> oracle_status)
 
+(** [make_oracle_from_pf_sf g_fname prefix suffix] returns an oracle based on a given grammar quotiented by a prefix and a suffix. Useful to simulate a system *)
+val make_oracle_from_pf_sf : ?oneline_comment: string option -> string -> string -> string -> (string option -> oracle_status)
+
 (** {1 Grammar manipulation functions} *)
 
 (** [to_uppercase g] returns the grammar [g] with uppercased chars. If simplified, nonterminals may disappear. *)

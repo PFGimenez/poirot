@@ -11,8 +11,10 @@ let ()=
     and oracle_timeout = ref (-1.)
     and oracle_wait = ref (-1.)
     and oracle_save = ref true
-    and grammar = ref None
     and oracle_fname = ref None
+    and grammar_fname = ref None
+    and prefix = ref None
+    and suffix = ref None
     and dict = ref None
     and goal = ref None
     and start = ref None
@@ -31,9 +33,10 @@ let ()=
             verbose_lvl := Result.get_ok r in
 
     let speclist = [
-        ("-grammar",    Arg.String (fun s -> grammar := Some (Poirot.read_bnf_grammar s)),     "Target grammar");
+        ("-grammar",    Arg.String (fun s -> grammar_fname := Some s),     "Target grammar");
         ("-goal",       Arg.String (fun s -> goal := Some (Poirot.read_token s)),     "Terminal or nonterminal to reach");
         ("-oracle",     Arg.String (fun s -> oracle_fname := Some s),     "Oracle script filename");
+        ("-oracle_pf_sf", Arg.Tuple ([Arg.String (fun s -> prefix := Some s);Arg.String (fun s -> suffix := Some s)]), "Oracle based on the simulation of a query given a prefix and a suffix");
         ("-start",      Arg.String (fun s -> start := Some (Poirot.read_tokens s)),     "A valid injection, either terminal or nonterminal");
         ("-avoid",      Arg.Set_string avoid,     "List of characters to avoid");
         ("-dict",      Arg.String (fun s -> dict := Some s),     "Filename of the semantics dictionary");
@@ -54,8 +57,7 @@ let ()=
         ("-v",    Arg.Unit (fun () -> print_endline ("Poirot v"^Poirot.version)),     "Show Poirot version")
     ] in
     Arg.parse speclist ignore ("Poirot v"^Poirot.version);
-
-    if !grammar <> None && !oracle_fname <> None && !goal <> None  && !start <> None then
+    if !grammar_fname <> None && ((!oracle_fname <> None) <> (!prefix <> None)) && !goal <> None  && !start <> None then
         let timeout = match !oracle_timeout with
             | -1. -> None
             | n when n > 0. -> Some n
@@ -65,10 +67,13 @@ let ()=
             | n when n > 0. -> Some n
             | _ -> failwith "Negative interval!" in
 
-        let grammar = Option.get !grammar
+        let grammar_fname = Option.get !grammar_fname in
+        let grammar = Poirot.read_bnf_grammar grammar_fname
         and goal = Option.get !goal
-        and start = Option.get !start
-        and oracle = Poirot.make_oracle_from_script ~interval:wait ~timeout:timeout (Option.get !oracle_fname) in
+        and start = Option.get !start in
+        let oracle = match !oracle_fname with
+        | None -> Poirot.make_oracle_from_pf_sf ~oneline_comment:!oneline_comment grammar_fname (Option.get !prefix) (Option.get !suffix)
+        | Some fname -> Poirot.make_oracle_from_script ~interval:wait ~timeout:timeout fname in
 
         let grammar = if !lowercase then Poirot.to_lowercase ~simplify:!simplify grammar else (if !uppercase then Poirot.to_uppercase ~simplify:!simplify grammar else grammar) in
 
@@ -80,4 +85,4 @@ let ()=
         | Some (gram, word), Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^word)
         | Some (_, word), _ -> print_endline ("Injection: "^word)
         | None, _ -> print_endline "No grammar found";
-    else print_endline "Error: grammar, goal, start and oracle are necessary"
+    else print_endline "Error: grammar, goal, start and one oracle (either -oracle or -oracle_pf_sf) are necessary"
