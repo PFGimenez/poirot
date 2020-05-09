@@ -9,21 +9,21 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_channel: out_channel option) (h_fname: string option) (o_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
+let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
 
     let closedset: (ext_element, unit) Hashtbl.t = Hashtbl.create 10000 in
 
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
     (* add the oneline comment if requested *)
-    let g,g_quotient = match oneline_comment with
+    let g = match oneline_comment with
     | Some s -> let g_comment = Grammar.add_comment g_non_comment s in
-                (g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules),g_comment) (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
-    | None -> (g_non_comment,g_non_comment) in
+                g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules) (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
+    | None -> g_non_comment in
 
     (* print_endline "Inference grammar:"; *)
     (* print_endline (string_of_grammar g); *)
     (* initialize the quotient *)
-    let quotient = Quotient.quotient_mem g_quotient forbidden dict (Some goal) None qgraph_channel
+    let quotient = Quotient.init oneline_comment g_non_comment forbidden dict qgraph_fname
     and all_sym = get_all_symbols g in
 
     (* load the heuristic *)
@@ -78,11 +78,11 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
 
      (* compute the non-trivial grammar. To do that, just add a new axiom with the same rules as the normal axiom EXCEPT the trivial rule (the rule that leads to the parent grammar) *)
     (* TODO: virer ? *)
-    let make_non_trivial_grammar (g: ext_grammar) (par: ext_element) : ext_grammar =
+(*    let make_non_trivial_grammar (g: ext_grammar) (par: ext_element) : ext_grammar =
         let e = g.ext_axiom in
         let dummy_axiom : ext_element = {e=Nonterminal ((string_of_element e.e)^"_dummy_axiom"); pf=e.pf; sf=e.sf} in
         let new_rules = g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = e && r.ext_right_part <> [par]) |> List.rev_map (fun r -> dummy_axiom ---> r.ext_right_part) in
-        dummy_axiom @@@ (new_rules @ g.ext_rules) in
+        dummy_axiom @@@ (new_rules @ g.ext_rules) in*)
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
     let split (e: ext_element) (original_rule: rule) : (ext_element * ext_element) list =
@@ -95,15 +95,16 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         (* print_endline ("split de "^(string_of_ext_element e)^" avec "^(string_of_rule original_rule)); *)
     split_aux [] [] original_rule.right_part in
 
-    let is_reachable_mem (par: element option) (e: ext_element) : bool =
-        match Hashtbl.find_opt reachable e with
+    let is_reachable_mem (_: element option) (_: ext_element) : bool =
+        true in
+(*        match Hashtbl.find_opt reachable e with
         | Some b -> b
         | None -> let g_local = match par with
             | Some p -> let g_inj,_,_ = quotient false e in
                     make_non_trivial_grammar g_inj (ext_element_of_element p)
             | None -> let g_inj,_,_ = (quotient false e) in g_inj in
             let b = is_reachable (grammar_of_ext_grammar g_local) goal (full_element_of_ext_element e) in
-            Hashtbl.add reachable e b; b in
+            Hashtbl.add reachable e b; b in*)
 
     (* breadth-first search *)
     let rec compute_heuristic (queue: (element * ext_element) list list) : ext_element list = match queue with
@@ -195,9 +196,10 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 Log.L.debug (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             end else begin
-                let inj_g,word,goal_reached = quotient true e in
+                let word,goal_reached = Quotient.get_injection quotient e (Some goal) in
                 (* print_endline "Grammar:"; *)
                 (* print_endline (string_of_ext_grammar inj_g); *)
+                assert (word <> None);
                 let word_str = string_of_word (Option.get word) in (* there is always a word as the trivial injection always works *)
                 (* print_endline ("Fuzzed word: "^word_str); *)
                 (* Grammar_io.export_bnf "out.bnf" inj_g; *)
@@ -207,7 +209,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)
-                    Some (Clean.clean inj_g, word_str)
+                    Some (Clean.clean (Quotient.get_grammar quotient e), word_str)
                 end else if step = max_steps then begin (* the end *)
                     Log.L.info (fun m -> m "Steps limit reached");
                     None
@@ -232,17 +234,16 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
     let start_time = Unix.gettimeofday () in
     Oracle.call_time := 0.;
     Oracle.idle_time := 0.;
-    Quotient.call_time := 0.;
 
     let finalize () =
         (* print the statistics *)
         let total_duration = Unix.gettimeofday () -. start_time in
-        Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, quotient: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. !Quotient.call_time -. !Oracle.call_time -. !Oracle.idle_time) !Quotient.call_time !Oracle.call_time !Oracle.idle_time);
+        Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, quotient: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. Quotient.get_call_time quotient -. !Oracle.call_time -. !Oracle.idle_time) (Quotient.get_call_time quotient) !Oracle.call_time !Oracle.idle_time);
         Log.L.info (fun m -> m "%d calls to oracle." !Oracle.call_nb);
 
         (* close the dot files *)
         Option.iter (fun ch -> Log.L.info (fun m -> m "Save search graph."); output_string ch "}"; close_out ch) graph_channel;
-        Option.iter (fun ch -> Log.L.info (fun m -> m "Save quotient graph."); output_string ch "}"; close_out ch) qgraph_channel;
+        Quotient.finalizer quotient;
 
         (* save the heuristics if necessary *)
         match h_fname with
@@ -264,16 +265,16 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         let result = find_start g goal inj in
         if result <> None then begin
             Log.L.info (fun m -> m "Injection directly found!");
-            let g,w,goal_reached = (quotient true (ext_element_of_element (Option.get result))) in
+            let e = (ext_element_of_element (Option.get result)) in
+            let w,goal_reached = Quotient.get_injection quotient e (Some goal) in
             assert goal_reached;
-            Some (g, string_of_word (Option.get w))
+            Some (Quotient.get_grammar quotient e, string_of_word (Option.get w))
         end
         else begin
             (* the injection token can't reach the goal *)
             List.iter (fun e -> Hashtbl.add reachable (ext_element_of_element e) false) inj;
 
             (* prepare the dot files *)
-            Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
             Option.iter (fun ch -> output_string ch "digraph {\n") graph_channel;
 
             let ext_inj = List.rev_map ext_element_of_element inj in

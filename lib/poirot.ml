@@ -5,7 +5,6 @@ type oracle_status = Oracle.oracle_status
 let version = "0.4"
 
 let search ?(oneline_comment: string option = None) ?(dict: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) ?(save_h: bool = true) ?(save_oracle: bool = true) (oracle: string option -> oracle_status) (g: grammar) (goal: element) (start: element list) : (grammar * string) option =
-    let qgraph_channel = Option.map open_out qgraph_fname in
 
     (* heuristic save file *)
     let h_fname = if save_h then Some ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^".prt") else None in
@@ -13,7 +12,7 @@ let search ?(oneline_comment: string option = None) ?(dict: (element,string) Has
     (* oracle save file *)
     let o_fname = if save_oracle then Some ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^"_oracle.prt") else None in
 
-    match Inference.search oracle g goal start oneline_comment dict max_depth max_steps sgraph_fname qgraph_channel h_fname o_fname forbidden_chars with
+    match Inference.search oracle g goal start oneline_comment dict max_depth max_steps sgraph_fname qgraph_fname h_fname o_fname forbidden_chars with
     | None -> None
     | Some (g,w) -> Some ((Grammar.grammar_of_ext_grammar g), w)
 
@@ -23,19 +22,16 @@ let make_oracle_from_fun (f: string -> int) = Oracle.oracle_mem (fun s -> Oracle
 
 let read_dict : string -> (element,string) Hashtbl.t = Grammar_io.read_dict
 
-let quotient ?(oneline_comment: string option = None) ?(qgraph_fname: string option = None) (grammar_fname: string) (prefix: string) (suffix: string) (goal: element option) : (grammar * string option * bool) =
+let whitebox_search ?(oneline_comment: string option = None) ?(qgraph_fname: string option = None) (grammar_fname: string) (prefix: string) (suffix: string) (goal: element option) : (grammar * string option * bool) =
     let g = Grammar_io.read_bnf_grammar true grammar_fname in
     let explode s = List.init (String.length s) (fun i -> Grammar.Terminal (String.make 1 (String.get s i))) in
     let prefix = explode prefix
     and suffix = explode suffix in
-    let qgraph_channel = Option.map open_out qgraph_fname in
-    Option.iter (fun ch -> output_string ch "digraph {\n") qgraph_channel;
-    let g = match oneline_comment with
-        | None -> g
-        | Some s -> Grammar.add_comment g s in
-    let g,inj,goal_reached = Quotient.quotient_mem g [] None goal None qgraph_channel true {pf=List.rev prefix;e=g.axiom;sf=suffix} in
+    let quotient = Quotient.init oneline_comment g [] None qgraph_fname in
+    let e : Grammar.ext_element = {pf=List.rev prefix;e=g.axiom;sf=suffix} in
+    let inj,goal_reached = Quotient.get_injection quotient e goal in
+    let g = Quotient.get_grammar quotient e in
     let g2 = Grammar.grammar_of_ext_grammar (Clean.clean g) in
-    Option.iter (fun ch -> output_string ch "}"; close_out ch) qgraph_channel;
     (g2,Option.map Grammar.string_of_word inj,goal_reached)
 
 let apply_and_simplify (simplify: bool) (g: grammar) (f: grammar -> grammar) : grammar =
