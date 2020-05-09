@@ -15,7 +15,7 @@ type element
 (** {1 Search functions} *)
 
 (** [search oracle g goal start] returns the grammar of injection from the base grammar [g] according to the oracle [oracle], starting from the trivial injection [start].
- @param oracle an oracle built with [make_oracle_from_script] or [make_oracle_from_fun]
+ @param oracle an oracle built with the Oracle module
  @param g the grammar of the query language (e.g. SQL)
  @param goal the goal of the search, i.e. the element (terminal or nonterminal) you seek to get in the grammar of injection. Poirot stops the search once it is reached.
  @param start a element (terminal or nonterminal) that is a injection.
