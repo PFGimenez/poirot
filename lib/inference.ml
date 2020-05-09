@@ -11,7 +11,7 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 
 let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
 
-    let neg_oracle : part list ref = ref [] in
+    let invalid_words : part list ref = ref [] in
 
     let closedset: (ext_element, unit) Hashtbl.t = Hashtbl.create 10000 in
 
@@ -125,12 +125,6 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
         end;
         Hashtbl.find heuristic eh in
 
-    (* tail-recursive *)
-    let rec verify_new_oracle_calls (e: ext_element) (oracle_calls: part list) : bool = match oracle_calls with
-        | [] -> true
-        | p::_ when Quotient.is_in_language quotient e p -> false
-        | _::q -> (verify_new_oracle_calls [@tailcall]) e q in
-
    (* compare for the open set sorting *)
     let compare_with_score (a: node) (b: node) : int = match a,b with
         | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
@@ -152,7 +146,7 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
                 par
                 |> build_ext_elements
                 (* |> List.map (fun e -> print_endline ("A:"^(string_of_ext_element (fst e)));e) *)
-                |> List.rev_map (fun (eh, e: ext_element * ext_element) : node -> {g_val;h_val=get_heuristic eh par.e;e=e;par=par;origin=INDUCTION})
+                |> List.rev_map (fun (eh, e: ext_element * ext_element) : node -> {g_val;h_val=get_heuristic eh par.e;e;par;origin=INDUCTION})
                 (* |> List.map (fun x -> print_endline ("B:"^(string_of_ext_element (x.e)^" "^(string_of_int x.h_val)));x) *)
                 |> List.filter (fun {h_val;_} -> h_val <> inf)
                 (* |> List.map (fun x -> print_endline ("C:"^(string_of_ext_element (x.e)));x) *)
@@ -161,12 +155,15 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
                 |> List.merge compare_with_score openset
             else openset in
         let openset =
-            if allow_derivation && null_h then begin
+            if allow_derivation && null_h then begin (* we only derive if the local axiom can access the goal *)
+                let g_val = match origin with
+                | INDUCTION -> g_val + 5 (* small malus when beginning the derivation *)
+                | DERIVATION -> g_val in
 (*                List.iter (fun p -> print_endline (string_of_part p)) (build_derivation g par.sf);*)
                 let new_elems =
                     par.sf
                     |> build_derivation g
-                    |> List.rev_map (fun (_, newsf) : node -> {g_val=g_val;h_val=0;e={e=par.e;sf=newsf;pf=par.pf};par=par;origin=DERIVATION})
+                    |> List.rev_map (fun (_, newsf) : node -> {g_val;h_val=0;e={e=par.e;sf=newsf;pf=par.pf};par;origin=DERIVATION})
                     |> List.sort compare_with_score in
 (*                List.iter (fun n -> Grammar_io.add_edge_in_graph graph_channel "penwidth=3" par n.e) new_elems;*)
                 List.merge compare_with_score openset new_elems
@@ -184,7 +181,7 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
             None
         (* verify whether e has already been visited *)
         end else if Hashtbl.mem closedset e then begin
-            Log.L.info (fun m -> m "Visited");
+            Log.L.debug (fun m -> m "Visited");
             (search_aux [@tailcall]) step q
         end else begin
             Log.L.info (fun m -> m "Search %d (queue: %d): %s" step (List.length q) (string_of_ext_element e));
@@ -197,7 +194,7 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
                 Log.L.debug (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             (* if this language is invalidated by a new oracle call *)
-            end else if not (verify_new_oracle_calls e !neg_oracle) then begin
+            end else if List.exists (Quotient.is_in_language quotient e) !invalid_words then begin
                     Log.L.debug (fun m -> m "Invalid");
                     set_node_color_in_graph e "crimson";
                     (search_aux [@tailcall]) (step + 1) q
@@ -210,7 +207,7 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
                 assert (Quotient.is_in_language quotient e word);
                 let word_str = string_of_word word in (* there is always a word as the trivial injection always works *)
                 let status = Oracle.call oracle word_str in
-                if status = Syntax_error then neg_oracle := word::!neg_oracle;
+                if status = Syntax_error then invalid_words := word::!invalid_words;
                 if goal_reached && status = No_error then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
