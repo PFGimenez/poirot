@@ -205,7 +205,12 @@ let rec quotient_symbols (quo: t) (elist: ext_element list) : unit =
             (quotient_symbols [@tailcall]) quo q
         end else if is_processed quo lhs then
                 (*(print_endline " Already known";*) (quotient_symbols [@tailcall]) quo q
-        else begin
+        else if is_ext_element_terminal lhs then begin
+            initialize_mem quo lhs;
+            if (lhs.pf=[lhs.e] && lhs.sf=[]) || (lhs.pf=[] && lhs.sf=[lhs.e]) then
+                add_rule_in_mem quo Left lhs []
+        end else begin
+            assert (not (is_ext_element_terminal lhs));
             let (base_lhs,sd,qu) = match lhs.pf,lhs.sf with
             | ((tpf::qpf) as pf),sf when List.compare_lengths pf sf >= 0 -> ({pf=qpf;e=lhs.e;sf=sf},Left,tpf) (* we decompose the longest -fix *)
             | _,[] -> assert false (* impossible because of the previous case *)
@@ -301,55 +306,35 @@ let get_first_derivation (quo: t) (e: ext_element) : ext_element list =
     (List.hd (List.sort compare_ext_rule (get_all_rules quo [e]))).ext_right_part
 
 let get_grammar (quo: t) (e: ext_element) : ext_grammar =
-    (* the case when e is terminal is handled separately *)
-    if is_ext_element_terminal e then begin
-        (* the dummy axiom is only used when the regular axiom is terminal *)
-        let da = {pf=[];e=Nonterminal("dummy_axiom");sf=[]} in
-        (* derive epsilon *)
-        if (e.pf=[e.e] && e.sf=[]) || (e.pf=[] && e.sf=[e.e]) then
-            da@@@[da--->[]]
-        (* derive this terminal *)
-        else if e.pf=[] && e.sf=[] then
-            da@@@[da--->[e]]
-        (* empty language *)
-        else
-            da@@@[]
-    end else begin
-        let start_time = Unix.gettimeofday () in
-        quotient_symbols quo [e];
-        quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
-        grammar_of_mem quo e
-    end
+    let start_time = Unix.gettimeofday () in
+    quotient_symbols quo [e];
+    quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
+    grammar_of_mem quo e
 
 let get_injection (quo: t) (e: ext_element) (goal: element option) : (part option * bool) =
-    (* the case when e is terminal is handled separately *)
-    if is_ext_element_terminal e then begin
-        (* derive epsilon *)
-        if (e.pf=[e.e] && e.sf=[]) || (e.pf=[] && e.sf=[e.e]) then
-            (Some [], false)
-        (* derive this terminal *)
-        else if e.pf=[] && e.sf=[] then
-            (Some [e.e], false)
-        (* empty language *)
-        else
-            (None, false)
-    end else begin
-        let goal = Option.map ext_element_of_element goal in
-        let start_time = Unix.gettimeofday () in
-        quotient_symbols quo [e];
+    let goal = Option.map ext_element_of_element goal in
+    let start_time = Unix.gettimeofday () in
+    quotient_symbols quo [e];
 
-        if is_useless quo e then (None,false)
-        else begin
-            let path = match goal with
-                | None -> []
-                | Some g -> find_path_to_goal quo g e in
-            let out = match path with
-            | [] -> (Some (fuzzer_minimize quo [] [] (get_first_derivation quo e)), false)
-            | l -> Log.L.debug (fun m -> m "Fuzzing with goal"); (Some (fuzzer_minimize quo l [] [e]), true) in
-            quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
-            out
-        end
+    if is_useless quo e then (None,false)
+    else begin
+        let path = match goal with
+            | None -> []
+            | Some g -> find_path_to_goal quo g e in
+        let out = match path with
+        | [] -> (Some (fuzzer_minimize quo [] [] (get_first_derivation quo e)), false)
+        | l -> Log.L.debug (fun m -> m "Fuzzing with goal"); (Some (fuzzer_minimize quo l [] [e]), true) in
+        quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
+        out
     end
+
+let is_in_language (quo: t) (axiom: ext_element) (word: part) : bool =
+    (* the word is put in the shortest part *)
+    let e = match List.compare_lengths axiom.pf axiom.sf >= 0 with
+        | true -> {pf=axiom.pf;e=axiom.e;sf=word@axiom.sf}
+        | _ -> {pf=(List.rev word)@axiom.pf;e=axiom.e;sf=axiom.sf} in
+    quotient_symbols quo [e];
+    can_epsilon quo e
 
 let print_statistics (quo: t) : unit =
     Log.L.debug (fun m -> m "Quotient memory size: %d" (Hashtbl.length quo.mem))

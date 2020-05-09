@@ -200,10 +200,12 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 (* print_endline "Grammar:"; *)
                 (* print_endline (string_of_ext_grammar inj_g); *)
                 assert (word <> None);
+                assert (Quotient.is_in_language quotient e (Option.get word));
                 let word_str = string_of_word (Option.get word) in (* there is always a word as the trivial injection always works *)
                 (* print_endline ("Fuzzed word: "^word_str); *)
                 (* Grammar_io.export_bnf "out.bnf" inj_g; *)
                 (* call the fuzzer/oracle with this grammar *)
+                (* TODO: changer oracle : ne peut pas prendre de None *)
                 let status = oracle (Option.map string_of_word word) in
                 if goal_reached then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
