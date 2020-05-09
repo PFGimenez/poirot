@@ -9,7 +9,7 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
+let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
 
     let neg_oracle : part list ref = ref [] in
 
@@ -37,17 +37,10 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
         | None -> Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
 
     (* load the oracle calls *)
-    let oracle_mem : (string, Oracle.oracle_status) Hashtbl.t option = match o_fname with
-        | Some fname -> begin
-                            try let out = Marshal.from_channel (open_in_bin fname) in Log.L.info (fun m -> m "Imported oracle calls from %s" fname); Some out
-                            with _ -> Log.L.info (fun m -> m "New oracle file: %s" fname); None
-                        end
-        | None -> None in
-    Option.iter Oracle.update_mem oracle_mem;
+    Option.iter (Oracle.load_mem oracle) o_fname;
 
     (* used to know if the heuristic file and oracle file need to be updated *)
     let initial_heuristic_length = Hashtbl.length heuristic in
-    let initial_oracle_length = Hashtbl.length Oracle.mem in
 
     (* tail-recursive *)
     (* build all the possible one-step derivation of part p in the grammar g *)
@@ -213,14 +206,11 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 (* print_endline "Grammar:"; *)
                 (* print_endline (string_of_ext_grammar inj_g); *)
                 assert (word <> None);
-                assert (Quotient.is_in_language quotient e (Option.get word));
-                let word_str = string_of_word (Option.get word) in (* there is always a word as the trivial injection always works *)
-                (* print_endline ("Fuzzed word: "^word_str); *)
-                (* Grammar_io.export_bnf "out.bnf" inj_g; *)
-                (* call the fuzzer/oracle with this grammar *)
-                (* TODO: changer oracle : ne peut pas prendre de None *)
-                let status = oracle (Option.map string_of_word word) in
-                if status = Syntax_error then neg_oracle := (Option.get word)::!neg_oracle;
+                let word = Option.get word in
+                assert (Quotient.is_in_language quotient e word);
+                let word_str = string_of_word word in (* there is always a word as the trivial injection always works *)
+                let status = Oracle.call oracle word_str in
+                if status = Syntax_error then neg_oracle := word::!neg_oracle;
                 if goal_reached && status = No_error then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
@@ -239,7 +229,6 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                     (search_aux [@tailcall]) (step + 1) q
                 end else begin (* we explore in this direction *)
                     (* get the rules e -> ... to verify if e is testable or not *)
-                    if status = Grammar_error then set_node_color_in_graph e "grey";
                     Log.L.debug (fun m -> m "Explore");
                     (search_aux [@tailcall]) (step + 1) (add_in_openset true (g_val + 1) (h_val = 0) origin e q)
                 end
@@ -248,15 +237,13 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
 
     (* initialize the call times *)
     let start_time = Unix.gettimeofday () in
-    Oracle.call_time := 0.;
-    Oracle.idle_time := 0.;
 
     let finalize () =
         (* print the statistics *)
         Quotient.print_statistics quotient;
         let total_duration = Unix.gettimeofday () -. start_time in
-        Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, quotient: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. Quotient.get_call_time quotient -. !Oracle.call_time -. !Oracle.idle_time) (Quotient.get_call_time quotient) !Oracle.call_time !Oracle.idle_time);
-        Log.L.info (fun m -> m "%d calls to oracle." !Oracle.call_nb);
+        Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, quotient: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. Quotient.get_call_time quotient -. Oracle.get_call_time oracle -. Oracle.get_idle_time oracle) (Quotient.get_call_time quotient) (Oracle.get_call_time oracle) (Oracle.get_idle_time oracle));
+        Log.L.info (fun m -> m "%d calls to oracle." (Oracle.get_call_nb oracle));
 
         (* close the dot files *)
         Option.iter (fun ch -> Log.L.info (fun m -> m "Save search graph."); output_string ch "}"; close_out ch) graph_channel;
@@ -268,9 +255,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
             | _ -> ();
 
         (* save the oracle answers if necessary *)
-        match o_fname with
-            | Some fname when Hashtbl.length Oracle.mem > initial_oracle_length -> Log.L.info (fun m -> m "Save oracle calls into %s" fname); Marshal.to_channel (open_out_bin fname) Oracle.mem []
-            | _ -> ()
+        Option.iter (Oracle.save_mem oracle) o_fname
         in
 
     let inj = start in

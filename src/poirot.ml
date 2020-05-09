@@ -1,6 +1,3 @@
-let explode s = List.init (String.length s) (String.get s)
-
-
 let ()=
     let graph_fname = ref None
     and qgraph_fname = ref None
@@ -72,10 +69,12 @@ let ()=
         and goal = Option.get !goal
         and start = Option.get !start in
         let oracle = match !oracle_fname with
-        | None -> Poirot.make_oracle_from_pf_sf ~oneline_comment:!oneline_comment grammar_fname (Option.get !prefix) (Option.get !suffix)
-        | Some fname -> Poirot.make_oracle_from_script ~interval:wait ~timeout:timeout fname in
+        | None -> Poirot__Oracle.oracle_from_pf_sf ~oneline_comment:!oneline_comment wait grammar_fname (Option.get !prefix) (Option.get !suffix)
+        | Some fname -> Poirot__Oracle.oracle_from_script wait timeout fname in
 
         let grammar = if !lowercase then Poirot.to_lowercase ~simplify:!simplify grammar else (if !uppercase then Poirot.to_uppercase ~simplify:!simplify grammar else grammar) in
+
+        let explode s = List.init (String.length s) (String.get s) in
 
         Poirot.set_log_level !verbose_lvl;
         Poirot.set_reporter (Logs_fmt.reporter ());

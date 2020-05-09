@@ -328,12 +328,15 @@ let get_injection (quo: t) (e: ext_element) (goal: element option) : (part optio
         out
     end
 
+    (* TODO: couper en deux le mot *)
 let is_in_language (quo: t) (axiom: ext_element) (word: part) : bool =
     (* the word is put in the shortest part *)
     let e = match List.compare_lengths axiom.pf axiom.sf >= 0 with
         | true -> {pf=axiom.pf;e=axiom.e;sf=word@axiom.sf}
         | _ -> {pf=(List.rev word)@axiom.pf;e=axiom.e;sf=axiom.sf} in
     quotient_symbols quo [e];
+    (* print_endline ((string_of_ext_element e)^" "^(string_of_ext_rules (get_all_rules quo [e]))); *)
+    (* print_endline (string_of_bool (can_epsilon quo e)); *)
     can_epsilon quo e
 
 let print_statistics (quo: t) : unit =
