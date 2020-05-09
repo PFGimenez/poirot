@@ -221,7 +221,7 @@ let search (oracle: string option -> Oracle.oracle_status) (unclean_g: grammar) 
                 (* TODO: changer oracle : ne peut pas prendre de None *)
                 let status = oracle (Option.map string_of_word word) in
                 if status = Syntax_error then neg_oracle := (Option.get word)::!neg_oracle;
-                if goal_reached then begin (* the goal has been found ! *)
+                if goal_reached && status = No_error then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)

@@ -2,6 +2,7 @@
 - Rename `quotient_poirot` into `whitebox_poirot`
 - "is_in_language" feature
 - Inference uses previous oracle calls
+- Oracle based on prefix and suffix
 
 # v0.4
 - Fuzzer and quotient rewrite
