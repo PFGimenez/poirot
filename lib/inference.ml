@@ -20,6 +20,7 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
 
     let h_time = ref 0. in
+    let user_time = ref 0. in
 
     (* add the oneline comment if requested *)
     let g = match oneline_comment with
@@ -178,19 +179,24 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
         if (!invalid_words <> []) then Log.L.debug (fun m -> m "Verify with %d oracle calls" (List.length !invalid_words));
         List.exists (Quotient.is_in_language quotient e) !invalid_words in
 
-    let rec stop_search (word: part) : bool =
-        print_endline ("Injection found: "^(string_of_word word));
-        print_endline "End the search? (Y/n)";
-        let s = String.lowercase_ascii (read_line ()) in
-            if (s = "y" || s="yes" || s="") then
-                true
-            else if (s = "n" || s="no") then begin
-                refused_words := (string_of_word word) :: !refused_words;
-                false
-            end else begin
-                print_endline "I didn't understand your answer.";
-                stop_search word
+    let stop_search (word: part) : bool =
+        let rec stop_search_aux (word: part) : bool =
+            print_endline ("Injection found: "^(string_of_word word));
+            print_endline "End the search? (Y/n)";
+            let s = String.lowercase_ascii (read_line ()) in
+                if (s = "y" || s="yes" || s="") then
+                    true
+                else if (s = "n" || s="no") then begin
+                    refused_words := (string_of_word word) :: !refused_words;
+                    false
+                end else begin
+                    print_endline "I didn't understand your answer.";
+                    stop_search_aux word
             end in
+        let start_time = Unix.gettimeofday () in
+        let out = stop_search_aux word in
+        user_time := !user_time +. (Unix.gettimeofday () -. start_time);
+        out in
 
     (* core algorithm : an A* algorithm *)
     (* tail recursive *)
@@ -260,7 +266,7 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
     let finalize () =
         (* print the statistics *)
         Quotient.print_statistics quotient;
-        let total_duration = Unix.gettimeofday () -. start_time in
+        let total_duration = Unix.gettimeofday () -. start_time -. !user_time in
         Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, heuristic: %.2fs, quotient: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. !h_time -. Quotient.get_call_time quotient -. Oracle.get_call_time oracle -. Oracle.get_idle_time oracle) !h_time (Quotient.get_call_time quotient) (Oracle.get_call_time oracle) (Oracle.get_idle_time oracle));
         Log.L.info (fun m -> m "%d calls to oracle." (Oracle.get_call_nb oracle));
 
