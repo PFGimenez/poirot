@@ -11,9 +11,8 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 
 let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) : (ext_grammar * string) option =
 
+    (* words refused by the user *)
     let refused_words : string list ref = ref [] in
-
-    let invalid_words : part list ref = ref [] in
 
     let closedset: (ext_element, unit) Hashtbl.t = Hashtbl.create 10000 in
 
@@ -42,8 +41,20 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
     (* load the oracle calls *)
     Option.iter (Oracle.load_mem oracle) o_fname;
 
-    (* used to know if the heuristic file and oracle file need to be updated *)
+    let iw_fname = Option.map (fun s -> "invalid_"^s) o_fname in
+
+    (* load the invalid words *)
+    (* words invalidated by the oracle *)
+    let invalid_words : part list ref = match iw_fname with
+        | Some fname -> begin
+                            try let out = Marshal.from_channel (open_in_bin fname) in Log.L.info (fun m -> m "Imported invalid words from %s" fname); ref out
+                            with _ -> Log.L.info (fun m -> m "New invalid words file: %s" fname); ref []
+                        end
+        | None -> ref [] in
+
+    (* used to know if the heuristic file and invalid words file need to be updated *)
     let initial_heuristic_length = Hashtbl.length heuristic in
+    let initial_invalid_length = List.length (!invalid_words) in
 
     (* tail-recursive *)
     (* build all the possible one-step derivation of part p in the grammar g *)
@@ -277,6 +288,11 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
         (* save the heuristics if necessary *)
         match h_fname with
             | Some fname when Hashtbl.length heuristic > initial_heuristic_length -> Log.L.info (fun m -> m "Save heuristic values into %s" fname); Marshal.to_channel (open_out_bin fname) heuristic []
+            | _ -> ();
+
+        (* save the invalid words if necessary *)
+        match iw_fname with
+            | Some fname when List.length !invalid_words > initial_invalid_length -> Log.L.info (fun m -> m "Save invalid words into %s" fname); Marshal.to_channel (open_out_bin fname) !invalid_words []
             | _ -> ();
 
         (* save the oracle answers if necessary *)
