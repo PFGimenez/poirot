@@ -9,7 +9,9 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) : (ext_grammar * string) option =
+let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) : (ext_grammar * string) option =
+
+    let refused_words : string list ref = ref [] in
 
     let invalid_words : part list ref = ref [] in
 
@@ -176,6 +178,20 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
         if (!invalid_words <> []) then Log.L.debug (fun m -> m "Verify with %d oracle calls" (List.length !invalid_words));
         List.exists (Quotient.is_in_language quotient e) !invalid_words in
 
+    let rec stop_search (word: part) : bool =
+        print_endline ("Injection found: "^(string_of_word word));
+        print_endline "End the search? (Y/n)";
+        let s = String.lowercase_ascii (read_line ()) in
+            if (s = "y" || s="yes" || s="") then
+                true
+            else if (s = "n" || s="no") then begin
+                refused_words := (string_of_word word) :: !refused_words;
+                false
+            end else begin
+                print_endline "I didn't understand your answer.";
+                stop_search word
+            end in
+
     (* core algorithm : an A* algorithm *)
     (* tail recursive *)
     let rec search_aux (step: int) (openset: node list) : (ext_grammar * string) option = match openset with
@@ -214,7 +230,7 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
                 let word_str = string_of_word word in (* there is always a word as the trivial injection always works *)
                 let status = Oracle.call oracle word_str in
                 if status = Syntax_error then invalid_words := word::!invalid_words;
-                if goal_reached && status = No_error then begin (* the goal has been found ! *)
+                if goal_reached && status = No_error && not (List.mem word_str !refused_words) && (not (manual_stop) || stop_search word) then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)

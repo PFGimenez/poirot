@@ -4,6 +4,8 @@
 - Inference uses previous oracle calls
 - Oracle based on prefix and suffix
 - API rework
+- Add manual stop
+- Bugfixes
 
 # v0.4
 - Fuzzer and quotient rewrite
@@ -14,6 +16,7 @@
 - Heuristic save can be disabled
 - Can set a minimal interval between two oracle calls
 - By default, save the previous oracle calls
+- Bugfixes
 
 # v0.3
 - Dune installs `poirot` and `bnf2antlr4`

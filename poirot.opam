@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "poirot"
-version: "0.4"
+version: "0.5"
 synopsis: "Grammar-based injection fuzzer for black box systems"
 maintainer: "Pierre-François Gimenez <pierre-francois.gimenez@laas.fr>"
 authors: "Pierre-François Gimenez <pierre-francois.gimenez@laas.fr>"
