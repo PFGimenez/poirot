@@ -6,4 +6,4 @@
 (library
     (name poirot) (public_name poirot)
     (libraries logs unix)
-    (private_modules ("clean" log grammar grammar_io inference lexerbnf lexerconf parserbnf)))
+    (private_modules ("clean" log grammar grammar_io lexerbnf lexerconf parserbnf)))

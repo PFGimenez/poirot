@@ -3,13 +3,15 @@ open Grammar
 (* infinity *)
 let inf = 100000
 
+type heuristic = NO_HEURISTIC | COMPLICATED
+
 (* the origin of a node *)
 type node_origin = DERIVATION | INDUCTION
 
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) : (ext_grammar * string) option =
+let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : (ext_grammar * string) option =
 
     (* words refused by the user *)
     let refused_words : string list ref = ref [] in
@@ -128,18 +130,25 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
                                     |> List.map (fun (e,_) -> (t.e,e)::t2) in
                     (compute_heuristic [@tailcall]) (q2@neighbours) in
 
+
     (* compute the heuristic if needed *)
     let get_heuristic (eh: ext_element) (par: element) : int =
-(*        print_endline ("get_heuristic of "^(string_of_ext_element eh));*)
+        let get_heuristic_aux (eh: ext_element) (par: element) : int =
+            if htype = NO_HEURISTIC then
+                0
+            else begin
+                if not (Hashtbl.mem heuristic eh) then begin
+                    Hashtbl.clear seen_hashtbl;
+                    let path = compute_heuristic [[(par,eh)]] in
+                    if path <> [] then List.iteri (fun index elem -> (*print_endline ((string_of_ext_element elem)^" "^(string_of_int index));*) Hashtbl.replace heuristic elem index) path
+                    else Hashtbl.replace heuristic eh inf
+                end;
+                Hashtbl.find heuristic eh
+            end in
         let start_time = Unix.gettimeofday () in
-        if not (Hashtbl.mem heuristic eh) then begin
-            Hashtbl.clear seen_hashtbl;
-            let path = compute_heuristic [[(par,eh)]] in
-            if path <> [] then List.iteri (fun index elem -> (*print_endline ((string_of_ext_element elem)^" "^(string_of_int index));*) Hashtbl.replace heuristic elem index) path
-            else Hashtbl.replace heuristic eh inf
-        end;
+        let out = get_heuristic_aux eh par in
         h_time := !h_time +. (Unix.gettimeofday () -. start_time);
-        Hashtbl.find heuristic eh in
+        out in
 
    (* compare for the open set sorting *)
     let compare_with_score (a: node) (b: node) : int = match a,b with

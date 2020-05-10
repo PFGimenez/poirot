@@ -5,6 +5,7 @@
 - Oracle based on prefix and suffix
 - API rework
 - Add manual stop
+- The user can choose the heuristic
 - Bugfixes
 
 # v0.4

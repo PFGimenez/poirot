@@ -16,6 +16,7 @@ let ()=
     and dict = ref None
     and goal = ref None
     and start = ref None
+    and heuristic = ref Poirot__Inference.COMPLICATED
     and oneline_comment = ref None
     and lowercase = ref false
     and uppercase = ref false
@@ -42,6 +43,7 @@ let ()=
         ("-oracle_timeout",   Arg.Set_float oracle_timeout,    "Set the timeout to oracle calls (in seconds, -1 for no timeout)");
         ("-oracle_interval",   Arg.Set_float oracle_wait,    "Set the minimal duration between two oracle calls (in seconds, -1 for no wait)");
         ("-manual_stop",   Arg.Set manual_stop,    "Ask the user if they wants to continue the search");
+        ("-heuristic",   Arg.Symbol (["none";"default"], fun s -> if s="none" then heuristic := Poirot__Inference.NO_HEURISTIC), "Select the heuristic");
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
         ("-nosave_h",     Arg.Clear save_h,    "Disable the heuristics save");
@@ -80,7 +82,7 @@ let ()=
         Poirot.set_reporter (Logs_fmt.reporter ());
 
         let s = Option.map Poirot.read_dict !dict in
-        match (Poirot.search ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_h:!save_h ~save_oracle:!oracle_save oracle grammar goal start, !injg_fname) with
+        match (Poirot.search ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_h:!save_h ~save_oracle:!oracle_save oracle grammar goal start, !injg_fname) with
         | Some (gram, word), Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^word)
         | Some (_, word), _ -> print_endline ("Injection: "^word)
         | None, _ -> print_endline "No grammar found";
