@@ -33,11 +33,11 @@ val whitebox_search : ?oneline_comment: string option -> ?qgraph_fname: string o
 
 (** {1 Grammar manipulation functions} *)
 
-(** [to_uppercase g] returns the grammar [g] with uppercased chars. If simplified, nonterminals may disappear. *)
-val to_uppercase : ?simplify: bool -> grammar -> grammar
+(** [to_uppercase g] returns the grammar [g] with uppercased chars. *)
+val to_uppercase : grammar -> grammar
 
-(** [to_lowercase g] returns the grammar [g] with lowercased chars. If simplified, nonterminals may disappear. *)
-val to_lowercase : ?simplify: bool -> grammar -> grammar
+(** [to_lowercase g] returns the grammar [g] with lowercased chars. *)
+val to_lowercase : grammar -> grammar
 
 (** [set_axiom g new_axiom] modifies the axiom of [g] with [new_axiom]. *)
 val set_axiom : grammar -> element -> grammar

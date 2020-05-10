@@ -18,7 +18,6 @@ let ()=
     and oneline_comment = ref None
     and lowercase = ref false
     and uppercase = ref false
-    and simplify = ref false
     and verbose_lvl = ref (Some Logs.Info)
     and avoid = ref "" in
 
@@ -49,7 +48,6 @@ let ()=
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
         ("-lowercase",  Arg.Set lowercase,     "Convert all terminals to lowercase");
         ("-uppercase",  Arg.Set uppercase,     "Convert all terminals to uppercase");
-        ("-simplify",   Arg.Set simplify,     "If used with -lowercase or -uppercase, simplify the grammar");
         ("-verbose_lvl",    Arg.String(set_verbose_lvl),     "Choose Poirot verbosity: debug, info, warning or error");
         ("-v",    Arg.Unit (fun () -> print_endline ("Poirot v"^Poirot.version)),     "Show Poirot version")
     ] in
@@ -72,7 +70,7 @@ let ()=
         | None -> Poirot__Oracle.oracle_from_pf_sf ~oneline_comment:!oneline_comment wait grammar_fname (Option.get !prefix) (Option.get !suffix)
         | Some fname -> Poirot__Oracle.oracle_from_script wait timeout fname in
 
-        let grammar = if !lowercase then Poirot.to_lowercase ~simplify:!simplify grammar else (if !uppercase then Poirot.to_uppercase ~simplify:!simplify grammar else grammar) in
+        let grammar = if !lowercase then Poirot.to_lowercase grammar else (if !uppercase then Poirot.to_uppercase grammar else grammar) in
 
         let explode s = List.init (String.length s) (String.get s) in
 

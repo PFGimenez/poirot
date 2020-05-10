@@ -29,11 +29,8 @@ let whitebox_search ?(oneline_comment: string option = None) ?(qgraph_fname: str
     let g2 = Grammar.grammar_of_ext_grammar (Clean.clean g) in
     (g2,Option.map Grammar.string_of_word inj,goal_reached)
 
-let apply_and_simplify (simplify: bool) (g: grammar) (f: grammar -> grammar) : grammar =
-    if simplify then Clean.simplify (f g) else (f g)
-
-let to_uppercase ?(simplify: bool = false) (g: grammar) = apply_and_simplify simplify g Clean.to_uppercase
-let to_lowercase ?(simplify: bool = false) (g: grammar) = apply_and_simplify simplify g Clean.to_lowercase
+let to_uppercase (g: grammar) = Clean.to_uppercase g
+let to_lowercase (g: grammar) = Clean.to_lowercase g
 
 let set_axiom (g: grammar) (axiom: element) : grammar = {axiom; rules=g.rules}
 

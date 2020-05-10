@@ -65,7 +65,6 @@ Here is the list of the options of `poirot`:
 - `-injg` Export the injection grammar in ANTLR4 format (you don't need to specify the .g4 extension).
 - `-lowercase` Convert all terminals to lowercase.
 - `-uppercase` Convert all terminals to uppercase.
-- `-simplify` If used with -lowercase or -uppercase, simplify the grammar.
 - `-verbose_lvl` Choose Poirot verbosity: debug, info, warning or error. "Info" by default.
 - `-v` Print the version of Poirot.
 
