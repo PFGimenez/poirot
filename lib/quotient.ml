@@ -356,8 +356,8 @@ let finalizer (quo: t) : unit =
     Option.iter (fun ch -> Log.L.info (fun m -> m "Save quotient graph."); output_string ch "}"; close_out ch) quo.graph_channel
 
 let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char list) (dict: (element,string) Hashtbl.t option) (qgraph_fname : string option) : t =
-    let q = {words = Hashtbl.create 10000;
-        mem = Hashtbl.create 10000;
+    let q = {words = Hashtbl.create 100000;
+        mem = Hashtbl.create 100000;
         dict = dict;
         forbidden = forbidden;
         call_time = 0.;

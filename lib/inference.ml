@@ -16,15 +16,15 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
     let closedset: (ext_element, unit) Hashtbl.t = Hashtbl.create 10000 in
 
     let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
+
+    let h_time = ref 0. in
+
     (* add the oneline comment if requested *)
     let g = match oneline_comment with
     | Some s -> let g_comment = add_comment g_non_comment s in
                 g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules) (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
     | None -> g_non_comment in
 
-    (* print_endline "Inference grammar:"; *)
-    (* print_endline (string_of_grammar g); *)
-    (* initialize the quotient *)
     let quotient = Quotient.init oneline_comment g_non_comment forbidden dict qgraph_fname
     and all_sym = get_all_symbols g in
 
@@ -52,10 +52,12 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
                 (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
         build_derivation_aux [] [] p in
 
-    (*if verbose then (Hashtbl.iter (fun k v -> print_endline ((string_of_ext_element k)^": "^(string_of_int v))) heuristic);*)
+    (* is the goal reachable from that element ? *)
     let reachable : (ext_element, bool) Hashtbl.t = Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in
+
     (* element that are the lhs of a single rule *)
     let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+
     (* used in the heuristic computation *)
     let seen_hashtbl : (ext_element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in
 
@@ -71,13 +73,12 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
     let set_node_color_in_graph: ext_element -> string -> unit =
         Grammar_io.set_node_color_in_graph graph_channel in
 
-     (* compute the non-trivial grammar. To do that, just add a new axiom with the same rules as the normal axiom EXCEPT the trivial rule (the rule that leads to the parent grammar) *)
-    (* TODO: virer ? *)
-(*    let make_non_trivial_grammar (g: ext_grammar) (par: ext_element) : ext_grammar =
+    (* compute the non-trivial grammar. To do that, just add a new axiom with the same rules as the normal axiom EXCEPT the trivial rule (the rule that leads to the parent grammar) *)
+    let make_non_trivial_grammar (g: ext_grammar) (par: ext_element) : ext_grammar =
         let e = g.ext_axiom in
         let dummy_axiom : ext_element = {e=Nonterminal ((string_of_element e.e)^"_dummy_axiom"); pf=e.pf; sf=e.sf} in
         let new_rules = g.ext_rules |> List.filter (fun r -> r.ext_left_symbol = e && r.ext_right_part <> [par]) |> List.rev_map (fun r -> dummy_axiom ---> r.ext_right_part) in
-        dummy_axiom @@@ (new_rules @ g.ext_rules) in*)
+        dummy_axiom @@@ (new_rules @ g.ext_rules) in
 
     (* get all the possible prefix/suffix surrounding an element in the rhs on a rule to create the new ext_elements *)
     let split (e: ext_element) (original_rule: rule) : (ext_element * ext_element) list =
@@ -90,16 +91,15 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
         (* print_endline ("split de "^(string_of_ext_element e)^" avec "^(string_of_rule original_rule)); *)
     split_aux [] [] original_rule.right_part in
 
-    let is_reachable_mem (_: element option) (_: ext_element) : bool =
-        true in
-(*        match Hashtbl.find_opt reachable e with
+    let is_reachable_mem (par: element option) (e: ext_element) : bool =
+        match Hashtbl.find_opt reachable e with
         | Some b -> b
         | None -> let g_local = match par with
-            | Some p -> let g_inj,_,_ = quotient false e in
+            | Some p -> let g_inj = Quotient.get_grammar quotient e in
                     make_non_trivial_grammar g_inj (ext_element_of_element p)
-            | None -> let g_inj,_,_ = (quotient false e) in g_inj in
+            | None -> Quotient.get_grammar quotient e in
             let b = is_reachable (grammar_of_ext_grammar g_local) goal (full_element_of_ext_element e) in
-            Hashtbl.add reachable e b; b in*)
+            Hashtbl.add reachable e b; b in
 
     (* breadth-first search *)
     let rec compute_heuristic (queue: (element * ext_element) list list) : ext_element list = match queue with
@@ -117,12 +117,14 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
     (* compute the heuristic if needed *)
     let get_heuristic (eh: ext_element) (par: element) : int =
 (*        print_endline ("get_heuristic of "^(string_of_ext_element eh));*)
+        let start_time = Unix.gettimeofday () in
         if not (Hashtbl.mem heuristic eh) then begin
             Hashtbl.clear seen_hashtbl;
             let path = compute_heuristic [[(par,eh)]] in
             if path <> [] then List.iteri (fun index elem -> (*print_endline ((string_of_ext_element elem)^" "^(string_of_int index));*) Hashtbl.replace heuristic elem index) path
             else Hashtbl.replace heuristic eh inf
         end;
+        h_time := !h_time +. (Unix.gettimeofday () -. start_time);
         Hashtbl.find heuristic eh in
 
    (* compare for the open set sorting *)
@@ -170,6 +172,10 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
             end else openset in
         openset in
 
+    let verify_previous_oracle_calls (e: ext_element) : bool =
+        if (!invalid_words <> []) then Log.L.debug (fun m -> m "Verify with %d oracle calls" (List.length !invalid_words));
+        List.exists (Quotient.is_in_language quotient e) !invalid_words in
+
     (* core algorithm : an A* algorithm *)
     (* tail recursive *)
     let rec search_aux (step: int) (openset: node list) : (ext_grammar * string) option = match openset with
@@ -194,7 +200,7 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
                 Log.L.debug (fun m -> m "Explore uniq");
                 (search_aux [@tailcall]) (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             (* if this language is invalidated by a new oracle call *)
-            end else if List.exists (Quotient.is_in_language quotient e) !invalid_words then begin
+            end else if verify_previous_oracle_calls e then begin
                     Log.L.debug (fun m -> m "Invalid");
                     set_node_color_in_graph e "crimson";
                     (search_aux [@tailcall]) (step + 1) q
@@ -239,7 +245,7 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
         (* print the statistics *)
         Quotient.print_statistics quotient;
         let total_duration = Unix.gettimeofday () -. start_time in
-        Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, quotient: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. Quotient.get_call_time quotient -. Oracle.get_call_time oracle -. Oracle.get_idle_time oracle) (Quotient.get_call_time quotient) (Oracle.get_call_time oracle) (Oracle.get_idle_time oracle));
+        Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, heuristic: %.2fs, quotient: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. !h_time -. Quotient.get_call_time quotient -. Oracle.get_call_time oracle -. Oracle.get_idle_time oracle) !h_time (Quotient.get_call_time quotient) (Oracle.get_call_time oracle) (Oracle.get_idle_time oracle));
         Log.L.info (fun m -> m "%d calls to oracle." (Oracle.get_call_nb oracle));
 
         (* close the dot files *)
@@ -279,8 +285,8 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
             let ext_inj = List.rev_map ext_element_of_element inj in
             List.iter (set_init_node) ext_inj;
             Log.L.debug (fun m -> m "Computing some heuristic values…");
-            let openset = List.fold_right (add_in_openset true 1 false INDUCTION) ext_inj [] in (* injection tokens won't be derived *)
             try
+                let openset = List.fold_right (add_in_openset true 1 false INDUCTION) ext_inj [] in (* injection tokens won't be derived *)
                 Sys.catch_break true;
                 let result = search_aux 1 openset (* search *) in
                 finalize ();

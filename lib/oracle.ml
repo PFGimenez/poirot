@@ -45,7 +45,7 @@ let load_mem (o: t) (fname: string) : unit =
 (* wrap the function to add the memoization, interval management, etc. *)
 let call (o: t) (inj: string) : oracle_status =
     if Hashtbl.mem o.mem inj then begin
-        Log.L.debug (fun m -> m "Oracle memoization: %s" inj);
+        (* Log.L.debug (fun m -> m "Oracle memoization: %s" inj); *)
         Hashtbl.find o.mem inj
     end else begin
         if o.interval <> None then begin
