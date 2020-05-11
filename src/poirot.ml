@@ -10,6 +10,7 @@ let ()=
     and oracle_save = ref true
     and oracle_fname = ref None
     and grammar_fname = ref None
+    and inference_grammar_fname = ref None
     and prefix = ref None
     and suffix = ref None
     and manual_stop = ref false
@@ -49,6 +50,7 @@ let ()=
         ("-nosave_h",     Arg.Clear save_h,    "Disable the heuristics save");
         ("-nosave_oracle",   Arg.Clear oracle_save,    "Disable the oracle calls save");
         ("-oneline_comment",     Arg.String (fun s -> oneline_comment := Some s),    "The string that starts one-line comment");
+        ("-inference_grammar",    Arg.String (fun s -> inference_grammar_fname := Some s),     "Grammar used for the inference");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
         ("-lowercase",  Arg.Set lowercase,     "Convert all terminals to lowercase");
         ("-uppercase",  Arg.Set uppercase,     "Convert all terminals to uppercase");
@@ -76,13 +78,17 @@ let ()=
 
         let grammar = if !lowercase then Poirot.to_lowercase grammar else (if !uppercase then Poirot.to_uppercase grammar else grammar) in
 
+        let inference_grammar = match !inference_grammar_fname with
+        | None -> None
+        | Some fname -> let g = Poirot.read_bnf_grammar fname in Some (if !lowercase then Poirot.to_lowercase g else (if !uppercase then Poirot.to_uppercase g else g)) in
+
         let explode s = List.init (String.length s) (String.get s) in
 
         Poirot.set_log_level !verbose_lvl;
         Poirot.set_reporter (Logs_fmt.reporter ());
 
         let s = Option.map Poirot.read_dict !dict in
-        match (Poirot.search ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_h:!save_h ~save_oracle:!oracle_save oracle grammar goal start, !injg_fname) with
+        match (Poirot.search ~inference_g:inference_grammar ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_h:!save_h ~save_oracle:!oracle_save oracle grammar goal start, !injg_fname) with
         | Some (gram, word), Some fname -> Poirot.export_antlr4 fname gram; print_endline ("Injection: "^word)
         | Some (_, word), _ -> print_endline ("Injection: "^word)
         | None, _ -> print_endline "No grammar found";

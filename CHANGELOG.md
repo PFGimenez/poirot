@@ -6,6 +6,7 @@
 - API rework
 - Add manual stop
 - The user can choose the heuristic
+- The inference grammar can be a subset of the quotient grammar
 - Bugfixes
 
 # v0.4

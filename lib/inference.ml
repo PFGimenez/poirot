@@ -11,14 +11,17 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : (ext_grammar * string) option =
+let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : (ext_grammar * string) option =
 
     (* words refused by the user *)
     let refused_words : string list ref = ref [] in
 
     let closedset: (ext_element, unit) Hashtbl.t = Hashtbl.create 10000 in
 
-    let g_non_comment = Clean.clean_grammar unclean_g in (* clean is necessary *)
+    let quotient_g = Clean.clean_grammar quotient_g in (* clean is necessary *)
+    let g_non_comment = match inference_g with
+    | Some g -> Clean.clean_grammar g
+    | None -> quotient_g in
 
     let h_time = ref 0. in
     let user_time = ref 0. in
@@ -29,7 +32,7 @@ let search (oracle: Oracle.t) (unclean_g: grammar) (goal: element) (start: eleme
                 g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules) (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
     | None -> g_non_comment in
 
-    let quotient = Quotient.init oneline_comment g_non_comment forbidden dict qgraph_fname
+    let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname
     and all_sym = get_all_symbols g in
 
     (* load the heuristic *)
