@@ -4,6 +4,7 @@ from antlr4 import *
 import importlib
 import sys
 from antlr4.error.ErrorListener import ErrorListener
+from antlr4.tree.Trees import Trees
 
 # usage: grammar prefix suffix injection
 
@@ -41,13 +42,15 @@ def main():
         exit(1)
     parser = getattr(parser_module, parser_name)(stream)
     parser.addErrorListener(MyErrorListener())
+
     try:
         p = getattr(parser, axiom)
     except Exception as e:
         print("Unknown axiom")
         exit(1)
     try:
-        p()
+        t = p()
+        print(Trees.toStringTree(t, None, parser))
     except Exception as e:
         print("Exception:",e)
         exit(180)
