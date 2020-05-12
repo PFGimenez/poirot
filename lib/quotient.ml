@@ -290,16 +290,19 @@ let build_derivation (quo: t) (p: ext_part) : (ext_rule * ext_part) list =
     build_derivation_aux [] [] p
 
 (* find a path (a list of rule) to produce, and an empty list if there is no path *)
-let rec find_path_to_goal_aux (quo: t) (goal: ext_element) (seen: ext_element list) (queue : (ext_part * ext_rule list) list) : ext_rule list =
+(* tail-recursive *)
+let rec find_path_to_goal_aux (quo: t) (goal: ext_element) (seen: ext_element list) (left_to_find: int) (found : ext_rule list list) (queue : (ext_part * ext_rule list) list) : ext_rule list list =
     match queue with
-    | [] -> [] (* no path *)
-    | (form,path)::_ when List.mem goal form -> List.rev path
-    | (form,_)::q when not (has_new seen form) -> (find_path_to_goal_aux [@tailcall]) quo goal seen q
+    | [] -> found (* no more path *)
+    | (form,path)::q when List.mem goal form ->
+            if left_to_find = 1 then found (* we found them all *)
+            else (find_path_to_goal_aux [@tailcall]) quo goal seen (left_to_find-1) ((List.rev path)::found) q
+    | (form,_)::q when not (has_new seen form) -> (find_path_to_goal_aux [@tailcall]) quo goal seen left_to_find found q
     | (form,path)::q -> let new_items = List.rev_map (fun (r,p) -> (p,r::path)) (build_derivation quo form) in
-        (find_path_to_goal_aux [@tailcall]) quo goal (List.sort_uniq compare (form@seen)) (q@new_items)
+        (find_path_to_goal_aux [@tailcall]) quo goal (List.sort_uniq compare (form@seen)) left_to_find found (q@new_items)
 
-let find_path_to_goal (quo: t) (goal: ext_element) (axiom : ext_element) : ext_rule list =
-    find_path_to_goal_aux quo goal [] [([axiom],[])]
+let find_path_to_goal (quo: t) (goal: ext_element) (axiom : ext_element) : ext_rule list list =
+    find_path_to_goal_aux quo goal [] 10 [] [([axiom],[])]
 
 (* get a derivation of ext_element with the "biggest" rule *)
 let get_first_derivation (quo: t) (e: ext_element) : ext_element list =
@@ -323,7 +326,7 @@ let get_injection (quo: t) (e: ext_element) (goal: element option) : (part list 
             | Some g -> find_path_to_goal quo g e in
         let out = match path with
         | [] -> ([fuzzer_minimize quo [] [] (get_first_derivation quo e)], false)
-        | l -> Log.L.debug (fun m -> m "Fuzzing with goal"); ([fuzzer_minimize quo l [] [e]], true) in
+        | all_path -> Log.L.debug (fun m -> m "Fuzzing with goal"); (List.sort_uniq compare (List.map (fun l -> fuzzer_minimize quo l [] [e]) all_path), true) in
         quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
         out
     end

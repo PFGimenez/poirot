@@ -1,6 +1,7 @@
 # v0.5
 - API rework
 - Rename `quotient_poirot` into `whitebox_poirot`
+- The fuzzer returns multiple injections with goal
 - Inference uses previous oracle calls
 - Oracle based on prefix and suffix
 - Add manual stop
