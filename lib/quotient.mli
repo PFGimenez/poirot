@@ -6,6 +6,8 @@ val get_injection : t -> Grammar.ext_element -> Grammar.element option -> Gramma
 val get_grammar : t -> Grammar.ext_element -> Grammar.ext_grammar
 val is_in_language : t -> Grammar.ext_element -> Grammar.part -> bool
 
+val refuse_injections : t -> Grammar.element -> unit
+
 val print_statistics : t -> unit
 val get_call_time : t -> float
 

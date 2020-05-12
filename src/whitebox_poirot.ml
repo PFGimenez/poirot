@@ -25,10 +25,13 @@ let ()=
 
         let inj_g,word,reached = Poirot.whitebox_search ~oneline_comment:!oneline_comment ~qgraph_fname:!qgraph_fname grammar_fname prefix suffix !goal in
         Option.iter (fun fname -> print_endline ("Injection grammar saved into "^(fname)^".g4"); Poirot.export_antlr4 fname inj_g) !injg_fname;
-        match word with
-        | None -> print_endline "No injection"
-        | Some inj when reached && !goal <> None -> print_endline ("Injection (goal reached): "^inj)
-        | Some inj when !goal <> None -> print_endline ("Injection (goal impossible to reach): "^inj)
-        | Some inj -> print_endline ("Injection: "^inj)
+        if word = [] then
+            print_endline "No injection"
+        else if reached && !goal <> None then
+            List.iter (fun w -> print_endline ("Injection (goal reached): "^w)) word
+        else if !goal <> None then
+            List.iter (fun w -> print_endline ("Injection (goal impossible to reach): "^w)) word
+        else
+            List.iter (fun w -> print_endline ("Injection: "^w)) word
     end else print_endline "Error: grammar, prefix and suffix are necessary"
 

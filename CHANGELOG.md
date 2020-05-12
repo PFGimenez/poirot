@@ -4,7 +4,7 @@
 - The fuzzer returns multiple injections with goal
 - Inference uses previous oracle calls
 - Oracle based on prefix and suffix
-- Add manual stop
+- The user can refuse an injection and continue the search
 - The user can choose the heuristic
 - The inference grammar can be a subset of the quotient grammar
 - Bugfixes

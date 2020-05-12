@@ -5,6 +5,7 @@ type side = Left | Right
 type t = {  words : (ext_element, part) Hashtbl.t;
             mem : (ext_element, ext_part list) Hashtbl.t;
             dict: (element,string) Hashtbl.t option;
+            cant_reach_goal: (element,unit) Hashtbl.t;
             forbidden: char list;
             mutable call_time: float;
             graph_channel : out_channel option}
@@ -281,7 +282,7 @@ let build_derivation (quo: t) (p: ext_part) : (ext_rule * ext_part) list =
     (* tail-recursive *)
     let rec build_derivation_aux (sofar: ext_part) (acc: (ext_rule * ext_part) list) (p: ext_part) : (ext_rule * ext_part) list = match p with
         | [] -> acc
-        | t::q when is_ext_element_terminal t || t.e = Nonterminal "poirot_nonterminal_comment" ->
+        | t::q when Hashtbl.mem quo.cant_reach_goal t.e || is_ext_element_terminal t || t.e = Nonterminal "poirot_nonterminal_comment" ->
                 (build_derivation_aux [@tailcall]) (t::sofar) acc q (* don't search in the oneline comment to find the goal *)
         | t::q-> let rhs = Hashtbl.find quo.mem t in
             let new_parts = rhs |> List.rev_map (fun rhs -> (t--->rhs),(List.rev sofar)@rhs@q) in
@@ -355,12 +356,16 @@ let print_statistics (quo: t) : unit =
 let get_call_time (quo: t) : float =
     quo.call_time
 
+let refuse_injections (quo: t) (e: element) : unit =
+    Hashtbl.add quo.cant_reach_goal e ()
+
 let finalizer (quo: t) : unit =
     Option.iter (fun ch -> Log.L.info (fun m -> m "Save quotient graph."); output_string ch "}"; close_out ch) quo.graph_channel
 
 let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char list) (dict: (element,string) Hashtbl.t option) (qgraph_fname : string option) : t =
     let q = {words = Hashtbl.create 100000;
         mem = Hashtbl.create 100000;
+        cant_reach_goal = Hashtbl.create 100;
         dict = dict;
         forbidden = forbidden;
         call_time = 0.;

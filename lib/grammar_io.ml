@@ -20,6 +20,7 @@ let bnf_string_of_ext_grammar (g : ext_grammar) : string = (bnf_string_of_ext_el
 
 (* read a grammar from a BNF file *)
 let read_bnf_grammar (unravel: bool) (filename : string) : grammar =
+    Log.L.debug (fun m -> m "Load grammar %s" filename);
     let lexbuf = Lexing.from_channel (open_in filename) in match unravel with
     | true -> Parserbnf.start_unravel Lexerbnf.token lexbuf
     | _ -> Parserbnf.start Lexerbnf.token lexbuf

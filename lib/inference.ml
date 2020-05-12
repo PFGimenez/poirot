@@ -13,15 +13,18 @@ type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: n
 
 let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : (ext_grammar * string list) option =
 
-    (* words refused by the user *)
-    let refused_words : string list ref = ref [] in
-
     let closedset: (ext_element, unit) Hashtbl.t = Hashtbl.create 10000 in
 
     let quotient_g = Clean.clean_grammar quotient_g in (* clean is necessary *)
     let g_non_comment = match inference_g with
     | Some g -> Clean.clean_grammar g
     | None -> quotient_g in
+
+    if inference_g <> None then begin
+        Log.L.debug (fun m -> m "Inference grammar: %d rules" (List.length g_non_comment.rules));
+        Log.L.debug (fun m -> m "Quotient grammar: %d rules" (List.length quotient_g.rules))
+    end else
+        Log.L.debug (fun m -> m "Inference/quotient grammar: %d rules" (List.length g_non_comment.rules));
 
     if inference_g <> None && not (is_subgrammar g_non_comment quotient_g) then
         failwith "The inference grammar should be a subgrammar of the quotient grammar !";
@@ -215,7 +218,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
                     true
                 else if (s = "n" || s="no") then begin
                     set_node_color_in_graph e "blue";
-                    refused_words := (List.map string_of_word words) @ !refused_words;
+                    Quotient.refuse_injections quotient e.e;
                     false
                 end else begin
                     print_endline "I didn't understand your answer.";
@@ -264,7 +267,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
                 let word_str = string_of_word word in (* there is always a word as the trivial injection always works *)
                 let status = Oracle.call oracle word_str in
                 if status = Syntax_error then invalid_words := word::!invalid_words;
-                if goal_reached && status = No_error && not (List.mem word_str !refused_words) && (not (manual_stop) || stop_search words e) then begin (* the goal has been found ! *)
+                if goal_reached && status = No_error && (not (manual_stop) || stop_search words e) then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)
@@ -322,7 +325,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
     if not (is_reachable_mem None (ext_element_of_element quotient_g.axiom)) then failwith "Unknown or unreachable goal" (* the goal is not reachable from the axiom ! *)
     else if inj = [] then failwith "No trivial injection token" (* no injection token found *)
     else begin
-        let result = find_start g goal inj in
+(*        let result = find_start g goal inj in
         if result <> None then begin
             Log.L.info (fun m -> m "Injection directly found!");
             let e = (ext_element_of_element (Option.get result)) in
@@ -330,7 +333,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
             assert goal_reached;
             Some (Quotient.get_grammar quotient e, List.map string_of_word w)
         end
-        else begin
+        else*) begin
             (* the injection token can't reach the goal *)
             List.iter (fun e -> Hashtbl.add reachable (ext_element_of_element e) false) inj;
 
