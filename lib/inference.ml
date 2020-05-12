@@ -23,6 +23,9 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
     | Some g -> Clean.clean_grammar g
     | None -> quotient_g in
 
+    if inference_g <> None && not (is_subgrammar g_non_comment quotient_g) then
+        failwith "The inference grammar should be a subgrammar of the quotient grammar !";
+
     let h_time = ref 0. in
     let user_time = ref 0. in
 

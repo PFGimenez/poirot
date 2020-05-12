@@ -89,6 +89,11 @@ let is_reachable (g: grammar) (s: element) (start: element) : bool =
     Hashtbl.clear seen;
     is_reachable_aux [start]
 
+(* true iff g1 is a subgrammar of g2, i.e. the rules of g1 are included in the rules of g2 and their axiom and identical *)
+let is_subgrammar (g1: grammar) (g2: grammar) : bool =
+    g1.axiom = g2.axiom &&
+    List.for_all (fun r -> List.exists ((=) r) g2.rules) g1.rules
+
 let add_comment (g: grammar) (s: string) : grammar =
     let new_axiom = Nonterminal "poirot_axiom_for_comment"
     and new_nterm = Nonterminal "poirot_nonterminal_comment" in
