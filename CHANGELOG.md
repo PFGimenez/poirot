@@ -1,9 +1,8 @@
 # v0.5
+- API rework
 - Rename `quotient_poirot` into `whitebox_poirot`
-- "is_in_language" feature
 - Inference uses previous oracle calls
 - Oracle based on prefix and suffix
-- API rework
 - Add manual stop
 - The user can choose the heuristic
 - The inference grammar can be a subset of the quotient grammar

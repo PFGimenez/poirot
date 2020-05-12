@@ -31,6 +31,9 @@ antlr-$(antlr_version)-complete.jar:
 PhpLexer.py: PhpLexer.g4 PhpParser.g4 antlr-$(antlr_version)-complete.jar
 	java -jar antlr-$(antlr_version)-complete.jar -Dlanguage=Python3 PhpLexer.g4 PhpParser.g4
 
+MySqlLexer.py: MySqlLexer.g4 MySqlParser.g4 antlr-$(antlr_version)-complete.jar
+	java -jar antlr-$(antlr_version)-complete.jar -Dlanguage=Python3 MySqlLexer.g4 MySqlParser.g4
+
 XMLLexer.py: XMLLexer.g4 XMLParser.g4 antlr-$(antlr_version)-complete.jar
 	java -jar antlr-$(antlr_version)-complete.jar -Dlanguage=Python3 XMLLexer.g4 XMLParser.g4
 
@@ -43,6 +46,10 @@ SQLite.bnf: SQLite.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBN
 	cat SQLite.g4 | python3 antlr4-to-bnf.py true "<WS_POIROT>" > SQLite.bnf
 	echo "<WS_POIROT> ::= ' ';" >> SQLite.bnf
 #	echo "<WS_POIROT> ::= <MULTILINE_COMMENT>;" >> SQLite.bnf
+
+MySql.bnf: MySqlLexer.g4 MySqlParser.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py antlr4-to-bnf.py
+	cat MySqlParser.g4 | python3 antlr4-to-bnf.py true "' '" > $@
+	cat MySqlLexer.g4 | python3 antlr4-to-bnf.py false "' '" >> $@
 
 Lua.bnf: SQLite.g4 ANTLRv4LexerPythonTarget.py ANTLRv4Parser.py ListenerForBNF.py antlr4-to-bnf.py
 	cat Lua.g4 | python3 antlr4-to-bnf.py true "" "' '" > Lua.bnf
@@ -81,6 +88,11 @@ XMLLexer.g4:
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/xml/XMLParser.g4
 	patch < XMLLexer.diff
 	patch < XMLParser.diff
+
+MySqlLexer.g4:
+	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/sql/mysql/Positive-Technologies/MySqlLexer.g4
+	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/sql/mysql/Positive-Technologies/MySqlParser.g4
+	patch < MySqlParser.diff
 
 SQLite.g4:
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/sql/sqlite/SQLite.g4
