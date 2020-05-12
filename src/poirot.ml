@@ -54,7 +54,7 @@ let ()=
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
         ("-lowercase",  Arg.Set lowercase,     "Convert all terminals to lowercase");
         ("-uppercase",  Arg.Set uppercase,     "Convert all terminals to uppercase");
-        ("-verbose_lvl",    Arg.String(set_verbose_lvl),     "Choose Poirot verbosity: debug, info, warning or error");
+        ("-verbose_lvl",    Arg.Symbol (["debug";"info";"warning";"error"], set_verbose_lvl),     "Choose Poirot verbosity: debug, info, warning or error");
         ("-v",    Arg.Unit (fun () -> print_endline ("Poirot v"^Poirot.version)),     "Show Poirot version")
     ] in
     Arg.parse speclist ignore ("Poirot v"^Poirot.version);
