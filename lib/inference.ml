@@ -31,8 +31,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
 
     (* add the oneline comment if requested *)
     let g = match oneline_comment with
-    | Some s -> let g_comment = add_comment g_non_comment s in
-                g_comment.axiom @@ ((g_comment.axiom --> [g_non_comment.axiom])::(g_comment.axiom --> [g_non_comment.axiom])::g_non_comment.rules) (* this double rule is just a hack to tell the inference that the new axiom has sereval rules *)
+    | Some _ -> add_comment_inference g_non_comment
     | None -> g_non_comment in
 
     let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname
@@ -84,7 +83,8 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
     let seen_hashtbl : (ext_element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in
 
     (* populate the uniq_rule hashtable *)
-    List.iter (fun e -> Hashtbl.add uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) g.rules) 1) == 0)) all_sym;
+    (* we must verify the quotient_g rules ! *)
+    List.iter (fun e -> Hashtbl.add uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) quotient_g.rules) 1) == 0)) all_sym;
 
     (* open the search graph file if requested *)
     let graph_channel = Option.map open_out graph_fname in

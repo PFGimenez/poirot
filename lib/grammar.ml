@@ -94,12 +94,18 @@ let is_subgrammar (g1: grammar) (g2: grammar) : bool =
     g1.axiom = g2.axiom &&
     List.for_all (fun r -> List.exists ((=) r) g2.rules) g1.rules
 
-let add_comment (g: grammar) (s: string) : grammar =
+(* the inference should be consider the comment *)
+let add_comment_inference (g: grammar) : grammar =
+    (Nonterminal "poirot_axiom_for_comment")@@((Nonterminal "poirot_axiom_for_comment" --> [g.axiom])::g.rules)
+
+let add_comment_quotient (g: grammar) (s: string) : grammar =
     let new_axiom = Nonterminal "poirot_axiom_for_comment"
     and new_nterm = Nonterminal "poirot_nonterminal_comment" in
     let new_rules = List.map (fun e -> new_nterm --> [e;new_nterm]) (get_all_symbols g) in
     let new_rules = (new_axiom --> [g.axiom])::(new_axiom --> [g.axiom; Terminal s; new_nterm])::(new_nterm --> [])::(new_rules@g.rules) in
     new_axiom@@new_rules
+
+
 
 (* get the list of token that can directly produce "axiom" *)
 let symbols_from_parents (g: grammar) (axiom : element) : element list =
