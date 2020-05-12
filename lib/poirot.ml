@@ -3,7 +3,7 @@ type element = Grammar.element
 
 let version = "0.4"
 
-let search ?(inference_g: grammar option = None) ?(heuristic: Inference.heuristic = Inference.COMPLICATED) ?(manual_stop: bool = false) ?(oneline_comment: string option = None) ?(dict: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) ?(save_h: bool = true) ?(save_oracle: bool = true) (oracle: Oracle.t) (g: grammar) (goal: element) (start: element list) : (grammar * string) option =
+let search ?(inference_g: grammar option = None) ?(heuristic: Inference.heuristic = Inference.COMPLICATED) ?(manual_stop: bool = false) ?(oneline_comment: string option = None) ?(dict: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) ?(save_h: bool = true) ?(save_oracle: bool = true) (oracle: Oracle.t) (g: grammar) (goal: element) (start: element list) : (grammar * string list) option =
 
     (* heuristic save file *)
     let h_fname = if save_h then Some ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^".prt") else None in
@@ -17,7 +17,7 @@ let search ?(inference_g: grammar option = None) ?(heuristic: Inference.heuristi
 
 let read_dict : string -> (element,string) Hashtbl.t = Grammar_io.read_dict
 
-let whitebox_search ?(oneline_comment: string option = None) ?(qgraph_fname: string option = None) (grammar_fname: string) (prefix: string) (suffix: string) (goal: element option) : (grammar * string option * bool) =
+let whitebox_search ?(oneline_comment: string option = None) ?(qgraph_fname: string option = None) (grammar_fname: string) (prefix: string) (suffix: string) (goal: element option) : (grammar * string list * bool) =
     let g = Grammar_io.read_bnf_grammar true grammar_fname in
     let explode s = List.init (String.length s) (fun i -> Grammar.Terminal (String.make 1 (String.get s i))) in
     let prefix = explode prefix
@@ -27,7 +27,7 @@ let whitebox_search ?(oneline_comment: string option = None) ?(qgraph_fname: str
     let inj,goal_reached = Quotient.get_injection quotient e goal in
     let g = Quotient.get_grammar quotient e in
     let g2 = Grammar.grammar_of_ext_grammar (Clean.clean g) in
-    (g2,Option.map Grammar.string_of_word inj,goal_reached)
+    (g2,List.map Grammar.string_of_word inj,goal_reached)
 
 let to_uppercase (g: grammar) = Clean.to_uppercase g
 let to_lowercase (g: grammar) = Clean.to_lowercase g

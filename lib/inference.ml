@@ -11,7 +11,7 @@ type node_origin = DERIVATION | INDUCTION
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
 
-let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : (ext_grammar * string) option =
+let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (h_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : (ext_grammar * string list) option =
 
     (* words refused by the user *)
     let refused_words : string list ref = ref [] in
@@ -228,7 +228,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
 
     (* core algorithm : an A* algorithm *)
     (* tail recursive *)
-    let rec search_aux (step: int) (openset: node list) : (ext_grammar * string) option = match openset with
+    let rec search_aux (step: int) (openset: node list) : (ext_grammar * string list) option = match openset with
     | [] -> None (* openset is empty : there is no way *)
     | {g_val;h_val;e;par;origin}::q ->
         (* assert (g_val <= max_depth); *)
@@ -258,8 +258,8 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
                 let word,goal_reached = Quotient.get_injection quotient e (Some goal) in
                 (* print_endline "Grammar:"; *)
                 (* print_endline (string_of_ext_grammar inj_g); *)
-                assert (word <> None);
-                let word = Option.get word in
+                assert (word <> []);
+                let word = List.hd word in (* TODO ! *)
                 assert (Quotient.is_in_language quotient e word);
                 let word_str = string_of_word word in (* there is always a word as the trivial injection always works *)
                 let status = Oracle.call oracle word_str in
@@ -268,7 +268,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)
-                    Some (Clean.clean (Quotient.get_grammar quotient e), word_str)
+                    Some (Clean.clean (Quotient.get_grammar quotient e), [word_str])
                 end else if step = max_steps then begin (* the end *)
                     Log.L.info (fun m -> m "Steps limit reached");
                     None
@@ -328,7 +328,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
             let e = (ext_element_of_element (Option.get result)) in
             let w,goal_reached = Quotient.get_injection quotient e (Some goal) in
             assert goal_reached;
-            Some (Quotient.get_grammar quotient e, string_of_word (Option.get w))
+            Some (Quotient.get_grammar quotient e, List.map string_of_word w)
         end
         else begin
             (* the injection token can't reach the goal *)

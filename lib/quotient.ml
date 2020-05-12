@@ -311,19 +311,19 @@ let get_grammar (quo: t) (e: ext_element) : ext_grammar =
     quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
     grammar_of_mem quo e
 
-let get_injection (quo: t) (e: ext_element) (goal: element option) : (part option * bool) =
+let get_injection (quo: t) (e: ext_element) (goal: element option) : (part list * bool) =
     let goal = Option.map ext_element_of_element goal in
     let start_time = Unix.gettimeofday () in
     quotient_symbols quo [e];
 
-    if is_useless quo e then (None,false)
+    if is_useless quo e then ([],false)
     else begin
         let path = match goal with
             | None -> []
             | Some g -> find_path_to_goal quo g e in
         let out = match path with
-        | [] -> (Some (fuzzer_minimize quo [] [] (get_first_derivation quo e)), false)
-        | l -> Log.L.debug (fun m -> m "Fuzzing with goal"); (Some (fuzzer_minimize quo l [] [e]), true) in
+        | [] -> ([fuzzer_minimize quo [] [] (get_first_derivation quo e)], false)
+        | l -> Log.L.debug (fun m -> m "Fuzzing with goal"); ([fuzzer_minimize quo l [] [e]], true) in
         quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
         out
     end
