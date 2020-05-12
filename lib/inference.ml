@@ -206,22 +206,23 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
         if (!invalid_words <> []) then Log.L.debug (fun m -> m "Verify with %d oracle calls" (List.length !invalid_words));
         List.exists (Quotient.is_in_language quotient e) !invalid_words in
 
-    let stop_search (word: part) : bool =
-        let rec stop_search_aux (word: part) : bool =
+    let stop_search (word: part) (e: ext_element) : bool =
+        let rec stop_search_aux () : bool =
             print_endline ("Injection found: "^(string_of_word word));
             print_endline "End the search? (Y/n)";
             let s = String.lowercase_ascii (read_line ()) in
                 if (s = "y" || s="yes" || s="") then
                     true
                 else if (s = "n" || s="no") then begin
+                    set_node_color_in_graph e "blue";
                     refused_words := (string_of_word word) :: !refused_words;
                     false
                 end else begin
                     print_endline "I didn't understand your answer.";
-                    stop_search_aux word
+                    stop_search_aux ()
             end in
         let start_time = Unix.gettimeofday () in
-        let out = stop_search_aux word in
+        let out = stop_search_aux () in
         user_time := !user_time +. (Unix.gettimeofday () -. start_time);
         out in
 
@@ -263,7 +264,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
                 let word_str = string_of_word word in (* there is always a word as the trivial injection always works *)
                 let status = Oracle.call oracle word_str in
                 if status = Syntax_error then invalid_words := word::!invalid_words;
-                if goal_reached && status = No_error && not (List.mem word_str !refused_words) && (not (manual_stop) || stop_search word) then begin (* the goal has been found ! *)
+                if goal_reached && status = No_error && not (List.mem word_str !refused_words) && (not (manual_stop) || stop_search word e) then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
     (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)
