@@ -1,16 +1,14 @@
---- MySqlParser.g4	2020-05-12 11:06:12.292579441 +0200
-+++ MySqlParser_new.g4	2020-05-11 14:33:19.460768653 +0200
-@@ -25,9 +25,6 @@
+--- MySqlParser.g4	2020-05-12 11:52:56.098867981 +0200
++++ MySqlParser_new.g4	2020-05-12 11:51:44.058196030 +0200
+@@ -27,7 +27,6 @@
  
- parser grammar MySqlParser;
+ options { tokenVocab=MySqlLexer; }
  
--options { tokenVocab=MySqlLexer; }
--
 -
  // Top Level Description
  
  root
-@@ -123,7 +120,7 @@
+@@ -123,7 +122,7 @@
  //    Create statements
  
  createDatabase
@@ -19,7 +17,7 @@
        ifNotExists? uid createDatabaseOption*
      ;
  
-@@ -137,27 +134,27 @@
+@@ -137,27 +136,27 @@
  
  createIndex
      : CREATE
@@ -56,7 +54,7 @@
        ENGINE '='? engineName
      ;
  
-@@ -180,7 +177,7 @@
+@@ -180,7 +179,7 @@
  
  createServer
      : CREATE SERVER uid
@@ -65,7 +63,7 @@
      OPTIONS '(' serverOption (',' serverOption)* ')'
      ;
  
-@@ -189,59 +186,59 @@
+@@ -189,59 +188,59 @@
         tableName
         (
           LIKE tableName
@@ -145,7 +143,7 @@
      ;
  
  // details
-@@ -256,16 +253,16 @@
+@@ -256,16 +255,16 @@
      ;
  
  scheduleExpression
@@ -168,7 +166,7 @@
      ;
  
  timestampValue
-@@ -305,7 +302,7 @@
+@@ -305,7 +304,7 @@
      ;
  
  procedureParameter
@@ -177,7 +175,7 @@
      ;
  
  functionParameter
-@@ -313,14 +310,14 @@
+@@ -313,14 +312,14 @@
      ;
  
  routineOption
@@ -197,7 +195,7 @@
      ;
  
  serverOption
-@@ -338,9 +335,9 @@
+@@ -338,9 +337,9 @@
      ;
  
  createDefinition
@@ -210,7 +208,7 @@
      ;
  
  columnDefinition
-@@ -348,48 +345,48 @@
+@@ -348,48 +347,48 @@
      ;
  
  columnConstraint
@@ -287,7 +285,7 @@
        )?
      ;
  
-@@ -398,44 +395,44 @@
+@@ -398,44 +397,44 @@
      ;
  
  indexColumnDefinition
@@ -363,7 +361,7 @@
      ;
  
  tablespaceStorage
-@@ -444,26 +441,26 @@
+@@ -444,26 +443,26 @@
  
  partitionDefinitions
      : PARTITION BY partitionFunctionDefinition
@@ -400,7 +398,7 @@
      ;
  
  partitionDefinition
-@@ -472,24 +469,24 @@
+@@ -472,24 +471,24 @@
            partitionDefinerAtom (',' partitionDefinerAtom)*
        ')'
        partitionOption*
@@ -430,7 +428,7 @@
      ;
  
  partitionDefinerAtom
-@@ -505,23 +502,23 @@
+@@ -505,23 +504,23 @@
      ;
  
  partitionOption
@@ -466,7 +464,7 @@
      ;
  
  alterEvent
-@@ -559,7 +556,7 @@
+@@ -559,7 +558,7 @@
      ;
  
  alterTable
@@ -475,7 +473,7 @@
        IGNORE? TABLE tableName
        (alterSpecification (',' alterSpecification)*)?
        partitionDefinitions?
-@@ -567,7 +564,7 @@
+@@ -567,7 +566,7 @@
  
  alterTablespace
      : ALTER TABLESPACE uid
@@ -484,7 +482,7 @@
        (INITIAL_SIZE '=' fileSizeLiteral)?
        WAIT?
        ENGINE '='? engineName
-@@ -576,92 +573,92 @@
+@@ -576,92 +575,92 @@
  alterView
      : ALTER
        (
@@ -635,7 +633,7 @@
      ;
  
  dropEvent
-@@ -669,12 +666,12 @@
+@@ -669,12 +668,12 @@
      ;
  
  dropIndex
@@ -651,7 +649,7 @@
        )*
      ;
  
-@@ -696,7 +693,7 @@
+@@ -696,7 +695,7 @@
  
  dropTable
      : DROP TEMPORARY? TABLE ifExists?
@@ -660,7 +658,7 @@
      ;
  
  dropTablespace
-@@ -709,7 +706,7 @@
+@@ -709,7 +708,7 @@
  
  dropView
      : DROP VIEW ifExists?
@@ -669,7 +667,7 @@
      ;
  
  
-@@ -758,32 +755,32 @@
+@@ -758,32 +757,32 @@
  
  insertStatement
      : INSERT
@@ -714,7 +712,7 @@
          selectFieldsInto+
        )?
        (
-@@ -791,7 +788,7 @@
+@@ -791,7 +790,7 @@
            selectLinesInto+
        )?
        (
@@ -723,7 +721,7 @@
        )?
        ( '(' assignmentField (',' assignmentField)* ')' )?
        (SET updatedElement (',' updatedElement)*)?
-@@ -799,44 +796,44 @@
+@@ -799,44 +798,44 @@
  
  loadXmlStatement
      : LOAD XML
@@ -785,7 +783,7 @@
      ;
  
  updateStatement
-@@ -847,7 +844,7 @@
+@@ -847,7 +846,7 @@
  
  insertStatementValue
      : selectStatement
@@ -794,7 +792,7 @@
        '(' expressionsWithDefaults? ')'
          (',' '(' expressionsWithDefaults? ')')*
      ;
-@@ -867,7 +864,7 @@
+@@ -867,7 +866,7 @@
  //    Detailed DML Statements
  
  singleDeleteStatement
@@ -803,7 +801,7 @@
      FROM tableName
        (PARTITION '(' uidList ')' )?
        (WHERE expression)?
-@@ -875,7 +872,7 @@
+@@ -875,7 +874,7 @@
      ;
  
  multipleDeleteStatement
@@ -812,7 +810,7 @@
        (
          tableName ('.' '*')? ( ',' tableName ('.' '*')? )*
              FROM tableSources
-@@ -891,16 +888,16 @@
+@@ -891,16 +890,16 @@
      ;
  
  handlerReadIndexStatement
@@ -832,7 +830,7 @@
        (WHERE expression)? (LIMIT limitClauseAtom)?
      ;
  
-@@ -909,13 +906,13 @@
+@@ -909,13 +908,13 @@
      ;
  
  singleUpdateStatement
@@ -848,7 +846,7 @@
        SET updatedElement (',' updatedElement)*
        (WHERE expression)?
      ;
-@@ -927,7 +924,7 @@
+@@ -927,7 +926,7 @@
      ;
  
  orderByExpression
@@ -857,7 +855,7 @@
      ;
  
  tableSources
-@@ -935,25 +932,25 @@
+@@ -935,25 +934,25 @@
      ;
  
  tableSource
@@ -892,7 +890,7 @@
        '(' uidList ')'
      ;
  
-@@ -966,14 +963,14 @@
+@@ -966,14 +965,14 @@
        (
          ON expression
          | USING '(' uidList ')'
@@ -911,7 +909,7 @@
      ;
  
  //    Select Statement's Details
-@@ -1001,11 +998,11 @@
+@@ -1001,11 +1000,11 @@
      ;
  
  unionParenthesis
@@ -925,7 +923,7 @@
        (querySpecificationNointo | queryExpressionNointo)
      ;
  
-@@ -1020,63 +1017,63 @@
+@@ -1020,63 +1019,63 @@
      ;
  
  selectElements
@@ -1010,7 +1008,7 @@
      )
      ;
  
-@@ -1097,14 +1094,14 @@
+@@ -1097,14 +1096,14 @@
  
  commitWork
      : COMMIT WORK?
@@ -1029,7 +1027,7 @@
      ;
  
  savepointStatement
-@@ -1131,11 +1128,11 @@
+@@ -1131,11 +1130,11 @@
  // details
  
  setAutocommitStatement
@@ -1043,7 +1041,7 @@
        transactionOption (',' transactionOption)*
      ;
  
-@@ -1182,10 +1179,10 @@
+@@ -1182,10 +1181,10 @@
      ;
  
  purgeBinaryLogs
@@ -1057,7 +1055,7 @@
         )
      ;
  
-@@ -1218,11 +1215,11 @@
+@@ -1218,11 +1217,11 @@
  // details
  
  masterOption
@@ -1074,7 +1072,7 @@
      ;
  
  stringMasterOption
-@@ -1247,19 +1244,19 @@
+@@ -1247,19 +1246,19 @@
      ;
  
  replicationFilter
@@ -1102,7 +1100,7 @@
      ;
  
  threadType
-@@ -1267,20 +1264,20 @@
+@@ -1267,20 +1266,20 @@
      ;
  
  untilOption
@@ -1132,7 +1130,7 @@
      ;
  
  gtuidSet
-@@ -1292,7 +1289,7 @@
+@@ -1292,7 +1291,7 @@
  //    XA Transactions
  
  xaStartTransaction
@@ -1141,7 +1139,7 @@
      ;
  
  xaEndTransaction
-@@ -1320,7 +1317,7 @@
+@@ -1320,7 +1319,7 @@
  
  prepareStatement
      : PREPARE uid FROM
@@ -1150,7 +1148,7 @@
      ;
  
  executeStatement
-@@ -1328,7 +1325,7 @@
+@@ -1328,7 +1327,7 @@
      ;
  
  deallocatePrepare
@@ -1159,7 +1157,7 @@
      ;
  
  
-@@ -1360,9 +1357,9 @@
+@@ -1360,9 +1359,9 @@
  
  ifStatement
      : IF expression
@@ -1171,7 +1169,7 @@
        END IF
      ;
  
-@@ -1399,9 +1396,9 @@
+@@ -1399,9 +1398,9 @@
      ;
  
  cursorStatement
@@ -1184,7 +1182,7 @@
      ;
  
  // details
-@@ -1420,19 +1417,19 @@
+@@ -1420,19 +1419,19 @@
      ;
  
  declareHandler
@@ -1211,7 +1209,7 @@
      ;
  
  procedureSqlStatement
-@@ -1455,27 +1452,27 @@
+@@ -1455,27 +1454,27 @@
  
  alterUser
      : ALTER USER
@@ -1245,7 +1243,7 @@
      ;
  
  dropUser
-@@ -1485,19 +1482,19 @@
+@@ -1485,19 +1484,19 @@
  grantStatement
      : GRANT privelegeClause (',' privelegeClause)*
        ON
@@ -1269,7 +1267,7 @@
        (WITH GRANT OPTION)?
      ;
  
-@@ -1509,16 +1506,16 @@
+@@ -1509,16 +1508,16 @@
  revokeStatement
      : REVOKE privelegeClause (',' privelegeClause)*
        ON
@@ -1291,7 +1289,7 @@
      ;
  
  setPasswordStatement
-@@ -1533,13 +1530,13 @@
+@@ -1533,13 +1532,13 @@
      ;
  
  userAuthOption
@@ -1309,7 +1307,7 @@
      ;
  
  tlsOption
-@@ -1559,14 +1556,14 @@
+@@ -1559,14 +1558,14 @@
  
  userPasswordOption
      : PASSWORD EXPIRE
@@ -1328,7 +1326,7 @@
      ;
  
  privelegeClause
-@@ -1589,22 +1586,22 @@
+@@ -1589,22 +1588,22 @@
      ;
  
  privilegeLevel
@@ -1359,7 +1357,7 @@
         TABLE tables
      ;
  
-@@ -1613,16 +1610,16 @@
+@@ -1613,16 +1612,16 @@
      ;
  
  checksumTable
@@ -1379,7 +1377,7 @@
        TABLE tables
        QUICK? EXTENDED? USE_FRM?
      ;
-@@ -1638,7 +1635,7 @@
+@@ -1638,7 +1637,7 @@
  
  createUdfunction
      : CREATE AGGREGATE? FUNCTION uid
@@ -1388,7 +1386,7 @@
        SONAME STRING_LITERAL
      ;
  
-@@ -1655,62 +1652,62 @@
+@@ -1655,62 +1654,62 @@
  
  setStatement
      : SET variableClause ('=' | ':=') expression
@@ -1494,7 +1492,7 @@
      ;
  
  // details
-@@ -1755,16 +1752,16 @@
+@@ -1755,16 +1754,16 @@
  cacheIndexStatement
      : CACHE INDEX tableIndexes (',' tableIndexes)*
        ( PARTITION '(' (uidList | ALL) ')' )?
@@ -1514,7 +1512,7 @@
        decimalLiteral+
      ;
  
-@@ -1786,7 +1783,7 @@
+@@ -1786,7 +1785,7 @@
  // details
  
  tableIndexes
@@ -1523,7 +1521,7 @@
      ;
  
  flushOption
-@@ -1797,9 +1794,9 @@
+@@ -1797,9 +1796,9 @@
            )? LOGS
          | OPTIMIZER_COSTS | PRIVILEGES | QUERY CACHE | STATUS
          | USER_RESOURCES | TABLES (WITH READ LOCK)?
@@ -1536,7 +1534,7 @@
      ;
  
  flushTableOption
-@@ -1809,8 +1806,8 @@
+@@ -1809,8 +1808,8 @@
  
  loadedTableIndexes
      : tableName
@@ -1547,7 +1545,7 @@
        (IGNORE LEAVES)?
      ;
  
-@@ -1819,16 +1816,16 @@
+@@ -1819,16 +1818,16 @@
  
  
  simpleDescribeStatement
@@ -1569,7 +1567,7 @@
        )?
        describeObjectClause
      ;
-@@ -1896,8 +1893,8 @@
+@@ -1896,8 +1895,8 @@
      : (
          selectStatement | deleteStatement | insertStatement
          | replaceStatement | updateStatement
@@ -1580,7 +1578,7 @@
      ;
  
  
-@@ -1918,7 +1915,7 @@
+@@ -1918,7 +1917,7 @@
      ;
  
  indexColumnName
@@ -1589,7 +1587,7 @@
      ;
  
  userName
-@@ -1954,10 +1951,10 @@
+@@ -1954,10 +1953,10 @@
      ;
  
  xid
@@ -1603,7 +1601,7 @@
        )?
      ;
  
-@@ -2031,52 +2028,52 @@
+@@ -2031,52 +2030,52 @@
      | '-' decimalLiteral
      | hexadecimalLiteral | booleanLiteral
      | REAL_LITERAL | BIT_STRING
@@ -1681,7 +1679,7 @@
      ;
  
  collectionOptions
-@@ -2084,10 +2081,10 @@
+@@ -2084,10 +2083,10 @@
      ;
  
  convertedDataType
@@ -1696,7 +1694,7 @@
      | (SIGNED | UNSIGNED) INTEGER?
      ;
  
-@@ -2169,134 +2166,134 @@
+@@ -2169,134 +2168,134 @@
  //    Functions
  
  functionCall
@@ -1885,7 +1883,7 @@
        ')'
      ;
  
-@@ -2310,7 +2307,7 @@
+@@ -2310,7 +2309,7 @@
      ;
  
  passwordFunctionClause
@@ -1894,7 +1892,7 @@
      ;
  
  functionArgs
-@@ -2330,42 +2327,42 @@
+@@ -2330,42 +2329,42 @@
  
  // Simplified approach for expression
  expression
