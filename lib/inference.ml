@@ -65,11 +65,12 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
 
     (* tail-recursive *)
     (* build all the possible one-step derivation of part p in the grammar g *)
+    (* uses the inference grammar *)
     let build_derivation (g: grammar) (p: part) : (rule * part) list =
         let rec build_derivation_aux (sofar: part) (acc: (rule * part) list) (p: part) : (rule * part) list = match p with
             | [] -> acc
             | (Terminal _ as t)::q -> (build_derivation_aux [@tailcall]) (t::sofar) acc q
-            | (Nonterminal _ as t)::q-> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in
+            | (Nonterminal _ as t)::q -> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in
                 (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
         build_derivation_aux [] [] p in
 
@@ -229,7 +230,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
     let rec search_aux (step: int) (openset: node list) : (ext_grammar * string) option = match openset with
     | [] -> None (* openset is empty : there is no way *)
     | {g_val;h_val;e;par;origin}::q ->
-        assert (g_val <= max_depth);
+        (* assert (g_val <= max_depth); *)
         if step > max_steps then begin
             Log.L.info (fun m -> m "Steps limit reached");
             None
@@ -249,9 +250,9 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
                 (search_aux [@tailcall]) (step + 1) (add_in_openset false (g_val + 1) (h_val = 0) origin e q)
             (* if this language is invalidated by a new oracle call *)
             end else if verify_previous_oracle_calls e then begin
-                    Log.L.debug (fun m -> m "Invalid");
-                    set_node_color_in_graph e "crimson";
-                    (search_aux [@tailcall]) (step + 1) q
+                Log.L.debug (fun m -> m "Invalid");
+                set_node_color_in_graph e "crimson";
+                (search_aux [@tailcall]) (step + 1) q
             end else begin
                 let word,goal_reached = Quotient.get_injection quotient e (Some goal) in
                 (* print_endline "Grammar:"; *)
@@ -274,7 +275,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
                     Log.L.debug (fun m -> m "Invalid");
                     set_node_color_in_graph e "crimson";
                     (search_aux [@tailcall]) (step + 1) q
-                end else if g_val = max_depth then begin (* before we explore, verify if the max depth has been reached *)
+                end else if g_val >= max_depth then begin (* before we explore, verify if the max depth has been reached *)
                     Log.L.debug (fun m -> m "Depth max");
                     set_node_color_in_graph e "orange";
                     (search_aux [@tailcall]) (step + 1) q
@@ -317,7 +318,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
     let inj = start in
 
     (* get the possible injections tokens *)
-    if not (is_reachable_mem None (ext_element_of_element g.axiom)) then failwith "Unknown or unreachable goal" (* the goal is not reachable from the axiom ! *)
+    if not (is_reachable_mem None (ext_element_of_element quotient_g.axiom)) then failwith "Unknown or unreachable goal" (* the goal is not reachable from the axiom ! *)
     else if inj = [] then failwith "No trivial injection token" (* no injection token found *)
     else begin
         let result = find_start g goal inj in
