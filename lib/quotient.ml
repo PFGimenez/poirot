@@ -306,6 +306,7 @@ let find_path_to_goal (quo: t) (goal: ext_element) (axiom : ext_element) : ext_r
     find_path_to_goal_aux quo goal [] 10 [] [([axiom],[])]
 
 (* get a derivation of ext_element with the "biggest" rule *)
+(* TODO: prendre la plus petite avec au moins deux éléments. Objectif : ne pas avoir une injection triviale. *)
 let get_first_derivation (quo: t) (e: ext_element) : ext_element list =
     (List.hd (List.sort compare_ext_rule (get_all_rules quo [e]))).ext_right_part
 

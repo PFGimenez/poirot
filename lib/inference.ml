@@ -261,21 +261,22 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
                 let words,goal_reached = Quotient.get_injection quotient e (Some goal) in
                 (* print_endline "Grammar:"; *)
                 (* print_endline (string_of_ext_grammar inj_g); *)
-                assert (words <> []);
+                assert (words <> []); (* there is always a word as the trivial injection always works *)
                 let word = List.hd words in (* during the inference, we verify only one word to reduce the oracle calls *)
-                assert (Quotient.is_in_language quotient e word);
-                let word_str = string_of_word word in (* there is always a word as the trivial injection always works *)
-                let status = Oracle.call oracle word_str in
-                if status = Syntax_error then invalid_words := word::!invalid_words;
-                if goal_reached && status = No_error && (not (manual_stop) || stop_search words e) then begin (* the goal has been found ! *)
+                assert (List.for_all (fun b -> b) (List.map (Quotient.is_in_language quotient e) words));
+                let status = Oracle.call oracle (string_of_word word) in
+                if status = Oracle.Syntax_error then invalid_words := word::!invalid_words;
+                if goal_reached && status = Oracle.No_error && (not (manual_stop) || stop_search words e) then begin (* the goal has been found ! *)
                     Log.L.info (fun m -> m "Found on step %d" step);
                     set_node_color_in_graph e "forestgreen";
+                    let status : (part * Oracle.status) list = List.map (fun w -> (w, Oracle.call oracle (string_of_word w))) words in
+                    let injection = status |> List.filter (fun (_,st) -> st = Oracle.No_error) |> List.map fst |> List.map string_of_word in
     (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)
-                    Some (Clean.clean (Quotient.get_grammar quotient e), List.map string_of_word words)
+                    Some (Clean.clean (Quotient.get_grammar quotient e), injection)
                 end else if step = max_steps then begin (* the end *)
                     Log.L.info (fun m -> m "Steps limit reached");
                     None
-                end else if status = Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
+                end else if status = Oracle.Syntax_error then begin (* this grammar has been invalidated by the oracle: ignore *)
                     Log.L.debug (fun m -> m "Invalid");
                     set_node_color_in_graph e "crimson";
                     (search_aux [@tailcall]) (step + 1) q

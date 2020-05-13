@@ -7,12 +7,12 @@ type t
  * syntax error: the injection is not syntactically correct
  * no error: the injection is syntactically correct
  *)
-type oracle_status = Syntax_error | No_error
+type status = Syntax_error | No_error
 
 (** {1 Oracle creation} *)
 
 (** [make_oracle_from_fun f] returns an oracle based on the function [f]. The function must return No_error if the injection is lexically correct, Syntax_error otherwise. *)
-val oracle_from_fun : float option -> (string -> oracle_status) -> t
+val oracle_from_fun : float option -> (string -> status) -> t
 
 (** [make_oracle_from_script filename] returns an oracle based on the script [filename]. The script must return error code 0 if the injection is lexically correct, 180 otherwise. *)
 val oracle_from_script : float option -> float option -> string -> t
@@ -25,7 +25,7 @@ val oracle_from_pf_sf : ?oneline_comment: string option -> float option -> strin
 (** {1 Oracle call} *)
 
 (** Call the oracle and handle the memoization, the interval, etc. *)
-val call : t -> string -> oracle_status
+val call : t -> string -> status
 
 (** {1 I/O} *)
 
@@ -41,4 +41,4 @@ val get_call_time : t -> float
 val get_idle_time : t -> float
 val get_call_nb : t -> int
 
-val string_of_oracle_status : oracle_status -> string
+val string_of_status : status -> string
