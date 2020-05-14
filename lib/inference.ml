@@ -3,10 +3,10 @@ open Grammar
 (* infinity *)
 let infinity = 100000
 
-type heuristic = NO_HEURISTIC | COMPLICATED
+type heuristic = No_heuristic | Complicated
 
 (* the origin of a node *)
-type node_origin = DERIVATION | INDUCTION
+type node_origin = Derivation | Induction
 
 (* the structure of a node *)
 type node = {g_val: int; h_val: int; e: ext_element; par: ext_element; origin: node_origin}
@@ -190,7 +190,7 @@ let rec compute_heuristic (queue: (element * ext_element) list list) : ext_eleme
 (* compute the heuristic if needed *)
 let get_heuristic (eh: ext_element) (par: element) : int =
     let get_heuristic_aux (eh: ext_element) (par: element) : int =
-        if htype = NO_HEURISTIC then
+        if htype = No_heuristic then
             0
         else begin
             if not (Hashtbl.mem heuristic eh) then begin
@@ -224,12 +224,12 @@ let build_ext_elements (inf: t) (e: ext_element) : (ext_element * ext_element) l
 (* add new elements to the open set *)
 let add_in_openset (inf: t) (allow_derivation: bool) (g_val: int) (null_h: bool) (origin: node_origin) (par: ext_element) (openset: node list) : node list =
 (* openset is already sorted *)
-    let openset = (* first INDUCTION and then DERIVATION *)
-        if origin=INDUCTION then
+    let openset = (* first Induction and then Derivation *)
+        if origin=Induction then
             par
             |> build_ext_elements inf
             (* |> List.map (fun e -> print_endline ("A:"^(string_of_ext_element (fst e)));e) *)
-            |> List.rev_map (fun (eh, e: ext_element * ext_element) : node -> {g_val;h_val=get_heuristic eh par.e;e;par;origin=INDUCTION})
+            |> List.rev_map (fun (eh, e: ext_element * ext_element) : node -> {g_val;h_val=get_heuristic eh par.e;e;par;origin=Induction})
             (* |> List.map (fun x -> print_endline ("B:"^(string_of_ext_element (x.e)^" "^(string_of_int x.h_val)));x) *)
             |> List.filter (fun {h_val;_} -> h_val <> infinity)
             (* |> List.map (fun x -> print_endline ("C:"^(string_of_ext_element (x.e)));x) *)
@@ -240,13 +240,13 @@ let add_in_openset (inf: t) (allow_derivation: bool) (g_val: int) (null_h: bool)
     let openset =
         if allow_derivation && null_h then begin (* we only derive if the local axiom can access the goal *)
             let g_val = match origin with
-            | INDUCTION -> g_val + 5 (* small malus when beginning the derivation *)
-            | DERIVATION -> g_val in
+            | Induction -> g_val + 5 (* small malus when beginning the derivation *)
+            | Derivation -> g_val in
 (*                List.iter (fun p -> print_endline (string_of_part p)) (build_derivation g par.sf);*)
             let new_elems =
                 par.sf
                 |> build_derivation inf.inference_g
-                |> List.rev_map (fun (_, newsf) : node -> {g_val;h_val=0;e={e=par.e;sf=newsf;pf=par.pf};par;origin=DERIVATION})
+                |> List.rev_map (fun (_, newsf) : node -> {g_val;h_val=0;e={e=par.e;sf=newsf;pf=par.pf};par;origin=Derivation})
                 |> List.sort compare_with_score in
 (*                List.iter (fun n -> Grammar_io.add_edge_in_graph graph_channel "penwidth=3" par n.e) new_elems;*)
             List.merge compare_with_score openset new_elems
@@ -301,7 +301,7 @@ let rec search_aux (inf: t) (step: int) (openset: node list) : (ext_grammar * st
     end else begin
         Log.L.info (fun m -> m "Search %d (queue: %d): %s" step (List.length q) (string_of_ext_element e));
         Grammar_io.set_node_attr inf.graph_channel ("[label=\""^(Grammar_io.export_ext_element e)^"\nstep="^(string_of_int step)^" g="^(string_of_int g_val)^" h="^(string_of_int h_val)^"\"]") e;
-        Grammar_io.add_edge_in_graph inf.graph_channel (if origin=INDUCTION then "" else "penwidth=3") par e;
+        Grammar_io.add_edge_in_graph inf.graph_channel (if origin=Induction then "" else "penwidth=3") par e;
         (* now it is visited *)
         Hashtbl.add inf.closedset e ();
         (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
@@ -404,7 +404,7 @@ let search (inf: t) : (ext_grammar * string list) option =
             List.iter (set_init_node inf) ext_inj;
             Log.L.debug (fun m -> m "Computing some heuristic values…");
             try
-                let openset = List.fold_right (add_in_openset inf true 1 false INDUCTION) ext_inj [] in (* injection tokens won't be derived *)
+                let openset = List.fold_right (add_in_openset inf true 1 false Induction) ext_inj [] in (* injection tokens won't be derived *)
                 Sys.catch_break true;
                 let result = search_aux inf 1 openset (* search *) in
                 finalize inf;

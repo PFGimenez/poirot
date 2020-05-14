@@ -16,7 +16,7 @@ let ()=
     and dict = ref None
     and goal = ref None
     and start = ref None
-    and heuristic = ref Poirot__Inference.COMPLICATED
+    and heuristic = ref Poirot__Inference.Complicated
     and oneline_comment = ref None
     and lowercase = ref false
     and uppercase = ref false
@@ -43,7 +43,7 @@ let ()=
         ("-oracle_timeout",   Arg.Set_float oracle_timeout,    "Set the timeout to oracle calls (in seconds, -1 for no timeout)");
         ("-oracle_interval",   Arg.Set_float oracle_wait,    "Set the minimal duration between two oracle calls (in seconds, -1 for no wait)");
         ("-manual_stop",   Arg.Set manual_stop,    "Ask the user if they wants to continue the search");
-        ("-heuristic",   Arg.Symbol (["none";"default"], fun s -> if s="none" then heuristic := Poirot__Inference.NO_HEURISTIC), "Select the heuristic");
+        ("-heuristic",   Arg.Symbol (["none";"default"], fun s -> if s="none" then heuristic := Poirot__Inference.No_heuristic), "Select the heuristic");
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
         ("-nosave_oracle",   Arg.Clear oracle_save,    "Disable the oracle calls save");
