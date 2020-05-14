@@ -1,7 +1,6 @@
 let ()=
     let graph_fname = ref None
     and qgraph_fname = ref None
-    and save_h = ref true
     and injg_fname = ref None
     and max_depth = ref 30
     and max_steps = ref 10000
@@ -47,7 +46,6 @@ let ()=
         ("-heuristic",   Arg.Symbol (["none";"default"], fun s -> if s="none" then heuristic := Poirot__Inference.NO_HEURISTIC), "Select the heuristic");
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");
-        ("-nosave_h",     Arg.Clear save_h,    "Disable the heuristics save");
         ("-nosave_oracle",   Arg.Clear oracle_save,    "Disable the oracle calls save");
         ("-oneline_comment",     Arg.String (fun s -> oneline_comment := Some s),    "The string that starts one-line comment");
         ("-inference_grammar",    Arg.String (fun s -> inference_grammar_fname := Some s),     "Grammar used for the inference");
@@ -88,7 +86,7 @@ let ()=
         Poirot.set_reporter (Logs_fmt.reporter ());
 
         let s = Option.map Poirot.read_dict !dict in
-        match (Poirot.search ~inference_g:inference_grammar ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_h:!save_h ~save_oracle:!oracle_save oracle grammar goal start, !injg_fname) with
+        match (Poirot.search ~inference_g:inference_grammar ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_oracle:!oracle_save oracle grammar goal start, !injg_fname) with
         | Some (gram, words), Some fname -> Poirot.export_antlr4 fname gram; List.iter (fun w -> print_endline ("Injection: "^w)) words
         | Some (_, words), _ -> List.iter (fun w -> print_endline ("Injection: "^w)) words
         | None, _ -> print_endline "No grammar found";

@@ -10,8 +10,8 @@ type t = {  words : (ext_element, part) Hashtbl.t;
             mutable call_time: float;
             graph_channel : out_channel option}
 
-(* compare the ext_rules. Sorting with this comparison puts the "biggest" rules at the beginning. *)
-let compare_ext_rule (r2: ext_rule) (r1: ext_rule) : int =
+(* compare the ext_rules. Sorting with this comparison puts the "smallest" rules at the beginning. *)
+let compare_ext_rule (r1: ext_rule) (r2: ext_rule) : int =
     let diff = List.compare_lengths (List.filter is_ext_element_non_terminal r1.ext_right_part) (List.filter is_ext_element_non_terminal r2.ext_right_part) in
     if diff <> 0 then diff
     else begin
@@ -305,10 +305,14 @@ let rec find_path_to_goal_aux (quo: t) (goal: ext_element) (seen: ext_element li
 let find_path_to_goal (quo: t) (goal: ext_element) (axiom : ext_element) : ext_rule list list =
     find_path_to_goal_aux quo goal [] 10 [] [([axiom],[])]
 
-(* get a derivation of ext_element with the "biggest" rule *)
-(* TODO: prendre la plus petite avec au moins deux éléments. Objectif : ne pas avoir une injection triviale. *)
+(* get a derivation of ext_element with the "smallest" non-trivial rule *)
 let get_first_derivation (quo: t) (e: ext_element) : ext_element list =
-    (List.hd (List.sort compare_ext_rule (get_all_rules quo [e]))).ext_right_part
+    (* smallest to biggest rule *)
+    let l = (*List.rev*) (List.sort compare_ext_rule (get_all_rules quo [e])) in
+    let l2 = List.filter (fun r -> List.compare_length_with r.ext_right_part 1 > 0) l in
+    match l2 with
+        | [] -> (List.hd l).ext_right_part;
+        | t::_ -> t.ext_right_part
 
 let get_grammar (quo: t) (e: ext_element) : ext_grammar =
     let start_time = Unix.gettimeofday () in
