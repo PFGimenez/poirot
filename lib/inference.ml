@@ -3,6 +3,8 @@ open Grammar
 (* infinity *)
 let infinity = 100000
 
+exception Unreachable
+
 type heuristic = No_heuristic | Complicated
 
 (* the origin of a node *)
@@ -188,7 +190,7 @@ let update_reach_goal (inf: t) : unit =
 let update_openset (inf: t) : unit =
     inf.openset <-
         inf.openset
-        |> List.map (fun {g_val;h_val;e;par;origin} -> {g_val;h_val=get_heuristic inf e.e par.e;e;par;origin})
+        |> List.map (fun {g_val;e;par;origin;_} -> {g_val;h_val=get_heuristic inf e.e par.e;e;par;origin})
         |> List.filter (fun {h_val;_} -> h_val <> infinity)
         |> List.sort compare_with_score (* sort again *)
 
@@ -218,15 +220,16 @@ let update_heuristic (inf: t) : unit =
                 (update_heuristic_aux [@tailcall]) (q@new_couples) end in
 
     Log.L.info (fun m -> m "Heuristic update");
+
     (* based on can_reach_goal, so we need to update it as well *)
     update_reach_goal inf;
-    (* TODO : lever une exception *)
     Hashtbl.clear inf.heuristic;
     if (Hashtbl.mem inf.can_reach_goal inf.quotient_g.axiom) then begin
         update_heuristic_aux (make_new_couples inf.quotient_g.axiom 0);
         update_openset inf;
         Log.L.debug (fun m -> m "Heuristic updated")
-    end
+    end else
+        raise Unreachable
 
 (* construct the new ext_elements (the neighborhood) *)
 let build_ext_elements (inf: t) (e: ext_element) : ext_element list =
@@ -268,8 +271,8 @@ let refuse_word (inf: t) (e: element) : unit =
 
 let stop_search (inf: t) (words: part list) (e: ext_element) : bool =
     let rec stop_search_aux () : bool =
-        List.iter (fun w -> print_endline ("Injection found: "^(string_of_word w))) words;
-        print_endline "End the search? (Y/n)";
+        List.iter (fun w -> print_endline ("Injection proposed: "^(string_of_word w))) words;
+        print_endline "Does it contain the goal you seek? (Y/n)";
         let s = String.lowercase_ascii (read_line ()) in
             if (s = "y" || s="yes" || s="") then
                 true
@@ -304,7 +307,8 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list) option =
         Log.L.debug (fun m -> m "Visited");
         (search_aux [@tailcall]) inf step
     end else begin
-        Log.L.info (fun m -> m "Search %d (g: %d, h: %d, queue: %d): %s" step (List.length q) g_val h_val (string_of_ext_element e));
+        Log.L.info (fun m -> m "Search %d (queue: %d)" step (List.length q));
+        Log.L.debug (fun m -> m "%s, g = %d, h = %d" (string_of_ext_element e) g_val h_val);
         Grammar_io.set_node_attr inf.graph_channel ("[label=\""^(Grammar_io.export_ext_element e)^"\nstep="^(string_of_int step)^" g="^(string_of_int g_val)^" h="^(string_of_int h_val)^"\"]") e;
         Grammar_io.add_edge_in_graph inf.graph_channel (if origin=Induction then "" else "penwidth=3") par e;
         (* now it is visited *)
@@ -327,11 +331,12 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list) option =
             let word = List.hd words in (* during the inference, we verify only one word to reduce the oracle calls *)
             assert (List.for_all (fun b -> b) (List.map (Quotient.is_in_language inf.quotient e) words));
 
-            if (not (Quotient.is_in_language inf.quotient par word)) then
-                print_endline ("Mot trivial !" ^(string_of_word word));
+            (* if (not (Quotient.is_in_language inf.quotient par word)) then *)
+                (* print_endline ("Mot trivial !" ^(string_of_word word)); *)
+
             let status = Oracle.call inf.oracle (string_of_word word) in
             if status = Oracle.Syntax_error then inf.invalid_words <- word::inf.invalid_words;
-            if goal_reached && status = Oracle.No_error && (not (inf.manual_stop) || stop_search inf words e) then begin (* the goal has been found ! *)
+            if goal_reached && (not (inf.manual_stop) || stop_search inf words e) && status = Oracle.No_error then begin (* the goal has been found ! *)
                 Log.L.info (fun m -> m "Found on step %d" step);
                 set_node_color_in_graph inf e "forestgreen";
                 let status : (part * Oracle.status) list = List.map (fun w -> (w, Oracle.call inf.oracle (string_of_word w))) words in
@@ -412,7 +417,10 @@ let search (inf: t) : (ext_grammar * string list) option =
                 finalize inf;
                 Sys.catch_break false;
                 result
-            with Sys.Break ->
+            with Unreachable ->
+                finalize inf;
+                None
+            | Sys.Break ->
                 (* in case of Crtl+C : save the work *)
                 finalize inf;
                 raise Sys.Break
