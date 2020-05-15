@@ -366,18 +366,19 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list) option =
 let finalize (inf: t) =
     (* print the statistics *)
     Quotient.print_statistics inf.quotient;
+    Oracle.print_mem inf.oracle;
     let total_duration = Unix.gettimeofday () -. inf.start_time -. inf.user_time in
     Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, heuristic: %.2fs, quotient: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. inf.h_time -. Quotient.get_call_time inf.quotient -. Oracle.get_call_time inf.oracle -. Oracle.get_idle_time inf.oracle) inf.h_time (Quotient.get_call_time inf.quotient) (Oracle.get_call_time inf.oracle) (Oracle.get_idle_time inf.oracle));
-    Log.L.info (fun m -> m "%d calls to oracle." (Oracle.get_call_nb inf.oracle));
 
     (* close the dot files *)
     Option.iter (fun ch -> Log.L.info (fun m -> m "Save search graph."); output_string ch "}"; close_out ch) inf.graph_channel;
     Quotient.finalizer inf.quotient;
 
     (* save the invalid words if necessary *)
-    match inf.iw_fname with
+    begin match inf.iw_fname with
         | Some fname (*when List.length inf.invalid_words > initial_invalid_length*) -> Log.L.info (fun m -> m "Save invalid words into %s" fname); Marshal.to_channel (open_out_bin fname) inf.invalid_words []
-        | _ -> ();
+        | _ -> ()
+    end;
 
     (* save the oracle answers if necessary *)
     Option.iter (Oracle.save_mem inf.oracle) inf.o_fname

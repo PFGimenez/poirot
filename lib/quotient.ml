@@ -378,7 +378,7 @@ let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char 
 
     Option.iter (fun ch -> output_string ch "digraph {\n") q.graph_channel;
 
-        let g_initial = match oneline_comment with
+    let g_initial = match oneline_comment with
         | Some s -> Grammar.add_comment_quotient g_initial s
         | None -> g_initial in
 

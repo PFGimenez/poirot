@@ -39,6 +39,7 @@ val load_mem : t -> string -> unit
 
 val get_call_time : t -> float
 val get_idle_time : t -> float
-val get_call_nb : t -> int
+
+val print_mem : t -> unit
 
 val string_of_status : status -> string

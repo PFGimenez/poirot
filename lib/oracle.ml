@@ -27,8 +27,9 @@ let get_call_time (o: t) : float =
 let get_idle_time (o: t) : float =
     o.idle_time
 
-let get_call_nb (o: t) : int =
-    o.call_nb
+let print_mem (o: t) : unit =
+    Log.L.info (fun m -> m "%d oracle calls:" o.call_nb);
+    Hashtbl.iter (fun k v ->  Log.L.info (fun m -> m "  %s: %s" k (string_of_status v))) o.mem
 
 let save_mem (o: t) (fname: string) : unit =
     if Hashtbl.length o.mem > o.initial_oracle_length then begin
@@ -105,5 +106,3 @@ let oracle_from_pf_sf ?(oneline_comment: string option = None) (interval: float 
         (* print_endline (Grammar.string_of_word (explode s)); *)
         if Quotient.is_in_language quotient e (explode s) then No_error else Syntax_error in
     oracle_from_fun interval f
-
-
