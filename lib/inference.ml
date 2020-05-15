@@ -219,6 +219,8 @@ let update_heuristic (inf: t) : unit =
                 let new_couples = make_new_couples ch h in
                 (update_heuristic_aux [@tailcall]) (q@new_couples) end in
 
+
+    let start_time = Unix.gettimeofday () in
     Log.L.info (fun m -> m "Heuristic update");
 
     (* based on can_reach_goal, so we need to update it as well *)
@@ -227,6 +229,7 @@ let update_heuristic (inf: t) : unit =
     if (Hashtbl.mem inf.can_reach_goal inf.quotient_g.axiom) then begin
         update_heuristic_aux (make_new_couples inf.quotient_g.axiom 0);
         update_openset inf;
+        inf.h_time <- inf.h_time +. (Unix.gettimeofday () -. start_time);
         Log.L.debug (fun m -> m "Heuristic updated")
     end else
         raise Unreachable
