@@ -89,5 +89,5 @@ let ()=
         match (Poirot.search ~inference_g:inference_grammar ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_oracle:!oracle_save oracle grammar goal start, !injg_fname) with
         | Some (gram, words), Some fname -> Poirot.export_antlr4 fname gram; List.iter (fun w -> print_endline ("Injection: "^w)) words
         | Some (_, words), _ -> List.iter (fun w -> print_endline ("Injection: "^w)) words
-        | None, _ -> print_endline "No grammar found";
+        | None, _ -> print_endline "Search failed: no injection found.";
     else print_endline "Error: grammar, goal, start and one oracle (either -oracle or -oracle_pf_sf) are necessary"
