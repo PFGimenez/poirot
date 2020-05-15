@@ -10,6 +10,7 @@ val refuse_injections : t -> Grammar.element -> unit
 
 val print_statistics : t -> unit
 val get_call_time : t -> float
+val get_fuzzer_time : t -> float
 
 (** Used for closing the dot file containing the graph. *)
 val finalizer : t -> unit

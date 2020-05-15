@@ -219,7 +219,6 @@ let update_heuristic (inf: t) : unit =
                 let new_couples = make_new_couples ch h in
                 (update_heuristic_aux [@tailcall]) (q@new_couples) end in
 
-
     let start_time = Unix.gettimeofday () in
     Log.L.info (fun m -> m "Heuristic update");
 
@@ -371,7 +370,7 @@ let finalize (inf: t) =
     Quotient.print_statistics inf.quotient;
     Oracle.print_mem inf.oracle;
     let total_duration = Unix.gettimeofday () -. inf.start_time -. inf.user_time in
-    Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, heuristic: %.2fs, quotient: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. inf.h_time -. Quotient.get_call_time inf.quotient -. Oracle.get_call_time inf.oracle -. Oracle.get_idle_time inf.oracle) inf.h_time (Quotient.get_call_time inf.quotient) (Oracle.get_call_time inf.oracle) (Oracle.get_idle_time inf.oracle));
+    Log.L.info (fun m -> m "Search duration: %.2fs (inference: %.2fs, heuristic: %.2fs, quotient: %.2fs, fuzzer: %.2fs, oracle: %.2fs, idle: %.2fs)." total_duration (total_duration -. inf.h_time -. Quotient.get_call_time inf.quotient -. Quotient.get_fuzzer_time inf.quotient -. Oracle.get_call_time inf.oracle -. Oracle.get_idle_time inf.oracle) inf.h_time (Quotient.get_call_time inf.quotient) (Quotient.get_fuzzer_time inf.quotient) (Oracle.get_call_time inf.oracle) (Oracle.get_idle_time inf.oracle));
 
     (* close the dot files *)
     Option.iter (fun ch -> Log.L.info (fun m -> m "Save search graph."); output_string ch "}"; close_out ch) inf.graph_channel;

@@ -8,6 +8,7 @@ type t = {  words : (ext_element, part) Hashtbl.t;
             cant_reach_goal: (element,unit) Hashtbl.t;
             forbidden: char list;
             mutable call_time: float;
+            mutable fuzzer_time: float;
             graph_channel : out_channel option}
 
 (* compare the ext_rules. Sorting with this comparison puts the "smallest" rules at the beginning. *)
@@ -317,23 +318,26 @@ let get_first_derivation (quo: t) (e: ext_element) : ext_element list =
 let get_grammar (quo: t) (e: ext_element) : ext_grammar =
     let start_time = Unix.gettimeofday () in
     quotient_symbols quo [e];
+    let out = grammar_of_mem quo e in
     quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
-    grammar_of_mem quo e
+    out
 
 let get_injection (quo: t) (e: ext_element) (goal: element option) : (part list * bool) =
     let goal = Option.map ext_element_of_element goal in
     let start_time = Unix.gettimeofday () in
     quotient_symbols quo [e];
+    quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
 
     if is_useless quo e then ([],false)
     else begin
+    let start_time = Unix.gettimeofday () in
         let path = match goal with
             | None -> []
             | Some g -> find_path_to_goal quo g e in
         let out = match path with
         | [] -> ([fuzzer_minimize quo [] [] (get_first_derivation quo e)], false)
         | all_path -> Log.L.debug (fun m -> m "Fuzzing with goal"); (List.sort_uniq compare (List.map (fun l -> fuzzer_minimize quo l [] [e]) all_path), true) in
-        quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
+        quo.fuzzer_time <- quo.fuzzer_time +. (Unix.gettimeofday () -. start_time);
         out
     end
 
@@ -361,6 +365,9 @@ let print_statistics (quo: t) : unit =
 let get_call_time (quo: t) : float =
     quo.call_time
 
+let get_fuzzer_time (quo: t) : float =
+    quo.fuzzer_time
+
 let refuse_injections (quo: t) (e: element) : unit =
     Hashtbl.add quo.cant_reach_goal e ()
 
@@ -374,6 +381,7 @@ let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char 
         dict = dict;
         forbidden = forbidden;
         call_time = 0.;
+        fuzzer_time = 0.;
         graph_channel = Option.map open_out qgraph_fname} in
 
     Option.iter (fun ch -> output_string ch "digraph {\n") q.graph_channel;
