@@ -2,19 +2,24 @@ open Grammar
 
 type side = Left | Right
 
-type t = {  words : (ext_element, part) Hashtbl.t;
+type t = {  words : (ext_element, bool * part list) Hashtbl.t;
             mem : (ext_element, ext_part list) Hashtbl.t;
             dict: (element,string) Hashtbl.t option;
             cant_reach_goal: (element,unit) Hashtbl.t;
+            goal: element option;
             forbidden: char list;
             mutable call_time: float;
             mutable fuzzer_time: float;
             graph_channel : out_channel option}
 
 (* compare the ext_rules. Sorting with this comparison puts the "smallest" rules at the beginning. *)
-let compare_ext_rule (r1: ext_rule) (r2: ext_rule) : int =
+let compare_ext_rule (quo: t) (r1: ext_rule) (r2: ext_rule) : int =
+    let b1 = List.exists (fun e -> Some e.e = quo.goal) r1.ext_right_part in
+    let b2 = List.exists (fun e -> Some e.e = quo.goal) r2.ext_right_part in
     let diff = List.compare_lengths (List.filter is_ext_element_non_terminal r1.ext_right_part) (List.filter is_ext_element_non_terminal r2.ext_right_part) in
-    if diff <> 0 then diff
+    if b1 && (not b2) then -1
+    else if (not b1) && b2 then 1
+    else if diff <> 0 then diff
     else begin
         let diff2 = List.compare_lengths r1.ext_right_part r2.ext_right_part in
         if diff2 <> 0 then diff2
@@ -41,15 +46,41 @@ let is_allowed (quo: t) (e: ext_element): bool = match e with
     | {e=Terminal s;_} -> not (List.exists (String.contains s) quo.forbidden)
     | _ -> true
 
-let update_words (quo: t) (r: ext_rule) : unit =
+(* return a word containing the goal, if possible *)
+let get_word_with_goal (quo: t) (e: ext_element) : part =
+    assert (is_processed quo e);
+
+    match quo.goal with
+        | None -> List.hd (snd (Hashtbl.find quo.words e)) (* no goal *)
+        | Some g -> let Hashtbl.find quo.words e) with
+            | None -> List.hd (Hashtbl.find quo.words e) (* no words with goal *)
+            | Some p -> p (* found ! *)
+
+(* Get the set of rules of a list of ext_element. No reverse *)
+let get_all_rules (quo: t) (elist: ext_element list) : ext_rule list =
+    elist |> List.rev_map (fun e -> List.rev_map (fun rhs -> e ---> rhs) (Hashtbl.find quo.mem e)) |> List.concat
+
+(* update the words of some lhs. It will generate a list of words, one for each rule of lhs. *)
+let update_words (quo: t) (lhs: ext_element) : unit = 
+    let rlist = get_all_rules quo [lhs] in
+    let update_one_word (quo: t) (r: ext_rule) : part =
+        match quo.dict with
+            | Some hashtbl when lhs.pf=[] && lhs.sf=[] && Hashtbl.mem hashtbl lhs.e -> [Terminal (Hashtbl.find hashtbl lhs.e)]
+            | _ -> r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else get_word_with_goal quo e) |> List.concat in (* all the prerequisite for computing the word are already computed ! *)
+    if not (Hashtbl.mem quo.words lhs) then
+        Hashtbl.add quo.words lhs (List.map (update_one_word quo) rlist)
+
+(* populate words with one rule whose rhs have words already *)
+let update_first_word (quo: t) (r: ext_rule) : unit =
     let lhs = r.ext_left_symbol in
     if not (Hashtbl.mem quo.words lhs) then begin
-        let w = match quo.dict with
-            | Some hashtbl when lhs.pf=[] && lhs.sf=[] && Hashtbl.mem hashtbl lhs.e -> [Terminal (Hashtbl.find hashtbl lhs.e)]
-            | _ -> r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else Hashtbl.find quo.words e) |> List.concat in (* all the prerequisite for computing the word are already computed ! *)
-        Hashtbl.add quo.words lhs w
+        let (goal_reached,w) = match quo.dict with
+            | Some hashtbl when lhs.pf=[] && lhs.sf=[] && Hashtbl.mem hashtbl lhs.e -> (false,[Terminal (Hashtbl.find hashtbl lhs.e)])
+            | _ -> (List.exists (fun e -> fst (Hashtbl.find quo.words e)) r.ext_right_part,
+                r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else get_word_with_goal quo e) |> List.concat) in (* all the prerequisite for computing the word are already computed ! *)
+        print_endline ("Word:"^(string_of_word w)^". Can reach goal: "^goal_reached);
+        Hashtbl.add quo.words lhs (goal_reached,[w])
     end
-
 
 (* based on level decomposition *)
 let update_words_and_useless (quo: t) (original_rules: ext_rule list) : ext_element list =
@@ -57,17 +88,15 @@ let update_words_and_useless (quo: t) (original_rules: ext_rule list) : ext_elem
         let usable_rules = List.filter (fun r -> List.for_all (fun s -> (is_ext_element_terminal s || Hashtbl.mem quo.words s) && is_allowed quo s) r.ext_right_part) original_rules in
         if usable_rules = [] then reached_sym (* the algorithm is done *)
         else begin
-            List.iter (update_words quo) (List.sort compare_ext_rule usable_rules);
+            (* TODO: virer print_endline *)
+            List.iter (fun r -> print_endline (string_of_ext_rule r); update_first_word quo r) (List.sort (compare_ext_rule quo) usable_rules);
             (update_words_and_useless_aux [@tailcall]) ((List.rev_map lhs_of_ext_rule usable_rules)@reached_sym) (List.filter (fun r -> not (Hashtbl.mem quo.words r.ext_left_symbol)) original_rules)
         end in
     let reached = update_words_and_useless_aux [] original_rules in
     (* unreachable symbols are useless *)
     original_rules |> List.rev_map lhs_of_ext_rule |> List.filter (fun e -> not (List.mem e reached)) |> (*List.map (fun e -> print_endline ("Useless: "^(string_of_ext_element e));e) |>*) List.iter (set_useless quo);
+    List.iter (update_words quo) reached;
     reached
-
-(* Get the set of rules of a list of ext_element. No reverse *)
-let get_all_rules (quo: t) (elist: ext_element list) : ext_rule list =
-    elist |> List.rev_map (fun e -> List.rev_map (fun rhs -> e ---> rhs) (Hashtbl.find quo.mem e)) |> List.concat
 
 (* construct a grammar, given an axiom, from the memory *)
 let grammar_of_mem (quo: t) (axiom : ext_element) : ext_grammar =
@@ -255,65 +284,16 @@ let rec quotient_symbols (quo: t) (elist: ext_element list) : unit =
             end
         end
 
-(* tail-recursive *)
-let rec fuzzer_minimize (quo: t) (goal_rules: ext_rule list) (word_prefix: element list) (sentential_suffix: ext_element list) : element list =
-    match sentential_suffix, goal_rules with
-    (* verify the sentential form length *)
-    | l,_ when List.compare_length_with l 1000000 > 0 -> failwith "Fuzzing failure: word too long"
-    (* no more suffix. All goal rules should have been used. *)
-    | [],_ -> assert (goal_rules = []); List.rev word_prefix
-    (* the suffix starts with a terminal *)
-    | t::q,_ when is_ext_element_terminal t -> (fuzzer_minimize [@tailcall]) quo goal_rules (t.e::word_prefix) q
-    (* the suffix starts with a goal rule *)
-    | t::q,r::q2 when r.ext_left_symbol=t -> (fuzzer_minimize [@tailcall]) quo q2 word_prefix (r.ext_right_part@q)
-    (* do we have a specific request for the start of the suffix ? *)
-    | {pf=[];e=t;sf=[]}::q,_ when Option.map (fun v -> Hashtbl.mem v t) quo.dict = Some true ->
-            (fuzzer_minimize [@tailcall]) quo goal_rules ((Terminal (Hashtbl.find (Option.get quo.dict) t))::word_prefix) q
-    (* do we have a words saved for the start of the suffix ? *)
-    | t::q,_ when Hashtbl.mem quo.words t -> (fuzzer_minimize [@tailcall]) quo goal_rules ((List.rev (Hashtbl.find quo.words t))@word_prefix) q
-    | _ -> failwith "No words?"
-
-let rec has_new (seen: ext_element list) (p: ext_element list) : bool = match p with
-    | [] -> false
-    | t::_ when not (List.mem t seen) -> true
-    | _::q -> (has_new [@tailcall]) seen q
-
-(* build all the possible one-step derivation of part p in the grammar g *)
-let build_derivation (quo: t) (p: ext_part) : (ext_rule * ext_part) list =
-    (* tail-recursive *)
-    let rec build_derivation_aux (sofar: ext_part) (acc: (ext_rule * ext_part) list) (p: ext_part) : (ext_rule * ext_part) list = match p with
-        | [] -> acc
-        | t::q when Hashtbl.mem quo.cant_reach_goal t.e || is_ext_element_terminal t || t.e = Nonterminal "poirot_nonterminal_comment" ->
-                (build_derivation_aux [@tailcall]) (t::sofar) acc q (* don't search in the oneline comment to find the goal *)
-        | t::q-> let rhs = Hashtbl.find quo.mem t in
-            let new_parts = rhs |> List.rev_map (fun rhs -> (t--->rhs),(List.rev sofar)@rhs@q) in
-(*                    let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in*)
-            (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
-    build_derivation_aux [] [] p
-
-(* find a path (a list of rule) to produce, and an empty list if there is no path *)
-(* tail-recursive *)
-let rec find_path_to_goal_aux (quo: t) (goal: ext_element) (seen: ext_element list) (left_to_find: int) (found : ext_rule list list) (queue : (ext_part * ext_rule list) list) : ext_rule list list =
-    match queue with
-    | [] -> found (* no more path *)
-    | (form,path)::q when List.mem goal form ->
-            if left_to_find = 1 then found (* we found them all *)
-            else (find_path_to_goal_aux [@tailcall]) quo goal seen (left_to_find-1) ((List.rev path)::found) q
-    | (form,_)::q when not (has_new seen form) -> (find_path_to_goal_aux [@tailcall]) quo goal seen left_to_find found q
-    | (form,path)::q -> let new_items = List.rev_map (fun (r,p) -> (p,r::path)) (build_derivation quo form) in
-        (find_path_to_goal_aux [@tailcall]) quo goal (List.sort_uniq compare (form@seen)) left_to_find found (q@new_items)
-
-let find_path_to_goal (quo: t) (goal: ext_element) (axiom : ext_element) : ext_rule list list =
-    find_path_to_goal_aux quo goal [] 10 [] [([axiom],[])]
-
-(* get a derivation of ext_element with the "smallest" non-trivial rule *)
-let get_first_derivation (quo: t) (e: ext_element) : ext_element list =
+let nontrivial_word (quo: t) (e: ext_element) : part =
+(* let get_first_derivation (quo: t) (e: ext_element) : ext_element list = *)
+    (* get a derivation of ext_element with the "smallest" non-trivial rule *)
     (* smallest to biggest rule *)
-    let l = (*List.rev*) (List.sort compare_ext_rule (get_all_rules quo [e])) in
+    let l = (*List.rev*) (List.sort (compare_ext_rule quo) (get_all_rules quo [e])) in
     let l2 = List.filter (fun r -> List.compare_length_with r.ext_right_part 1 > 0) l in
-    match l2 with
+    let part = match l2 with
         | [] -> (List.hd l).ext_right_part;
-        | t::_ -> t.ext_right_part
+        | t::_ -> t.ext_right_part in
+    part |> List.map (get_word_with_goal quo) |> List.concat
 
 let get_grammar (quo: t) (e: ext_element) : ext_grammar =
     let start_time = Unix.gettimeofday () in
@@ -322,23 +302,24 @@ let get_grammar (quo: t) (e: ext_element) : ext_grammar =
     quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
     out
 
-let get_injection (quo: t) (e: ext_element) (goal: element option) : (part list * bool) =
-    let goal = Option.map ext_element_of_element goal in
+let get_injection (quo: t) (e: ext_element) : (part list * bool) =
     let start_time = Unix.gettimeofday () in
     quotient_symbols quo [e];
     quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
 
     if is_useless quo e then ([],false)
     else begin
-    let start_time = Unix.gettimeofday () in
-        let path = match goal with
+        List.iter (fun w -> print_endline (string_of_word w)) (Hashtbl.find quo.words e);
+    (* let start_time = Unix.gettimeofday () in *)
+    (Hashtbl.find quo.words e, false)
+(*        let path = match goal with
             | None -> []
             | Some g -> find_path_to_goal quo g e in
         let out = match path with
         | [] -> ([fuzzer_minimize quo [] [] (get_first_derivation quo e)], false)
         | all_path -> Log.L.debug (fun m -> m "Fuzzing with goal"); (List.sort_uniq compare (List.map (fun l -> fuzzer_minimize quo l [] [e]) all_path), true) in
         quo.fuzzer_time <- quo.fuzzer_time +. (Unix.gettimeofday () -. start_time);
-        out
+        out*)
     end
 
 (* tail-recursive *)
@@ -374,7 +355,7 @@ let refuse_injections (quo: t) (e: element) : unit =
 let finalizer (quo: t) : unit =
     Option.iter (fun ch -> Log.L.info (fun m -> m "Save quotient graph."); output_string ch "}"; close_out ch) quo.graph_channel
 
-let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char list) (dict: (element,string) Hashtbl.t option) (qgraph_fname : string option) : t =
+let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char list) (dict: (element,string) Hashtbl.t option) (qgraph_fname : string option) (goal: element option) : t =
     let q = {words = Hashtbl.create 100000;
         mem = Hashtbl.create 100000;
         cant_reach_goal = Hashtbl.create 100;
@@ -382,6 +363,7 @@ let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char 
         forbidden = forbidden;
         call_time = 0.;
         fuzzer_time = 0.;
+        goal = goal;
         graph_channel = Option.map open_out qgraph_fname} in
 
     Option.iter (fun ch -> output_string ch "digraph {\n") q.graph_channel;

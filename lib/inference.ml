@@ -61,7 +61,7 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
     | Some _ -> add_comment_inference g_non_comment
     | None -> g_non_comment in
 
-    let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname
+    let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname (Some goal)
     and all_sym = get_all_symbols g in
 
     let can_reach_goal: (element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in
@@ -326,7 +326,7 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list) option =
             set_node_color_in_graph inf e "crimson";
             (search_aux [@tailcall]) inf (step + 1)
         end else begin
-            let words,goal_reached = Quotient.get_injection inf.quotient e (Some inf.goal) in
+            let words,goal_reached = Quotient.get_injection inf.quotient e in
             (* print_endline "Grammar:"; *)
             (* print_endline (string_of_ext_grammar inj_g); *)
             assert (words <> []); (* there is always a word as the trivial injection always works *)

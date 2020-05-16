@@ -24,9 +24,9 @@ let whitebox_search ?(oneline_comment: string option = None) ?(qgraph_fname: str
     let explode s = List.init (String.length s) (fun i -> Grammar.Terminal (String.make 1 (String.get s i))) in
     let prefix = explode prefix
     and suffix = explode suffix in
-    let quotient = Quotient.init oneline_comment g [] None qgraph_fname in
+    let quotient = Quotient.init oneline_comment g [] None qgraph_fname goal in
     let e : Grammar.ext_element = {pf=List.rev prefix;e=g.axiom;sf=suffix} in
-    let inj,goal_reached = Quotient.get_injection quotient e goal in
+    let inj,goal_reached = Quotient.get_injection quotient e in
     let g = Quotient.get_grammar quotient e in
     let g2 = Grammar.grammar_of_ext_grammar (Clean.clean g) in
     (g2,List.map Grammar.string_of_word inj,goal_reached)
