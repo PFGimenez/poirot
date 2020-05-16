@@ -83,7 +83,7 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
 
     (* populate the uniq_rule hashtable *)
     (* we must verify the quotient_g rules ! *)
-    List.iter (fun e -> Hashtbl.add uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) quotient_g.rules) 1) == 0)) all_sym;
+    List.iter (fun e -> Hashtbl.replace uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) quotient_g.rules) 1) == 0)) all_sym;
 
     {   refused_elems = [];
         invalid_words = invalid_words;
@@ -166,7 +166,7 @@ let update_reach_goal (inf: t) : unit =
         else (update_reach_goal_aux [@tailcall]) (new_reachable_elems @ reachable) in
     Hashtbl.clear inf.can_reach_goal;
     let reach = List.sort_uniq compare (update_reach_goal_aux [inf.goal]) in
-    List.iter (fun e -> Hashtbl.add inf.can_reach_goal e ()) reach
+    List.iter (fun e -> Hashtbl.replace inf.can_reach_goal e ()) reach
 
 (* update the openset after a change of heuristic *)
 let update_openset (inf: t) : unit =
@@ -199,7 +199,7 @@ let update_heuristic (inf: t) : unit =
                 let h = (* search the non-trivial injections. If the children can already reach the goal, then the parent should reach the goal with at least two paths (the trivial and at least one non-trivial) *)
                     if (Hashtbl.mem inf.can_reach_goal ch && children_number >= 2) || (not (Hashtbl.mem inf.can_reach_goal ch) && children_number >= 1) then 0
                     else h_par + 1 in
-                Hashtbl.add inf.heuristic (par,ch) h;
+                Hashtbl.replace inf.heuristic (par,ch) h;
                 let new_couples = make_new_couples ch h in
                 (update_heuristic_aux [@tailcall]) (q@new_couples) end in
 
@@ -303,7 +303,7 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list) option =
         Grammar_io.set_node_attr inf.graph_channel ("[label=\""^(Grammar_io.export_ext_element e)^"\nstep="^(string_of_int step)^" g="^(string_of_int g_val)^" h="^(string_of_int h_val)^"\"]") e;
         Grammar_io.add_edge_in_graph inf.graph_channel (if origin=Induction then "" else "penwidth=3") par e;
         (* now it is visited *)
-        Hashtbl.add inf.closedset e ();
+        Hashtbl.replace inf.closedset e ();
         (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
         if Hashtbl.find inf.uniq_rule e.e && g_val < inf.max_depth && step < inf.max_steps then begin
             Log.L.debug (fun m -> m "Explore uniq");

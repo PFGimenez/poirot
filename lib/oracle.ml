@@ -64,7 +64,7 @@ let call (o: t) (inj: string) : status =
         let answer = o.call inj in
         o.call_time <- o.call_time +. (Unix.gettimeofday () -. start_time);
         Log.L.info (fun m -> m "Oracle answer to %s: %s" inj (string_of_status answer));
-        Hashtbl.add o.mem inj answer;
+        Hashtbl.replace o.mem inj answer;
         (*if verbose then print_endline ((string_of_int (Hashtbl.length mem))^"th call to oracle: "^inj^" ("^(string_of_status answer)^")");*)
         answer
     end
