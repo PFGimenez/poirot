@@ -315,7 +315,7 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list) option =
             set_node_color_in_graph inf e "crimson";
             (search_aux [@tailcall]) inf (step + 1)
         end else begin
-            let words,goal_reached = Quotient.get_injection inf.quotient e in
+            let goal_reached,words = Quotient.get_injection inf.quotient e in
             (* print_endline "Grammar:"; *)
             (* print_endline (string_of_ext_grammar inj_g); *)
             assert (words <> []); (* there is always a word as the trivial injection always works *)

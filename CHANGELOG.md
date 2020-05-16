@@ -1,6 +1,6 @@
 # v0.5
 - API rework
-- Heuristic rewrite
+- Heuristic rewrite to handle refused words
 - Rename `quotient_poirot` into `whitebox_poirot`
 - The fuzzer returns multiple injections with goal
 - Inference uses previous oracle calls
