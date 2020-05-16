@@ -37,8 +37,6 @@ type t = {  mutable refused_elems: element list;
             max_depth: int;
             max_steps: int;
             graph_channel: out_channel option}
-            (* initial_heuristic_length: int; *)
-            (* initial_invalid_length: int} *)
 
 let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : t =
 
@@ -80,12 +78,9 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
                         end
         | None -> [] in
 
-    (* used to know if the heuristic file and invalid words file need to be updated *)
-    (* let initial_heuristic_length = Hashtbl.length heuristic in *)
-    (* let initial_invalid_length = List.length (!invalid_words) in *)
-
     (* element that are the lhs of a single rule *)
     let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+
     (* populate the uniq_rule hashtable *)
     (* we must verify the quotient_g rules ! *)
     List.iter (fun e -> Hashtbl.add uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) quotient_g.rules) 1) == 0)) all_sym;
@@ -99,7 +94,6 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
         uniq_rule = uniq_rule;
         quotient_g = quotient_g;
         inference_g = g;
-        (* h_fname = h_fname; *)
         o_fname = o_fname;
         iw_fname = iw_fname;
         manual_stop = manual_stop;
@@ -114,10 +108,6 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
         max_depth = max_depth;
         max_steps = max_steps;
         graph_channel = Option.map open_out graph_fname}
-        (* initial_heuristic_length: Hashtbl.length heuristic; *)
-        (* initial_invalid_length: int} *)
-
-
 
 (* tail-recursive *)
 (* build all the possible one-step derivation of part p in the grammar g *)
@@ -129,12 +119,6 @@ let build_derivation (g: grammar) (p: part) : (rule * part) list =
         | (Nonterminal _ as t)::q -> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in
             (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
     build_derivation_aux [] [] p
-
-(* is the goal reachable from that element ? *)
-(* let reachable : (ext_element, bool) Hashtbl.t = Hashtbl.create ((List.length g.rules)*(List.length all_sym)) in *)
-
-(* used in the heuristic computation *)
-(* let seen_hashtbl : (ext_element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in *)
 
 let set_init_node (inf: t): ext_element -> unit =
     Grammar_io.set_node_attr inf.graph_channel "shape=doublecircle"
@@ -153,21 +137,21 @@ let split (e: ext_element) (original_rule: rule) : ext_element list =
     (* print_endline ("split de "^(string_of_ext_element e)^" avec "^(string_of_rule original_rule)); *)
     split_aux [] [] original_rule.right_part
 
-    (* compare for the open set sorting *)
+(* compare for the open set sorting *)
 let compare_with_score (a: node) (b: node) : int = match a,b with
     | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag+ah < bg+bh || (ag+ah = bg+bh && ah < bh) -> -1
     | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag=bg && ah=bh -> (List.length (b.e.pf) + List.length (b.e.sf)) - (List.length (a.e.pf) + List.length (a.e.sf)) (* prefer the longest prefix/suffix *)
     | _ -> 1
 
+(* Get the heuristic. It is already computed. *)
 let get_heuristic (inf: t) (ch: element) (par: element) : int =
-    (* print_endline "AAAAA"; *)
-    (* print_endline ((string_of_element ch)^" "^(string_of_element par)); *)
     match inf.htype with
         | No_heuristic -> 0
         | Complicated -> Option.value ~default:infinity (Hashtbl.find_opt inf.heuristic (ch,par))
         (* ch and par are reversed. Heuristic thinks of "parent" in the sense of the grammar. Inference thinks of "parents" in the sense of the A* search. But the search it bottom up ! *)
 
 (* use the quotient grammar *)
+(* populate can_reach_goal. Verify if a element can reach the goal with a path that contains no refused word *)
 let update_reach_goal (inf: t) : unit =
     (* tail recursive *)
     let rec update_reach_goal_aux (reachable: element list) : element list =
@@ -182,19 +166,18 @@ let update_reach_goal (inf: t) : unit =
         else (update_reach_goal_aux [@tailcall]) (new_reachable_elems @ reachable) in
     Hashtbl.clear inf.can_reach_goal;
     let reach = List.sort_uniq compare (update_reach_goal_aux [inf.goal]) in
-    (* print_endline "Can reach:"; *)
-    (* List.iter (fun e -> print_endline (string_of_element e)) (reach); *)
     List.iter (fun e -> Hashtbl.add inf.can_reach_goal e ()) reach
 
 (* update the openset after a change of heuristic *)
 let update_openset (inf: t) : unit =
     inf.openset <-
         inf.openset
-        |> List.map (fun {g_val;e;par;origin;_} -> {g_val;h_val=get_heuristic inf e.e par.e;e;par;origin})
-        |> List.filter (fun {h_val;_} -> h_val <> infinity)
+        |> List.map (fun {g_val;e;par;origin;_} -> {g_val;h_val=get_heuristic inf e.e par.e;e;par;origin}) (* recompute the heuristic *)
+        |> List.filter (fun {h_val;_} -> h_val <> infinity) (* remove node with h=infinity *)
         |> List.sort compare_with_score (* sort again *)
 
 let update_heuristic (inf: t) : unit =
+    (* get the number of rules an element can reach the goal with *)
     let children_with_goal_number (e: element) : int =
         if Hashtbl.mem inf.can_reach_goal e then
             e   |> get_all_rhs inf.quotient_g.rules
@@ -202,43 +185,46 @@ let update_heuristic (inf: t) : unit =
                 |> List.length
         else 0 in (* if the word has been refused, then it artificially has no child that can reach the goal *)
 
+    (* construct the children of new_par whose heuristic is h *)
     let make_new_couples (new_par: element) (h: int) : (element*element*int) list =
         get_all_rhs inf.quotient_g.rules new_par |> List.concat |> List.sort_uniq compare |> List.map (fun e -> (new_par,e,h)) in
 
+    (* compute the heuristic from the top of the grammar to its leaves *)
+    (* all the heuristic is computed at once *)
     let rec update_heuristic_aux (queue: (element*element*int) list) : unit =
         match queue with
             | [] -> ()
-            | (par,ch,_)::q when Hashtbl.mem inf.heuristic (par,ch) -> (update_heuristic_aux [@tailcall]) q
+            | (par,ch,_)::q when Hashtbl.mem inf.heuristic (par,ch) -> (update_heuristic_aux [@tailcall]) q (* heuristic already computed *)
             | (par,ch,h_par)::q -> begin let children_number = children_with_goal_number par in
-                let h =
+                let h = (* search the non-trivial injections. If the children can already reach the goal, then the parent should reach the goal with at least two paths (the trivial and at least one non-trivial) *)
                     if (Hashtbl.mem inf.can_reach_goal ch && children_number >= 2) || (not (Hashtbl.mem inf.can_reach_goal ch) && children_number >= 1) then 0
                     else h_par + 1 in
-                (* print_endline "Heuristic:"; *)
-                (* print_endline ((string_of_element par)^" "^(string_of_element ch)^" "^(string_of_int h)); *)
                 Hashtbl.add inf.heuristic (par,ch) h;
                 let new_couples = make_new_couples ch h in
                 (update_heuristic_aux [@tailcall]) (q@new_couples) end in
 
-    let start_time = Unix.gettimeofday () in
-    Log.L.info (fun m -> m "Heuristic update");
+    if inf.htype = Complicated then begin
+        let start_time = Unix.gettimeofday () in
+        Log.L.info (fun m -> m "Heuristic update");
 
-    (* based on can_reach_goal, so we need to update it as well *)
-    update_reach_goal inf;
-    Hashtbl.clear inf.heuristic;
-    if (Hashtbl.mem inf.can_reach_goal inf.quotient_g.axiom) then begin
-        update_heuristic_aux (make_new_couples inf.quotient_g.axiom 0);
-        update_openset inf;
-        inf.h_time <- inf.h_time +. (Unix.gettimeofday () -. start_time);
-        Log.L.debug (fun m -> m "Heuristic updated")
-    end else
-        raise Unreachable
+        (* based on can_reach_goal, so we need to update it as well *)
+        update_reach_goal inf;
+        Hashtbl.clear inf.heuristic;
+        if (Hashtbl.mem inf.can_reach_goal inf.quotient_g.axiom) then begin
+            (* update the heuristic *)
+            update_heuristic_aux (make_new_couples inf.quotient_g.axiom 0);
+            update_openset inf;
+            inf.h_time <- inf.h_time +. (Unix.gettimeofday () -. start_time);
+            Log.L.debug (fun m -> m "Heuristic updated")
+        end else
+            (* the goal is unreachable because the axiom can't reach it *)
+            raise Unreachable
+    end
+    (* if inf.hype = No_heuristic, no computation *)
 
 (* construct the new ext_elements (the neighborhood) *)
 let build_ext_elements (inf: t) (e: ext_element) : ext_element list =
-    (* print_endline "Rules built ext elements"; *)
-    (* print_endline (string_of_grammar g); *)
     inf.inference_g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e) |> List.flatten
-    (* print_endline ("Children: "^(string_of_ext_part (fst (List.split new_e)))); *)
 
 (* add new elements to the open set *)
 let add_in_openset (inf: t) (allow_derivation: bool) (g_val: int) (null_h: bool) (origin: node_origin) (par: ext_element) : unit =
@@ -252,25 +238,28 @@ let add_in_openset (inf: t) (allow_derivation: bool) (g_val: int) (null_h: bool)
             |> List.sort compare_with_score
             |> List.merge compare_with_score inf.openset;
     if allow_derivation && null_h then begin (* we only derive if the local axiom can access the goal *)
-            let g_val = match origin with
-            | Induction -> g_val + 5 (* small malus when beginning the derivation *)
-            | Derivation -> g_val in
-            inf.openset <-
-                par.sf
-                |> build_derivation inf.inference_g
-                |> List.rev_map (fun (_, newsf) : node -> {g_val;h_val=0;e={e=par.e;sf=newsf;pf=par.pf};par;origin=Derivation})
-                |> List.sort compare_with_score
-                |> List.merge compare_with_score inf.openset
+        let g_val = match origin with
+        | Induction -> g_val + 5 (* small malus when beginning the derivation *)
+        | Derivation -> g_val in
+        inf.openset <-
+            par.sf
+            |> build_derivation inf.inference_g
+            |> List.rev_map (fun (_, newsf) : node -> {g_val;h_val=0;e={e=par.e;sf=newsf;pf=par.pf};par;origin=Derivation})
+            |> List.sort compare_with_score
+            |> List.merge compare_with_score inf.openset
     end
 
+(* verify whether a previous invalid oracle call is in the grammar of e *)
 let verify_previous_oracle_calls (inf: t) (e: ext_element) : bool =
     if (inf.invalid_words <> []) then Log.L.debug (fun m -> m "Verify with %d oracle calls" (List.length inf.invalid_words));
     List.exists (Quotient.is_in_language inf.quotient e) inf.invalid_words
 
+(* refuse a word and update the heuristic *)
 let refuse_word (inf: t) (e: element) : unit =
     inf.refused_elems <- e::inf.refused_elems;
     update_heuristic inf
 
+(* ask the user whether the injection is correct *)
 let stop_search (inf: t) (words: part list) (e: ext_element) : bool =
     let rec stop_search_aux () : bool =
         List.iter (fun w -> print_endline ("Injection proposed: "^(string_of_word w))) words;
@@ -388,6 +377,7 @@ let finalize (inf: t) =
 let search (inf: t) : (ext_grammar * string list) option =
     (* initialize the call times *)
     inf.start_time <- Unix.gettimeofday ();
+    (* initialize the heuristic *)
     update_heuristic inf;
 
     if not (List.mem inf.goal (get_all_symbols inf.quotient_g)) then failwith "Unknown goal"
@@ -395,37 +385,24 @@ let search (inf: t) : (ext_grammar * string list) option =
     (* if not (is_reachable_mem None (ext_element_of_element quotient_g.axiom)) then failwith "Unknown or unreachable goal" (1* the goal is not reachable from the axiom ! *1) *)
     else if inf.start = [] then failwith "No starting point!" (* no injection token found *)
     else begin
-    (*        let result = find_start g goal inj in
-        if result <> None then begin
-            Log.L.info (fun m -> m "Injection directly found!");
-            let e = (ext_element_of_element (Option.get result)) in
-            let w,goal_reached = Quotient.get_injection quotient e (Some goal) in
-            assert goal_reached;
-            Some (Quotient.get_grammar quotient e, List.map string_of_word w)
-        end
-        else*) begin
-            (* the injection token can't reach the goal *)
-            (* List.iter (fun e -> Hashtbl.add reachable (ext_element_of_element e) false) inj; *)
+        (* prepare the dot files *)
+        Option.iter (fun ch -> output_string ch "digraph {\n") inf.graph_channel;
 
-            (* prepare the dot files *)
-            Option.iter (fun ch -> output_string ch "digraph {\n") inf.graph_channel;
-
-            let ext_inj = List.rev_map ext_element_of_element inf.start in
-            List.iter (set_init_node inf) ext_inj;
-            try
-                inf.openset <- [];
-                List.iter (add_in_openset inf true 1 false Induction) ext_inj; (* injection tokens won't be derived *)
-                Sys.catch_break true;
-                let result = search_aux inf 1 (* search *) in
-                finalize inf;
-                Sys.catch_break false;
-                result
-            with Unreachable ->
-                finalize inf;
-                None
-            | Sys.Break ->
-                (* in case of Crtl+C : save the work *)
-                finalize inf;
-                raise Sys.Break
-        end
+        let ext_inj = List.rev_map ext_element_of_element inf.start in
+        List.iter (set_init_node inf) ext_inj;
+        try
+            inf.openset <- [];
+            List.iter (add_in_openset inf true 1 false Induction) ext_inj; (* injection tokens won't be derived *)
+            Sys.catch_break true;
+            let result = search_aux inf 1 (* search *) in
+            finalize inf;
+            Sys.catch_break false;
+            result
+        with Unreachable ->
+            finalize inf;
+            None
+        | Sys.Break ->
+            (* in case of Crtl+C : save the work *)
+            finalize inf;
+            raise Sys.Break
     end
