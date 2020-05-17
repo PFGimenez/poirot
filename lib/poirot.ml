@@ -1,7 +1,7 @@
 type grammar = Grammar.grammar
 type element = Grammar.element
 
-let version = "0.4"
+let version = "0.6"
 
 let search ?(inference_g: grammar option = None) ?(heuristic: Inference.heuristic = Inference.Complicated) ?(manual_stop: bool = false) ?(oneline_comment: string option = None) ?(dict: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) ?(save_oracle: bool = true) (oracle: Oracle.t) (g: grammar) (goal: element) (start: element list) : (grammar * string list) option =
 

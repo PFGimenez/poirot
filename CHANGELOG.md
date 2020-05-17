@@ -1,11 +1,14 @@
+# v0.6
+- Heuristic rewrite to handle refused words
+- The user can refuse an injection and continue the search (reworked)
+
 # v0.5
 - API rework
-- Heuristic rewrite to handle refused words
 - Rename `quotient_poirot` into `whitebox_poirot`
 - The fuzzer returns multiple injections with goal
 - Inference uses previous oracle calls
 - Oracle based on prefix and suffix
-- The user can refuse an injection and continue the search
+- Add manual stop
 - The user can choose the heuristic
 - The inference grammar can be a subset of the quotient grammar
 - Bugfixes
