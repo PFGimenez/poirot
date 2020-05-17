@@ -2,10 +2,11 @@ open Grammar
 
 type side = Left | Right
 
-type t = {  words : (ext_element, bool * part list) Hashtbl.t; (* the words of the fuzzer *)
+type t = {  words : (ext_element, part list) Hashtbl.t; (* the words of the fuzzer *)
             mem : (ext_element, ext_part list) Hashtbl.t; (* the rules *)
             dict: (element,string) Hashtbl.t option; (* the semantics dictionary *)
-            cant_reach_goal: (element,unit) Hashtbl.t; (* TODO *)
+            can_reach_goal: (ext_element, unit) Hashtbl.t; (* ext_element that can access the goal *)
+            cant_reach_goal: (element,unit) Hashtbl.t; (* element that are refused by the user *)
             goal: element option;
             forbidden: char list; (* the set of characters that should not appear in injections *)
             mutable call_time: float;
@@ -58,32 +59,51 @@ let is_allowed (quo: t) (e: ext_element): bool = match e with
 let get_all_rules (quo: t) (elist: ext_element list) : ext_rule list =
     elist |> List.rev_map (fun e -> List.rev_map (fun rhs -> e ---> rhs) (Hashtbl.find quo.mem e)) |> List.concat
 
-let update_one_word (quo: t) (lhs: ext_element) (r: ext_rule) : part = (* TODO: à revoir *)
-    print_endline ("Update one word: "^(string_of_ext_rule r));
-    match quo.dict with
-        | Some hashtbl when lhs.pf=[] && lhs.sf=[] && Hashtbl.mem hashtbl lhs.e -> [Terminal (Hashtbl.find hashtbl lhs.e)]
-        | _ -> r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else List.hd (snd (Hashtbl.find quo.words e))) |> List.concat (* all the prerequisite for computing the word are already computed ! *)
-
 (* populate words with one rule whose rhs have words already *)
-let update_first_word (quo: t) (r: ext_rule) : unit =
+let update_words (quo: t) (r: ext_rule) : unit =
     let lhs = r.ext_left_symbol in
     if quo.dict <> None && lhs.pf=[] && lhs.sf=[] && Hashtbl.mem (Option.get quo.dict) lhs.e then (* word is imposed by the semantics *)
-        Hashtbl.replace quo.words lhs (false,[[Terminal (Hashtbl.find (Option.get quo.dict) lhs.e)]]) (* we consider that the given word can't reach the goal *)
+        Hashtbl.replace quo.words lhs [[Terminal (Hashtbl.find (Option.get quo.dict) lhs.e)]] (* we consider that the given word can't reach the goal *)
     else begin
-        let (prev_reached,prev_words) = match Hashtbl.find_opt quo.words lhs with
-            | Some (r,w) -> (r,w)
-            | None -> (false,[]) in
-    (* TODO: gérer cant_reach_goal *)
+        let prev_reached = Hashtbl.mem quo.can_reach_goal lhs in
+        let prev_words = Option.value (Hashtbl.find_opt quo.words lhs) ~default:[] in
 
-        let new_reached = not (Hashtbl.mem quo.cant_reach_goal lhs.e) && Some lhs.e = quo.goal || (List.exists (fun e -> Some e.e = quo.goal || (not (is_ext_element_terminal e) && fst (Hashtbl.find quo.words e))) r.ext_right_part) in (* this word can obtain the goal if one of its children can *)
-        let new_word = r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else List.hd (snd (Hashtbl.find quo.words e))) |> List.concat in (* all the prerequisite for computing the word are already computed ! *)
+        let new_reached = not (Hashtbl.mem quo.cant_reach_goal lhs.e) && Some lhs.e = quo.goal || (List.exists (fun e -> Some e.e = quo.goal || (not (is_ext_element_terminal e) && (Hashtbl.mem quo.can_reach_goal e))) r.ext_right_part) in (* this word can obtain the goal if one of its children can *)
 
-        if new_reached = prev_reached then (* the status doesn't change : just add a word *)
-            Hashtbl.replace quo.words lhs (new_reached,new_word::prev_words)
-        else if new_reached then
-            Hashtbl.replace quo.words lhs (new_reached,[new_word])
+        let new_word = r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else List.hd (List.sort List.compare_lengths (Hashtbl.find quo.words e))) |> List.concat in (* all the prerequisite for computing the word are already computed ! We use the shortest word for each dependency. *)
+
+        (* print_endline ((string_of_ext_rule r)^": "^(string_of_word new_word)); *)
+        if new_reached = prev_reached then begin (* the status doesn't change : just add a word *)
+            if not (List.mem new_word prev_words) then
+                Hashtbl.replace quo.words lhs (new_word::prev_words)
+        end else if new_reached then begin
+            Hashtbl.replace quo.can_reach_goal lhs ();
+            Hashtbl.replace quo.words lhs [new_word]
+        end
         (* else: new_reached and not prev_reached means we don't add the word *)
     end
+
+(* use the quotient grammar *)
+(* populate words. Verify if a element can reach the goal with a path that contains no refused word *)
+let update_goal_words (quo: t) (original_rules: ext_rule list) : unit =
+    (* tail recursive *)
+    let rec update_reach_goal_aux (reachable: ext_element list) : unit =
+        let acceptable_rule (r: ext_rule) =
+            not (List.mem r.ext_left_symbol reachable) (* not already found *)
+            && not (Hashtbl.mem quo.cant_reach_goal r.ext_left_symbol.e) (* not refused *)
+            && List.exists (fun e -> List.mem e reachable) r.ext_right_part in (* can directly access a symbol that can reach the goal *)
+
+        let acceptable_rules = List.filter acceptable_rule original_rules in
+
+        let new_reachable_elems = List.map (fun r -> r.ext_left_symbol) acceptable_rules in
+        if new_reachable_elems = [] then ()
+        else (update_reach_goal_aux [@tailcall]) (new_reachable_elems @ reachable) in
+
+    let starting_elems = original_rules
+        |> List.concat_map rhs_of_ext_rule
+        |> List.sort_uniq compare
+        |> List.filter (Hashtbl.mem quo.can_reach_goal) in
+    update_reach_goal_aux starting_elems
 
 let remove_useless_rules (quo: t) (lhs: ext_element) : unit =
     assert (is_useful quo lhs);
@@ -92,20 +112,21 @@ let remove_useless_rules (quo: t) (lhs: ext_element) : unit =
     assert (is_useful quo lhs)
 
 (* based on level decomposition *)
+(* returns the useful lhs of the rules *)
 let update_words_and_useless (quo: t) (original_rules: ext_rule list) : ext_element list =
     (* tail-recursive *)
-    let rec update_words_and_useless_aux (reached_sym: ext_element list) (tmp_original_rules: ext_rule list) : ext_element list =
+    let rec update_words_and_useless_aux (reached_sym: ext_element list) (all_usable_rules : ext_rule list) (tmp_original_rules: ext_rule list) : (ext_element list * ext_rule list) =
         let usable_rules = List.filter (fun r -> List.for_all (fun s -> (is_ext_element_terminal s || Hashtbl.mem quo.words s) && is_allowed quo s) r.ext_right_part) tmp_original_rules in
-        if usable_rules = [] then reached_sym (* the algorithm is done *)
+        if usable_rules = [] then (reached_sym,all_usable_rules) (* the algorithm is done *)
         else begin
-            List.iter (fun r -> update_first_word quo r) usable_rules;
-            (update_words_and_useless_aux [@tailcall]) ((List.rev_map lhs_of_ext_rule usable_rules)@reached_sym) (List.filter (fun r -> not (List.mem r usable_rules)) tmp_original_rules) (* we remove the usable rules (but not the others that can possibly lead to the goal!  (but not the others that can possibly lead to the goal!*)
+            List.iter (fun r -> update_words quo r) usable_rules;
+            (update_words_and_useless_aux [@tailcall]) ((List.rev_map lhs_of_ext_rule usable_rules)@reached_sym) (all_usable_rules@usable_rules) (List.filter (fun r -> not (List.mem r usable_rules)) tmp_original_rules) (* we remove the usable rules (but not the others that can possibly lead to the goal!  (but not the others that can possibly lead to the goal!*)
         end in
-    let reached = update_words_and_useless_aux [] original_rules in
+    let (reached,all_usable_rules) = update_words_and_useless_aux [] [] original_rules in
     (* unreachable symbols are useless *)
     original_rules |> List.rev_map lhs_of_ext_rule |> List.filter (fun e -> not (List.mem e reached)) |> List.iter (set_useless quo);
     original_rules |> List.rev_map lhs_of_ext_rule |> List.filter (is_useful quo) |> List.iter (remove_useless_rules quo); (* let's remove the rules that involve useless symbols. Remark that it can't make a element useless *)
-    (* List.iter (update_words quo) reached; *)
+    update_goal_words quo all_usable_rules;
     reached
 
 (* construct a grammar, given an axiom, from the memory *)
@@ -279,9 +300,7 @@ let rec quotient_symbols (quo: t) (elist: ext_element list) : unit =
 
 let nontrivial_word (quo: t) (lhs: ext_element) : part =
     assert (is_processed quo lhs);
-    let all_inj = get_all_rules quo [lhs]
-        |> List.rev_map (update_one_word quo lhs)
-        (* |> List.rev_map (fun p -> print_endline ("Words in mem ?"^(string_of_word p)); p) *)
+    let all_inj = Hashtbl.find quo.words lhs
         |> List.sort List.compare_lengths in
     assert (all_inj <> []); (* there is at least the trivial injection *)
     if List.compare_length_with all_inj 1 = 0 then
@@ -303,7 +322,8 @@ let get_injection (quo: t) (e: ext_element) : (bool * part list) =
 
     if is_useless quo e then (false,[])
     else begin
-        let goal_reached, words = Hashtbl.find quo.words e in
+        let goal_reached = Hashtbl.mem quo.can_reach_goal e in
+        let words = Hashtbl.find quo.words e in
         if goal_reached then begin
             List.iter (fun w -> print_endline (string_of_word w)) words;
             (true, words)
@@ -341,7 +361,7 @@ let get_fuzzer_time (quo: t) : float =
     quo.fuzzer_time
 
 let refuse_injections (quo: t) (e: element) : unit =
-    (* TODO *)
+    Hashtbl.filter_map_inplace (fun k _ -> if k.e = e then None else Some ()) quo.can_reach_goal; (* update can_reach_goal *)
     Hashtbl.replace quo.cant_reach_goal e ()
 
 let finalizer (quo: t) : unit =
@@ -351,6 +371,7 @@ let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char 
     let q = {words = Hashtbl.create 100000;
         mem = Hashtbl.create 100000;
         cant_reach_goal = Hashtbl.create 100;
+        can_reach_goal = Hashtbl.create 100000;
         dict = dict;
         forbidden = forbidden;
         call_time = 0.;
@@ -358,6 +379,7 @@ let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char 
         goal = goal;
         graph_channel = Option.map open_out qgraph_fname} in
 
+    print_endline "Init";
     Option.iter (fun ch -> output_string ch "digraph {\n") q.graph_channel;
 
     let g_initial = match oneline_comment with
@@ -371,7 +393,10 @@ let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char 
 
 
     (* we update the rules of the base grammar *)
+    print_endline "Init 2";
     replace_rules_in_mem q g_rules;
+    print_endline "Init 3";
     ignore (update_words_and_useless q g_rules);
+    print_endline "Init 4";
     q
 
