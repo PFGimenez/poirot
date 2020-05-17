@@ -260,7 +260,7 @@ let search (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar
                 (* print_endline (string_of_ext_grammar inj_g); *)
                 assert (word <> None);
                 let word = Option.get word in
-                assert (Quotient.is_in_language quotient e word);
+                (* assert (Quotient.is_in_language quotient e word); *)
                 let word_str = string_of_word word in (* there is always a word as the trivial injection always works *)
                 let status = Oracle.call oracle word_str in
                 if status = Syntax_error then invalid_words := word::!invalid_words;
