@@ -74,7 +74,7 @@ let update_words (quo: t) (r: ext_rule) : unit =
 
         (* print_endline ((string_of_ext_rule r)^": "^(string_of_word new_word)); *)
         if new_reached = prev_reached then begin (* the status doesn't change : just add a word *)
-            if not (List.mem new_word prev_words) then
+            if not (List.mem new_word prev_words) then (* avoid duplicate *)
                 Hashtbl.replace quo.words lhs (new_word::prev_words)
         end else if new_reached then begin
             Hashtbl.replace quo.can_reach_goal lhs ();
@@ -94,7 +94,7 @@ let update_goal_words (quo: t) (original_rules: ext_rule list) : unit =
             && List.exists (fun e -> List.mem e reachable) r.ext_right_part in (* can directly access a symbol that can reach the goal *)
 
         let acceptable_rules = List.filter acceptable_rule original_rules in
-
+        List.iter (update_words quo) acceptable_rules; (* we found a new rule that can lead to the goal *)
         let new_reachable_elems = List.map (fun r -> r.ext_left_symbol) acceptable_rules in
         if new_reachable_elems = [] then ()
         else (update_reach_goal_aux [@tailcall]) (new_reachable_elems @ reachable) in
@@ -379,7 +379,6 @@ let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char 
         goal = goal;
         graph_channel = Option.map open_out qgraph_fname} in
 
-    print_endline "Init";
     Option.iter (fun ch -> output_string ch "digraph {\n") q.graph_channel;
 
     let g_initial = match oneline_comment with
@@ -393,10 +392,11 @@ let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char 
 
 
     (* we update the rules of the base grammar *)
-    print_endline "Init 2";
     replace_rules_in_mem q g_rules;
-    print_endline "Init 3";
     ignore (update_words_and_useless q g_rules);
-    print_endline "Init 4";
+
+    (* if oneline_comment <> None then *)
+        (* Hashtbl.replace q.words {pf=[];e=Nonterminal "poirot_nonterminal_comment";sf=[]} []; *)
+
     q
 

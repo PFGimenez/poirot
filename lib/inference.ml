@@ -379,6 +379,8 @@ let search (inf: t) : (ext_grammar * string list) option =
     inf.start_time <- Unix.gettimeofday ();
     (* initialize the heuristic *)
     update_heuristic inf;
+    if inf.htype = No_heuristic then (* we initialize "can_reach_goal" to verify if the axiom can access it *)
+        update_reach_goal inf;
 
     if not (List.mem inf.goal (get_all_symbols inf.quotient_g)) then failwith "Unknown goal"
     else if not (Hashtbl.mem inf.can_reach_goal inf.quotient_g.axiom) then failwith "Unreachable goal"
