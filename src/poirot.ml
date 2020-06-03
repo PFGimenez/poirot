@@ -15,7 +15,7 @@ let ()=
     and manual_stop = ref false
     and dict = ref None
     and goal = ref None
-    and start = ref None
+    and start = ref []
     and heuristic = ref Poirot__Inference.Complicated
     and oneline_comment = ref None
     and lowercase = ref false
@@ -35,7 +35,7 @@ let ()=
         ("-goal",       Arg.String (fun s -> goal := Some (Poirot.read_token s)),     "Terminal or nonterminal to reach");
         ("-oracle",     Arg.String (fun s -> oracle_fname := Some s),     "Oracle script filename");
         ("-oracle_pf_sf", Arg.Tuple ([Arg.String (fun s -> prefix := Some s);Arg.String (fun s -> suffix := Some s)]), "Oracle based on the simulation of a query given a prefix and a suffix");
-        ("-start",      Arg.String (fun s -> start := Some (Poirot.read_tokens s)),     "A valid injection, either terminal or nonterminal");
+        ("-start",      Arg.String (fun s -> start := (Poirot.read_token s) :: !start),     "A valid injection, either terminal or nonterminal");
         ("-avoid",      Arg.Set_string avoid,     "List of characters to avoid");
         ("-dict",      Arg.String (fun s -> dict := Some s),     "Filename of the semantics dictionary");
         ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
@@ -56,7 +56,7 @@ let ()=
         ("-v",    Arg.Unit (fun () -> print_endline ("Poirot v"^Poirot.version)),     "Show Poirot version")
     ] in
     Arg.parse speclist ignore ("Poirot v"^Poirot.version);
-    if !grammar_fname <> None && ((!oracle_fname <> None) <> (!prefix <> None)) && !goal <> None  && !start <> None then
+    if !grammar_fname <> None && ((!oracle_fname <> None) <> (!prefix <> None)) && !goal <> None && !start <> [] then
         let timeout = match !oracle_timeout with
             | -1. -> None
             | n when n > 0. -> Some n
@@ -68,8 +68,7 @@ let ()=
 
         let grammar_fname = Option.get !grammar_fname in
         let grammar = Poirot.read_bnf_grammar grammar_fname
-        and goal = Option.get !goal
-        and start = Option.get !start in
+        and goal = Option.get !goal in
         let oracle = match !oracle_fname with
         | None -> Poirot__Oracle.oracle_from_pf_sf ~oneline_comment:!oneline_comment wait grammar_fname (Option.get !prefix) (Option.get !suffix)
         | Some fname -> Poirot__Oracle.oracle_from_script wait timeout fname in
@@ -86,8 +85,8 @@ let ()=
         Poirot.set_reporter (Logs_fmt.reporter ());
 
         let s = Option.map Poirot.read_dict !dict in
-        match (Poirot.search ~inference_g:inference_grammar ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_oracle:!oracle_save oracle grammar goal start, !injg_fname) with
+        match (Poirot.search ~inference_g:inference_grammar ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_oracle:!oracle_save oracle grammar goal !start, !injg_fname) with
         | Some (gram, words), Some fname -> Poirot.export_antlr4 fname gram; List.iter (fun w -> print_endline ("Injection: "^w)) words
         | Some (_, words), _ -> List.iter (fun w -> print_endline ("Injection: "^w)) words
         | None, _ -> print_endline "Search failed: no injection found.";
-    else print_endline "Error: grammar, goal, start and one oracle (either -oracle or -oracle_pf_sf) are necessary"
+    else print_endline "Error: grammar, goal, start and an oracle (either -oracle or -oracle_pf_sf) are necessary"

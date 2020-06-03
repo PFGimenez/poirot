@@ -38,77 +38,6 @@ type t = {  mutable refused_elems: element list;
             max_steps: int;
             graph_channel: out_channel option}
 
-let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : t =
-
-    let quotient_g = Clean.clean_grammar quotient_g in (* clean is necessary *)
-    let g_non_comment = match inference_g with
-    | Some g -> Clean.clean_grammar g
-    | None -> quotient_g in
-
-    if inference_g <> None then begin
-        Log.L.debug (fun m -> m "Inference grammar: %d rules" (List.length g_non_comment.rules));
-        Log.L.debug (fun m -> m "Quotient grammar: %d rules" (List.length quotient_g.rules))
-    end else
-        Log.L.debug (fun m -> m "Inference/quotient grammar: %d rules" (List.length g_non_comment.rules));
-
-    if inference_g <> None && not (is_subgrammar g_non_comment quotient_g) then
-        failwith "The inference grammar should be a subgrammar of the quotient grammar !";
-
-    (* add the oneline comment if requested *)
-    let g = match oneline_comment with
-    | Some _ -> add_comment_inference g_non_comment
-    | None -> g_non_comment in
-
-    let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname (Some goal)
-    and all_sym = get_all_symbols g in
-
-    let can_reach_goal: (element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in
-
-    (* load the oracle calls *)
-    Option.iter (Oracle.load_mem oracle) o_fname;
-
-    let iw_fname = Option.map (fun s -> "invalid_"^s) o_fname in
-
-    (* load the invalid words *)
-    (* words invalidated by the oracle *)
-    let invalid_words : part list = match iw_fname with
-        | Some fname -> begin
-                            try let out = Marshal.from_channel (open_in_bin fname) in Log.L.info (fun m -> m "Imported invalid words from %s" fname); out
-                            with _ -> Log.L.info (fun m -> m "New invalid words file: %s" fname); []
-                        end
-        | None -> [] in
-
-    (* element that are the lhs of a single rule *)
-    let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
-
-    (* populate the uniq_rule hashtable *)
-    (* we must verify the quotient_g rules ! *)
-    List.iter (fun e -> Hashtbl.replace uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) quotient_g.rules) 1) == 0)) all_sym;
-
-    {   refused_elems = [];
-        invalid_words = invalid_words;
-        can_reach_goal = can_reach_goal;
-        heuristic = Hashtbl.create 10000;
-        closedset = Hashtbl.create 10000;
-        openset = [];
-        uniq_rule = uniq_rule;
-        quotient_g = quotient_g;
-        inference_g = g;
-        o_fname = o_fname;
-        iw_fname = iw_fname;
-        manual_stop = manual_stop;
-        start_time = 0.;
-        h_time = 0.;
-        user_time = 0.;
-        quotient = quotient;
-        htype = htype;
-        oracle = oracle;
-        start = start;
-        goal = goal;
-        max_depth = max_depth;
-        max_steps = max_steps;
-        graph_channel = Option.map open_out graph_fname}
-
 (* tail-recursive *)
 (* build all the possible one-step derivation of part p in the grammar g *)
 (* uses the inference grammar *)
@@ -374,19 +303,106 @@ let finalize (inf: t) =
     (* save the oracle answers if necessary *)
     Option.iter (Oracle.save_mem inf.oracle) inf.o_fname
 
-let search (inf: t) : (ext_grammar * string list) option =
-    (* initialize the call times *)
-    inf.start_time <- Unix.gettimeofday ();
+let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : t =
+
+    let quotient_g = Clean.clean_grammar quotient_g in (* clean is necessary *)
+    let g_non_comment = match inference_g with
+    | Some g -> Clean.clean_grammar g
+    | None -> quotient_g in
+
+    if inference_g <> None then begin
+        Log.L.debug (fun m -> m "Inference grammar: %d rules" (List.length g_non_comment.rules));
+        Log.L.debug (fun m -> m "Quotient grammar: %d rules" (List.length quotient_g.rules))
+    end else
+        Log.L.debug (fun m -> m "Inference/quotient grammar: %d rules" (List.length g_non_comment.rules));
+
+    if inference_g <> None && not (is_subgrammar g_non_comment quotient_g) then
+        failwith "The inference grammar should be a subgrammar of the quotient grammar !";
+
+    (* add the oneline comment if requested *)
+    let g = match oneline_comment with
+    | Some _ -> add_comment_inference g_non_comment
+    | None -> g_non_comment in
+
+    let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname (Some goal)
+    and all_sym = get_all_symbols g in
+
+    let can_reach_goal: (element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+
+    (* load the oracle calls *)
+    Option.iter (Oracle.load_mem oracle) o_fname;
+
+    let iw_fname = Option.map (fun s -> "invalid_"^s) o_fname in
+
+    (* load the invalid words *)
+    (* words invalidated by the oracle *)
+    let invalid_words : part list = match iw_fname with
+        | Some fname -> begin
+                            try let out = Marshal.from_channel (open_in_bin fname) in Log.L.info (fun m -> m "Imported invalid words from %s" fname); out
+                            with _ -> Log.L.info (fun m -> m "New invalid words file: %s" fname); []
+                        end
+        | None -> [] in
+
+    (* element that are the lhs of a single rule *)
+    let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+
+    (* populate the uniq_rule hashtable *)
+    (* we must verify the quotient_g rules ! *)
+    List.iter (fun e -> Hashtbl.replace uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) quotient_g.rules) 1) == 0)) all_sym;
+
+    let all_sym = get_all_symbols g in
+
+    let no_start = List.filter (fun s -> not (List.mem s all_sym)) start in
+    let start = List.filter (fun s -> List.mem s all_sym) start in
+    if no_start <> [] then Log.L.warn (fun m -> m "Unknown starting points: %s" (Grammar.string_of_part no_start));
+    if start = [] then failwith "No starting point!"; (* no injection token found *)
+    Log.L.debug (fun m -> m "Starting points: %s" (Grammar.string_of_part start));
+    if not (List.mem goal all_sym) then failwith "Unknown goal";
+
+    let inf = {   refused_elems = [];
+        invalid_words = invalid_words;
+        can_reach_goal = can_reach_goal;
+        heuristic = Hashtbl.create 10000;
+        closedset = Hashtbl.create 10000;
+        openset = [];
+        uniq_rule = uniq_rule;
+        quotient_g = quotient_g;
+        inference_g = g;
+        o_fname = o_fname;
+        iw_fname = iw_fname;
+        manual_stop = manual_stop;
+        start_time = 0.;
+        h_time = 0.;
+        user_time = 0.;
+        quotient = quotient;
+        htype = htype;
+        oracle = oracle;
+        start = start;
+        goal = goal;
+        max_depth = max_depth;
+        max_steps = max_steps;
+        graph_channel = Option.map open_out graph_fname} in
+
     (* initialize the heuristic *)
-    update_heuristic inf;
+    begin
+        try
+            update_heuristic inf;
+        with Unreachable -> failwith "Unreachable goal"
+    end;
+
     if inf.htype = No_heuristic then (* we initialize "can_reach_goal" to verify if the axiom can access it *)
         update_reach_goal inf;
 
-    if not (List.mem inf.goal (get_all_symbols inf.quotient_g)) then failwith "Unknown goal"
-    else if not (Hashtbl.mem inf.can_reach_goal inf.quotient_g.axiom) then failwith "Unreachable goal"
+    if not (List.mem goal (get_all_symbols quotient_g)) then failwith "Unknown goal"
+    else if not (Hashtbl.mem can_reach_goal quotient_g.axiom) then failwith "Unreachable goal";
     (* if not (is_reachable_mem None (ext_element_of_element quotient_g.axiom)) then failwith "Unknown or unreachable goal" (1* the goal is not reachable from the axiom ! *1) *)
-    else if inf.start = [] then failwith "No starting point!" (* no injection token found *)
-    else begin
+    inf
+
+
+let search (inf: t) : (ext_grammar * string list) option =
+    (* initialize the call times *)
+    inf.start_time <- Unix.gettimeofday ();
+    begin
         (* prepare the dot files *)
         Option.iter (fun ch -> output_string ch "digraph {\n") inf.graph_channel;
 
@@ -394,7 +410,7 @@ let search (inf: t) : (ext_grammar * string list) option =
         List.iter (set_init_node inf) ext_inj;
         try
             inf.openset <- [];
-            List.iter (add_in_openset inf true (List.hd inf.start) 1 false Induction) ext_inj; (* injection tokens won't be derived *)
+            List.iter (fun (start : ext_element) -> add_in_openset inf true start.e 1 false Induction start) ext_inj; (* injection tokens won't be derived *)
             Sys.catch_break true;
             let result = search_aux inf 1 (* search *) in
             finalize inf;
