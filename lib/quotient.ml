@@ -328,7 +328,7 @@ let get_injection (quo: t) (e: ext_element) : (bool * part list) =
             List.iter (fun w -> print_endline (string_of_word w)) words;
             (true, words)
         end else begin (* only one non-trivial injection *)
-            print_endline ("Non-trivial injection :"^(string_of_word (nontrivial_word quo e)));
+            print_endline ("Non-trivial injection: "^(string_of_word (nontrivial_word quo e)));
             (false, [nontrivial_word quo e])
         end
     end
@@ -366,6 +366,16 @@ let refuse_injections (quo: t) (e: element) : unit =
 
 let finalizer (quo: t) : unit =
     Option.iter (fun ch -> Log.L.info (fun m -> m "Save quotient graph."); output_string ch "}"; close_out ch) quo.graph_channel
+
+let get_possible_query_from_ext_element (quo: t) (e: ext_element) (par: element) : string =
+    let get_string_of_element e = match e with
+        | Terminal s -> s
+        | Nonterminal _ -> string_of_word (List.hd (Hashtbl.find quo.words (ext_element_of_element e))) in
+
+    let prefix = String.concat " " (List.rev_map get_string_of_element e.pf)
+    and suffix = String.concat " " (List.map get_string_of_element e.sf) in
+    prefix^"["^(string_of_element par)^"] "^suffix
+
 
 let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char list) (dict: (element,string) Hashtbl.t option) (qgraph_fname : string option) (goal: element option) : t =
     let q = {words = Hashtbl.create 100000;

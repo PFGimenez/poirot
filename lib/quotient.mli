@@ -8,6 +8,8 @@ val is_in_language : t -> Grammar.ext_element -> Grammar.part -> bool
 
 val refuse_injections : t -> Grammar.element -> unit
 
+val get_possible_query_from_ext_element : t -> Grammar.ext_element -> Grammar.element -> string
+
 val print_statistics : t -> unit
 val get_call_time : t -> float
 val get_fuzzer_time : t -> float

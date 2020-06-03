@@ -1,0 +1,283 @@
+# Grammar LEXER= None
+# Grammar PARSER= None
+# Grammar GRAMMAR= grammar
+# Grammar name:  ('rule', 'html')
+# LEXER: Doc
+# BEGIN LEXER FOR  Doc and
+<Doc>;
+#
+<Doc> ::= <Wspace> <DOC_START> <Wspace> <Head> <Wspace> <Body> <Wspace> <DOC_END> <Wspace>  ;
+# END
+# LEXER: Head
+# BEGIN LEXER FOR  Head and
+<Head> ::= <HEAD_START> <Html> <HEAD_END>  ;
+# END
+# LEXER: Body
+# BEGIN LEXER FOR  Body and
+<Body> ::= <BODY_START> <Html> <BODY_END>  ;
+# END
+# LEXER: Wspace
+# BEGIN LEXER FOR  Wspace or
+# BEGIN LEXER FOR  Wspace token
+<Wspace> ::= <SPACE>  ;
+# END
+# BEGIN LEXER FOR  Wspace eps
+<Wspace> ::=  ;
+# END
+# END
+# LEXER: Html
+# BEGIN LEXER FOR  Html or
+# BEGIN LEXER FOR  Html and
+<Html> ::= <Item> <Html>  ;
+# END
+# BEGIN LEXER FOR  Html eps
+<Html> ::=  ;
+# END
+# END
+# LEXER: Item
+# BEGIN LEXER FOR  Item or
+# BEGIN LEXER FOR  Item and
+<Item> ::= <BF_START> <Html> <BF_END>  ;
+# END
+# BEGIN LEXER FOR  Item and
+<Item> ::= <IT_START> <Html> <IT_END>  ;
+# END
+# BEGIN LEXER FOR  Item token
+<Item> ::= <List>  ;
+# END
+# BEGIN LEXER FOR  Item token
+<Item> ::= <H_title>  ;
+# END
+# BEGIN LEXER FOR  Item token
+<Item> ::= <Ancre>  ;
+# END
+# BEGIN LEXER FOR  Item token
+<Item> ::= <Other>  ;
+# END
+# END
+# LEXER: List
+# BEGIN LEXER FOR  List or
+# BEGIN LEXER FOR  List and
+<List> ::= <UL_START> <Wspace> <ItemList> <Wspace> <UL_END>  ;
+# END
+# BEGIN LEXER FOR  List and
+<List> ::= <OL_START> <Wspace> <ItemList> <Wspace> <OL_END>  ;
+# END
+# END
+# LEXER: H_title
+# BEGIN LEXER FOR  H_title or
+# BEGIN LEXER FOR  H_title eps
+<H_title> ::=  ;
+# END
+# BEGIN LEXER FOR  H_title and
+<H_title> ::= <H1_START> <TEXT> <H1_END>  ;
+# END
+# BEGIN LEXER FOR  H_title and
+<H_title> ::= <H2_START> <TEXT> <H2_END>  ;
+# END
+# END
+# LEXER: Ancre
+# BEGIN LEXER FOR  Ancre or
+# BEGIN LEXER FOR  Ancre eps
+<Ancre> ::=  ;
+# END
+# BEGIN LEXER FOR  Ancre and
+<Ancre> ::= <ANCRE_START> <HREF_START> '"' <TEXT> '"' <HREF_END> <TEXT> <ANCRE_END>  ;
+# END
+# END
+# LEXER: ItemList
+# BEGIN LEXER FOR  ItemList or
+# BEGIN LEXER FOR  ItemList and
+<ItemList> ::= <ItemList> <Wspace> <OneItem>  ;
+# END
+# BEGIN LEXER FOR  ItemList token
+<ItemList> ::= <OneItem>  ;
+# END
+# END
+# LEXER: OneItem
+# BEGIN LEXER FOR  OneItem and
+<OneItem> ::= <LI_START> <Html> <LI_END>  ;
+# END
+# LEXER: Other
+# BEGIN LEXER FOR  Other or
+# BEGIN LEXER FOR  Other eps
+<Other> ::=  ;
+# END
+# BEGIN LEXER FOR  Other token
+<Other> ::= <TEXT>  ;
+# END
+# BEGIN LEXER FOR  Other token
+<Other> ::= <SPACE>  ;
+# END
+# END
+# LEXER: TEXT
+# BEGIN LEXER FOR  TEXT +
+<TEXT> ::= <TEXT_-_1>  ;
+<TEXT_-_1> ::= <TEXT_-_2>  ;
+<TEXT_-_1> ::= <TEXT_-_2> <TEXT_-_1>  ;
+# BEGIN LEXER FOR  TEXT char_set
+<TEXT_-_2> ::= 'a' ;
+<TEXT_-_2> ::= 'b' ;
+<TEXT_-_2> ::= 'c' ;
+<TEXT_-_2> ::= 'd' ;
+<TEXT_-_2> ::= 'e' ;
+<TEXT_-_2> ::= 'f' ;
+<TEXT_-_2> ::= 'g' ;
+<TEXT_-_2> ::= 'h' ;
+<TEXT_-_2> ::= 'i' ;
+<TEXT_-_2> ::= 'j' ;
+<TEXT_-_2> ::= 'k' ;
+<TEXT_-_2> ::= 'l' ;
+<TEXT_-_2> ::= 'm' ;
+<TEXT_-_2> ::= 'n' ;
+<TEXT_-_2> ::= 'o' ;
+<TEXT_-_2> ::= 'p' ;
+<TEXT_-_2> ::= 'q' ;
+<TEXT_-_2> ::= 'r' ;
+<TEXT_-_2> ::= 's' ;
+<TEXT_-_2> ::= 't' ;
+<TEXT_-_2> ::= 'u' ;
+<TEXT_-_2> ::= 'v' ;
+<TEXT_-_2> ::= 'w' ;
+<TEXT_-_2> ::= 'x' ;
+<TEXT_-_2> ::= 'y' ;
+<TEXT_-_2> ::= 'z' ;
+<TEXT_-_2> ::= 'A' ;
+<TEXT_-_2> ::= 'B' ;
+<TEXT_-_2> ::= 'C' ;
+<TEXT_-_2> ::= 'D' ;
+<TEXT_-_2> ::= 'E' ;
+<TEXT_-_2> ::= 'F' ;
+<TEXT_-_2> ::= 'G' ;
+<TEXT_-_2> ::= 'H' ;
+<TEXT_-_2> ::= 'I' ;
+<TEXT_-_2> ::= 'J' ;
+<TEXT_-_2> ::= 'K' ;
+<TEXT_-_2> ::= 'L' ;
+<TEXT_-_2> ::= 'M' ;
+<TEXT_-_2> ::= 'N' ;
+<TEXT_-_2> ::= 'O' ;
+<TEXT_-_2> ::= 'P' ;
+<TEXT_-_2> ::= 'Q' ;
+<TEXT_-_2> ::= 'R' ;
+<TEXT_-_2> ::= 'S' ;
+<TEXT_-_2> ::= 'T' ;
+<TEXT_-_2> ::= 'U' ;
+<TEXT_-_2> ::= 'V' ;
+<TEXT_-_2> ::= 'W' ;
+<TEXT_-_2> ::= 'X' ;
+<TEXT_-_2> ::= 'Y' ;
+<TEXT_-_2> ::= 'Z' ;
+<TEXT_-_2> ::= '0' ;
+<TEXT_-_2> ::= '1' ;
+<TEXT_-_2> ::= '2' ;
+<TEXT_-_2> ::= '3' ;
+<TEXT_-_2> ::= '4' ;
+<TEXT_-_2> ::= '5' ;
+<TEXT_-_2> ::= '6' ;
+<TEXT_-_2> ::= '7' ;
+<TEXT_-_2> ::= '8' ;
+<TEXT_-_2> ::= '9' ;
+<TEXT_-_2> ::= '\' ;
+<TEXT_-_2> ::= ']' ;
+<TEXT_-_2> ::= '^' ;
+<TEXT_-_2> ::= '_' ;
+# END
+# END
+# LEXER: DOC_START
+# BEGIN LEXER FOR  DOC_START string
+<DOC_START> ::= '<html>'  ;
+# END
+# LEXER: DOC_END
+# BEGIN LEXER FOR  DOC_END string
+<DOC_END> ::= '</html>'  ;
+# END
+# LEXER: HEAD_START
+# BEGIN LEXER FOR  HEAD_START string
+<HEAD_START> ::= '<head>'  ;
+# END
+# LEXER: HEAD_END
+# BEGIN LEXER FOR  HEAD_END string
+<HEAD_END> ::= '</head>'  ;
+# END
+# LEXER: BODY_START
+# BEGIN LEXER FOR  BODY_START string
+<BODY_START> ::= '<body>'  ;
+# END
+# LEXER: BODY_END
+# BEGIN LEXER FOR  BODY_END string
+<BODY_END> ::= '</body>'  ;
+# END
+# LEXER: BF_START
+# BEGIN LEXER FOR  BF_START string
+<BF_START> ::= '<b>'  ;
+# END
+# LEXER: BF_END
+# BEGIN LEXER FOR  BF_END string
+<BF_END> ::= '</b>'  ;
+# END
+# LEXER: IT_START
+# BEGIN LEXER FOR  IT_START string
+<IT_START> ::= '<i>'  ;
+# END
+# LEXER: IT_END
+# BEGIN LEXER FOR  IT_END string
+<IT_END> ::= '</i>'  ;
+# END
+# LEXER: UL_START
+# BEGIN LEXER FOR  UL_START string
+<UL_START> ::= '<ul>'  ;
+# END
+# LEXER: UL_END
+# BEGIN LEXER FOR  UL_END string
+<UL_END> ::= '</ul>'  ;
+# END
+# LEXER: OL_START
+# BEGIN LEXER FOR  OL_START string
+<OL_START> ::= '<ol>'  ;
+# END
+# LEXER: OL_END
+# BEGIN LEXER FOR  OL_END string
+<OL_END> ::= '</ol>'  ;
+# END
+# LEXER: LI_START
+# BEGIN LEXER FOR  LI_START string
+<LI_START> ::= '<li>'  ;
+# END
+# LEXER: LI_END
+# BEGIN LEXER FOR  LI_END string
+<LI_END> ::= '</li>'  ;
+# END
+# LEXER: H1_START
+# BEGIN LEXER FOR  H1_START string
+<H1_START> ::= '<h1>'  ;
+# END
+# LEXER: H1_END
+# BEGIN LEXER FOR  H1_END string
+<H1_END> ::= '</h1>'  ;
+# END
+# LEXER: H2_START
+# BEGIN LEXER FOR  H2_START string
+<H2_START> ::= '<h2>'  ;
+# END
+# LEXER: H2_END
+# BEGIN LEXER FOR  H2_END string
+<H2_END> ::= '</h2>'  ;
+# END
+# LEXER: ANCRE_START
+# BEGIN LEXER FOR  ANCRE_START string
+<ANCRE_START> ::= '<a '  ;
+# END
+# LEXER: HREF_START
+# BEGIN LEXER FOR  HREF_START string
+<HREF_START> ::= 'href='  ;
+# END
+# LEXER: HREF_END
+# BEGIN LEXER FOR  HREF_END string
+<HREF_END> ::= '>'  ;
+# END
+# LEXER: ANCRE_END
+# BEGIN LEXER FOR  ANCRE_END string
+<ANCRE_END> ::= '</a>'  ;
+# END
+<SPACE> ::= ' ';
