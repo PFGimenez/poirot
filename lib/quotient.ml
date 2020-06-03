@@ -372,9 +372,9 @@ let get_possible_query_from_ext_element (quo: t) (e: ext_element) (par: element)
         | Terminal s -> s
         | Nonterminal _ -> string_of_word (List.hd (Hashtbl.find quo.words (ext_element_of_element e))) in
 
-    let prefix = String.concat " " (List.rev_map get_string_of_element e.pf)
-    and suffix = String.concat " " (List.map get_string_of_element e.sf) in
-    prefix^"["^(string_of_element par)^"] "^suffix
+    let prefix = String.concat "" (List.rev_map get_string_of_element e.pf)
+    and suffix = String.concat "" (List.map get_string_of_element e.sf) in
+    prefix^" ["^(string_of_element par)^"] "^suffix
 
 
 let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char list) (dict: (element,string) Hashtbl.t option) (qgraph_fname : string option) (goal: element option) : t =

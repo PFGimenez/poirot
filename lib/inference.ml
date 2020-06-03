@@ -212,7 +212,7 @@ let stop_search (inf: t) (words: part list) (e: ext_element) : bool =
 
 (* core algorithm : an A* algorithm *)
 (* tail recursive *)
-let rec search_aux (inf: t) (step: int) : (ext_grammar * string list) option =
+let rec search_aux (inf: t) (step: int) : (ext_grammar * string list * string) option =
     match inf.openset with
     | [] -> None (* openset is empty : there is no way *)
     | {g_val;h_val;e;par;origin;start}::q ->
@@ -227,9 +227,10 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list) option =
         Log.L.debug (fun m -> m "Visited");
         (search_aux [@tailcall]) inf step
     end else begin
-        Log.L.info (fun m -> m "Search %d (queue: %d) : %s (from %s)" step (List.length q) (Quotient.get_possible_query_from_ext_element inf.quotient e start) (string_of_element e.e));
+        let query = Quotient.get_possible_query_from_ext_element inf.quotient e start in
+        Log.L.info (fun m -> m "Search %d : %s (from %s)" step query (string_of_element e.e));
         Log.L.debug (fun m -> m "Queue: %d. Hypothesis: %s, g = %d, h = %d" (List.length q) (string_of_ext_element e) g_val h_val);
-        Grammar_io.set_node_attr inf.graph_channel ("[label=\""^(Grammar_io.export_ext_element e)^"\nstep="^(string_of_int step)^" g="^(string_of_int g_val)^" h="^(string_of_int h_val)^"\"]") e;
+        Grammar_io.set_node_attr inf.graph_channel ("[label=\""^(Grammar_io.export_ext_element e)^"\nstep="^(string_of_int step)^" g="^(string_of_int g_val)^" h="^(string_of_int h_val)^"\n"^(Grammar_io.export_string Grammar_io.export_xdot_name query)^"\"]") e;
         Grammar_io.add_edge_in_graph inf.graph_channel (if origin=Induction then "" else "penwidth=3") par e;
         (* now it is visited *)
         Hashtbl.replace inf.closedset e ();
@@ -262,7 +263,7 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list) option =
                 let status : (part * Oracle.status) list = List.map (fun w -> (w, Oracle.call inf.oracle (string_of_word w))) words in
                 let injection = status |> List.filter (fun (_,st) -> st = Oracle.No_error) |> List.map fst |> List.map string_of_word in
 (*                if verbose then print_endline (string_of_ext_grammar inj_g);*)
-                Some (Clean.clean (Quotient.get_grammar inf.quotient e), injection)
+                Some (Clean.clean (Quotient.get_grammar inf.quotient e), injection, query)
             end else if step = inf.max_steps then begin (* the end *)
                 Log.L.info (fun m -> m "Steps limit reached");
                 None
@@ -352,12 +353,13 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
 
     let all_sym = get_all_symbols g in
 
+    (* the start must be in the inference grammar and the goal in the quotient grammar *)
     let no_start = List.filter (fun s -> not (List.mem s all_sym)) start in
     let start = List.filter (fun s -> List.mem s all_sym) start in
     if no_start <> [] then Log.L.warn (fun m -> m "Unknown starting points: %s" (Grammar.string_of_part no_start));
     if start = [] then failwith "No starting point!"; (* no injection token found *)
     Log.L.debug (fun m -> m "Starting points: %s" (Grammar.string_of_part start));
-    if not (List.mem goal all_sym) then failwith "Unknown goal";
+    if not (List.mem goal (get_all_symbols quotient_g)) then failwith "Unknown goal";
 
     let inf = {   refused_elems = [];
         invalid_words = invalid_words;
@@ -399,7 +401,7 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
     inf
 
 
-let search (inf: t) : (ext_grammar * string list) option =
+let search (inf: t) : (ext_grammar * string list * string) option =
     (* initialize the call times *)
     inf.start_time <- Unix.gettimeofday ();
     begin
