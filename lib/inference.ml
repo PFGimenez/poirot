@@ -31,6 +31,7 @@ type t = {  mutable refused_elems: element list;
             mutable user_time: float;
             quotient: Quotient.t;
             htype: heuristic;
+            allow_derivation: bool;
             oracle: Oracle.t;
             start: element list;
             goal: element;
@@ -38,17 +39,16 @@ type t = {  mutable refused_elems: element list;
             max_steps: int;
             graph_channel: out_channel option}
 
-(* tail-recursive *)
-(* build all the possible one-step derivation of part p in the grammar g *)
-(* uses the inference grammar *)
-(* TODO: right-most derivation only *)
-let build_derivation (g: grammar) (p: part) : (rule * part) list =
-    let rec build_derivation_aux (sofar: part) (acc: (rule * part) list) (p: part) : (rule * part) list = match p with
-        | [] -> acc
-        | (Terminal _ as t)::q -> (build_derivation_aux [@tailcall]) (t::sofar) acc q
-        | (Nonterminal _ as t)::q -> let new_parts = g.rules |> List.filter (fun r -> r.left_symbol = t) |> List.rev_map (fun r -> r,(List.rev sofar)@r.right_part@q) in
-            (build_derivation_aux [@tailcall]) (t::sofar) (new_parts@acc) q in
-    build_derivation_aux [] [] p
+(* build the rightmost derivations of p *)
+let build_rightmost_derivation (inf: t) (p: part) : part list =
+    let rec build_rightmost_derivation (prefix: part) (p: part) : part list = match p with
+    | [] -> []
+    | (Terminal _ as e)::q -> (build_rightmost_derivation [@tailcall]) (e::prefix) q
+    | e::q -> let rhs = get_all_rhs inf.inference_g.rules e in
+        List.map (fun p -> (List.rev q) @ p @ (List.rev prefix)) rhs in
+    print_endline ("Derivation of "^(string_of_part p));
+    List.iter (fun p -> print_endline (string_of_part p)) (build_rightmost_derivation [] (List.rev p));
+    build_rightmost_derivation [] (List.rev p)
 
 let set_init_node (inf: t): ext_element -> unit =
     Grammar_io.set_node_attr inf.graph_channel "shape=doublecircle"
@@ -98,6 +98,7 @@ let update_reach_goal (inf: t) : unit =
     let reach = List.sort_uniq compare (update_reach_goal_aux [inf.goal]) in
     List.iter (fun e -> Hashtbl.replace inf.can_reach_goal e ()) reach
 
+(* TODO: disabled for the moment *)
 (* update the openset after a change of heuristic *)
 (*let update_openset (inf: t) : unit =
     inf.openset <-
@@ -109,15 +110,6 @@ let update_reach_goal (inf: t) : unit =
 
 (* compute the heuristic once and for all *)
 let update_heuristic (inf: t) : unit =
-    (* get the number of rules an element can reach the goal with *)
-(*    let children_with_goal_number (e: ext_element) : int =
-        (* if Hashtbl.mem inf.can_reach_goal e then *)
-            e   |> Quotient.get_rhs inf.quotient
-                |> List.filter (List.exists (fun e2 -> Hashtbl.mem inf.can_reach_goal e2))
-                |> List.length in
-        (* else 0 in (1* if the word has been refused, then it artificially has no child that can reach the goal *1) *)
-    *)
-
     (* decompose a RHS into every possible (prefix,sym,suffix). Prefix is reversed. *)
     (* tail-recursive *)
     let rec decompose (prefix: part) (acc: (part*element*part) list) (p: part) : (part*element*part) list = match p with
@@ -133,12 +125,11 @@ let update_heuristic (inf: t) : unit =
 
     (* construct the children of new_par. Their heuristic is h *)
     let make_new_couples (new_par: element) (h: int) : (ext_element*element*int) list =
-        print_endline "Yo";
         get_all_rhs inf.quotient_g.rules new_par
         |> List.map (decompose [] [])
         |> List.flatten
         |> List.map (fun (pf,e,sf) -> let par={pf=pf;e=new_par;sf=sf} and ch=e in
-        if is_null_heuristic par ch then (print_endline ("h=0: "^(string_of_ext_element par)^" "^(string_of_element ch)); (par,ch,0)) else (print_endline ("h="^(string_of_int h)^": "^(string_of_ext_element par)^" "^(string_of_element ch)); (par,ch,h))) in
+        if is_null_heuristic par ch then (*(print_endline ("h=0: "^(string_of_ext_element par)^" "^(string_of_element ch));*) (par,ch,0) else (*(print_endline ("h="^(string_of_int h)^": "^(string_of_ext_element par)^" "^(string_of_element ch));*) (par,ch,h)) in
 
     (* compute the heuristic from the top of the grammar to its leaves *)
     (* all the heuristic is computed at once *)
@@ -172,29 +163,48 @@ let update_heuristic (inf: t) : unit =
 let build_ext_elements (inf: t) (e: ext_element) : (ext_element * ext_element) list =
     inf.inference_g.rules |> List.filter (fun r -> List.exists ((=) e.e) r.right_part) |> List.rev_map (split e) |> List.flatten
 
-(* add new elements to the open set *)
-let add_in_openset (inf: t) (allow_derivation: bool) (start: element) (g_val: int) (null_h: bool) (origin: node_origin) (par: ext_element) : unit =
-(* openset is already sorted *)
-    match origin with
-    | Induction _ -> begin
-        inf.openset <-
-            par
-            |> build_ext_elements inf
-            |> List.rev_map (fun (e, simplified_e: ext_element * ext_element) : node -> {g_val;h_val=get_heuristic inf simplified_e par.e;e;par;origin=Induction simplified_e;start=start})
-            |> List.filter (fun {g_val;h_val;_} -> g_val + h_val <= inf.max_depth)
-            |> List.sort compare_with_score
-            |> List.merge compare_with_score inf.openset end
-    | _ -> ();
+(* extract (w1,A,w2) from (w1 alpha, A, beta w2), where w1 and w2 are the longest terminal sequence *)
+let extract_terminal_ext_element (e: ext_element) : ext_element =
+    (* tail-recursive *)
+    let rec extract_terminal (acc: part) (p: part) : part = match p with
+        | (Terminal _ as t)::q -> (extract_terminal [@tailcall]) (t::acc) q
+        | _ -> acc in
 
-    if allow_derivation && null_h then begin (* we only derive if the local axiom can access the goal *)
+    let pf=extract_terminal [] (List.rev e.pf)
+    and sf=extract_terminal [] (List.rev e.sf) in
+    {pf;e=e.e;sf}
+
+(* verify if the goal can be access from the grammar of its extract_terminal_ext_element *)
+(* used for the derivation *)
+let can_possibly_access_goal (inf: t) (e: ext_element) : bool =
+    let term = extract_terminal_ext_element e in
+    let rhs = List.flatten (Quotient.get_rhs inf.quotient term) in
+    List.exists (fun ({e;_}: ext_element) -> Hashtbl.mem inf.can_reach_goal e) rhs
+
+
+(* add new elements to the open set *)
+let add_in_openset (inf: t) (start: element) (g_val: int) (null_h: bool) (origin: node_origin) (par: ext_element) : unit =
+(* openset is already sorted *)
+    begin match origin with
+        | Induction _ -> begin
+            inf.openset <-
+                par
+                |> build_ext_elements inf
+                |> List.rev_map (fun (e, simplified_e: ext_element * ext_element) : node -> {g_val;h_val=get_heuristic inf simplified_e par.e;e;par;origin=Induction simplified_e;start=start})
+                |> List.filter (fun {g_val;h_val;_} -> g_val + h_val <= inf.max_depth)
+                |> List.sort compare_with_score
+                |> List.merge compare_with_score inf.openset end
+        | _ -> ()
+    end;
+    
+    if inf.allow_derivation && null_h then begin (* we only derive if the local axiom can access the goal *)
         let g_val = match origin with
         | Induction _ -> g_val + 5 (* small malus when beginning the derivation *)
         | Derivation -> g_val in
         inf.openset <-
-            par.sf
-            |> build_derivation inf.inference_g
-            (* TODO: vérifier l'accesibilité de (w1,A,w2) pour (w1,A,αw2) *)
-            |> List.rev_map (fun (_, newsf) : node -> {g_val;h_val=0;e={e=par.e;sf=newsf;pf=par.pf};par;origin=Derivation;start=start})
+            build_rightmost_derivation inf par.sf
+            |> List.rev_map (fun newsf : node -> {g_val;h_val=0;e={e=par.e;sf=newsf;pf=par.pf};par;origin=Derivation;start=start})
+            |> List.filter (fun n -> can_possibly_access_goal inf n.e)
             |> List.sort compare_with_score
             |> List.merge compare_with_score inf.openset
     end
@@ -258,7 +268,7 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list * string) o
         (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
         if Hashtbl.find inf.uniq_rule e.e && g_val < inf.max_depth && step < inf.max_steps then begin
             Log.L.debug (fun m -> m "Explore uniq");
-            add_in_openset inf false start (g_val + 1) (h_val = 0) origin e;
+            add_in_openset inf start (g_val + 1) (h_val = 0) origin e;
             (search_aux [@tailcall]) inf (step + 1)
         (* if this language is invalidated by a new oracle call *)
         end else if verify_previous_oracle_calls inf e then begin
@@ -299,7 +309,7 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list * string) o
             end else begin (* we explore in this direction *)
                 (* get the rules e -> ... to verify if e is testable or not *)
                 Log.L.debug (fun m -> m "Explore");
-                add_in_openset inf true start (g_val + 1) (h_val = 0) origin e;
+                add_in_openset inf start (g_val + 1) (h_val = 0) origin e;
                 (search_aux [@tailcall]) inf (step + 1)
             end
         end
@@ -399,6 +409,7 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
         user_time = 0.;
         quotient = quotient;
         htype = htype;
+        allow_derivation = true;
         oracle = oracle;
         start = start;
         goal = goal;
@@ -433,7 +444,7 @@ let search (inf: t) : (ext_grammar * string list * string) option =
         List.iter (set_init_node inf) ext_inj;
         try
             inf.openset <- [];
-            List.iter (fun (start : ext_element) -> add_in_openset inf true start.e 1 false (Induction start) start) ext_inj; (* injection tokens won't be derived *)
+            List.iter (fun (start : ext_element) -> add_in_openset inf start.e 1 false (Induction start) start) ext_inj; (* injection tokens won't be derived *)
             Sys.catch_break true;
             let result = search_aux inf 1 (* search *) in
             finalize inf;
