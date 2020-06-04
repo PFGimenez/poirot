@@ -1,6 +1,6 @@
 type t
 
-type heuristic = No_heuristic | Complicated
+type heuristic = No_heuristic | Default
 
 val init : Oracle.t -> Grammar.grammar option -> Grammar.grammar -> Grammar.element -> Grammar.element list -> string option -> (Grammar.element,string) Hashtbl.t option -> int -> int -> string option -> string option -> string option -> char list -> bool -> heuristic -> t
 

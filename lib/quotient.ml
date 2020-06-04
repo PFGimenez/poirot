@@ -308,6 +308,13 @@ let nontrivial_word (quo: t) (lhs: ext_element) : part =
     else
         List.hd (List.tl all_inj) (* TODO: the trivial injection is not necessary the smallest… *)
 
+let get_rhs (quo: t) (e: ext_element) : ext_part list =
+    let start_time = Unix.gettimeofday () in
+    quotient_symbols quo [e];
+    let out = Hashtbl.find quo.mem e in
+    quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
+    out
+
 let get_grammar (quo: t) (e: ext_element) : ext_grammar =
     let start_time = Unix.gettimeofday () in
     quotient_symbols quo [e];

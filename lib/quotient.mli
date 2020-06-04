@@ -5,6 +5,7 @@ val init : string option -> Grammar.grammar -> char list -> (Grammar.element,str
 val get_injection : t -> Grammar.ext_element -> bool * Grammar.part list
 val get_grammar : t -> Grammar.ext_element -> Grammar.ext_grammar
 val is_in_language : t -> Grammar.ext_element -> Grammar.part -> bool
+val get_rhs : t -> Grammar.ext_element -> Grammar.ext_part list
 
 val refuse_injections : t -> Grammar.element -> unit
 
