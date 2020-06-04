@@ -42,7 +42,7 @@ let ()=
         ("-maxsteps",   Arg.Set_int max_steps,    "Set the max steps search (default: "^(string_of_int !max_steps)^")");
         ("-oracle_timeout",   Arg.Set_float oracle_timeout,    "Set the timeout to oracle calls (in seconds, -1 for no timeout)");
         ("-oracle_interval",   Arg.Set_float oracle_wait,    "Set the minimal duration between two oracle calls (in seconds, -1 for no wait)");
-        ("-manual_stop",   Arg.Set manual_stop,    "Ask the user if they wants to continue the search");
+        (* ("-manual_stop",   Arg.Set manual_stop,    "Ask the user if they wants to continue the search"); *)
         ("-heuristic",   Arg.Symbol (["none";"default"], fun s -> if s="none" then heuristic := Poirot__Inference.No_heuristic), "Select the heuristic");
         ("-sgraph",     Arg.String (fun s -> graph_fname := Some s),    "Save the search graph");
         ("-qgraph",     Arg.String (fun s -> qgraph_fname := Some s),    "Save the quotient graph");

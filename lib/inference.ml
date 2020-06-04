@@ -16,10 +16,10 @@ type node = {g_val: int; mutable h_val: int; e: ext_element; par: ext_element; o
 type t = {  mutable refused_elems: element list;
             mutable invalid_words: part list;
             mutable openset: node list;
-            can_reach_goal: (element, unit) Hashtbl.t;
+            (* can_reach_goal: (element, unit) Hashtbl.t; *)
             heuristic: (ext_element*element, int) Hashtbl.t; (* parent then child, in the sense of the grammar *)
             closedset: (ext_element, unit) Hashtbl.t;
-            uniq_rule : (element, bool) Hashtbl.t;
+            (* uniq_rule : (element, bool) Hashtbl.t; *)
             quotient_g: grammar;
             inference_g: grammar;
             (* h_fname: string option; *)
@@ -82,7 +82,8 @@ let get_heuristic (inf: t) (ch: ext_element) (par: element) : int =
 
 (* use the quotient grammar *)
 (* populate can_reach_goal. Verify if a element can reach the goal with a path that contains no refused word *)
-let update_reach_goal (inf: t) : unit =
+(* TODO: disabled for the moment because words can't be refused *)
+(*let update_reach_goal (inf: t) : unit =
     (* tail recursive *)
     let rec update_reach_goal_aux (reachable: element list) : element list =
         let acceptable_rule (r: rule) =
@@ -96,9 +97,9 @@ let update_reach_goal (inf: t) : unit =
         else (update_reach_goal_aux [@tailcall]) (new_reachable_elems @ reachable) in
     Hashtbl.clear inf.can_reach_goal;
     let reach = List.sort_uniq compare (update_reach_goal_aux [inf.goal]) in
-    List.iter (fun e -> Hashtbl.replace inf.can_reach_goal e ()) reach
+    List.iter (fun e -> Hashtbl.replace inf.can_reach_goal e ()) reach*)
 
-(* TODO: disabled for the moment *)
+(* TODO: disabled for the moment because words can't be refused *)
 (* update the openset after a change of heuristic *)
 (*let update_openset (inf: t) : unit =
     inf.openset <-
@@ -121,7 +122,7 @@ let update_heuristic (inf: t) : unit =
         e |> Quotient.get_rhs inf.quotient
         |> List.filter ((<>) ([ext_element_of_element ch]))
         |> List.flatten
-        |> List.exists (fun ({e;_}: ext_element) -> Hashtbl.mem inf.can_reach_goal e) in
+        |> List.exists (Quotient.can_reach_goal inf.quotient) in
 
     (* construct the children of new_par. Their heuristic is h *)
     let make_new_couples (new_par: element) (h: int) : (ext_element*element*int) list =
@@ -145,9 +146,9 @@ let update_heuristic (inf: t) : unit =
         Log.L.info (fun m -> m "Heuristic update");
         print_endline ("Axiom: "^(string_of_element inf.quotient_g.axiom));
         (* based on can_reach_goal, so we need to update it as well *)
-        update_reach_goal inf;
+        (* update_reach_goal inf; *)
         Hashtbl.clear inf.heuristic;
-        if (Hashtbl.mem inf.can_reach_goal inf.quotient_g.axiom) then begin
+        if (Quotient.can_reach_goal inf.quotient (ext_element_of_element inf.quotient_g.axiom)) then begin
             (* update the heuristic *)
             update_heuristic_aux (make_new_couples inf.quotient_g.axiom 0);
             (* update_openset inf; *)
@@ -179,8 +180,7 @@ let extract_terminal_ext_element (e: ext_element) : ext_element =
 let can_possibly_access_goal (inf: t) (e: ext_element) : bool =
     let term = extract_terminal_ext_element e in
     let rhs = List.flatten (Quotient.get_rhs inf.quotient term) in
-    List.exists (fun ({e;_}: ext_element) -> Hashtbl.mem inf.can_reach_goal e) rhs
-
+    List.exists (Quotient.can_reach_goal inf.quotient) rhs
 
 (* add new elements to the open set *)
 let add_in_openset (inf: t) (start: element) (g_val: int) (null_h: bool) (origin: node_origin) (par: ext_element) : unit =
@@ -196,10 +196,10 @@ let add_in_openset (inf: t) (start: element) (g_val: int) (null_h: bool) (origin
                 |> List.merge compare_with_score inf.openset end
         | _ -> ()
     end;
-    
+
     if inf.allow_derivation && null_h then begin (* we only derive if the local axiom can access the goal *)
         let g_val = match origin with
-        | Induction _ -> g_val + 5 (* small malus when beginning the derivation *)
+        | Induction _ -> g_val -10 (*TODO*) (* small malus when beginning the derivation *)
         | Derivation -> g_val in
         inf.openset <-
             build_rightmost_derivation inf par.sf
@@ -266,9 +266,10 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list * string) o
         (* now it is visited *)
         Hashtbl.replace inf.closedset e ();
         (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
-        if Hashtbl.find inf.uniq_rule e.e && g_val < inf.max_depth && step < inf.max_steps then begin
+        if List.length (Quotient.get_rhs inf.quotient e) = 1 && g_val < inf.max_depth && step < inf.max_steps then begin
             Log.L.debug (fun m -> m "Explore uniq");
             add_in_openset inf start (g_val + 1) (h_val = 0) origin e;
+            set_node_color_in_graph inf e "gray";
             (search_aux [@tailcall]) inf (step + 1)
         (* if this language is invalidated by a new oracle call *)
         end else if verify_previous_oracle_calls inf e then begin
@@ -356,10 +357,10 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
     | Some _ -> add_comment_inference quotient_g, add_comment_inference g_non_comment
     | None -> quotient_g,g_non_comment in
 
-    let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname (Some goal)
-    and all_sym = get_all_symbols g in
+    let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname (Some goal) in
+    (* and all_sym = get_all_symbols g in *)
 
-    let can_reach_goal: (element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+    (* let can_reach_goal: (element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in *)
 
     (* load the oracle calls *)
     Option.iter (Oracle.load_mem oracle) o_fname;
@@ -376,11 +377,11 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
         | None -> [] in
 
     (* element that are the lhs of a single rule *)
-    let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in
+    (* let uniq_rule : (element, bool) Hashtbl.t = Hashtbl.create (List.length all_sym) in *)
 
     (* populate the uniq_rule hashtable *)
     (* we must verify the quotient_g rules ! *)
-    List.iter (fun e -> Hashtbl.replace uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) quotient_g.rules) 1) == 0)) all_sym;
+    (* List.iter (fun e -> Hashtbl.replace uniq_rule e ((List.compare_length_with (List.filter (fun r -> r.left_symbol = e) quotient_g.rules) 1) == 0)) all_sym; *)
 
     let all_sym = get_all_symbols g in
 
@@ -394,11 +395,11 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
 
     let inf = {   refused_elems = [];
         invalid_words = invalid_words;
-        can_reach_goal = can_reach_goal;
+        (* can_reach_goal = can_reach_goal; *)
         heuristic = Hashtbl.create 10000;
         closedset = Hashtbl.create 10000;
         openset = [];
-        uniq_rule = uniq_rule;
+        (* uniq_rule = uniq_rule; *)
         quotient_g = quotient_g;
         inference_g = g;
         o_fname = o_fname;
@@ -424,11 +425,11 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
         with Unreachable -> failwith "Unreachable goal"
     end;
 
-    if inf.htype = No_heuristic then (* we initialize "can_reach_goal" to verify if the axiom can access it *)
-        update_reach_goal inf;
+    (* if inf.htype = No_heuristic then (1* we initialize "can_reach_goal" to verify if the axiom can access it *1) *)
+        (* update_reach_goal inf; *)
 
     if not (List.mem goal (get_all_symbols quotient_g)) then failwith "Unknown goal"
-    else if not (Hashtbl.mem can_reach_goal quotient_g.axiom) then failwith "Unreachable goal";
+    else if not (Quotient.can_reach_goal inf.quotient (ext_element_of_element quotient_g.axiom)) then failwith "Unreachable goal";
     (* if not (is_reachable_mem None (ext_element_of_element quotient_g.axiom)) then failwith "Unknown or unreachable goal" (1* the goal is not reachable from the axiom ! *1) *)
     inf
 

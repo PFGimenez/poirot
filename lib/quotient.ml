@@ -311,9 +311,14 @@ let nontrivial_word (quo: t) (lhs: ext_element) : part =
 let get_rhs (quo: t) (e: ext_element) : ext_part list =
     let start_time = Unix.gettimeofday () in
     quotient_symbols quo [e];
-    let out = Hashtbl.find quo.mem e in
     quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
-    out
+    Hashtbl.find quo.mem e
+
+let can_reach_goal (quo: t) (e: ext_element) : bool =
+    let start_time = Unix.gettimeofday () in
+    quotient_symbols quo [e];
+    quo.call_time <- quo.call_time +. (Unix.gettimeofday () -. start_time);
+    Hashtbl.mem quo.can_reach_goal e
 
 let get_grammar (quo: t) (e: ext_element) : ext_grammar =
     let start_time = Unix.gettimeofday () in
