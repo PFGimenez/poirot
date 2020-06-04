@@ -324,6 +324,9 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
     let g = match oneline_comment with
     | Some _ -> add_comment_inference g_non_comment
     | None -> g_non_comment in
+    let quotient_g,g = match oneline_comment with
+    | Some _ -> add_comment_inference quotient_g, add_comment_inference g_non_comment
+    | None -> quotient_g,g_non_comment in
 
     let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname (Some goal)
     and all_sym = get_all_symbols g in
