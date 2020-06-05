@@ -75,6 +75,7 @@ let compare_with_score (a: node) (b: node) : int = match a,b with
 
 (* Get the heuristic. It is already computed. *)
 let get_heuristic (inf: t) (ch: ext_element) (par: element) : int =
+    (* print_endline ("Get heuristic of "^(string_of_ext_element ch)^" "^(string_of_element par)); *)
     match inf.htype with
         | No_heuristic -> 0
         | Default -> Option.value ~default:infinity (Hashtbl.find_opt inf.heuristic (ch,par))
@@ -118,6 +119,11 @@ let update_heuristic (inf: t) : unit =
         | t::q -> (decompose [@tailcall]) (t::prefix) ((prefix,t,q)::acc) q in
 
     let is_null_heuristic (e: ext_element) (ch: element) : bool =
+        (* print_endline ("Null? "^(string_of_ext_element e)^" "^(string_of_element ch)); *)
+        (* let l = e |> Quotient.get_rhs inf.quotient |> List.filter ((<>) ([ext_element_of_element ch])) |> List.flatten in *)
+        (* print_endline ("Accessible: "^(string_of_ext_part l)); *)
+        (* print_endline ("Can reach: "^(string_of_ext_part (List.filter (Quotient.can_reach_goal inf.quotient) l))); *)
+
         (* get all the rhs rules except the trivial one *)
         e |> Quotient.get_rhs inf.quotient
         |> List.filter ((<>) ([ext_element_of_element ch]))
@@ -144,7 +150,7 @@ let update_heuristic (inf: t) : unit =
     if inf.htype = Default then begin
         let start_time = Unix.gettimeofday () in
         Log.L.info (fun m -> m "Heuristic update");
-        print_endline ("Axiom: "^(string_of_element inf.quotient_g.axiom));
+        (* print_endline ("Axiom: "^(string_of_element inf.quotient_g.axiom)); *)
         (* based on can_reach_goal, so we need to update it as well *)
         (* update_reach_goal inf; *)
         Hashtbl.clear inf.heuristic;
@@ -199,7 +205,7 @@ let add_in_openset (inf: t) (start: element) (g_val: int) (null_h: bool) (origin
 
     if inf.allow_derivation && null_h then begin (* we only derive if the local axiom can access the goal *)
         let g_val = match origin with
-        | Induction _ -> g_val -10 (*TODO*) (* small malus when beginning the derivation *)
+        | Induction _ -> g_val + 5 (* small malus when beginning the derivation *)
         | Derivation -> g_val in
         inf.openset <-
             build_rightmost_derivation inf par.sf
@@ -215,9 +221,9 @@ let verify_previous_oracle_calls (inf: t) (e: ext_element) : bool =
     List.exists (Quotient.is_in_language inf.quotient e) inf.invalid_words
 
 (* refuse a word and update the heuristic *)
-let refuse_word (inf: t) (e: element) : unit =
-    inf.refused_elems <- e::inf.refused_elems;
-    update_heuristic inf
+(* let refuse_word (inf: t) (e: element) : unit = *)
+    (* inf.refused_elems <- e::inf.refused_elems; *)
+    (* update_heuristic inf *)
 
 (* ask the user whether the injection is correct *)
 let stop_search (inf: t) (words: part list) (e: ext_element) : bool =
@@ -229,8 +235,8 @@ let stop_search (inf: t) (words: part list) (e: ext_element) : bool =
                 true
             else if (s = "n" || s="no") then begin
                 set_node_color_in_graph inf e "blue";
-                refuse_word inf e.e;
-                Quotient.refuse_injections inf.quotient e.e;
+                (* refuse_word inf e.e; *)
+                (* Quotient.refuse_injections inf.quotient e.e; *)
                 false
             end else begin
                 print_endline "I didn't understand your answer.";
@@ -266,7 +272,7 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list * string) o
         (* now it is visited *)
         Hashtbl.replace inf.closedset e ();
         (* if this element has only one rule, we know it cannot reach the goal (otherwise it would have be done by its predecessor) *)
-        if List.length (Quotient.get_rhs inf.quotient e) = 1 && g_val < inf.max_depth && step < inf.max_steps then begin
+        if List.length (Quotient.get_rhs inf.quotient e) = 1 && step < inf.max_steps then begin
             Log.L.debug (fun m -> m "Explore uniq");
             add_in_openset inf start (g_val + 1) (h_val = 0) origin e;
             set_node_color_in_graph inf e "gray";
@@ -303,10 +309,10 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list * string) o
                 Log.L.debug (fun m -> m "Invalid");
                 set_node_color_in_graph inf e "crimson";
                 (search_aux [@tailcall]) inf (step + 1)
-            end else if g_val >= inf.max_depth then begin (* before we explore, verify if the max depth has been reached *)
-                Log.L.debug (fun m -> m "Depth max");
-                set_node_color_in_graph inf e "orange";
-                (search_aux [@tailcall]) inf (step + 1)
+            (* end else if g_val >= inf.max_depth then begin (1* before we explore, verify if the max depth has been reached *1) *)
+                (* Log.L.debug (fun m -> m "Depth max"); *)
+                (* set_node_color_in_graph inf e "orange"; *)
+                (* (search_aux [@tailcall]) inf (step + 1) *)
             end else begin (* we explore in this direction *)
                 (* get the rules e -> ... to verify if e is testable or not *)
                 Log.L.debug (fun m -> m "Explore");

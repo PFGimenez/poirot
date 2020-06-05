@@ -372,9 +372,9 @@ let get_call_time (quo: t) : float =
 let get_fuzzer_time (quo: t) : float =
     quo.fuzzer_time
 
-let refuse_injections (quo: t) (e: element) : unit =
-    Hashtbl.filter_map_inplace (fun k _ -> if k.e = e then None else Some ()) quo.can_reach_goal; (* update can_reach_goal *)
-    Hashtbl.replace quo.cant_reach_goal e ()
+(* let refuse_injections (quo: t) (e: element) : unit = *)
+(*     Hashtbl.filter_map_inplace (fun k _ -> if k.e = e then None else Some ()) quo.can_reach_goal; (1* update can_reach_goal *1) *)
+(*     Hashtbl.replace quo.cant_reach_goal e () *)
 
 let finalizer (quo: t) : unit =
     Option.iter (fun ch -> Log.L.info (fun m -> m "Save quotient graph."); output_string ch "}"; close_out ch) quo.graph_channel
