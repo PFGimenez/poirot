@@ -3,7 +3,7 @@ open Grammar
 (* infinity *)
 let infinity = 100000
 
-exception Unreachable
+(* exception Unreachable *)
 
 type heuristic = No_heuristic | Default
 
@@ -17,12 +17,14 @@ type t = {  mutable refused_elems: element list;
             mutable invalid_words: part list;
             mutable openset: node list;
             (* can_reach_goal: (element, unit) Hashtbl.t; *)
-            heuristic: (ext_element*element, int) Hashtbl.t; (* parent then child, in the sense of the grammar *)
+            mutable heuristic: (ext_element*element, int) Hashtbl.t; (* parent then child, in the sense of the grammar *)
+            mutable heuristic_openset: (ext_element*element*int) list;
             closedset: (ext_element, unit) Hashtbl.t;
             (* uniq_rule : (element, bool) Hashtbl.t; *)
             quotient_g: grammar;
             inference_g: grammar;
-            (* h_fname: string option; *)
+            mutable initial_h_size: int;
+            h_fname: string option;
             iw_fname: string option;
             o_fname: string option;
             manual_stop: bool;
@@ -46,8 +48,8 @@ let build_rightmost_derivation (inf: t) (p: part) : part list =
     | (Terminal _ as e)::q -> (build_rightmost_derivation [@tailcall]) (e::prefix) q
     | e::q -> let rhs = get_all_rhs inf.inference_g.rules e in
         List.map (fun p -> (List.rev q) @ p @ (List.rev prefix)) rhs in
-    print_endline ("Derivation of "^(string_of_part p));
-    List.iter (fun p -> print_endline (string_of_part p)) (build_rightmost_derivation [] (List.rev p));
+    (* print_endline ("Derivation of "^(string_of_part p)); *)
+    (* List.iter (fun p -> print_endline (string_of_part p)) (build_rightmost_derivation [] (List.rev p)); *)
     build_rightmost_derivation [] (List.rev p)
 
 let set_init_node (inf: t): ext_element -> unit =
@@ -73,12 +75,6 @@ let compare_with_score (a: node) (b: node) : int = match a,b with
     | {g_val=ag;h_val=ah;_},{g_val=bg;h_val=bh;_} when ag=bg && ah=bh -> (List.length (b.e.pf) + List.length (b.e.sf)) - (List.length (a.e.pf) + List.length (a.e.sf)) (* prefer the longest prefix/suffix *)
     | _ -> 1
 
-(* Get the heuristic. It is already computed. *)
-let get_heuristic (inf: t) (ch: ext_element) (par: element) : int =
-    (* print_endline ("Get heuristic of "^(string_of_ext_element ch)^" "^(string_of_element par)); *)
-    match inf.htype with
-        | No_heuristic -> 0
-        | Default -> Option.value ~default:infinity (Hashtbl.find_opt inf.heuristic (ch,par))
         (* ch and par are reversed. Heuristic thinks of "parent" in the sense of the grammar. Inference thinks of "parents" in the sense of the A* search. But the search it bottom up ! *)
 
 (* use the quotient grammar *)
@@ -110,53 +106,48 @@ let get_heuristic (inf: t) (ch: ext_element) (par: element) : int =
         |> List.sort compare_with_score (* sort again *)
 *)
 
-(* compute the heuristic once and for all *)
-let update_heuristic (inf: t) : unit =
-    (* decompose a RHS into every possible (prefix,sym,suffix). Prefix is reversed. *)
-    (* tail-recursive *)
-    let rec decompose (prefix: part) (acc: (part*element*part) list) (p: part) : (part*element*part) list = match p with
-        | [] -> acc
-        | t::q -> (decompose [@tailcall]) (t::prefix) ((prefix,t,q)::acc) q in
+(* decompose a RHS into every possible (prefix,sym,suffix). Prefix is reversed. *)
+(* tail-recursive *)
+let rec decompose (prefix: part) (acc: (part*element*part) list) (p: part) : (part*element*part) list = match p with
+    | [] -> acc
+    | t::q -> (decompose [@tailcall]) (t::prefix) ((prefix,t,q)::acc) q
 
-    let is_null_heuristic (e: ext_element) (ch: element) : bool =
+let is_null_heuristic (inf: t) (e: ext_element) (ch: element) : bool =
         (* print_endline ("Null? "^(string_of_ext_element e)^" "^(string_of_element ch)); *)
         (* let l = e |> Quotient.get_rhs inf.quotient |> List.filter ((<>) ([ext_element_of_element ch])) |> List.flatten in *)
         (* print_endline ("Accessible: "^(string_of_ext_part l)); *)
         (* print_endline ("Can reach: "^(string_of_ext_part (List.filter (Quotient.can_reach_goal inf.quotient) l))); *)
 
         (* get all the rhs rules except the trivial one *)
-        e |> Quotient.get_rhs inf.quotient
-        |> List.filter ((<>) ([ext_element_of_element ch]))
-        |> List.flatten
-        |> List.exists (Quotient.can_reach_goal inf.quotient) in
+    e |> Quotient.get_rhs inf.quotient
+    |> List.filter ((<>) ([ext_element_of_element ch]))
+    |> List.flatten
+    |> List.exists (Quotient.can_reach_goal inf.quotient)
 
-    (* construct the children of new_par. Their heuristic is h *)
-    let make_new_couples (new_par: element) (h: int) : (ext_element*element*int) list =
-        get_all_rhs inf.quotient_g.rules new_par
-        |> List.map (decompose [] [])
-        |> List.flatten
-        |> List.map (fun (pf,e,sf) -> let par={pf=pf;e=new_par;sf=sf} and ch=e in
-        if is_null_heuristic par ch then (*(print_endline ("h=0: "^(string_of_ext_element par)^" "^(string_of_element ch));*) (par,ch,0) else (*(print_endline ("h="^(string_of_int h)^": "^(string_of_ext_element par)^" "^(string_of_element ch));*) (par,ch,h)) in
+(* construct the children of new_par. Their heuristic is h *)
+let make_new_couples (inf: t) (new_par: element) (h: int) : (ext_element*element*int) list =
+    get_all_rhs inf.quotient_g.rules new_par
+    |> List.map (decompose [] [])
+    |> List.flatten
+    |> List.map (fun (pf,e,sf) -> let par={pf=pf;e=new_par;sf=sf} and ch=e in
+    if is_null_heuristic inf par ch then (*(print_endline ("h=0: "^(string_of_ext_element par)^" "^(string_of_element ch));*) (par,ch,0) else (*(print_endline ("h="^(string_of_int h)^": "^(string_of_ext_element par)^" "^(string_of_element ch));*) (par,ch,h))
+
+(*(* compute the heuristic once and for all *)
+let update_heuristic (inf: t) : unit =
 
     (* compute the heuristic from the top of the grammar to its leaves *)
     (* all the heuristic is computed at once *)
-    let rec update_heuristic_aux (queue: (ext_element*element*int) list) : unit =
-        match queue with
-            | [] -> ()
-            | (par,ch,_)::q when Hashtbl.mem inf.heuristic (par,ch) -> (update_heuristic_aux [@tailcall]) q (* heuristic already computed *)
-            | (par,ch,h_par)::q -> Hashtbl.add inf.heuristic (par,ch) h_par;
-                (update_heuristic_aux [@tailcall]) (q@(make_new_couples ch (h_par+1))) in
 
     if inf.htype = Default then begin
         let start_time = Unix.gettimeofday () in
-        Log.L.info (fun m -> m "Heuristic update");
+        (* Log.L.info (fun m -> m "Heuristic update"); *)
         (* print_endline ("Axiom: "^(string_of_element inf.quotient_g.axiom)); *)
         (* based on can_reach_goal, so we need to update it as well *)
         (* update_reach_goal inf; *)
-        Hashtbl.clear inf.heuristic;
+        (* Hashtbl.clear inf.heuristic; *)
         if (Quotient.can_reach_goal inf.quotient (ext_element_of_element inf.quotient_g.axiom)) then begin
             (* update the heuristic *)
-            update_heuristic_aux (make_new_couples inf.quotient_g.axiom 0);
+            update_heuristic_aux ();
             (* update_openset inf; *)
             inf.h_time <- inf.h_time +. (Unix.gettimeofday () -. start_time);
             Log.L.debug (fun m -> m "Heuristic updated")
@@ -165,6 +156,23 @@ let update_heuristic (inf: t) : unit =
             raise Unreachable
     end
     (* if inf.hype = No_heuristic, no computation *)
+*)
+let rec update_heuristic (inf: t) (ch_goal: element) (par_goal: ext_element) : unit =
+    match inf.heuristic_openset with
+        | [] -> ()
+        | (par,ch,_)::q when Hashtbl.mem inf.heuristic (par,ch) -> inf.heuristic_openset <- q;
+                if par<>par_goal || ch<>ch_goal then (update_heuristic [@tailcall]) inf ch_goal par_goal (* heuristic already computed *)
+        | (par,ch,h_par)::q -> Hashtbl.add inf.heuristic (par,ch) h_par;
+            inf.heuristic_openset <- q@(make_new_couples inf ch (h_par+1));
+            if par<>par_goal || ch<>ch_goal then (update_heuristic [@tailcall]) inf ch_goal par_goal
+
+(* Get the heuristic. It is already computed. *)
+let get_heuristic (inf: t) (ch: ext_element) (par: element) : int =
+    (* print_endline ("Get heuristic of "^(string_of_ext_element ch)^" "^(string_of_element par)); *)
+    match inf.htype with
+        | No_heuristic -> 0
+        | Default -> update_heuristic inf par ch; Option.value ~default:infinity (Hashtbl.find_opt inf.heuristic (ch,par))
+
 
 (* construct the new ext_elements (the neighborhood) *)
 let build_ext_elements (inf: t) (e: ext_element) : (ext_element * ext_element) list =
@@ -197,7 +205,7 @@ let add_in_openset (inf: t) (start: element) (g_val: int) (null_h: bool) (origin
                 par
                 |> build_ext_elements inf
                 |> List.rev_map (fun (e, simplified_e: ext_element * ext_element) : node -> {g_val;h_val=get_heuristic inf simplified_e par.e;e;par;origin=Induction simplified_e;start=start})
-                |> List.filter (fun {g_val;h_val;_} -> g_val + h_val <= inf.max_depth)
+                |> List.filter (fun {g_val;h_val;_} -> g_val + h_val <= inf.max_depth) (* because the heuristic is consistent *)
                 |> List.sort compare_with_score
                 |> List.merge compare_with_score inf.openset end
         | _ -> ()
@@ -339,10 +347,17 @@ let finalize (inf: t) =
         | _ -> ()
     end;
 
+    (* save the invalid words if necessary *)
+    if inf.initial_h_size < Hashtbl.length inf.heuristic then
+    begin match inf.h_fname with
+        | Some fname (*when List.length inf.invalid_words > initial_invalid_length*) -> Log.L.info (fun m -> m "Save heuritic values into %s" fname); Marshal.to_channel (open_out_bin fname) (inf.heuristic,inf.heuristic_openset) []
+        | _ -> ()
+    end;
+
     (* save the oracle answers if necessary *)
     Option.iter (Oracle.save_mem inf.oracle) inf.o_fname
 
-let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (o_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : t =
+let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (o_fname: string option) (h_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : t =
 
     let quotient_g = Clean.clean_grammar quotient_g in (* clean is necessary *)
     let g_non_comment = match inference_g with
@@ -400,36 +415,51 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
     if not (List.mem goal (get_all_symbols quotient_g)) then failwith "Unknown goal";
 
     let inf = {   refused_elems = [];
-        invalid_words = invalid_words;
+        invalid_words;
         (* can_reach_goal = can_reach_goal; *)
         heuristic = Hashtbl.create 10000;
+        heuristic_openset = [];
         closedset = Hashtbl.create 10000;
         openset = [];
         (* uniq_rule = uniq_rule; *)
-        quotient_g = quotient_g;
+        quotient_g;
         inference_g = g;
-        o_fname = o_fname;
-        iw_fname = iw_fname;
-        manual_stop = manual_stop;
+        initial_h_size = 0;
+        h_fname;
+        o_fname;
+        iw_fname;
+        manual_stop;
         start_time = 0.;
         h_time = 0.;
         user_time = 0.;
-        quotient = quotient;
-        htype = htype;
+        quotient;
+        htype;
         allow_derivation = true;
-        oracle = oracle;
-        start = start;
-        goal = goal;
-        max_depth = max_depth;
-        max_steps = max_steps;
+        oracle;
+        start;
+        goal;
+        max_depth;
+        max_steps;
         graph_channel = Option.map open_out graph_fname} in
 
+    let default = (Hashtbl.create 10000, make_new_couples inf inf.quotient_g.axiom 0) in
+    let heuristic,heuristic_openset = match h_fname with
+        | Some fname -> begin
+                            try let out = Marshal.from_channel (open_in_bin fname) in Log.L.info (fun m -> m "Imported heuristic values from %s" fname); out
+                            with _ -> Log.L.info (fun m -> m "New heuristic file: %s" fname); default                        end
+        | None -> default in
+
+    inf.heuristic <- heuristic;
+    inf.heuristic_openset <- heuristic_openset;
+    inf.initial_h_size <- Hashtbl.length heuristic;
+
     (* initialize the heuristic *)
+(*    if Hashtbl.length heuristic = 0 then
     begin
         try
             update_heuristic inf;
         with Unreachable -> failwith "Unreachable goal"
-    end;
+    end;*)
 
     (* if inf.htype = No_heuristic then (1* we initialize "can_reach_goal" to verify if the axiom can access it *1) *)
         (* update_reach_goal inf; *)
@@ -438,7 +468,6 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
     else if not (Quotient.can_reach_goal inf.quotient (ext_element_of_element quotient_g.axiom)) then failwith "Unreachable goal";
     (* if not (is_reachable_mem None (ext_element_of_element quotient_g.axiom)) then failwith "Unknown or unreachable goal" (1* the goal is not reachable from the axiom ! *1) *)
     inf
-
 
 let search (inf: t) : (ext_grammar * string list * string) option =
     (* initialize the call times *)
@@ -457,10 +486,10 @@ let search (inf: t) : (ext_grammar * string list * string) option =
             finalize inf;
             Sys.catch_break false;
             result
-        with Unreachable ->
-            finalize inf;
-            None
-        | Sys.Break ->
+        (* with Unreachable -> *)
+            (* finalize inf; *)
+            (* None *)
+        with Sys.Break ->
             (* in case of Crtl+C : save the work *)
             finalize inf;
             raise Sys.Break
