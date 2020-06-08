@@ -36,7 +36,7 @@ type t = {  mutable refused_elems: element list;
             allow_derivation: bool;
             oracle: Oracle.t;
             start: element list;
-            goal: element;
+            goal: element list;
             max_depth: int;
             max_steps: int;
             graph_channel: out_channel option}
@@ -370,7 +370,7 @@ let finalize (inf: t) =
     (* save the oracle answers if necessary *)
     Option.iter (Oracle.save_mem inf.oracle) inf.o_fname
 
-let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (o_fname: string option) (h_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : t =
+let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element list) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (o_fname: string option) (h_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : t =
 
     let quotient_g = Clean.clean_grammar quotient_g in (* clean is necessary *)
 
@@ -394,7 +394,7 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
 
     (* print_string (string_of_grammar quotient_g); *)
 
-    let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname (Some goal) in
+    let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname goal in
 
     (* lexer token should not be epsilon-capable *)
     List.iter (fun e -> match e with
@@ -437,7 +437,13 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
     if no_start <> [] then Log.L.warn (fun m -> m "Unknown starting points: %s" (Grammar.string_of_part no_start));
     if start = [] then failwith "No starting point!"; (* no injection token found *)
     Log.L.debug (fun m -> m "Starting points: %s" (Grammar.string_of_part start));
-    if not (List.mem goal (get_all_symbols quotient_g)) then failwith "Unknown goal";
+
+    let all_sym_quotient = get_all_symbols quotient_g in
+    let no_goal = List.filter (fun e -> not (List.mem e all_sym_quotient)) goal in
+    let goal = List.filter (fun e -> List.mem e all_sym_quotient) goal in
+    if no_goal <> [] then Log.L.warn (fun m -> m "Unknown goals: %s" (Grammar.string_of_part no_goal));
+    if goal = [] then failwith "No goal!"; (* no injection token found *)
+    Log.L.debug (fun m -> m "Goals: %s" (Grammar.string_of_part goal));
 
     let inf = {   refused_elems = [];
         invalid_words;
@@ -489,8 +495,8 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
     (* if inf.htype = No_heuristic then (1* we initialize "can_reach_goal" to verify if the axiom can access it *1) *)
         (* update_reach_goal inf; *)
 
-    if not (List.mem goal (get_all_symbols quotient_g)) then failwith "Unknown goal"
-    else if not (Quotient.can_reach_goal inf.quotient (ext_element_of_element quotient_g.axiom)) then failwith "Unreachable goal";
+    (* if not (List.mem goal (get_all_symbols quotient_g)) then failwith "Unknown goal" *)
+    if not (Quotient.can_reach_goal inf.quotient (ext_element_of_element quotient_g.axiom)) then failwith "Unreachable goal";
     (* if not (is_reachable_mem None (ext_element_of_element quotient_g.axiom)) then failwith "Unknown or unreachable goal" (1* the goal is not reachable from the axiom ! *1) *)
     inf
 

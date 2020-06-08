@@ -7,7 +7,7 @@ type t = {  words : (ext_element, part list) Hashtbl.t; (* the words of the fuzz
             dict: (element,string) Hashtbl.t option; (* the semantics dictionary *)
             can_reach_goal: (ext_element, unit) Hashtbl.t; (* ext_element that can access the goal *)
             cant_reach_goal: (element,unit) Hashtbl.t; (* element that are refused by the user *)
-            goal: element option;
+            goal: element list;
             forbidden: char list; (* the set of characters that should not appear in injections *)
             mutable call_time: float;
             mutable fuzzer_time: float;
@@ -68,7 +68,7 @@ let update_words (quo: t) (r: ext_rule) : unit =
         let prev_reached = Hashtbl.mem quo.can_reach_goal lhs in
         let prev_words = Option.value (Hashtbl.find_opt quo.words lhs) ~default:[] in
 
-        let new_reached = not (Hashtbl.mem quo.cant_reach_goal lhs.e) && Some lhs.e = quo.goal || (List.exists (fun e -> Some e.e = quo.goal || (not (is_ext_element_terminal e) && (Hashtbl.mem quo.can_reach_goal e))) r.ext_right_part) in (* this word can obtain the goal if one of its children can *)
+        let new_reached = not (Hashtbl.mem quo.cant_reach_goal lhs.e) && List.mem lhs.e quo.goal || (List.exists (fun e -> List.mem e.e quo.goal || (not (is_ext_element_terminal e) && (Hashtbl.mem quo.can_reach_goal e))) r.ext_right_part) in (* this word can obtain the goal if one of its children can *)
 
         let new_word = r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else List.hd (List.sort List.compare_lengths (Hashtbl.find quo.words e))) |> List.concat in (* all the prerequisite for computing the word are already computed ! We use the shortest word for each dependency. *)
         (* print_endline ("New word for "^(string_of_ext_element lhs)^": "^(string_of_word new_word)^" from rule "^(string_of_ext_rule r)); *)
@@ -389,7 +389,7 @@ let get_possible_query_from_ext_element (quo: t) (e: ext_element) (par: element)
     prefix^" ["^(string_of_element par)^"] "^suffix
 
 
-let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char list) (dict: (element,string) Hashtbl.t option) (qgraph_fname : string option) (goal: element option) : t =
+let init (oneline_comment: string option) (g_initial: grammar) (forbidden: char list) (dict: (element,string) Hashtbl.t option) (qgraph_fname : string option) (goal: element list) : t =
     let q = {words = Hashtbl.create 100000;
         mem = Hashtbl.create 100000;
         cant_reach_goal = Hashtbl.create 100;

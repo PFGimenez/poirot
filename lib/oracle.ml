@@ -100,7 +100,7 @@ let oracle_from_pf_sf ?(oneline_comment: string option = None) (interval: float 
     let explode s = List.init (String.length s) (fun i -> Grammar.Terminal (String.make 1 (String.get s i))) in
     let prefix = explode prefix
     and suffix = explode suffix in
-    let quotient = Quotient.init oneline_comment g [] None None None in
+    let quotient = Quotient.init oneline_comment g [] None None [] in
     let e : Grammar.ext_element = {pf=List.rev prefix;e=g.axiom;sf=suffix} in
     let f (s: string) : status =
         (* print_endline (Grammar.string_of_word (explode s)); *)

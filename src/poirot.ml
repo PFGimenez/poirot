@@ -14,7 +14,7 @@ let ()=
     and suffix = ref None
     and manual_stop = ref false
     and dict = ref None
-    and goal = ref None
+    and goal = ref []
     and start = ref []
     and heuristic = ref Poirot__Inference.Default
     and oneline_comment = ref None
@@ -32,7 +32,7 @@ let ()=
 
     let speclist = [
         ("-grammar",    Arg.String (fun s -> grammar_fname := Some s),     "Target grammar");
-        ("-goal",       Arg.String (fun s -> goal := Some (Poirot.read_token s)),     "Terminal or nonterminal to reach");
+        ("-goal",       Arg.String (fun s -> goal := (Poirot.read_token s) :: !goal),     "Terminal or nonterminal to reach");
         ("-oracle",     Arg.String (fun s -> oracle_fname := Some s),     "Oracle script filename");
         ("-oracle_pf_sf", Arg.Tuple ([Arg.String (fun s -> prefix := Some s);Arg.String (fun s -> suffix := Some s)]), "Oracle based on the simulation of a query given a prefix and a suffix");
         ("-legitimate",      Arg.String (fun s -> start := (Poirot.read_token s) :: !start),     "A valid injection, either terminal or nonterminal");
@@ -56,7 +56,7 @@ let ()=
         ("-v",    Arg.Unit (fun () -> print_endline ("Poirot v"^Poirot.version)),     "Show Poirot version")
     ] in
     Arg.parse speclist ignore ("Poirot v"^Poirot.version);
-    if !grammar_fname <> None && ((!oracle_fname <> None) <> (!prefix <> None)) && !goal <> None && !start <> [] then
+    if !grammar_fname <> None && ((!oracle_fname <> None) <> (!prefix <> None)) && !goal <> [] && !start <> [] then
         let timeout = match !oracle_timeout with
             | -1. -> None
             | n when n > 0. -> Some n
@@ -67,8 +67,7 @@ let ()=
             | _ -> failwith "Negative interval!" in
 
         let grammar_fname = Option.get !grammar_fname in
-        let grammar = Poirot.read_bnf_grammar grammar_fname
-        and goal = Option.get !goal in
+        let grammar = Poirot.read_bnf_grammar grammar_fname in
         let oracle = match !oracle_fname with
         | None -> Poirot__Oracle.oracle_from_pf_sf ~oneline_comment:!oneline_comment wait grammar_fname (Option.get !prefix) (Option.get !suffix)
         | Some fname -> Poirot__Oracle.oracle_from_script wait timeout fname in
@@ -85,7 +84,7 @@ let ()=
         Poirot.set_reporter (Logs_fmt.reporter ());
 
         let s = Option.map Poirot.read_dict !dict in
-        let result = Poirot.search ~inference_g:inference_grammar ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_oracle:!oracle_save oracle grammar goal !start in
+        let result = Poirot.search ~inference_g:inference_grammar ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_oracle:!oracle_save oracle grammar !goal !start in
         match result with
         | Some (gram, words, query) ->
                 if !injg_fname <> None then Poirot.export_antlr4 (Option.get !injg_fname) gram;
