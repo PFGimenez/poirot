@@ -171,7 +171,7 @@ let get_heuristic (inf: t) (ch: ext_element) (par: element) : int =
     (* print_endline ("Get heuristic of "^(string_of_ext_element ch)^" "^(string_of_element par)); *)
     match inf.htype with
         | No_heuristic -> 0
-        | Default -> update_heuristic inf par ch; Option.value ~default:infinity (Hashtbl.find_opt inf.heuristic (ch,par))
+        | Default -> update_heuristic inf par ch; (*print_endline ("Heuristic: "^(string_of_int (Option.value ~default:infinity (Hashtbl.find_opt inf.heuristic (ch,par)))));*) Option.value ~default:infinity (Hashtbl.find_opt inf.heuristic (ch,par))
 
 
 (* construct the new ext_elements (the neighborhood) *)
@@ -255,6 +255,18 @@ let stop_search (inf: t) (words: part list) (e: ext_element) : bool =
     inf.user_time <- inf.user_time +. (Unix.gettimeofday () -. start_time);
     out
 
+(*let print_openset (inf: t) : unit =
+    let string_of_node (n: node) : string =
+        (string_of_ext_element n.e)^" (from "^(string_of_element n.par.e)^"), g="^(string_of_int n.g_val)^", h="^(string_of_int n.h_val) in
+    let rec print_openset_aux (openset: node list) : unit =
+        match openset with
+        | [] -> ()
+        | t::q -> print_endline (string_of_node t); print_openset_aux q in
+    if inf.openset <> [] then begin
+        print_endline "Openset:";
+        print_openset_aux inf.openset
+    end*)
+
 (* core algorithm : an A* algorithm *)
 (* tail recursive *)
 let rec search_aux (inf: t) (step: int) : (ext_grammar * string list * string) option =
@@ -303,7 +315,7 @@ let rec search_aux (inf: t) (step: int) : (ext_grammar * string list * string) o
 
             let status = Oracle.call inf.oracle (string_of_word word) in
             if status = Oracle.Syntax_error then inf.invalid_words <- word::inf.invalid_words;
-            if goal_reached && (not (inf.manual_stop) || stop_search inf words e) && status = Oracle.No_error then begin (* the goal has been found ! *)
+            if goal_reached && status = Oracle.No_error && (not (inf.manual_stop) || stop_search inf words e) then begin (* the goal has been found ! *)
                 Log.L.info (fun m -> m "Found on step %d" step);
                 set_node_color_in_graph inf e "forestgreen";
                 let status : (part * Oracle.status) list = List.map (fun w -> (w, Oracle.call inf.oracle (string_of_word w))) words in
@@ -339,6 +351,7 @@ let finalize (inf: t) =
 
     (* close the dot files *)
     Option.iter (fun ch -> Log.L.info (fun m -> m "Save search graph."); output_string ch "}"; close_out ch) inf.graph_channel;
+    (* print_openset inf; *)
     Quotient.finalizer inf.quotient;
 
     (* save the invalid words if necessary *)
@@ -360,6 +373,7 @@ let finalize (inf: t) =
 let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (o_fname: string option) (h_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : t =
 
     let quotient_g = Clean.clean_grammar quotient_g in (* clean is necessary *)
+
     let g_non_comment = match inference_g with
     | Some g -> Clean.clean_grammar g
     | None -> quotient_g in
@@ -378,7 +392,18 @@ let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) 
     | Some _ -> add_comment_inference quotient_g, add_comment_inference g_non_comment
     | None -> quotient_g,g_non_comment in
 
+    (* print_string (string_of_grammar quotient_g); *)
+
     let quotient = Quotient.init oneline_comment quotient_g forbidden dict qgraph_fname (Some goal) in
+
+    (* lexer token should not be epsilon-capable *)
+    List.iter (fun e -> match e with
+        | Nonterminal s when String.uppercase_ascii s = s ->
+                if Quotient.is_in_language quotient (ext_element_of_element e) [] then
+                    failwith ("Error: a token "^(string_of_element e)^" can produce epsilon")
+        | _ -> ())
+    (get_all_symbols quotient_g);
+
     (* and all_sym = get_all_symbols g in *)
 
     (* let can_reach_goal: (element, unit) Hashtbl.t = Hashtbl.create (List.length all_sym) in *)

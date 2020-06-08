@@ -93,6 +93,7 @@ MySqlLexer.g4:
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/sql/mysql/Positive-Technologies/MySqlLexer.g4
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/sql/mysql/Positive-Technologies/MySqlParser.g4
 	patch < MySqlParser.diff
+	patch < MySqlLexer.diff
 
 SQLite.g4:
 	wget https://raw.githubusercontent.com/antlr/grammars-v4/$(grammarv4_commit)/sql/sqlite/SQLite.g4

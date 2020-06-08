@@ -71,7 +71,7 @@ let update_words (quo: t) (r: ext_rule) : unit =
         let new_reached = not (Hashtbl.mem quo.cant_reach_goal lhs.e) && Some lhs.e = quo.goal || (List.exists (fun e -> Some e.e = quo.goal || (not (is_ext_element_terminal e) && (Hashtbl.mem quo.can_reach_goal e))) r.ext_right_part) in (* this word can obtain the goal if one of its children can *)
 
         let new_word = r.ext_right_part |> List.map (fun e -> if is_ext_element_terminal e then [e.e] else List.hd (List.sort List.compare_lengths (Hashtbl.find quo.words e))) |> List.concat in (* all the prerequisite for computing the word are already computed ! We use the shortest word for each dependency. *)
-
+        (* print_endline ("New word for "^(string_of_ext_element lhs)^": "^(string_of_word new_word)^" from rule "^(string_of_ext_rule r)); *)
         (* print_endline ((string_of_ext_rule r)^": "^(string_of_word new_word)); *)
         if new_reached = prev_reached then begin (* the status doesn't change : just add a word *)
             if not (List.mem new_word prev_words) then (* avoid duplicate *)
