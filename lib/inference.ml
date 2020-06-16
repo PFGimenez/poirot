@@ -255,17 +255,20 @@ let stop_search (inf: t) (words: part list) (e: ext_element) : bool =
     inf.user_time <- inf.user_time +. (Unix.gettimeofday () -. start_time);
     out
 
-(*let print_openset (inf: t) : unit =
+let string_of_openset (nb: int) (inf: t) : string =
     let string_of_node (n: node) : string =
         (string_of_ext_element n.e)^" (from "^(string_of_element n.par.e)^"), g="^(string_of_int n.g_val)^", h="^(string_of_int n.h_val) in
-    let rec print_openset_aux (openset: node list) : unit =
+    (* tail-recursive *)
+    let rec string_of_openset_aux (acc: string) (nb: int) (openset: node list) : string =
         match openset with
-        | [] -> ()
-        | t::q -> print_endline (string_of_node t); print_openset_aux q in
-    if inf.openset <> [] then begin
-        print_endline "Openset:";
-        print_openset_aux inf.openset
-    end*)
+        | [] -> assert false (* at least one element *)
+        | t::[] -> acc^(string_of_node t)
+        | t::_ when nb = 0 -> acc^(string_of_node t)
+        | t::q -> (string_of_openset_aux [@tailcall]) (acc^string_of_node t^"\n") (nb-1) q in
+    if inf.openset <> [] then
+        "Openset: "^(string_of_openset_aux "" nb inf.openset)
+    else
+        "Empty openset"
 
 (* core algorithm : an A* algorithm *)
 (* tail recursive *)
@@ -351,7 +354,7 @@ let finalize (inf: t) =
 
     (* close the dot files *)
     Option.iter (fun ch -> Log.L.info (fun m -> m "Save search graph."); output_string ch "}"; close_out ch) inf.graph_channel;
-    (* print_openset inf; *)
+    Log.L.debug (fun m -> m "%s" (string_of_openset 10 inf));
     Quotient.finalizer inf.quotient;
 
     (* save the invalid words if necessary *)
@@ -372,6 +375,7 @@ let finalize (inf: t) =
 
 let init (oracle: Oracle.t) (inference_g: grammar option) (quotient_g: grammar) (goal: element list) (start: element list) (oneline_comment: string option) (dict: (element,string) Hashtbl.t option) (max_depth: int) (max_steps: int) (graph_fname: string option) (qgraph_fname: string option) (o_fname: string option) (h_fname: string option) (forbidden: char list) (manual_stop: bool) (htype: heuristic) : t =
 
+    Log.L.info (fun m -> m "Grammar preprocessing…");
     let quotient_g = Clean.clean_grammar quotient_g in (* clean is necessary *)
 
     let g_non_comment = match inference_g with

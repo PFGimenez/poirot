@@ -20,7 +20,7 @@ let search ?(inference_g: grammar option = None) ?(heuristic: Inference.heuristi
 let read_dict : string -> (element,string) Hashtbl.t = Grammar_io.read_dict
 
 let whitebox_search ?(oneline_comment: string option = None) ?(qgraph_fname: string option = None) (grammar_fname: string) (prefix: string) (suffix: string) (goal: element list) : (grammar * string list * bool) =
-    let g = Grammar_io.read_bnf_grammar true grammar_fname in
+    let g = Clean.clean_grammar (Grammar_io.read_bnf_grammar true grammar_fname) in
     let explode s = List.init (String.length s) (fun i -> Grammar.Terminal (String.make 1 (String.get s i))) in
     let prefix = explode prefix
     and suffix = explode suffix in

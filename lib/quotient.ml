@@ -321,6 +321,7 @@ let can_reach_goal (quo: t) (e: ext_element) : bool =
     Hashtbl.mem quo.can_reach_goal e
 
 let get_grammar (quo: t) (e: ext_element) : ext_grammar =
+    Log.L.info (fun m -> m "Building of the injection grammar…");
     let start_time = Unix.gettimeofday () in
     quotient_symbols quo [e];
     let out = grammar_of_mem quo e in

@@ -1,3 +1,7 @@
+%{
+    open Grammar
+%}
+
 %token <string> TERM
 %token <string> PSEUDO_TERM
 %token <string> NTERM
