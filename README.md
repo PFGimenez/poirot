@@ -20,7 +20,7 @@ To install Poirot, run the following steps. `opam` will automatically install th
     opam install .
     eval `opam env`
 
-You will need ANTLR4 to convert grammars from .g4 format and to use the prefix/suffix oracle generator. Make sure you have python 3 and Java JRE installed. Execute:
+Optionnaly, if you want to use grammars that are not included in this repository, you can use ANTLR4 to convert grammars from .g4 format. Make sure you have python 3 and Java JRE installed and execute:
 
     pip3 install --user -r antlr4-utils/requirements.txt
 
@@ -32,17 +32,17 @@ Run `poirot -help` to get the list of parameters on how to use it. The workflow 
 
 ![poirot workflow](https://raw.githubusercontent.com/PFGimenez/poirot/master/resources/poirot_workflow.png)
 
-The following examples use the prefix/suffix oracle generator described in a later section.
+The following examples use the local oracle described in a later section.
 
 Here is an example that uses the simple grammar `msg_exec`. Run:
 
-    poirot -grammar bnf_grammars/toy/msg_exec.bnf -goal "Exe" -start "'value'" -oracle "oracles/prefix-suffix.py msg_exec axiom 'msg key = ' ' & key = value'"
+    poirot -grammar bnf_grammars/toy/msg_exec.bnf -goal "Exe" -legitimate "'value'" -local_oracle 'msg key = ' ' & key = value'
 
 It will generates the injection `value ; exec cmd ; msg key = value`.
 
 You can experiment with the more complex grammar `parenthesis` as well. Run:
 
-    poirot -grammar bnf_grammars/toy/parenthesis.bnf -goal "'b'" -start "'a'" -oracle "oracles/prefix-suffix.py parenthesis axiom '([[([' '])]])'"
+    poirot -grammar bnf_grammars/toy/parenthesis.bnf -goal "'b'" -legitimate "'a'" -local_oracle '([[([' '])]])'
 
 It will generate the injection `a])]])b([[([a`.
 
@@ -57,7 +57,7 @@ Here is the list of the options of `poirot`:
 - `-maxdepth` Set the max depth search (default: 10).
 - `-maxsteps` Set the max steps search (default: 1000).
 - `-oracle_timeout` Set the timeout to oracle calls (in seconds, -1 for no timeout).
-- `-oracle_interval` Set the minimal duration between two oracle calls (in seconds, -1 for no wait).
+- `-throttle` Set the minimal duration between two oracle calls (in seconds, -1 for no wait).
 - `-sgraph` Save the search graph in dot format.
 - `-nosave_h` Disable the heuristics save.
 - `-nosave_oracle` Disable the oracle calls save.
@@ -84,7 +84,7 @@ If you know the query (i.e. the prefix and the suffix surrounding the injection 
 
 For example, you can run:
 
-    quotient_poirot -grammar bnf_grammars/toy/msg_exec.bnf -pf "msg key = " -sf " & key = value" -goal "Exe"
+    whitebox_poirot -grammar bnf_grammars/toy/msg_exec.bnf -prefix "msg key = " -suffix " & key = value" -goal "Exe"
 
 It will generate the injection `value ; exec cmd ; msg key = value`.
 
@@ -120,17 +120,8 @@ It will generate the file `test.g4` containing the grammar in ANTLR4 format. Its
 
 An oracle is a script that can send injection to the black-box system and, by examining this system, tell whether this injection is syntactically correct or not. Poirot gets the answer by checking its error code: 0 if the injection is syntactically correct, 180 otherwise. Make sure the executable permission is enabled (added with `chmod +x`).
 
-More precisely, Poirot will use this oracle by calling it with a single parameter, the injection. If you need more parameters for your oracle (e.g. an URL), you should give a partial application of the oracle to Poirot. For example, if your oracle script is `oracle.sh param1 param2 param3 inj`, just tell Poirot your script is `oracle.sh param1 param2 param3`.
+More precisely, Poirot will use this oracle by calling it with a single parameter, the injection. If you need more parameters for your oracle (e.g. an URL), you should give a partial application of the oracle to Poirot. For example, if your oracle script is `oracle.sh param1 param2 param3 inj` where `inj` is the injection to examine, just tell Poirot your script is `oracle.sh param1 param2 param3`.
 
 The oracles are in the directory `oracles`.
 
-### Use the prefix/suffix oracle generator
-
-The workflow of creating an oracle with the prefix/suffix oracle generator is described in the following figure:
-
-![Prefix/suffix oracle generator workflow](https://raw.githubusercontent.com/PFGimenez/poirot/master/resources/prefix_suffix_oracle_workflow.png)
-
-We provide an oracle generator that simulates a black-box, given a grammar, a prefix and a suffix. To use it, you must first create the ANTLR4 lexer and parser of its grammar. To do that, put the ANTLR4 grammar (such as `example.g4`) into the `antlr4-utils` directory and execute `make exampleLexer.py` (change accordingly to the name of your grammar).
-
-This oracle generator needs four parameters: the ANTLR4 grammar name (without the `.g4` extension), the axiom, a prefix and a suffix. Beware, the grammar path is relative to the directory `antlr4-utils`.
-
+We also provide a local oracle that simulates a black-box, given the prefix and the suffix of a query. This can be used to verify the effectiveness of Poirot without interacting with another system. Remark that if you know the prefix and the suffix of the query, you should you the white-box utility instead of the black-box one.

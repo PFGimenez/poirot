@@ -9,8 +9,8 @@ let ()=
 
     let speclist = [
         ("-grammar",    Arg.String (fun s -> grammar_fname := Some s),     "Target grammar");
-        ("-pf",         Arg.String (fun s -> prefix := Some s),     "Prefix of the request");
-        ("-sf",         Arg.String (fun s -> suffix := Some s),     "Suffix of the request");
+        ("-prefix",         Arg.String (fun s -> prefix := Some s),     "Prefix of the request");
+        ("-suffix",         Arg.String (fun s -> suffix := Some s),     "Suffix of the request");
         ("-goal",       Arg.String (fun s -> goal := (Poirot.read_token s) :: !goal),     "Terminal or nonterminal to reach");
         ("-injg",       Arg.String (fun s -> injg_fname := Some s),     "Export the injection grammar in ANTLR4 format");
         ("-oneline_comment",     Arg.String (fun s -> oneline_comment := Some s),    "The string that starts one-line comment");
