@@ -1,6 +1,7 @@
 # v0.6
 - Heuristic rewrite to handle refused words
 - The user can refuse an injection and continue the search (reworked)
+- Maximal blank depth parameter
 
 # v0.5
 - API rework

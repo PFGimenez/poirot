@@ -20,13 +20,14 @@ type element
  @param goal the goal of the search, i.e. the element (terminal or nonterminal) you seek to get in the grammar of injection. Poirot stops the search once it is reached.
  @param start a element (terminal or nonterminal) that is a injection.
  @param dict (optional) an Hashtable containing the semantics dictionary.
- @param max_depth (optional) modify the maximal depth of the search
+ @param max_search_depth (optional) modify the maximal depth of the search
+ @param max_blank_depth (optional) specify the maximal depth of the blank in the hidden template
  @param max_steps (optional) modify the maximal number of steps of the search
  @param forbidden_chars (optional) a list of forbidden characters. Such characters won't be used in injection. Useful to avoid escaped characters.
  @param sgraph_fname (optional, for debug) export the search graph in graphviz dot format.
  @param qgraph_fname (optional, for debug) export the quotient graph in graphviz dot format.
  *)
-val search : ?inference_g: grammar option -> ?heuristic: Inference.heuristic -> ?manual_stop: bool -> ?oneline_comment: string option -> ?dict:(element,string) Hashtbl.t option -> ?max_depth:int -> ?max_steps:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> ?save_oracle: bool -> Oracle.t -> grammar -> element list -> element list -> (grammar * string list * string) option
+val search : ?inference_g: grammar option -> ?heuristic: Inference.heuristic -> ?manual_stop: bool -> ?oneline_comment: string option -> ?dict:(element,string) Hashtbl.t option -> ?max_search_depth:int -> ?max_blank_depth:int -> ?max_steps:int -> ?forbidden_chars:char list -> ?sgraph_fname:string option -> ?qgraph_fname:string option -> ?save_oracle: bool -> Oracle.t -> grammar -> element list -> element list -> (grammar * string list * string) option
 
 (** [whitebox_search g_fname left_quotient right_quotient goal] returns the grammar in file [g_fname] after a left quotient by [left_quotient] and a right quotient by [right_quotient], as well as an word of this language. The word will contain the goal (if possible) if it is not None. The boolean returned tells whether the goal has been reached. The grammar must be in BNF format *)
 val whitebox_search : ?oneline_comment: string option -> ?qgraph_fname: string option -> string -> string -> string -> element list -> grammar * (string list) * bool

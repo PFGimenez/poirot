@@ -2,7 +2,8 @@ let ()=
     let graph_fname = ref None
     and qgraph_fname = ref None
     and injg_fname = ref None
-    and max_depth = ref 30
+    and max_depth = ref 20
+    and max_blank_depth = ref 20
     and max_steps = ref 10000
     and oracle_timeout = ref (-1.)
     and oracle_wait = ref (-1.)
@@ -38,7 +39,8 @@ let ()=
         ("-legitimate",      Arg.String (fun s -> start := (Poirot.read_token s) :: !start),     "A valid injection, either terminal or nonterminal");
         ("-avoid",      Arg.Set_string avoid,     "List of characters to avoid");
         ("-dict",      Arg.String (fun s -> dict := Some s),     "Filename of the semantics dictionary");
-        ("-maxdepth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
+        ("-max_search_depth",   Arg.Set_int max_depth,    "Set the max depth search (default: "^(string_of_int !max_depth)^")");
+        ("-max_blank_depth",   Arg.Set_int max_blank_depth,    "Set the max depth of the injection point (default: "^(string_of_int !max_blank_depth)^")");
         ("-maxsteps",   Arg.Set_int max_steps,    "Set the max steps search (default: "^(string_of_int !max_steps)^")");
         ("-oracle_timeout",   Arg.Set_float oracle_timeout,    "Set the timeout to oracle calls (in seconds, -1 for no timeout)");
         ("-throttle",   Arg.Set_float oracle_wait,    "Set the minimal duration between two oracle calls (in seconds, -1 for no wait)");
@@ -84,11 +86,11 @@ let ()=
         Poirot.set_reporter (Logs_fmt.reporter ());
 
         let s = Option.map Poirot.read_dict !dict in
-        let result = Poirot.search ~inference_g:inference_grammar ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_depth:!max_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_oracle:!oracle_save oracle grammar !goal !start in
+        let result = Poirot.search ~inference_g:inference_grammar ~heuristic:!heuristic ~manual_stop:!manual_stop ~oneline_comment:!oneline_comment ~dict:s ~max_search_depth:!max_depth ~max_blank_depth:!max_blank_depth ~max_steps:!max_steps ~forbidden_chars:(explode !avoid) ~sgraph_fname:!graph_fname ~qgraph_fname:!qgraph_fname ~save_oracle:!oracle_save oracle grammar !goal !start in
         match result with
         | Some (gram, words, query) ->
                 if !injg_fname <> None then Poirot.export_antlr4 (Option.get !injg_fname) gram;
                 print_endline ("Infered query: "^query);
                 List.iter (fun w -> print_endline ("Injection: "^w)) words
         | None -> print_endline "Search failed: no injection found.";
-    else print_endline "Error: grammar, goal, start and an oracle (either -oracle or -oracle_pf_sf) are necessary"
+    else print_endline "Error: grammar, goal, start and an oracle (either -oracle or -local_oracle) are necessary"

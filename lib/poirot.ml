@@ -3,7 +3,7 @@ type element = Grammar.element
 
 let version = "0.6"
 
-let search ?(inference_g: grammar option = None) ?(heuristic: Inference.heuristic = Inference.Default) ?(manual_stop: bool = false) ?(oneline_comment: string option = None) ?(dict: (element,string) Hashtbl.t option = None) ?(max_depth: int = 10) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) ?(save_oracle: bool = true) (oracle: Oracle.t) (g: grammar) (goal: element list) (start: element list) : (grammar * string list * string) option =
+let search ?(inference_g: grammar option = None) ?(heuristic: Inference.heuristic = Inference.Default) ?(manual_stop: bool = false) ?(oneline_comment: string option = None) ?(dict: (element,string) Hashtbl.t option = None) ?(max_search_depth: int = 10) ?(max_blank_depth: int = 12) ?(max_steps: int = 1000) ?(forbidden_chars: char list = []) ?(sgraph_fname: string option = None) ?(qgraph_fname: string option = None) ?(save_oracle: bool = true) (oracle: Oracle.t) (g: grammar) (goal: element list) (start: element list) : (grammar * string list * string) option =
 
     (* heuristic save file *)
     let h_fname = Some ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^".prt") in
@@ -11,7 +11,7 @@ let search ?(inference_g: grammar option = None) ?(heuristic: Inference.heuristi
     (* oracle save file *)
     let o_fname = if save_oracle then Some ((string_of_int (Hashtbl.hash g + Hashtbl.hash goal))^"_oracle.prt") else None in
 
-    let inf = Inference.init oracle inference_g g goal start oneline_comment dict max_depth max_steps sgraph_fname qgraph_fname o_fname h_fname forbidden_chars manual_stop heuristic in
+    let inf = Inference.init oracle inference_g g goal start oneline_comment dict max_search_depth max_blank_depth max_steps sgraph_fname qgraph_fname o_fname h_fname forbidden_chars manual_stop heuristic in
 
     match Inference.search inf with
     | None -> None

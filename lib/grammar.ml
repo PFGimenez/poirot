@@ -105,8 +105,6 @@ let add_comment_quotient (g: grammar) (s: string) : grammar =
     let new_rules = (new_axiom --> [g.axiom])::(new_axiom --> [g.axiom; Terminal s; new_nterm])::(new_nterm --> [])::(new_rules@g.rules) in
     new_axiom@@new_rules
 
-
-
 (* get the list of token that can directly produce "axiom" *)
 let symbols_from_parents (g: grammar) (axiom : element) : element list =
     g.rules |> List.filter (fun r -> List.mem axiom r.right_part) |> List.rev_map (fun r -> r.left_symbol) |> List.sort_uniq compare
